@@ -1,6 +1,6 @@
-div#workflow-results.card.card-body
+div#workflow-results.card
 
-  div.head
+  div.card-header.pb-0
 
     h3.inline.mr-2 Results
 
@@ -16,163 +16,169 @@ div#workflow-results.card.card-body
 
           a.nav-link.tab.active(data-toggle="tab" href="#sweep") Sweep
 
-    button.btn.btn-outline-collapse.mb-1(data-toggle="collapse" data-target="#collapse-results" data-hook="collapse-results-btn") -
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-results" data-hook="collapse-results-btn") -
 
   div.collapse.show(id="collapse-results" data-hook="workflow-results")
 
-    div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
+    div.card-body
 
-      table.table
-        thead
-          tr
-            th(scope="col") Title
-            th(scope="col") X-axis Label
-            th(scope="col") Y-axis Label
+      div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
 
-        tbody
-          tr
-            td: div(id="title" data-hook="title")
-            td: div(id="xaxis" data-hook="xaxis")
-            td: div(id="yaxis" data-hook="yaxis")
+        table.table
+          thead
+            tr
+              th(scope="col") Title
+              th(scope="col") X-axis Label
+              th(scope="col") Y-axis Label
 
-    div.tab-content
+          tbody
+            tr
+              td: div(id="title" data-hook="title")
+              td: div(id="xaxis" data-hook="xaxis")
+              td: div(id="yaxis" data-hook="yaxis")
 
-      div.tab-pane.card.card-body(id="time-series" data-hook="time-series")
+      div.tab-content
 
-        div
+        div.tab-pane.card(id="time-series" data-hook="time-series")
 
-          h5.inline Parameter Sweep
-
-          button.btn.btn-outline-collapse(
-            data-toggle="collapse"
-            data-target="#collapse-ts-psweep"
-            id="collapse-ts-psweep-btn"
-            data-hook="collapse-ts-psweep-btn"
-            data-trigger="collapse-plot-container"
-            data-type="ts-psweep"
-          ) -
-            
-        div.collapse.show(id="collapse-ts-psweep")
-
-          div.row
-
-            div.col-md-9
-
-              div(data-hook="ts-psweep-plot")
-
-              div.spinner-border.workflow-plot(data-hook="ts-psweep-plot-spinner")
-
-              button.btn.btn-primary.box-shadow(data-hook="ts-psweep-edit-plot" data-target="edit-plot" disabled) Edit Plot
-
-              button.btn.btn-primary.box-shadow(data-hook="multiple-plots" data-type="ts-psweep-mp" style="display: none;" disabled) Multiple Plots
-
-              button.btn.btn-primary.box-shadow(
-                data-hook="ts-psweep-download-png-custom"
-                data-target="download-png-custom"
-                data-type="ts-psweep"
-                disabled
-              ) Download PNG
-
-              button.btn.btn-primary.box-shadow(
-                data-hook="ts-psweep-download-json"
-                data-target="download-json"
-                data-type="ts-psweep"
-                disabled
-              ) Download JSON
-
-            div.col-md-3
-
-              div.head(data-hook="plot-type-header")
-
-                h6 Plot Type
-
-              div.mt-2(data-hook="plot-type-select")
-
-              div.head
-
-                h6 Parameters
-
-              div.mt-2(data-hook="ts-parameter-ranges")
-
-      div.tab-pane.active.mt-3(id="sweep" data-hook="sweep")
-
-        div.inline.horizontal-space
-
-          span.inline(for="species-of-interest") Variable of Interest:
-
-          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.species) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-
-          div.inline(id="species-of-interest" data-hook="specie-of-interest-list")
-
-        div.inline.horizontal-space
-
-          span.inline(for="feature-extractor") Feature Extraction: 
-
-          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.mapper) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-
-          div.inline(id="feature-extractor" data-hook="feature-extraction-list")
-
-        div.inline.horizontal-space(id="ensemble-aggragator-container" data-hook="ensemble-aggragator-container")
-
-          span.inline(for="ensemble-aggragator") Ensemble Aggragator: 
-
-          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.reducer) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-          
-          div.inline(id="ensemble-aggragator" data-hook="ensemble-aggragator-list")
-
-        div.card.card-body
-
-          div
+          div.card-header.pb-0
 
             h5.inline Parameter Sweep
 
             button.btn.btn-outline-collapse(
               data-toggle="collapse"
-              data-target="#collapse-psweep"
-              id="collapse-psweep-btn"
-              data-hook="collapse-psweep-btn"
+              data-target="#collapse-ts-psweep"
+              id="collapse-ts-psweep-btn"
+              data-hook="collapse-ts-psweep-btn"
               data-trigger="collapse-plot-container"
-              data-type="psweep"
+              data-type="ts-psweep"
             ) -
-          
-          div.collapse.show(id="collapse-psweep")
+              
+          div.collapse.show(id="collapse-ts-psweep")
 
-            div(data-hook="psweep-plot")
+            div.card-body
 
-            div.spinner-border.workflow-plot(data-hook="psweep-plot-spinner")
+              div.row
 
-            button.btn.btn-primary.box-shadow(data-hook="psweep-edit-plot" data-target="edit-plot" disabled) Edit Plot
+                div.col-md-9
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="psweep-download-png-custom"
-              data-target="download-png-custom"
-              data-type="psweep"
-              disabled
-            ) Download PNG
+                  div(data-hook="ts-psweep-plot")
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="psweep-download-json"
-              data-target="download-json"
-              data-type="psweep"
-              disabled
-            ) Download JSON
+                  div.spinner-border.workflow-plot(data-hook="ts-psweep-plot-spinner")
+
+                  button.btn.btn-primary.box-shadow(data-hook="ts-psweep-edit-plot" data-target="edit-plot" disabled) Edit Plot
+
+                  button.btn.btn-primary.box-shadow(data-hook="multiple-plots" data-type="ts-psweep-mp" style="display: none;" disabled) Multiple Plots
+
+                  button.btn.btn-primary.box-shadow(
+                    data-hook="ts-psweep-download-png-custom"
+                    data-target="download-png-custom"
+                    data-type="ts-psweep"
+                    disabled
+                  ) Download PNG
+
+                  button.btn.btn-primary.box-shadow(
+                    data-hook="ts-psweep-download-json"
+                    data-target="download-json"
+                    data-type="ts-psweep"
+                    disabled
+                  ) Download JSON
+
+                div.col-md-3
+
+                  div.head(data-hook="plot-type-header")
+
+                    h6 Plot Type
+
+                  div.mt-2(data-hook="plot-type-select")
+
+                  div.head
+
+                    h6 Parameters
+
+                  div.mt-2(data-hook="ts-parameter-ranges")
+
+        div.tab-pane.active.mt-3(id="sweep" data-hook="sweep")
+
+          div.inline.horizontal-space
+
+            span.inline(for="species-of-interest") Variable of Interest:
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.species) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.inline(id="species-of-interest" data-hook="specie-of-interest-list")
+
+          div.inline.horizontal-space
+
+            span.inline(for="feature-extractor") Feature Extraction: 
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.mapper) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.inline(id="feature-extractor" data-hook="feature-extraction-list")
+
+          div.inline.horizontal-space(id="ensemble-aggragator-container" data-hook="ensemble-aggragator-container")
+
+            span.inline(for="ensemble-aggragator") Ensemble Aggragator: 
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.reducer) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
             
-    button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
+            div.inline(id="ensemble-aggragator" data-hook="ensemble-aggragator-list")
 
-    button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
+          div.card
 
-    button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
+            div.card-header.pb-0
 
-    div.saving-status(data-hook="job-action-start")
+              h5.inline Parameter Sweep
 
-      div.spinner-grow
+              button.btn.btn-outline-collapse(
+                data-toggle="collapse"
+                data-target="#collapse-psweep"
+                id="collapse-psweep-btn"
+                data-hook="collapse-psweep-btn"
+                data-trigger="collapse-plot-container"
+                data-type="psweep"
+              ) -
+            
+            div.collapse.show(id="collapse-psweep")
 
-      span Publishing ...
+              div.card-body
 
-    div.saved-status(data-hook="job-action-end")
+                div(data-hook="psweep-plot")
 
-      span Published
+                div.spinner-border.workflow-plot(data-hook="psweep-plot-spinner")
 
-    div.save-error-status(data-hook="job-action-err")
+                button.btn.btn-primary.box-shadow(data-hook="psweep-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-      span Error
+                button.btn.btn-primary.box-shadow(
+                  data-hook="psweep-download-png-custom"
+                  data-target="download-png-custom"
+                  data-type="psweep"
+                  disabled
+                ) Download PNG
+
+                button.btn.btn-primary.box-shadow(
+                  data-hook="psweep-download-json"
+                  data-target="download-json"
+                  data-type="psweep"
+                  disabled
+                ) Download JSON
+              
+      button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
+
+      button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
+
+      button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
+
+      div.saving-status(data-hook="job-action-start")
+
+        div.spinner-grow
+
+        span Publishing ...
+
+      div.saved-status(data-hook="job-action-end")
+
+        span Published
+
+      div.save-error-status(data-hook="job-action-err")
+
+        span Error
