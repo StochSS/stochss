@@ -27,12 +27,12 @@ let Plotly = require('../lib/plotly');
 let InputView = require('./input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
-let SweepParametersView = require('./sweep-parameter-range');
+let SweepParametersView = require('./sweep-parameter-range-view');
 //templates
-let gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
-let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
-let parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResults.pug');
-let parameterScanTemplate = require('../templates/includes/parameterScanResults.pug');
+let gillespyResultsTemplate = require('../templates/includes/gillespyResultsView.pug');
+let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsembleView.pug');
+let parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResultsView.pug');
+let parameterScanTemplate = require('../templates/includes/parameterScanResultsView.pug');
 
 module.exports = View.extend({
   events: {
@@ -255,6 +255,10 @@ module.exports = View.extend({
   handleCollapsePlotContainerClick: function (e) {
     app.changeCollapseButtonText(this, e);
     let type = e.target.dataset.type;
+    for (var storageKey in this.plots) {
+      let data = JSON.parse(storageKey)
+      if(data.plt_key === type) { return }
+    }
     this.getPlot(type);
   },
   handleConvertToNotebookClick: function (e) {
