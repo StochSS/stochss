@@ -22,8 +22,8 @@ let app = require('../app');
 let tests = require('./tests');
 let Tooltips = require('../tooltips');
 //views
-let View = require('ampersand-view');
 let InputView = require('./input');
+let View = require('ampersand-view');
 //templates
 let template = require('../templates/includes/simulationSettings.pug');
 
@@ -44,23 +44,35 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.simulationSettings;
     this.algorithm = this.model.isAutomatic ? "The algorithm was chosen based on your model." : this.model.algorithm;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    if(!this.model.isAutomatic){
-      $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));
-      $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA")); 
-      $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
-      $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
-    }else{
-      $(this.queryByHook('settings-container')).collapse('hide');
-      $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic);
+    if(this.readOnly) {
+      $(this.queryByHook('sim-settings-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('sim-settings-view-tab')).tab('show');
+      $(this.queryByHook('edit-sim-settings')).removeClass('active');
+      $(this.queryByHook('view-sim-settings')).addClass('active');
+    }else {
+      if(!this.model.isAutomatic){
+        $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));
+        $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA")); 
+        $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
+        $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
+      }else{
+        $(this.queryByHook('settings-container')).collapse('hide');
+        $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic);
+      }
+      this.disableInputFieldByAlgorithm();
+      app.tooltipSetup();
     }
-    this.disableInputFieldByAlgorithm();
     this.updateViewer();
-    app.tooltipSetup();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
