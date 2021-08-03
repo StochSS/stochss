@@ -4,7 +4,10 @@ div
 
     div.col-md-5
 
-      a.btn.btn-outline-secondary.box-shadow.text-break(href=this.model.open style="width: 100%" role="button")=this.model.name
+      if(this.model.type == "Notebook")
+        a.btn.btn-outline-secondary.box-shadow.text-break(href=this.model.open target="_blank" style="width: 100%" role="button")=this.model.name
+      else
+        a.btn.btn-outline-secondary.box-shadow.text-break(href=this.model.open style="width: 100%" role="button")=this.model.name
 
     div.col-md-4
 
