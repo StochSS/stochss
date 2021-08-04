@@ -51,6 +51,7 @@ module.exports = State.extend({
   validateComponent: function () {
     advanced_error = false;
     if(!this.name.trim() || this.name.match(/^\d/)) return false;
+    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
     if(!this.triggerExpression.trim()) return false;
     if(!this.priority.trim()) {
       this.advanced_error = true;
