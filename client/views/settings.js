@@ -24,8 +24,8 @@ let app = require('../app');
 //views
 let View = require('ampersand-view');
 let TimespanSettingsView = require('./timespan-settings');
+let ParameterSettingsView = require('./parameter-settings-view');
 let SimulationSettingsView = require('./simulation-settings-view');
-let ParameterSettingsView = require('./parameter-settings');
 //templates
 let template = require('../templates/includes/settings.pug');
 
