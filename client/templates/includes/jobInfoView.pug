@@ -1,0 +1,29 @@
+div#job-info-view.card
+
+  div.card-header.pb-0
+
+    h3.inline Info
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-info" data-hook="collapse-info") +
+
+  div.collapse(id="collapse-info" data-hook="job-info")
+
+    div.card-body
+
+      div.collapse(data-hook="job-statistics")
+
+        h5.inline Statistics
+
+        div(data-hook="list-of-notes")
+
+      div.collapse(data-hook="job-warnings")
+
+        h5.inline Warnings
+
+        div(data-hook="list-of-warnings")
+
+      div.collapse(data-hook="job-errors")
+
+        h5.inline Errors
+
+        div(data-hook="list-of-errors")
