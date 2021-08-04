@@ -15,7 +15,7 @@ div
 
     div.inline(style="max-width: 100%")
 
-      div.horizontal-scroll(data-hook=this.model.elementID + "-current-value" style="overflow-x: none;")=this.model.range[0]
+      div.horizontal-scroll(data-hook=this.model.elementID + "-current-value" style="overflow-x: visible;")=this.model.range[0]
 
   input.custom-range(
     type="range"
