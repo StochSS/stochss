@@ -27,7 +27,7 @@ let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
 let SettingsView = require('../views/settings');
-let LogsView = require('../views/workflow-info');
+let LogsView = require('../views/job-info-view');
 let SelectView = require('ampersand-select-view');
 let ModelView = require('../model-view/model-view');
 let StatusView = require('../views/workflow-status');
