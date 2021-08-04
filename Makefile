@@ -1,6 +1,17 @@
 
-include .env
 include jupyterhub/.env
+
+ifeq ($(OS),Windows_NT)
+include .win32.env
+	DOCKER_ROOT_DIR := $(shell cmd.exe /C "echo %cd%")
+	DOCKER_WORKING_DIR ?= $(DOCKER_ROOT_DIR)\local_data
+	DOCKER_SETUP_COMMAND := setup.bat $(subst /,\\\,$(DOCKER_WORKING_DIR))
+else
+include .env
+	DOCKER_ROOT_DIR := $(PWD)
+	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
+	DOCKER_SETUP_COMMAND := "bash -c \"if [ ! -d \"$(DOCKER_WORKING_DIR)\" ] && [ -z ${DOCKER_WORKING_DIR+\"if_var_set\"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
+endif
 
 .DEFAULT_GOAL=build_and_run
 
@@ -96,9 +107,7 @@ build_clean:
 	 	--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 create_working_dir:
-	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
-	bash -c "if [ ! -d "$(DOCKER_WORKING_DIR)" ] && [ -z ${DOCKER_WORKING_DIR+"if_var_set"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
-
+	$(DOCKER_SETUP_COMMAND)
 
 build:  
 	docker build \
@@ -109,7 +118,7 @@ test:   create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(PWD):/stochss \
+		-v $(DOCKER_ROOT_DIR):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
@@ -121,7 +130,7 @@ run:    create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(PWD):/stochss \
+		-v $(DOCKER_ROOT_DIR):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
@@ -132,7 +141,7 @@ run_bash:
 	docker run -it --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(PWD):/stochss \
+		-v $(DOCKER_ROOT_DIR):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
@@ -141,7 +150,7 @@ watch:
 	docker run -it --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(PWD):/stochss \
+		-v $(DOCKER_ROOT_DIR):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
