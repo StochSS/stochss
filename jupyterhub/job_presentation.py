@@ -18,8 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import shutil
 import pickle
 import logging
+import tempfile
+
+from pathlib import Path
 
 from presentation_base import StochSSBase, get_presentation_from_user
 from presentation_error import StochSSAPIError, report_error
@@ -87,7 +91,65 @@ def process_job_presentation(path, file=None, for_download=False):
         with open(os.path.join(job_dir, "results.p"), "wb") as res_file:
             pickle.dump(job['results'], res_file)
         return job['job']
+    job = make_zip_for_download(job)
     return job
+
+
+def make_zip_for_download(job):
+    '''
+    Make an editable job for users to download.
+
+    Attributes
+    ----------
+    job : dict
+        StochSS job presentation
+    '''
+    tmp_dir = tempfile.TemporaryDirectory()
+    res_path = os.path.join(tmp_dir.name, job['name'],
+                            '/'.join(job['job']['directory'].split('/')[2:]), "results.p")
+    Path(res_path).mkdir(parents=True)
+    with open(res_path, "wb") as res_file:
+        pickle.dump(job['results'], res_file)
+    job_path = os.path.dirname(res_path)
+    Path(os.path.join(job_path, "RUNNING")).touch()
+    Path(os.path.join(job_path, "COMPLETE")).touch()
+    write_json(path=os.path.join(job_path, "settings.json"), body=job['job']['settings'])
+    write_json(path=os.path.join(job_path, job['job']['mdlPath'].split('/').pop()),
+               body=job['job']['model'])
+    info = {"annotation": "", "wkfl_model": job['job']['mdlPath'].split('/').pop(),
+            "start_time": job['job']['startTime'], "type": job['job']['startTime'],
+            "source_model": os.path.join(job['name'], job['job']['mdlPath'].split('/').pop())}
+    write_json(path=os.path.join(job_path, "info.json"), body=info)
+    if "No logs" in job['job']['logs']:
+        Path(os.path.join(job_path, "logs.txt")).touch()
+    else:
+        with open(os.path.join(job_path, "logs.txt"), "w") as logs_file:
+            logs_file.write(job['job']['logs'])
+    wkfl_path = os.path.dirname(job_path)
+    settings = {"model": info['source_model'], "settings": job['job']['settings'],
+                "type": job['job']['titleType']}
+    write_json(path=os.path.join(wkfl_path, "settings.json"), body=settings)
+    write_json(path=os.path.join(os.path.dirname(wkfl_path),
+                                 job['job']['mdlPath'].split('/').pop()), body=job['job']['model'])
+    zip_path = os.path.join(tmp_dir.name, job['name'])
+    shutil.make_archive(zip_path, "zip", tmp_dir.name, job['name'])
+    with open(zip_path, "rb") as zip_file:
+        return zip_file.read()
+
+
+def write_json(path, body):
+    '''
+    Write a json file to disc.
+
+    Attributes
+    ----------
+    path : str
+        Path to the file.
+    body : dict
+        Contents of the file.
+    '''
+    with open(path, "r") as file:
+        json.dump(body, file, sort_keys=True, indent=4)
 
 
 class StochSSJob(StochSSBase):
