@@ -85,7 +85,6 @@ class DownJobPresentationAPIHandler(BaseHandler):
         job, name = get_presentation_from_user(owner=owner, file=file,
                                                kwargs={"for_download": True},
                                                process_func=process_job_presentation)
-        ext = file.split(".").pop()
         self.set_header('Content-Disposition', f'attachment; filename="{name}.zip"')
         self.write(job)
         self.finish()
