@@ -66,6 +66,31 @@ class JobAPIHandler(BaseHandler):
         self.finish()
 
 
+class DownJobPresentationAPIHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Base Handler for downloading job presentations from user containers.
+    ################################################################################################
+    '''
+    async def get(self, owner, file):
+        '''
+        Download the job presentation from User's presentations directory.
+
+        Attributes
+        ----------
+        '''
+        log.debug("Container id of the owner: %s", owner)
+        log.debug("Name to the file: %s", file)
+        self.set_header('Content-Type', 'application/zip')
+        job, name = get_presentation_from_user(owner=owner, file=file,
+                                               kwargs={"for_download": True},
+                                               process_func=process_job_presentation)
+        ext = file.split(".").pop()
+        self.set_header('Content-Disposition', f'attachment; filename="{name}.zip"')
+        self.write(job)
+        self.finish()
+
+
 def process_job_presentation(path, file=None, for_download=False):
     '''
     Get the job presentation data from the file.
@@ -92,7 +117,7 @@ def process_job_presentation(path, file=None, for_download=False):
             pickle.dump(job['results'], res_file)
         return job['job']
     job = make_zip_for_download(job)
-    return job
+    return job, job['name']
 
 
 def make_zip_for_download(job):
