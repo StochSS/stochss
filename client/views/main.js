@@ -32,6 +32,12 @@ var ViewSwitcher = require('ampersand-view-switcher');
 var headTemplate = require('!pug-loader!../templates/head.pug');
 var bodyTemplate = require('!pug-loader!../templates/body.pug');
 
+String.prototype.toHtmlEntities = function() {
+  return this.replace(/./gm, function(s) {
+    return (s.match(/[a-z0-9\s]+/i)) ? s : "&#" + s.charCodeAt(0) + ";";
+  });
+};
+
 let operationInfoModalHtml = (infoKey) => {
   let fileBrowserInfo = `
     <p>In StochSS we use custom file extensions for a number of files we work with.  Here is a list of our extentions with the files they are associated with:</p>
@@ -153,11 +159,11 @@ module.exports = View.extend({
       if(log.includes("$ ")){
         let head = self.addNewLogBlock();
         var newLog = self.formatLog(log);
-        $("#user-logs").append(head + newLog);
+        $("#user-logs").append(head + newLog.toHtmlEntities());
       }else{
         var newLog = log;
         if(newLog.trim()) {
-          self.logBlock.push(newLog);
+          self.logBlock.push(newLog.toHtmlEntities());
         }
       }
       self.logs.push(newLog);

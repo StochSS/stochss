@@ -573,5 +573,10 @@ module.exports = {
       let modalID = "presentationLinksModal"
 
       return templates.presentationLinks(modalID, title, headers, links);
+    },
+    modelErrorHtml: (title, message) => {
+      let modalID = "modelErrorModal";
+
+      return templates.message(modalID, title, message);
     }
 }

@@ -38,6 +38,7 @@ module.exports = State.extend({
   },
   validateComponent: function () {
     if(!this.name.trim() || this.name.match(/^\d/)) return false;
+    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
     if(this.expression === "" || isNaN(this.expression)) return false
     return true;
   }
