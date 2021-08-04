@@ -44,10 +44,13 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     if(!this.showFixed){
       $(this.queryByHook(this.model.elementID + "-fixed-container")).css("display", "none");
+    }else{
+      $(this.queryByHook(this.model.elementID + '-slider')).prop("disabled", !this.model.fixed);
     }
   },
   setParameterRangeFixed: function (e) {
     this.model.fixed = e.target.checked;
+    $(this.queryByHook(this.model.elementID + '-slider')).prop("disabled", !this.model.fixed);
     this.parent.getPlot("psweep");
   },
   setParameterRangeValue: function (e) {
