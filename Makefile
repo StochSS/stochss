@@ -10,7 +10,7 @@ else
 include .env
 	DOCKER_ROOT_DIR := $(PWD)
 	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
-	DOCKER_SETUP_COMMAND := "bash -c \"if [ ! -d \"$(DOCKER_WORKING_DIR)\" ] && [ -z ${DOCKER_WORKING_DIR+\"if_var_set\"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
+	DOCKER_SETUP_COMMAND := bash -c "if [ ! -d \"$(DOCKER_WORKING_DIR)\" ] && [ -z ${DOCKER_WORKING_DIR+\"if_var_set\"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
 endif
 
 .DEFAULT_GOAL=build_and_run
