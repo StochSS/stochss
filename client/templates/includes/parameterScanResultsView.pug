@@ -1,0 +1,202 @@
+div#workflow-results.card
+
+  div.card-header.pb-0
+
+    h3.inline.mr-2 Results
+
+    div.inline
+
+      ul.nav.nav-tabs
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-toggle="tab" href="#time-series") Time Series
+
+        li.nav-item
+
+          a.nav-link.tab(data-toggle="tab" href="#sweep") Sweep
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-results" data-hook="collapse-results-btn") -
+
+  div.collapse.show(id="collapse-results" data-hook="workflow-results")
+
+    div.card-body
+
+      div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
+
+        table.table
+          thead
+            tr
+              th(scope="col") Title
+              th(scope="col") X-axis Label
+              th(scope="col") Y-axis Label
+
+          tbody
+            tr
+              td: div(id="title" data-hook="title")
+              td: div(id="xaxis" data-hook="xaxis")
+              td: div(id="yaxis" data-hook="yaxis")
+
+      div.tab-content
+
+        div.tab-pane.active.card(id="time-series" data-hook="time-series")
+
+          div.card-header.pb-0
+
+            h5.inline Parameter Sweep
+
+            button.btn.btn-outline-collapse(
+              data-toggle="collapse"
+              data-target="#collapse-ts-psweep"
+              id="collapse-ts-psweep-btn"
+              data-hook="collapse-ts-psweep-btn"
+              data-trigger="collapse-plot-container"
+              data-type="ts-psweep"
+            ) -
+            
+          div.collapse.show(id="collapse-ts-psweep")
+
+            div.card-body
+
+              div.row
+
+                div.col-md-9
+
+                  div(data-hook="ts-psweep-plot")
+
+                  div.spinner-border.workflow-plot(data-hook="ts-psweep-plot-spinner")
+
+                  button.btn.btn-primary.box-shadow(data-hook="ts-psweep-edit-plot" data-target="edit-plot" disabled) Edit Plot
+
+                  button.btn.btn-primary.box-shadow(data-hook="multiple-plots" data-type="ts-psweep-mp" style="display: none;" disabled) Multiple Plots
+
+                  button.btn.btn-primary.box-shadow(
+                    data-hook="ts-psweep-download-png-custom"
+                    data-target="download-png-custom"
+                    data-type="ts-psweep"
+                    disabled
+                  ) Download PNG
+
+                  button.btn.btn-primary.box-shadow(
+                    data-hook="ts-psweep-download-json"
+                    data-target="download-json"
+                    data-type="ts-psweep"
+                    disabled
+                  ) Download JSON
+
+                div.col-md-3
+
+                  div.head(data-hook="plot-type-header")
+
+                    h6 Plot Type
+
+                  div.my-3(data-hook="plot-type-select")
+
+                  div.head
+
+                    h6 Parameters
+
+                  div.mt-3(data-hook="ts-parameter-ranges")
+
+        div.tab-pane.mt-3(id="sweep" data-hook="sweep")
+
+          div.inline.horizontal-space
+
+            span.inline(for="species-of-interest") Variable of Interest:
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.species) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.inline(id="species-of-interest" data-hook="specie-of-interest-list")
+
+          div.inline.horizontal-space
+
+            span.inline(for="feature-extractor") Feature Extraction: 
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.mapper) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.inline(id="feature-extractor" data-hook="feature-extraction-list")
+
+          div.inline.horizontal-space(id="ensemble-aggragator-container" data-hook="ensemble-aggragator-container")
+
+            span.inline(for="ensemble-aggragator") Ensemble Aggragator: 
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.reducer) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+            
+            div.inline(id="ensemble-aggragator" data-hook="ensemble-aggragator-list")
+
+          div.card
+
+            div.card-header.pb-0
+
+              h5.inline Parameter Sweep
+
+              button.btn.btn-outline-collapse(
+                data-toggle="collapse"
+                data-target="#collapse-psweep"
+                id="collapse-psweep-btn"
+                data-hook="collapse-psweep-btn"
+                data-trigger="collapse-plot-container"
+                data-type="psweep"
+              ) -
+            
+            div.collapse.show(id="collapse-psweep")
+
+              div.card-body
+
+                div.row
+
+                  div.col-md-9
+
+                    div(data-hook="psweep-plot")
+
+                    div.spinner-border.workflow-plot(data-hook="psweep-plot-spinner")
+
+                    div.mb-3(data-hook="too-few-params")
+
+                      p.text-danger
+                        | The number of variable parameters cannot exceed 2.  Please add another fixed parameters.
+
+                    div.mb-3(data-hook="too-many-params" style="display: none")
+
+                      p.text-danger
+                        | The number of variable parameters cannot be 0.  Please remove a fixed parameter.
+
+                    button.btn.btn-primary.box-shadow(data-hook="psweep-edit-plot" data-target="edit-plot" disabled) Edit Plot
+
+                    button.btn.btn-primary.box-shadow(
+                      data-hook="psweep-download-png-custom"
+                      data-target="download-png-custom"
+                      data-type="psweep"
+                      disabled
+                    ) Download PNG
+
+                    button.btn.btn-primary.box-shadow(
+                      data-hook="psweep-download-json"
+                      data-target="download-json"
+                      data-type="psweep"
+                      disabled
+                    ) Download JSON
+
+                  div.col-md-3
+
+                    div.head
+
+                      h6 Parameters
+
+                    div.mt-3(data-hook="ps-parameter-ranges")
+
+      button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish Presentation
+
+      div.saving-status(data-hook="job-action-start")
+
+        div.spinner-grow
+
+        span Publishing ...
+
+      div.saved-status(data-hook="job-action-end")
+
+        span Published
+
+      div.save-error-status(data-hook="job-action-err")
+
+        span Error

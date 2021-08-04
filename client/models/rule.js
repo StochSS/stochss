@@ -33,6 +33,7 @@ module.exports = State.extend({
   },
   validateComponent: function () {
     if(!this.name.trim() || this.name.match(/^\d/)) return false;
+    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
     if(!this.expression.trim()) return false;
     return true;
   }

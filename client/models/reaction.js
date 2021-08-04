@@ -165,6 +165,7 @@ module.exports = State.extend({
   },
   validateComponent: function () {
     if(!this.name.trim() || this.name.match(/^\d/)) return false;
+    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
     if(!this.propensity.trim() && this.reactionType === "custom-propensity") return false;
     if(this.reactionType.startsWith('custom')) {
       if(this.reactants.length <= 0 && this.products.length <= 0) return false;

@@ -27,12 +27,12 @@ let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
 let SettingsView = require('../views/settings');
-let LogsView = require('../views/workflow-info');
+let LogsView = require('../views/job-info-view');
 let SelectView = require('ampersand-select-view');
 let ModelView = require('../model-view/model-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
-let ResultsView = require('../views/workflow-results');
+let ResultsView = require('../views/job-results-view');
 let SettingsViewerView = require('../views/settings-viewer');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
@@ -142,6 +142,7 @@ let WorkflowManager = PageView.extend({
   },
   removeActiveJob: function () {
     $(this.queryByHook("active-job-header-container")).css("display", "none");
+    $("#review-model-section").css("display", "none");
     if(this.resultsView) {
       this.resultsView.remove();
     }
@@ -213,6 +214,7 @@ let WorkflowManager = PageView.extend({
     if(this.modelView) {
       this.modelView.remove();
     }
+    $("#review-model-section").css("display", "block")
     let header = "Review Model: " + this.model.activeJob.model.name;
     $("#model-viewer-header").html(header);
     this.modelView = new ModelView({
