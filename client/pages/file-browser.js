@@ -922,13 +922,20 @@ let FileBrowser = PageView.extend({
     app.getXHR(endpoint, {
       success: function (err, response, body) {
         let title = body.message;
-        let linkHeaders = "Shareable Presentation Link";
+        let linkHeaders = "Shareable Presentation";
         let links = body.links;
-        let name = o.original._path.split('/').pop().split('.ipynb')[0];
-        $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
+        $(modals.presentationLinks(title, linkHeaders, links)).modal();
         let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
         copyBtn.addEventListener('click', function (e) {
-          app.copyToClipboard(links.presentation)
+          let onFulfilled = (value) => {
+            $("#copy-link-success").css("display", "inline-block");
+          } 
+          let onReject = (reason) => {
+            let msg = $("#copy-link-failed");
+            msg.html(reason);
+            msg.css("display", "inline-block");
+          }
+          app.copyToClipboard(links.presentation, onFulfilled, onReject);
         });
       },
       error: function (err, response, body) {
