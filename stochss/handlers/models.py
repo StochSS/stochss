@@ -165,19 +165,19 @@ class LoadDomainAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path", default=None)
-        log.debug("Path to the spatial model: {}", path)
+        log.debug(f"Path to the spatial model: {path}")
         d_path = self.get_query_argument(name="domain_path", default=None)
         if d_path is not None:
-            log.debug("Path to the domain file: {}", d_path)
+            log.debug(f"Path to the domain file: {d_path}")
         new = self.get_query_argument(name="new", default=False)
-        log.debug("The domain is new: {}", new)
+        log.debug(f"The domain is new: {new}")
         log.info("Generating the domain plot")
         try:
             model = StochSSSpatialModel(path=path)
             fig = json.loads(model.get_domain_plot(path=d_path, new=new))
             log.info("Loading the domain plot")
             resp = {"fig":fig}
-            log.debug("Response: {}", resp)
+            log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -201,14 +201,14 @@ class RunModelAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("Path to the model: {}", path)
+        log.debug(f"Path to the model: {path}")
         run_cmd = self.get_query_argument(name="cmd")
-        log.debug("Run command sent to the script: {}", run_cmd)
+        log.debug(f"Run command sent to the script: {run_cmd}")
         outfile = self.get_query_argument(name="outfile")
         # Create temporary results file it doesn't already exist
         if outfile == 'none':
             outfile = str(uuid.uuid4()).replace("-", "_")
-        log.debug("Temporary outfile: {}", outfile)
+        log.debug(f"Temporary outfile: {outfile}")
         target = self.get_query_argument(name="target", default=None)
         resp = {"Running":False, "Outfile":outfile, "Results":""}
         if run_cmd == "start":
@@ -217,23 +217,23 @@ class RunModelAPIHandler(APIHandler):
             if target is not None:
                 exec_cmd.insert(1, "--target")
                 exec_cmd.insert(2, f"{target}")
-            log.debug("Script commands for running a preview: {}", exec_cmd)
+            log.debug(f"Script commands for running a preview: {exec_cmd}")
             subprocess.Popen(exec_cmd)
             resp['Running'] = True
-            log.debug("Response to the start command: {}", resp)
+            log.debug(f"Response to the start command: {resp}")
             self.write(resp)
         else:
             model = StochSSModel(path=path)
             log.info("Check for preview results ...")
             results = model.get_preview_results(outfile=outfile)
-            log.debug("Results for the model preview: {}", results)
+            log.debug(f"Results for the model preview: {results}")
             if results is None:
                 resp['Running'] = True
                 log.info("The preview is still running")
             else:
                 resp['Results'] = results
                 log.info("Loading the preview results")
-            log.debug("Response to the read command: {}", resp)
+            log.debug(f"Response to the read command: {resp}")
             self.write(resp)
         self.finish()
 
@@ -254,10 +254,10 @@ class ModelExistsAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("Path to the file: {}", path)
+        log.debug(f"Path to the file: {path}")
         model = StochSSModel(path=path)
         resp = {"exists":os.path.exists(model.get_path(full=True))}
-        log.debug("Response: {}", resp)
+        log.debug(f"Response: {resp}")
         self.write(resp)
         self.finish()
 
@@ -277,11 +277,11 @@ class ImportMeshAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        log.info("Loading the mesh from {}", self.request.files['datafile'][0]['filename'])
+        log.info(f"Loading the mesh from {self.request.files['datafile'][0]['filename']}")
         data = self.request.files['datafile'][0]['body'].decode()
         if "typefile" in self.request.files.keys():
-            log.info("Loading the particle types from {}",
-                     self.request.files['typefile'][0]['filename'])
+            log.info(f"Loading the particle types from \
+                        {self.request.files['typefile'][0]['filename']}")
             types = self.request.files['typefile'][0]['body'].decode().strip().split("\n")
         else:
             types = None
@@ -291,7 +291,7 @@ class ImportMeshAPIHandler(APIHandler):
             log.info("Generating new particles")
             resp = StochSSSpatialModel.get_particles_from_remote(mesh=data, data=particle_data,
                                                                  types=types)
-            log.debug("Number of Particles: {}", len(resp['particles']))
+            log.debug(f"Number of Particles: {len(resp['particles'])}")
             log.info("Successfully created new particles")
             self.write(resp)
         except StochSSAPIError as err:
@@ -318,7 +318,7 @@ class LoadExternalDomains(APIHandler):
             folder = StochSSFolder(path="")
             test = lambda ext, root, file: bool("trash" in root.split("/"))
             resp = folder.get_file_list(ext=".domn", test=test)
-            log.debug("Response: {}", resp)
+            log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -344,7 +344,7 @@ class LoadParticleTypesDescriptions(APIHandler):
             folder = StochSSFolder(path="")
             test = lambda ext, root, file: bool("trash" in root.split("/"))
             resp = folder.get_file_list(ext=".txt", test=test)
-            log.debug("Response: {}", resp)
+            log.debug("Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -368,11 +368,11 @@ class Create3DDomainAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         log.info("Loading particle data")
         data = json.loads(self.request.body.decode())
-        log.debug("Data used to create the domain: {}", data)
+        log.debug("Data used to create the domain: {data}")
         try:
             log.info("Generating new particles")
             resp = StochSSSpatialModel.get_particles_from_3d_domain(data=data)
-            log.debug("Number of Particles: {}", len(resp['particles']))
+            log.debug(f"Number of Particles: {len(resp['particles'])}")
             log.info("Successfully created new particles")
             self.write(resp)
         except StochSSAPIError as err:
@@ -398,10 +398,10 @@ class GetParticlesTypesAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("Path to the file: {}", path)
         try:
-            log.info("Loading particle types from {}", path.split('/').pop())
+            log.info(f"Loading particle types from {path.split('/').pop()}")
             model = StochSSSpatialModel(path="")
             resp = model.get_types_from_file(path=path)
-            log.debug("Number of Particles: {}", len(resp['types']))
+            log.debug(f"Number of Particles: {len(resp['types'])}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -424,12 +424,12 @@ class ModelPresentationAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("Path to the file: {}", path)
+        log.debug(f"Path to the file: {path}")
         file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
         ext = path.split(".").pop()
         try:
             model = file_objs[ext](path=path)
-            log.info("Publishing the {} presentation", model.get_name())
+            log.info(f"Publishing the {model.get_name()} presentation")
             links, data = model.publish_presentation()
             if data is None:
                 message = f"A presentation for {model.get_name()} already exists."
@@ -438,7 +438,7 @@ class ModelPresentationAPIHandler(APIHandler):
                 file_objs[ext](**data)
             resp = {"message": message, "links": links}
             log.info(resp['message'])
-            log.debug("Response Message: {}", resp)
+            log.debug(f"Response Message: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -463,13 +463,13 @@ class CreateNewBoundCondAPIHandler(APIHandler):
         data = json.loads(self.request.body.decode())
         path = data['model_path']
         kwargs = data['kwargs']
-        log.debug("Args passed to the boundary condition constructor: {}", kwargs)
+        log.debug(f"Args passed to the boundary condition constructor: {kwargs}")
         try:
             log.info("Creating the new boundary condition")
             model = StochSSSpatialModel(path=path)
             resp = model.create_boundary_condition(kwargs)
             log.info("Successfully created the new boundary condition")
-            log.debug("Response Message: {}", resp)
+            log.debug(f"Response Message: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
