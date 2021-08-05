@@ -115,8 +115,8 @@ def process_job_presentation(path, file=None, for_download=False):
         with open(os.path.join(job_dir, "results.p"), "wb") as res_file:
             pickle.dump(job['results'], res_file)
         return job['job']
-    job = make_zip_for_download(job)
-    return job, job['name']
+    job_zip = make_zip_for_download(job)
+    return job_zip, job['name']
 
 
 def make_zip_for_download(job):
