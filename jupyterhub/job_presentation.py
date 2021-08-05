@@ -155,7 +155,7 @@ def make_zip_for_download(job):
     write_json(path=os.path.join(wkfl_path, "settings.json"), body=settings)
     write_json(path=os.path.join(os.path.dirname(wkfl_path),
                                  job['job']['mdlPath'].split('/').pop()), body=job['job']['model'])
-    zip_path = os.path.join(tmp_dir.name, job['name'])
+    zip_path = os.path.join(tmp_dir.name, "job-presentation")
     shutil.make_archive(zip_path, "zip", tmp_dir.name, job['name'])
     with open(zip_path, "rb") as zip_file:
         return zip_file.read()
