@@ -42,6 +42,7 @@ let JobPresentationPage = PageView.extend({
   template: loadingTemplate,
   initialize: function () {
     PageView.prototype.initialize.apply(this, arguments);
+    let urlParams = new URLSearchParams(window.location.search);
     let owner = urlParams.get("owner");
     let file = urlParams.get("file");
     this.fileType = "Job"
