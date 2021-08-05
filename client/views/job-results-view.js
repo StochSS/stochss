@@ -55,7 +55,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : true;
+    this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : false;
     this.tooltips = Tooltips.parameterSweepResults;
     this.plots = {};
     this.plotArgs = {};
