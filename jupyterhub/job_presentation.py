@@ -172,7 +172,7 @@ def write_json(path, body):
     body : dict
         Contents of the file.
     '''
-    with open(path, "r") as file:
+    with open(path, "w") as file:
         json.dump(body, file, sort_keys=True, indent=4)
 
 
