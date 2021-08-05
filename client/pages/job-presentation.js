@@ -31,49 +31,67 @@ let ResultsView = require('../views/workflow-results');
 let SettingsView = require('../views/settings-viewer');
 //templates
 let template = require('../templates/pages/jobPresentation.pug');
+let loadingTemplate = require('../templates/pages/loadingPage.pug');
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
 
 import bootstrapStyles from '../styles/bootstrap.css';
 import styles from '../styles/styles.css';
 import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min.css'
 
 let JobPresentationPage = PageView.extend({
-  template: template,
+  template: loadingTemplate,
   initialize: function () {
     PageView.prototype.initialize.apply(this, arguments);
-    console.log("TODO: get the path to the job from the url")
-    // let urlParams = new URLSearchParams(window.location.search)
-    // this.model = new Job({
-    //   directory: urlParams.get("path")
-    // });
-    console.log("TODO: get job from file system using the app.getXHR function")
-    // let self = this;
-    // let queryStr = "?path=" + this.model.directory;
-    // let endpoint = path.join();
-    // app.getXHR(endpoint, {
-    //   success: function (err, response, body) {
-    //     self.model.set(body);
-    //     self.model.type = body.titleType;
-    //     self.renderSubviews();
-    //   }
-    // });
-    console.log("TODO: generate the open link and store in this.open")
+    let owner = urlParams.get("owner");
+    let file = urlParams.get("file");
+    this.fileType = "Job"
+    this.model = new Job({
+      directory: file,
+    });
+    let self = this;
+    let queryStr = "?file=" + file + "&owner=" + owner;
+    let endpoint = "api/job/load" + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        self.model.set(body);
+        self.renderSubviews(false);
+      },
+      error: function (err, response, body) {
+        self.renderSubviews(true);
+      }
+    });
+    let downloadStart = "https://staging.stochss.org/stochss/job/download_presentation";
+    this.downloadLink = downloadStart + "/" + owner + "/" + file;
+    this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
   },
-  renderSubviews: function () {
+  render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
-    this.renderResultsContainer();
-    this.renderSettingsContainer();
-    this.renderModelContainer();
+    $(this.queryByHook("loading-header")).html(`Loading ${this.fileType}`);
+    $(this.queryByHook("loading-target")).css("display", "none");
+    $(this.queryByHook("loading-spinner")).css("display", "block");
+    let message = `This ${this.fileType} can be downloaded or opened in your own StochSS Live! account using the buttons at the bottom of the page.`;
+    $(this.queryByHook("loading-message")).html(message);
+  },
+  renderSubviews: function (notFound) {
+    this.template = notFound ? errorTemplate : template
+    PageView.prototype.render.apply(this, arguments);
+    if(!notFound) {
+      this.renderResultsContainer();
+      this.renderSettingsContainer();
+      this.renderModelContainer();
+    }
   },
   renderModelContainer: function () {
     let modelView = new ModelView({
       model: this.model.model,
+      readOnly: true
     });
     app.registerRenderSubview(this, modelView, "job-model");
   },
   renderResultsContainer: function () {
     let resultsView = new ResultsView({
       model: this.model,
-      mode: "presentation"
+      readOnly: true
     });
     app.registerRenderSubview(this, resultsView, "job-results");
   },
