@@ -105,7 +105,7 @@ def process_job_presentation(path, file=None, for_download=False):
         job = pickle.load(job_file)
         job['job']['name'] = job['name']
     if not for_download:
-        dirname = "/cache/presentation_cache"
+        dirname = "/tmp/presentation_cache"
         if not os.path.exists(dirname):
             os.mkdir(dirname)
         job_dir = os.path.join(dirname, file)
