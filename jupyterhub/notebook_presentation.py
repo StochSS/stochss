@@ -46,9 +46,9 @@ class NotebookAPIHandler(BaseHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         owner = self.get_query_argument(name="owner")
-        log.debug("Container id of the owner: %s", owner)
+        log.debug(f"Container id of the owner: {owner}")
         file = self.get_query_argument(name="file")
-        log.debug("Name to the file: %s", file)
+        log.debug(f"Name to the file: {file}")
         html = get_presentation_from_user(owner=owner, file=file,
                                           process_func=process_notebook_presentation)
         self.write(html)
@@ -68,14 +68,14 @@ class DownNotebookPresentationAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
-        log.debug("Container id of the owner: %s", owner)
-        log.debug("Name to the file: %s", file)
+        log.debug(f"Container id of the owner: {owner}")
+        log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/json')
         nb_presentation = get_presentation_from_user(owner=owner, file=file,
                                                      kwargs={"as_dict": True},
                                                      process_func=process_notebook_presentation)
         self.set_header('Content-Disposition', f'attachment; filename="{nb_presentation["file"]}"')
-        log.debug("Contents of the json file: %s", nb_presentation['notebook'])
+        log.debug(f"Contents of the json file: {nb_presentation['notebook']}")
         self.write(nb_presentation['notebook'])
         self.finish()
 
