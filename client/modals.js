@@ -224,7 +224,7 @@ let templates = {
                   </div>
                 </div>`
         },
-        presentationLinks : (modalID, title, name, headers, links) => {
+        presentationLinks : (modalID, title, headers, links) => {
           return `
             <div id=${modalID} class="modal" tabindex="-1" role="dialog">
               <div class="modal-dialog" role="document">
@@ -238,8 +238,10 @@ let templates = {
                   <div class="modal-body">
                     <h4><u>${headers}</u></h4>
                     <div>
-                      <a class="inline" data-hook="view-present-link" href="${links.presentation}" target="_blank"> View ${name} Presentation</a>
+                      <a class="btn btn-primary box-shadow inline" role="button" data-hook="view-present-link" href="${links.presentation}" target="_blank">View</a>
                       <button type="button" class="btn btn-primary box-shadow inline" id="copy-to-clipboard">Copy Link</button>
+                      <div class="text-success" id="copy-link-success" style="display: none;"> Link copied to clipboard</div>
+                      <div class="text-danger" id="copy-link-failed" style="display: none;"></div>
                     </div>
                   </div>
                   <div class="modal-footer">
@@ -567,9 +569,14 @@ module.exports = {
               </div>
             </div>`
     },
-    presentationLinks : (title, name, headers, links) => {
+    presentationLinks : (title, headers, links) => {
       let modalID = "presentationLinksModal"
 
-      return templates.presentationLinks(modalID, title, name, headers, links);
+      return templates.presentationLinks(modalID, title, headers, links);
+    },
+    modelErrorHtml: (title, message) => {
+      let modalID = "modelErrorModal";
+
+      return templates.message(modalID, title, message);
     }
 }

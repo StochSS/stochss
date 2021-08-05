@@ -5,11 +5,17 @@ div
 
   div
 
+    div.inline.mr-2(data-hook=this.model.elementID + "-fixed-container")
+
+      span(for=this.model.elementID + "-fixed") Fixed: 
+
+      input(type="checkbox" id=this.model.elementID + "-fixed" data-hook=this.model.elementID + "-fixed")
+
     div.inline.mr-2=this.model.name + ":"
 
     div.inline(style="max-width: 100%")
 
-      div.horizontal-scroll(data-hook=this.model.elementID + "-current-value")=this.model.range[0]
+      div.horizontal-scroll(data-hook=this.model.elementID + "-current-value" style="overflow-x: visible; overflow-y: visible;")=this.model.range[0]
 
   input.custom-range(
     type="range"

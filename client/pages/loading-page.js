@@ -35,7 +35,7 @@ let LoadingPage = PageView.extend({
     let urlParams = new URLSearchParams(window.location.search)
     this.filePath = urlParams.get("path");
     this.action = urlParams.get("action");
-    this.homeLink = path.append(app.getBasePath(), 'stochss/home');
+    this.homeLink = path.join(app.getBasePath(), 'stochss/home');
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);

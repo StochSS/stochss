@@ -22,10 +22,10 @@ let app = require('../app');
 let tests = require('./tests');
 let Tooltips = require('../tooltips');
 //views
-let View = require('ampersand-view');
 let InputView = require('./input');
+let View = require('ampersand-view');
 //templates
-let template = require('../templates/includes/simulationSettings.pug');
+let template = require('../templates/includes/simulationSettingsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -35,30 +35,44 @@ module.exports = View.extend({
     'change [data-hook=select-tau-leaping]' : 'handleSelectSimulationAlgorithmClick',
     'change [data-hook=select-hybrid-tau]' : 'handleSelectSimulationAlgorithmClick',
     'change [data-hook=select-automatic]' : 'handleSelectSimulationAlgorithmClick',
+    'change [data-hook=relative-tolerance]' : 'updateViewRTol',
+    'change [data-hook=absolute-tolerance]' : 'updateViewATol',
+    'change [data-hook=trajectories]' : 'updateViewTraj',
+    'change [data-hook=seed]' : 'updateViewSeed',
+    'change [data-hook=tau-tolerance]' : 'updateViewTauTol',
     'click [data-hook=collapse]' :  'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.simulationSettings;
+    this.algorithm = this.model.isAutomatic ? "The algorithm was chosen based on your model." : this.model.algorithm;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    if(!this.model.isAutomatic){
-      $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));
-      $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA")); 
-      $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
-      $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
-    }else{
-      $(this.queryByHook('settings-container')).collapse('hide');
-      $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic);
-    }
-    this.disableInputFieldByAlgorithm();
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
+    if(this.readOnly) {
+      $(this.queryByHook('sim-settings-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
       });
-    });
+      $(this.queryByHook('sim-settings-view-tab')).tab('show');
+      $(this.queryByHook('edit-sim-settings')).removeClass('active');
+      $(this.queryByHook('view-sim-settings')).addClass('active');
+    }else {
+      if(!this.model.isAutomatic){
+        $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));
+        $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA")); 
+        $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
+        $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
+      }else{
+        $(this.queryByHook('settings-container')).collapse('hide');
+        $(this.queryByHook('select-automatic')).prop('checked', this.model.isAutomatic);
+      }
+      this.disableInputFieldByAlgorithm();
+      app.tooltipSetup();
+    }
+    this.updateViewer();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -78,9 +92,11 @@ module.exports = View.extend({
   handleSelectSimulationAlgorithmClick: function (e) {
     let value = e.target.dataset.name;
     if(value === "Automatic"){
+      this.algorithm = "The algorithm was chosen based on your model.";
       this.model.isAutomatic = true;
       $(this.queryByHook('settings-container')).collapse('hide');
     }else{
+      this.algorithm = value;
       this.model.isAutomatic = false;
       this.model.algorithm = value;
       $(this.queryByHook('settings-container')).collapse('show');
@@ -91,9 +107,45 @@ module.exports = View.extend({
       }
       this.disableInputFieldByAlgorithm();
     }
+    this.updateViewer();
   },
   update: function (e) {},
-  updateValid: function () {},
+  updateViewATol: function (e) {
+    $(this.queryByHook("view-a-tol")).html(this.model.absoluteTol)
+  },
+  updateViewRTol: function (e) {
+    $(this.queryByHook("view-r-tol")).html(this.model.relativeTol)
+  },
+  updateViewSeed: function (e) {
+    $(this.queryByHook("view-seed")).html(this.model.seed)
+  },
+  updateViewTauTol: function (e) {
+    $(this.queryByHook("view-tau-tol")).html(this.model.tauTol)
+  },
+  updateViewTraj: function (e) {
+    $(this.queryByHook("view-realizations")).html(this.model.realizations)
+  },
+  updateValid: function (e) {},
+  updateViewer: function () {
+    $(this.queryByHook("view-algorithm")).html(this.algorithm);
+    let hideDeterministic = this.model.isAutomatic || this.model.algorithm === "SSA" || this.model.algorithm === "Tau-Leaping";
+    let hideStochastic = this.model.isAutomatic || this.model.algorithm === "ODE" 
+    if(hideDeterministic) {
+      $(this.queryByHook("view-deterministic-settings")).css("display", "none");
+    }else{
+      $(this.queryByHook("view-deterministic-settings")).css("display", "block");
+    }
+    if(hideStochastic) {
+      $(this.queryByHook("view-stochastic-settings")).css("display", "none");
+    }else {
+      $(this.queryByHook("view-stochastic-settings")).css("display", "block");
+      if(this.model.algorithm === "SSA") {
+        $(this.queryByHook("view-tau-tolerance")).css("display", "none");
+      }else{
+        $(this.queryByHook("view-tau-tolerance")).css("display", "block");
+      }
+    }
+  },
   subviews: {
     inputRelativeTolerance: {
       hook: 'relative-tolerance',

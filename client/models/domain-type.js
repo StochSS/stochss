@@ -36,6 +36,7 @@ module.exports = State.extend({
     this.numParticles = 0;
   },
   validate: function () {
+    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
     return true;
   }
 });

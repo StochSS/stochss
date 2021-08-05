@@ -33,10 +33,13 @@ from escapism import escape
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
+from .parameter_sweep_1d import ParameterSweep1D
+from .parameter_sweep_2d import ParameterSweep2D
 from .stochss_spatial_model import StochSSSpatialModel
 from .stochss_errors import StochSSJobError, StochSSJobNotCompleteError, \
                             StochSSFileNotFoundError, StochSSFileExistsError, \
-                            FileNotJSONFormatError, PlotNotAvailableError, StochSSPermissionsError
+                            FileNotJSONFormatError, PlotNotAvailableError, \
+                            StochSSPermissionsError, StochSSJobResultsError
 
 class StochSSJob(StochSSBase):
     '''
@@ -154,6 +157,50 @@ class StochSSJob(StochSSBase):
         return links
 
 
+    def __get_filtered_1d_results(self, f_keys):
+        results = self.__get_pickled_results()
+        f_results = []
+        for key, result in results.items():
+            if self.__is_result_valid(f_keys, key):
+                f_results.append(result)
+        return f_results
+
+
+    def __get_filtered_2d_results(self, f_keys, param):
+        results = self.__get_pickled_results()
+        f_results = []
+        for value in param['range']:
+            p_key = f"{param['name']}:{value}"
+            p_results = []
+            for key, result in results.items():
+                if p_key in key.split(',') and self.__is_result_valid(f_keys, key):
+                    p_results.append(result)
+            f_results.append(p_results)
+        return f_results
+
+
+    @classmethod
+    def __get_fixed_keys_and_dims(cls, settings, fixed):
+        p_len = len(settings['parameterSweepSettings']['parameters'])
+        dims = p_len - len(fixed.keys())
+        if dims <= 0:
+            message = "Too many fixed parameters were provided."
+            message += "At least one variable parameter is required."
+            raise StochSSJobResultsError(message)
+        if dims > 2:
+            message = "Not enough fixed parameters were provided."
+            message += "Variable parameters cannot exceed 2."
+            raise StochSSJobResultsError(message)
+        f_keys = [f"{name}:{value}" for name, value in fixed.items()]
+        return dims, f_keys
+
+
+    def __get_pickled_results(self):
+        path = os.path.join(self.__get_results_path(full=True), "results.p")
+        with open(path, "rb") as results_file:
+            return pickle.load(results_file)
+
+
     def __get_results_path(self, full=False):
         '''
         Return the path to the results directory
@@ -172,6 +219,14 @@ class StochSSJob(StochSSBase):
         path = os.path.join(self.__get_results_path(), file)
         if not os.path.isdir(path):
             return False
+        return True
+
+
+    @classmethod
+    def __is_result_valid(cls, f_keys, key):
+        for f_key in f_keys:
+            if f_key not in key.split(','):
+                return False
         return True
 
 
@@ -350,43 +405,40 @@ class StochSSJob(StochSSBase):
         return {"kwargs":kwargs, "type":wkfl_type}
 
 
-    def get_plot_from_results(self, plt_key, plt_data, plt_type):
+    def get_plot_from_results(self, data_keys, plt_key, add_config=False):
         '''
         Get the plotly figure for the results of a job
 
         Attributes
         ----------
+        data_keys : dict
+            Dictionary of param names and values used to identify the correct data.
         plt_key : str
-            Indentifier for the requested plot figure
-        plt_data : dict
-            Title and axes data for the plot
-        plt_type : str
             Type of plot to generate.
         '''
-        self.log("debug", f"Key identifying the plot to generate: {plt_type}")
-        path = os.path.join(self.__get_results_path(full=True), "results.p")
+        self.log("debug", f"Key identifying the plot to generate: {plt_key}")
         try:
             self.log("info", "Loading the results...")
-            with open(path, "rb") as results_file:
-                result = pickle.load(results_file)
-                if plt_key is not None:
-                    result = result[plt_key]
+            result = self.__get_pickled_results()
+            if data_keys:
+                key = [f"{name}:{value}" for name, value in data_keys.items()]
+                key = ','.join(key)
+                result = result[key]
             self.log("info", "Generating the plot...")
-            if plt_type == "mltplplt":
+            if plt_key == "mltplplt":
                 fig = result.plotplotly(return_plotly_figure=True, multiple_graphs=True)
-            elif plt_type == "stddevran":
+            elif plt_key == "stddevran":
                 fig = result.plotplotly_std_dev_range(return_plotly_figure=True)
             else:
-                if plt_type == "stddev":
+                if plt_key == "stddev":
                     result = result.stddev_ensemble()
-                elif plt_type == "avg":
+                elif plt_key == "avg":
                     result = result.average_ensemble()
                 fig = result.plotplotly(return_plotly_figure=True)
-            if plt_type != "mltplplt":
+            if add_config and plt_key != "mltplplt":
                 fig["config"] = {"responsive":True}
             self.log("info", "Loading the plot...")
-            fig = json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
-            return self.get_results_plot(plt_key=None, plt_data=plt_data, fig=fig)
+            return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -395,25 +447,59 @@ class StochSSJob(StochSSBase):
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
-    def get_results_plot(self, plt_key, plt_data, fig=None):
+    def get_psweep_plot_from_results(self, fixed, kwargs, add_config=False):
         '''
-        Get the plotly figure for the results of a job
+        Generate and return the parameter sweep plot form the time series results.
 
         Attributes
         ----------
-        plt_key : str
-            Indentifier for the requested plot figure
+        fixed : dict
+            Dictionary for parameters that remain at a fixed value.
+        kwarps : dict
+            Dictionary of keys used for post proccessing the results.
+        '''
+        self.log("debug", f"Key identifying the plot to generate: {kwargs}")
+        settings = self.load_settings()
+        try:
+            self.log("info", "Loading the results...")
+            dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
+            params = list(filter(lambda param: param['name'] not in fixed.keys(),
+                                 settings['parameterSweepSettings']['parameters']))
+            if dims == 1:
+                kwargs['param'] = params[0]
+                kwargs['results'] = self.__get_filtered_1d_results(f_keys)
+                self.log("info", "Generating the plot...")
+                fig = ParameterSweep1D.plot(**kwargs)
+            else:
+                kwargs['params'] = params
+                kwargs['results'] = self.__get_filtered_2d_results(f_keys, params[0])
+                self.log("info", "Generating the plot...")
+                fig = ParameterSweep2D.plot(**kwargs)
+            if add_config:
+                fig['config'] = {"responsive": True}
+            self.log("info", "Loading the plot...")
+            return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
+
+
+    def update_fig_layout(self, fig=None, plt_data=None):
+        '''
+        Update the figure layout.
+
+        Attributes
+        ----------
+        fig : dict
+            Plotly figure to be updated
         plt_data : dict
             Title and axes data for the plot
         '''
-        self.log("debug", f"Key identifying the requested plot: {plt_key}")
         self.log("debug", f"Title and axis data for the plot: {plt_data}")
-        path = os.path.join(self.__get_results_path(full=True), "plots.json")
-        self.log("debug", f"Path to the job result plot file: {path}")
         try:
-            if fig is None:
-                with open(path, "r") as plot_file:
-                    fig = json.load(plot_file)[plt_key]
             if plt_data is None:
                 return fig
             for key in plt_data.keys():
@@ -422,12 +508,6 @@ class StochSSJob(StochSSBase):
                 else:
                     fig['layout'][key]['title']['text'] = plt_data[key]
             return fig
-        except FileNotFoundError as err:
-            message = f"Could not find the plots file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
-        except json.decoder.JSONDecodeError as err:
-            message = f"The plots file is not JSON decodable: {str(err)}"
-            raise FileNotJSONFormatError(message, traceback.format_exc()) from err
         except KeyError as err:
             message = f"The requested plot is not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
