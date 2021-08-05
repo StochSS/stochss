@@ -20,11 +20,15 @@ import os
 import json
 import shutil
 import pickle
+import string
+import hashlib
 
 import datetime
 import traceback
 import numpy
 import plotly
+
+from escapism import escape
 
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
@@ -35,7 +39,7 @@ from .stochss_spatial_model import StochSSSpatialModel
 from .stochss_errors import StochSSJobError, StochSSJobNotCompleteError, \
                             StochSSFileNotFoundError, StochSSFileExistsError, \
                             FileNotJSONFormatError, PlotNotAvailableError, \
-                            StochSSJobResultsError
+                            StochSSPermissionsError, StochSSJobResultsError
 
 class StochSSJob(StochSSBase):
     '''
@@ -126,6 +130,31 @@ class StochSSJob(StochSSBase):
         if wkgp_name != self.get_name(path=mdl_file):
             mdl_file = f"{wkgp_name}.{mdl_file.split('.').pop()}"
         return os.path.join(wkgp_path, mdl_file)
+
+
+    def __get_info_path(self, full=False):
+        '''
+        Return the path to the info.json file
+
+        Attributes
+        ----------
+        full : bool
+            Indicates whether or not to get the full path or local path
+        '''
+        return os.path.join(self.get_path(full=full), "info.json")
+
+
+    @classmethod
+    def __get_presentation_links(cls, file):
+        safe_chars = set(string.ascii_letters + string.digits)
+        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+        query_str = f"?owner={hostname}&file={file}"
+        present_link = f"https://live.stochss.org/stochss/present-job{query_str}"
+        dl_base = "https://live.stochss.org/stochss/job/download_presentation"
+        downloadlink = os.path.join(dl_base, hostname, file)
+        open_link = f"https://open.stochss.org?open={downloadlink}"
+        links = {"presentation": present_link, "download": downloadlink, "open": open_link}
+        return links
 
 
     def __get_filtered_1d_results(self, f_keys):
@@ -318,18 +347,6 @@ class StochSSJob(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
-    def get_info_path(self, full=False):
-        '''
-        Return the path to the info.json file
-
-        Attributes
-        ----------
-        full : bool
-            Indicates whether or not to get the full path or local path
-        '''
-        return os.path.join(self.get_path(full=full), "info.json")
-
-
     def get_model_path(self, full=False, external=False):
         '''
         Return the path to the model file
@@ -472,7 +489,7 @@ class StochSSJob(StochSSBase):
 
     def update_fig_layout(self, fig=None, plt_data=None):
         '''
-        Get the plotly figure for the results of a job
+        Update the figure layout.
 
         Attributes
         ----------
@@ -609,7 +626,7 @@ class StochSSJob(StochSSBase):
         ----------
         '''
         try:
-            path = self.get_info_path(full=True)
+            path = self.__get_info_path(full=True)
             self.log("debug", f"The path to the job's info file: {path}")
             with open(path, "r") as info_file:
                 info = json.load(info_file)
@@ -669,6 +686,41 @@ class StochSSJob(StochSSBase):
         except json.decoder.JSONDecodeError as err:
             message = f"The settings file is not JSON decobable: {str(err)}"
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
+
+
+    def publish_presentation(self, name=None):
+        '''
+        Publish a job, workflow, or project presentation.
+
+        Attributes
+        ----------
+        name : str
+            Name of the job presentation.
+        '''
+        present_dir = os.path.join(self.user_dir, ".presentations")
+        if not os.path.exists(present_dir):
+            os.mkdir(present_dir)
+        try:
+            self.load()
+            job = json.dumps(self.job, sort_keys=True)
+            file = f"{hashlib.md5(job.encode('utf-8')).hexdigest()}.job"
+            dst = os.path.join(present_dir, file)
+            if os.path.exists(dst):
+                exists = True
+            else:
+                exists = False
+                name = self.get_file() if name is None else name
+                path = os.path.join(self.__get_results_path(), "results.p")
+                with open(path, "rb") as results_file:
+                    results = pickle.load(results_file)
+                data = {"name": name, "job": self.job, "results": results}
+                with open(dst, "wb") as presentation_file:
+                    pickle.dump(data, presentation_file)
+            links = self.__get_presentation_links(file)
+            return links, exists
+        except PermissionError as err:
+            message = f"You do not have permission to publish this directory: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def save(self, mdl_path, settings, initialize=False):
@@ -745,5 +797,5 @@ class StochSSJob(StochSSBase):
             if "annotation" in new_info.keys():
                 info['annotation'] = new_info['annotation']
         self.log("debug", f"New info: {info}")
-        with open(self.get_info_path(full=True), "w") as file:
+        with open(self.__get_info_path(full=True), "w") as file:
             json.dump(info, file, indent=4, sort_keys=True)

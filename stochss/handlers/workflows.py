@@ -423,9 +423,14 @@ class JobPresentationAPIHandler(APIHandler):
         name = self.get_query_argument(name="name")
         log.debug("Name of the job presentation: %s", name)
         try:
-            folder = StochSSFolder(path=path)
-            log.info("Publishing the %s presentation", folder.get_name())
-            resp = folder.publish_presentation(name=name)
+            job = StochSSJob(path=path)
+            log.info("Publishing the %s presentation", job.get_name())
+            links, exists = job.publish_presentation(name=name)
+            if exists:
+                message = f"A presentation for {job.get_name()} already exists."
+            else:
+                message = f"Successfully published the {job.get_name()} presentation"
+            resp = {"message": message, "links": links}
             log.info(resp['message'])
             log.debug("Response Message: %s", resp)
             self.write(resp)
