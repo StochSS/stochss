@@ -223,6 +223,33 @@ let templates = {
                     </div>
                   </div>
                 </div>`
+        },
+        presentationLinks : (modalID, title, headers, links) => {
+          return `
+            <div id=${modalID} class="modal" tabindex="-1" role="dialog">
+              <div class="modal-dialog" role="document">
+                <div class="modal-content info">
+                  <div class="modal-header">
+                    <h5 class="modal-title"> ${title} </h5>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                  <div class="modal-body">
+                    <h4><u>${headers}</u></h4>
+                    <div>
+                      <a class="btn btn-primary box-shadow inline" role="button" data-hook="view-present-link" href="${links.presentation}" target="_blank">View</a>
+                      <button type="button" class="btn btn-primary box-shadow inline" id="copy-to-clipboard">Copy Link</button>
+                      <div class="text-success" id="copy-link-success" style="display: none;"> Link copied to clipboard</div>
+                      <div class="text-danger" id="copy-link-failed" style="display: none;"></div>
+                    </div>
+                  </div>
+                  <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary box-shadow close-btn" data-dismiss="modal">Close</button>
+                  </div>
+                </div>
+              </div>
+            </div>`
         }
     }
 
@@ -541,5 +568,15 @@ module.exports = {
                 </div>
               </div>
             </div>`
+    },
+    presentationLinks : (title, headers, links) => {
+      let modalID = "presentationLinksModal"
+
+      return templates.presentationLinks(modalID, title, headers, links);
+    },
+    modelErrorHtml: (title, message) => {
+      let modalID = "modelErrorModal";
+
+      return templates.message(modalID, title, message);
     }
 }

@@ -23,6 +23,8 @@ let _ = require('underscore');
 //support files
 let app = require('../app');
 let modals = require('../modals');
+//models
+let Model = require('../models/model');
 //views
 let View = require('ampersand-view');
 //templates
@@ -754,7 +756,23 @@ module.exports = View.extend({
     });
   },
   newWorkflow: function (o, type) {
-    app.newWorkflow(this, o.original._path, o.type === "spatial", type);
+    let model = new Model({
+      directory: o.original._path
+    });
+    app.getXHR(model.url(), {
+      success: function (err, response, body) {
+        model.set(body);
+        model.updateValid();
+        if(model.valid){
+          app.newWorkflow(this, o.original._path, o.type === "spatial", type);
+        }else{
+          let title = "Model Errors Detected";
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory;
+          let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
+          $(modals.modelErrorHtml(title, message)).modal();
+        }
+      }
+    });
   },
   addModel: function (parentPath, modelName, message) {
     var endpoint = path.join(app.getBasePath(), "stochss/models/edit")
@@ -939,6 +957,33 @@ module.exports = View.extend({
       },
       error: function (err, response, body) {
         let modal = $(modals.newProjectModelErrorHtml(body.Reason, body.message)).modal();
+      }
+    });
+  },
+  publishNotebookPresentation: function (o) {
+    let queryStr = "?path=" + o.original._path;
+    let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        let title = body.message;
+        let linkHeaders = "Shareable Presentation";
+        let links = body.links;
+        $(modals.presentationLinks(title, linkHeaders, links)).modal();
+        let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+        copyBtn.addEventListener('click', function (e) {
+          let onFulfilled = (value) => {
+            $("#copy-link-success").css("display", "inline-block");
+          } 
+          let onReject = (reason) => {
+            let msg = $("#copy-link-failed");
+            msg.html(reason);
+            msg.css("display", "inline-block");
+          }
+          app.copyToClipboard(links.presentation, onFulfilled, onReject);
+        });
+      },
+      error: function (err, response, body) {
+        $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
       }
     });
   },
@@ -1373,6 +1418,17 @@ module.exports = View.extend({
           }
         }
       }
+      let notebook = {
+        "publish" : {
+          "label" : "Publish",
+          "_disabled" : false,
+          "separator_before" : false,
+          "separator_after" : false,
+          "action" : function (data) {
+            self.publishNotebookPresentation(o);
+          }
+        }
+      }
       if (o.type === 'root'){
         return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
       }
@@ -1400,7 +1456,13 @@ module.exports = View.extend({
       if (o.text.endsWith(".zip")) {
         return $.extend(open, extractAll, download, common)
       }
-      if (o.type === 'notebook' || o.type === "other") {
+      if (o.type === 'notebook') {
+        if(app.getBasePath() === "/") {
+          return $.extend(open, download, common)
+        }
+        return $.extend(open, notebook, download, common)
+      }
+      if (o.type === 'other') {
         return $.extend(open, download, common)
       }
       if (o.type === 'sbml-model') {

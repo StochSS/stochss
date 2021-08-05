@@ -19,8 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
-from urllib import request
 import traceback
+
+import requests
 
 from .stochss_base import StochSSBase
 from .stochss_file import StochSSFile
@@ -375,6 +376,31 @@ class StochSSFolder(StochSSBase):
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
+    def publish_presentation(self, name=None):
+        '''
+        Publish a job, workflow, or project presentation.
+
+        Attributes
+        ----------
+        '''
+        present_dir = os.path.join(self.user_dir, ".presentations")
+        if not os.path.exists(present_dir):
+            os.mkdir(present_dir)
+        file = self.get_file() if name is None else name
+        dst = os.path.join(present_dir, file)
+        if os.path.exists(dst):
+            message = "A presentation with this name already exists"
+            raise StochSSFileExistsError(message)
+        src = self.get_path(full=True)
+        try:
+            shutil.copytree(src, dst)
+            # INSERT JUPYTER HUB CODE HERE
+            return {"message": f"Successfully published the {self.get_name()} presentation"}
+        except PermissionError as err:
+            message = f"You do not have permission to publish this directory: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
+
+
     def upload(self, file_type, file, body, new_name=None):
         '''
         Upload a file from a remote location to the users file system
@@ -417,17 +443,24 @@ class StochSSFolder(StochSSBase):
         remote_path : str
             Path to the remote file
         '''
-        response = request.urlopen(remote_path)
-        file = self.get_file(path=remote_path)
+        ext = remote_path.split('.').pop()
+        body = requests.get(remote_path, allow_redirects=True).content
+        if "download_presentation" in remote_path:
+            if ext in ("mdl", "smdl"):
+                file = f"{json.loads(body)['name']}.{ext}"
+            elif ext == "ipynb":
+                file = json.loads(body)['file']
+                body = json.dumps(json.loads(body)['notebook'])
+        else:
+            file = self.get_file(path=remote_path)
         path = self.get_new_path(dst_path=file)
         if os.path.exists(path):
             message = f"Could not upload this file as {file} already exists"
             return {"message":message, "reason":"File Already Exists"}
         try:
             file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
-            ext = file.split('.').pop()
             file_type = file_types[ext] if ext in file_types.keys() else "file"
-            _ = self.upload(file_type=file_type, file=file, body=response.read())
+            _ = self.upload(file_type=file_type, file=file, body=body)
             new_path = self.__get_rmt_upld_path(file=file)
             message = f"Successfully uploaded the file {file} to {new_path}"
             return {"message":message, "file_path":new_path}

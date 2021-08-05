@@ -193,6 +193,35 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   });
 }
 
+tooltipSetup = () => {
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').on('click ', function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+     });
+  });
+}
+
+documentSetup = () => {
+  tooltipSetup();
+  $(document).on('shown.bs.modal', function (e) {
+    $('[autofocus]', e.target).focus();
+  });
+  $(document).on('hide.bs.modal', '.modal', function (e) {
+    e.target.remove();
+  });
+}
+
+copyToClipboard = (text, success, error) => {
+  if (window.clipboardData && window.clipboardData.setData) {
+    // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
+    return window.clipboardData.setData("Text", text);
+  }
+  else {
+    navigator.clipboard.writeText(text).then(success, error)
+  }
+}
+
 module.exports = {
     routePrefix: routePrefix,
     getApiPath: getApiPath,
@@ -202,7 +231,10 @@ module.exports = {
     changeCollapseButtonText: changeCollapseButtonText,
     newWorkflow: newWorkflow,
     getXHR: getXHR,
-    postXHR: postXHR
+    postXHR: postXHR,
+    tooltipSetup: tooltipSetup,
+    documentSetup: documentSetup,
+    copyToClipboard: copyToClipboard
 };
 
 

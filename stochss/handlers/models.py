@@ -408,6 +408,43 @@ class GetParticlesTypesAPIHandler(APIHandler):
         self.finish()
 
 
+class ModelPresentationAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler publishing model presentations.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Publish a model or spatial model presentation.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("Path to the file: %s", path)
+        file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
+        ext = path.split(".").pop()
+        try:
+            model = file_objs[ext](path=path)
+            log.info("Publishing the %s presentation", model.get_name())
+            links, data = model.publish_presentation()
+            if data is None:
+                message = f"A presentation for {model.get_name()} already exists."
+            else:
+                message = f"Successfully published the {model.get_name()} presentation."
+                file_objs[ext](**data)
+            resp = {"message": message, "links": links}
+            log.info(resp['message'])
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
 class CreateNewBoundCondAPIHandler(APIHandler):
     '''
     ################################################################################################

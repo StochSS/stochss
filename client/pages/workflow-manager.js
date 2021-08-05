@@ -27,12 +27,12 @@ let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
 let SettingsView = require('../views/settings');
-let LogsView = require('../views/workflow-info');
+let LogsView = require('../views/job-info-view');
 let SelectView = require('ampersand-select-view');
+let ModelView = require('../model-view/model-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
-let ModelViewerView = require('../views/model-viewer');
-let ResultsView = require('../views/workflow-results');
+let ResultsView = require('../views/job-results-view');
 let SettingsViewerView = require('../views/settings-viewer');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
@@ -47,6 +47,7 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=project-breadcrumb]' : 'handleReturnToProject',
     'click [data-hook=save-model]' : 'handleSaveWorkflow',
     'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-model]' : 'changeCollapseButtonText',
     'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
   },
   initialize: function (attrs, options) {
@@ -141,12 +142,13 @@ let WorkflowManager = PageView.extend({
   },
   removeActiveJob: function () {
     $(this.queryByHook("active-job-header-container")).css("display", "none");
+    $("#review-model-section").css("display", "none");
     if(this.resultsView) {
       this.resultsView.remove();
     }
     if(this.logsView) {
       this.logsView.remove();
-      this.modelViewerView.remove();
+      this.modelView.remove();
       this.settingsViewerView.remove();
     }
   },
@@ -160,7 +162,7 @@ let WorkflowManager = PageView.extend({
     }
     this.renderLogsView();
     this.renderSettingsViewerView();
-    this.renderModelViewerView();
+    this.renderModelView();
   },
   renderJobListingView: function () {
     if(this.jobListingView) {
@@ -208,14 +210,18 @@ let WorkflowManager = PageView.extend({
     });
     app.registerRenderSubview(this, modelSelectView, "model-file");
   },
-  renderModelViewerView: function () {
-    if(this.modelViewerView) {
-      this.modelViewerView.remove();
+  renderModelView: function () {
+    if(this.modelView) {
+      this.modelView.remove();
     }
-    this.modelViewerView = new ModelViewerView({
-      model: this.model.activeJob.model
+    $("#review-model-section").css("display", "block")
+    let header = "Review Model: " + this.model.activeJob.model.name;
+    $("#model-viewer-header").html(header);
+    this.modelView = new ModelView({
+      model: this.model.activeJob.model,
+      readOnly: true
     });
-    app.registerRenderSubview(this, this.modelViewerView, "model-viewer-container");
+    app.registerRenderSubview(this, this.modelView, "model-viewer-container");
   },
   renderResultsView: function () {
     if(this.resultsView) {

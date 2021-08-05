@@ -16,14 +16,15 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import json
 import copy
 import logging
 import traceback
 
 import numpy
 import plotly
-import matplotlib
-import mpl_toolkits
+# import matplotlib
+# import mpl_toolkits
 
 log = logging.getLogger("stochss")
 
@@ -140,32 +141,74 @@ class ParameterSweep2D():
         return trace_list
 
 
-    def plot(self, keys=None):
+    # def plot(self, keys=None):
+    #     '''
+    #     Plot the results based on the keys using matplotlib
+
+    #     Attributes
+    #     ----------
+    #     key : list
+    #         Identifiers for the results data
+    #     '''
+    #     if len(keys) <= 2:
+    #         results = self.results[keys[0]][keys[1]]
+    #     else:
+    #         results = self.results[keys[0]][keys[1]][keys[2]]
+
+    #     _, axis = matplotlib.pyplot.subplots(figsize=(8, 8))
+    #     matplotlib.pyplot.imshow(results)
+    #     axis.set_xticks(numpy.arange(results.shape[1])+0.5, minor=False)
+    #     axis.set_yticks(numpy.arange(results.shape[0])+0.5, minor=False)
+    #     matplotlib.pyplot.title(f"Parameter Sweep - Variable: {keys[0]}")
+    #     axis.set_xticklabels(self.params[0]['range'], minor=False, rotation=90)
+    #     axis.set_yticklabels(self.params[1]['range'], minor=False)
+    #     axis.set_xlabel(self.params[0]['parameter'], fontsize=16, fontweight='bold')
+    #     axis.set_ylabel(self.params[1]['parameter'], fontsize=16, fontweight='bold')
+    #     divider = mpl_toolkits.axes_grid1.make_axes_locatable(axis)
+    #     cax = divider.append_axes("right", size="5%", pad=0.2)
+    #     _ = matplotlib.pyplot.colorbar(ax=axis, cax=cax)
+
+
+    @classmethod
+    def plot(cls, results, species, params, mapper="final", reducer="avg"):
         '''
-        Plot the results based on the keys using matplotlib
+        Plot the results with error bar from time series results.
 
         Attributes
         ----------
-        key : list
-            Identifiers for the results data
+        results : list
+            List of GillesPy2 results objects.
+        species : str
+            Species of interest name.
+        params : list
+            List of StochSS sweep parameter dictionaries.
+        mapper : str
+            Key indicating the feature extraction function to use.
+        reducer : str
+            Key indicating the ensemble aggragation function to use.
         '''
-        if len(keys) <= 2:
-            results = self.results[keys[0]][keys[1]]
-        else:
-            results = self.results[keys[0]][keys[1]][keys[2]]
+        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
+                    "var": numpy.var, "final": lambda res: res[-1]}
+        data = []
+        for p_results in results:
+            map_results = [[func_map[mapper](traj[species]) for traj in result]
+                            for result in p_results]
+            if len(map_results[0]) > 1:
+                red_results = [func_map[reducer](map_result) for map_result in map_results]
+            else:
+                red_results = [map_result[0] for map_result in map_results]
+            data.append(red_results)
+        data = numpy.array(data)
 
-        _, axis = matplotlib.pyplot.subplots(figsize=(8, 8))
-        matplotlib.pyplot.imshow(results)
-        axis.set_xticks(numpy.arange(results.shape[1])+0.5, minor=False)
-        axis.set_yticks(numpy.arange(results.shape[0])+0.5, minor=False)
-        matplotlib.pyplot.title(f"Parameter Sweep - Variable: {keys[0]}")
-        axis.set_xticklabels(self.params[0]['range'], minor=False, rotation=90)
-        axis.set_yticklabels(self.params[1]['range'], minor=False)
-        axis.set_xlabel(self.params[0]['parameter'], fontsize=16, fontweight='bold')
-        axis.set_ylabel(self.params[1]['parameter'], fontsize=16, fontweight='bold')
-        divider = mpl_toolkits.axes_grid1.make_axes_locatable(axis)
-        cax = divider.append_axes("right", size="5%", pad=0.2)
-        _ = matplotlib.pyplot.colorbar(ax=axis, cax=cax)
+        trace_list = [plotly.graph_objs.Heatmap(z=data, x=params[0]['range'],
+                                                y=params[1]['range'])]
+
+        title = f"<b>Parameter Sweep - Variable: {species}</b>"
+        layout = plotly.graph_objs.Layout(title=dict(text=title, x=0.5),
+                                          xaxis=dict(title=f"<b>{params[0]['name']}</b>"),
+                                          yaxis=dict(title=f"<b>{params[1]['name']}</b>"))
+        fig = dict(data=trace_list, layout=layout)
+        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
 
 
     def run(self, job_id, verbose=False):

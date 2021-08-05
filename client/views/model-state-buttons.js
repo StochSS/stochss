@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 var path = require('path');
 var Plotly = require('../lib/plotly');
 var $ = require('jquery');
+let _ = require('underscore');
 //support file
 var app = require('../app');
 var modals = require('../modals');
@@ -35,7 +36,8 @@ module.exports = View.extend({
     "click [data-hook=stochss-es]" : "handleSimulateClick",
     "click [data-hook=stochss-ps]" : "handleSimulateClick",
     'click [data-hook=new-workflow]' : 'handleSimulateClick',
-    'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler'
+    'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
+    'click [data-hook=presentation]' : 'handlePresentationClick'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -48,10 +50,14 @@ module.exports = View.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("stochss-es")).addClass("disabled");
       $(this.queryByHook("stochss-ps")).addClass("disabled");
+      $(this.queryByHook("presentation")).css("display", "none");
+    }else if(app.getBasePath() === "/") {
+      $(this.queryByHook("presentation")).css("display", "none");
     }
   },
   clickSaveHandler: function (e) {
-    this.saveModel(this.saved.bind(this));
+    let self = this;
+    this.saveModel(_.bind(self.endAction, self, "save"));
   },
   clickRunHandler: function (e) {
     if(this.model.is_spatial && $(this.queryByHook("domain-plot-viewer-container")).css("display") !== "none") {
@@ -71,7 +77,7 @@ module.exports = View.extend({
   clickReturnToProjectHandler: function (e) {
     let self = this
     this.saveModel(function () {
-      self.saved()
+      self.endAction("save")
       var dirname = path.dirname(self.model.directory)
       if(dirname.endsWith(".wkgp")) {
         dirname = path.dirname(dirname)
@@ -83,7 +89,7 @@ module.exports = View.extend({
   clickNewWorkflowHandler: function (e) {
     let self = this
     this.saveModel(function () {
-      self.saved()
+      self.endAction("save")
       var queryString = "?path="+self.model.directory
       if(self.model.directory.includes('.proj')) {
         let wkgp = self.model.directory.includes('.wkgp') ? self.model.name + ".wkgp" : "WorkflowGroup1.wkgp"
@@ -95,7 +101,7 @@ module.exports = View.extend({
     })
   },
   getPreviewTarget: function () {
-    this.saved();
+    this.endAction("save");
     let species = this.model.species.map(function (species) {
       return species.name
     });
@@ -125,7 +131,7 @@ module.exports = View.extend({
     }
   },
   saveModel: function (cb) {
-    this.saving();
+    this.startAction("save");
     // this.model is a ModelVersion, the parent of the collection is Model
     var model = this.model;
     if (cb) {
@@ -134,24 +140,50 @@ module.exports = View.extend({
       model.saveModel();
     }
   },
-  saving: function () {
-    var saving = this.queryByHook('saving-mdl');
-    var saved = this.queryByHook('saved-mdl');
+  startAction: function (action) {
+    if(action === "save") {
+      msg = $(this.queryByHook("saving"));
+    }else{
+      msg = $(this.queryByHook("publishing"));
+    }
+    msg.css("display", "inline-block");
+    var saving = this.queryByHook('mdl-action-start');
+    var saved = this.queryByHook('mdl-action-end');
     saved.style.display = "none";
     saving.style.display = "inline-block";
   },
-  saved: function () {
-    var saving = this.queryByHook('saving-mdl');
-    var saved = this.queryByHook('saved-mdl');
+  errorAction: function () {
+    oldMsg = $(this.queryByHook("publishing")).css("display", "none");
+    var saving = this.queryByHook('mdl-action-start');
+    var error = this.queryByHook('mdl-action-err');
+    saving.style.display = "none";
+    error.style.display = "inline-block";
+    setTimeout(function () {
+      error.style.display = "none";
+    }, 5000);
+  },
+  endAction: function (action) {
+    if(action === "save") {
+      oldMsg = $(this.queryByHook("saving"));
+      msg = $(this.queryByHook("saved"));
+    }else{
+      oldMsg = $(this.queryByHook("publishing"));
+      msg = $(this.queryByHook("published"));
+    }
+    oldMsg.css("display", "none");
+    msg.css("display", "inline-block");
+    var saving = this.queryByHook('mdl-action-start');
+    var saved = this.queryByHook('mdl-action-end');
     saving.style.display = "none";
     saved.style.display = "inline-block";
     setTimeout(function () {
       saved.style.display = "none";
+      msg.css("display", "none");
     }, 5000);
   },
   runModel: function (target=null) {
     if(typeof target !== "string") {
-      this.saved();
+      this.endAction("save");
     }
     this.running();
     $(this.parent.queryByHook('model-run-container')).css("display", "block")
@@ -238,12 +270,15 @@ module.exports = View.extend({
     Plotly.newPlot(el, data);
     window.scrollTo(0, document.body.scrollHeight)
   },
+  displayError: function (errorMsg, e) {
+    $(this.parent.queryByHook('toggle-preview-plot')).click()
+    errorMsg.css('display', 'block')
+    this.focusOnError(e)
+  },
   handleSimulateClick: function (e) {
     var errorMsg = $(this.parent.queryByHook("error-detected-msg"))
     if(!this.model.valid) {
-      $(this.parent.queryByHook('toggle-preview-plot')).click()
-      errorMsg.css('display', 'block')
-      this.focusOnError(e)
+      this.displayError(errorMsg, e);
     }else{
       errorMsg.css('display', 'none')
       let simType = e.target.dataset.type
@@ -258,6 +293,42 @@ module.exports = View.extend({
           app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep");
         }
       }
+    }
+  },
+  handlePresentationClick: function (e) {
+    var errorMsg = $(this.parent.queryByHook("error-detected-msg"));
+    if(!this.model.valid) {
+      this.displayError(errorMsg, e);
+    }else{
+      let self = this;
+      this.startAction("publish")
+      let queryStr = "?path=" + this.model.directory;
+      let endpoint = path.join(app.getApiPath(), "model/presentation") + queryStr;
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
+          self.endAction("publish");
+          let title = body.message;
+          let linkHeaders = "Shareable Presentation";
+          let links = body.links;
+          $(modals.presentationLinks(title, linkHeaders, links)).modal();
+          let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+          copyBtn.addEventListener('click', function (e) {
+            let onFulfilled = (value) => {
+              $("#copy-link-success").css("display", "inline-block");
+            } 
+            let onReject = (reason) => {
+              let msg = $("#copy-link-failed");
+              msg.html(reason);
+              msg.css("display", "inline-block");
+            }
+            app.copyToClipboard(links.presentation, onFulfilled, onReject);
+          });
+        },
+        error: function (err, response, body) {
+          self.errorAction();
+          $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+        }
+      });
     }
   },
   focusOnError: function (e) {
@@ -294,34 +365,34 @@ module.exports = View.extend({
     }
   },
   openSpeciesSection: function () {
-    let specSection = $(this.parent.speciesEditor.queryByHook("species-list-container"))
+    let specSection = $(this.parent.modelView.speciesView.queryByHook("species-list-container"))
     if(!specSection.hasClass("show")) {
-      let specCollapseBtn = $(this.parent.speciesEditor.queryByHook("collapse"))
+      let specCollapseBtn = $(this.parent.modelView.speciesView.queryByHook("collapse"))
       specCollapseBtn.click()
       specCollapseBtn.html('-')
     }
   },
   openDomainSection: function () {
-    let domainSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
+    let domainSection = $(this.parent.modelView.domainViewer.queryByHook("domain-container"))
     if(!domainSection.hasClass("show")) {
-      let domainCollapseBtn = $(this.parent.domainViewer.queryByHook("collapse"))
+      let domainCollapseBtn = $(this.parent.modelView.domainViewer.queryByHook("collapse"))
       domainCollapseBtn.click()
       domainCollapseBtn.html('-')
     }
   },
   openParametersSection: function () {
-    let paramSection = $(this.parent.parametersEditor.queryByHook("parameters-list-container"))
+    let paramSection = $(this.parent.modelView.parametersView.queryByHook("parameters-list-container"))
     if(!paramSection.hasClass("show")) {
-      let paramCollapseBtn = $(this.parent.parametersEditor.queryByHook("collapse"))
+      let paramCollapseBtn = $(this.parent.modelView.parametersView.queryByHook("collapse"))
       paramCollapseBtn.click()
       paramCollapseBtn.html('-')
     }
   },
   openReactionsSection: function (isCollection = false) {
     let error = this.model.error
-    let reacSection = $(this.parent.reactionsEditor.queryByHook("reactions-list-container"))
+    let reacSection = $(this.parent.modelView.reactionsView.queryByHook("reactions-list-container"))
     if(!reacSection.hasClass("show")) {
-      let reacCollapseBtn = $(this.parent.reactionsEditor.queryByHook("collapse"))
+      let reacCollapseBtn = $(this.parent.modelView.reactionsView.queryByHook("collapse"))
       reacCollapseBtn.click()
       reacCollapseBtn.html('-')
     }
@@ -334,15 +405,15 @@ module.exports = View.extend({
   },
   openEventsSection: function () {
     let error = this.model.error
-    let advSection = $(this.parent.queryByHook("me-advanced-section"))
+    let advSection = $(this.parent.modelView.queryByHook("mv-advanced-section"))
     if(!advSection.hasClass("show")) {
-      let advCollapseBtn = $(this.parent.queryByHook("collapse-me-advanced-section"))
+      let advCollapseBtn = $(this.parent.modelView.queryByHook("collapse-mv-advanced-section"))
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let evtSection = $(this.eventsEditor.queryByHook("events"))
+    let evtSection = $(this.parent.modelView.eventsView.queryByHook("events"))
     if(!evtSection.hasClass("show")) {
-      let evtCollapseBtn = $(this.parent.eventsEditor.queryByHook("collapse"))
+      let evtCollapseBtn = $(this.parent.modelView.eventsView.queryByHook("collapse"))
       evtCollapseBtn.click()
       evtCollapseBtn.html('-')
     }
@@ -359,9 +430,9 @@ module.exports = View.extend({
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let ruleSection = $(this.rulesEditor.queryByHook("rules-list-container"))
+    let ruleSection = $(this.parent.modelView.rulesView.queryByHook("rules-list-container"))
     if(!ruleSection.hasClass("show")) {
-      let ruleCollapseBtn = $(this.parent.rulesEditor.queryByHook("collapse"))
+      let ruleCollapseBtn = $(this.parent.modelView.rulesView.queryByHook("collapse"))
       ruleCollapseBtn.click()
       ruleCollapseBtn.html('-')
     }

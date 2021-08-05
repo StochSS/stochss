@@ -44,6 +44,7 @@ module.exports = State.extend({
   },
   validateComponent: function () {
     if(!this.name.trim() || this.name.match(/^\d/)) return false;
+    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
     if(this.value === "" || isNaN(this.value)) return false;
     if(this.mode === "dynamic") {
       if(this.isSwitchTol && (this.switchTol === "" || isNaN(this.switchTol))) return false;

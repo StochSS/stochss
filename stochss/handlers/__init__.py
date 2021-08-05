@@ -66,6 +66,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
         (r"/stochss/api/file/duplicate\/?", DuplicateModelHandler),
         (r"/stochss/api/file/unzip\/?", UnzipFileAPIHandler),
+        (r"/stochss/api/notebook/presentation\/?", NotebookPresentationAPIHandler),
         (r"/stochss/api/directory/duplicate\/?", DuplicateDirectoryHandler),
         (r"/stochss/api/directory/create\/?", CreateDirectoryHandler),
         (r"/stochss/api/spatial/to-model\/?", ConvertToModelAPIHandler),
@@ -75,6 +76,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/model/to-sbml\/?", ModelToSBMLAPIHandler),
         (r"/stochss/api/model/run\/?", RunModelAPIHandler),
         (r"/stochss/api/model/exists\/?", ModelExistsAPIHandler),
+        (r"/stochss/api/model/presentation\/?", ModelPresentationAPIHandler),
         (r"/stochss/api/model/new-bc\/?", CreateNewBoundCondAPIHandler),
         (r"/stochss/api/spatial-model/domain-list\/?", LoadExternalDomains),
         (r"/stochss/api/spatial-model/types-list\/?", LoadParticleTypesDescriptions),
@@ -105,7 +107,8 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/edit-model\/?", GetWorkflowModelPathAPIHandler),
         (r"/stochss/api/workflow/save-plot\/?", SavePlotAPIHandler),
         (r"/stochss/api/workflow/save-annotation\/?", SaveAnnotationAPIHandler),
-        (r"/stochss/api/workflow/update-format\/?", UpadteWorkflowAPIHandler)
+        (r"/stochss/api/workflow/update-format\/?", UpadteWorkflowAPIHandler),
+        (r"/stochss/api/job/presentation\/?", JobPresentationAPIHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers

@@ -22,24 +22,14 @@ let path = require('path');
 //support files
 var app = require('../app');
 var modals = require('../modals');
-var tests = require('../views/tests');
 let Tooltips = require("../tooltips");
 //views
 var PageView = require('../pages/base');
-var InputView = require('../views/input');
-var DomainViewer = require('../views/domain-viewer');
-var SpeciesEditorView = require('../views/species-editor');
-var InitialConditionsEditorView = require('../views/initial-conditions-editor');
-var ParametersEditorView = require('../views/parameters-editor');
+let ModelView = require('../model-view/model-view');
 var ParticleViewer = require('../views/view-particle');
-var ReactionsEditorView = require('../views/reactions-editor');
-var EventsEditorView = require('../views/events-editor');
-var RulesEditorView = require('../views/rules-editor');
-var SBMLComponentView = require('../views/sbml-component-editor');
 var TimespanSettingsView = require('../views/timespan-settings');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 var QuickviewDomainTypes = require('../views/quickview-domain-types');
-let BoundaryConditionsView = require('../views/boundary-conditions-editor');
 //models
 var Model = require('../models/model');
 var Domain = require('../models/domain');
@@ -51,23 +41,16 @@ import initPage from './page.js';
 let ModelEditor = PageView.extend({
   template: template,
   events: {
-    'change [data-hook=all-continuous]' : 'setDefaultMode',
-    'change [data-hook=all-discrete]' : 'setDefaultMode',
-    'change [data-hook=advanced]' : 'setDefaultMode',
     'click [data-hook=edit-model-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
-    'change [data-hook=edit-volume]' : 'updateVolumeViewer',
-    'click [data-hook=collapse-me-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
     'click [data-hook=toggle-preview-domain]' : 'toggleDomainPlot',
-    'click [data-hook=download-png]' : 'clickDownloadPNGButton',
-    'click [data-hook=collapse-system-volume]' : 'changeCollapseButtonText'
+    'click [data-hook=download-png]' : 'clickDownloadPNGButton'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
-    this.tooltips = Tooltips.modelEditor
     var self = this;
     let urlParams = new URLSearchParams(window.location.search)
     var directory = urlParams.get('path');
@@ -99,28 +82,12 @@ let ModelEditor = PageView.extend({
         self.model.updateValid()
       }
     })
-    this.model.reactions.on("change", function (reactions) {
-      this.updateSpeciesInUse();
-      this.updateParametersInUse();
-    }, this);
-    this.model.eventsCollection.on("add change remove", function (){
-      this.updateSpeciesInUse();
-      this.updateParametersInUse();
-    }, this);
-    this.model.rules.on("add change remove", function() {
-      this.updateSpeciesInUse();
-      this.updateParametersInUse();
-    }, this);
     window.addEventListener("pageshow", function (event) {
       var navType = window.performance.navigation.type
       if(navType === 2){
         window.location.reload()
       }
     });
-  },
-  update: function () {
-  },
-  updateValid: function () {
   },
   getFileName: function (file) {
     if(file.endsWith('/')) {
@@ -140,63 +107,6 @@ let ModelEditor = PageView.extend({
       window.location.href = endpoint
     }, this))
   },
-  updateSpeciesInUse: function () {
-    var species = this.model.species;
-    var reactions = this.model.reactions;
-    var events = this.model.eventsCollection;
-    var rules = this.model.rules;
-    species.forEach(function (specie) { specie.inUse = false; });
-    var updateInUseForReaction = function (stoichSpecie) {
-      _.where(species.models, { compID: stoichSpecie.specie.compID })
-       .forEach(function (specie) {
-          specie.inUse = true;
-        });
-    }
-    var updateInUseForOther = function (specie) {
-      _.where(species.models, { compID: specie.compID })
-       .forEach(function (specie) {
-         specie.inUse = true;
-       });
-    }
-    reactions.forEach(function (reaction) {
-      reaction.products.forEach(updateInUseForReaction);
-      reaction.reactants.forEach(updateInUseForReaction);
-    });
-    events.forEach(function (event) {
-      event.eventAssignments.forEach(function (assignment) {
-        updateInUseForOther(assignment.variable)
-      });
-    });
-    rules.forEach(function (rule) {
-      updateInUseForOther(rule.variable);
-    });
-  },
-  updateParametersInUse: function () {
-    var parameters = this.model.parameters;
-    var reactions = this.model.reactions;
-    var events = this.model.eventsCollection;
-    var rules = this.model.rules;
-    parameters.forEach(function (param) { param.inUse = false; });
-    var updateInUse = function (param) {
-      _.where(parameters.models, { compID: param.compID })
-       .forEach(function (param) {
-         param.inUse = true;
-       });
-    }
-    reactions.forEach(function (reaction) {
-      if(reaction.reactionType !== "custom-propensity"){
-        updateInUse(reaction.rate);
-      }
-    });
-    events.forEach(function (event) {
-      event.eventAssignments.forEach(function (assignment) {
-        updateInUse(assignment.variable)
-      });
-    });
-    rules.forEach(function (rule) {
-      updateInUse(rule.variable);
-    });
-  },
   renderParticleViewer: function (particle=null) {
     if(this.particleViewer) {
       this.particleViewer.remove();
@@ -213,19 +123,20 @@ let ModelEditor = PageView.extend({
     }else{
       $(this.queryByHook("me-select-particle")).css("display", "block")
       this.typeQuickViewer = this.renderCollection(
-        this.domainViewer.model.types,
+        this.modelView.domainViewer.model.types,
         QuickviewDomainTypes,
         this.queryByHook("me-types-quick-view")
       );
     }
   },
+  renderModelView: function () {
+    this.modelView = new ModelView({
+      model: this.model
+    });
+    app.registerRenderSubview(this, this.modelView, "model-view-container")
+  },
   renderSubviews: function () {
-    if(this.model.defaultMode === "" && !this.model.is_spatial){
-      this.getInitialDefaultMode();
-    }else{
-      let dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'}
-      $(this.queryByHook(dataHooks[this.model.defaultMode])).prop('checked', true)
-    }
+    this.renderModelView()
     this.modelSettings = new TimespanSettingsView({
       parent: this,
       model: this.model.modelSettings,
@@ -233,30 +144,12 @@ let ModelEditor = PageView.extend({
     this.modelStateButtons = new ModelStateButtonsView({
       model: this.model
     });
-    this.renderSpeciesView();
-    this.renderParametersView();
-    this.renderReactionsView();
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
     app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
     if(this.model.is_spatial) {
-      $(this.queryByHook("system-volume-container")).css("display", "none");
-      $(this.queryByHook("advaced-model-mode")).css("display", "none");
       $(this.queryByHook("spatial-beta-message")).css("display", "block");
-      this.renderDomainViewer();
-      this.renderInitialConditions();
-      this.renderBoundaryConditionsView();
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
-    }else {
-      this.renderEventsView();
-      this.renderRulesView();
-      if(this.model.functionDefinitions.length) {
-        var sbmlComponentView = new SBMLComponentView({
-          functionDefinitions: this.model.functionDefinitions
-        });
-        app.registerRenderSubview(this, sbmlComponentView, 'sbml-component-container');
-      }
-      this.renderSystemVolumeView();
     }
     this.model.autoSave();
     $(function () {
@@ -268,111 +161,6 @@ let ModelEditor = PageView.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
-  },
-  renderBoundaryConditionsView: function() {
-    if(this.boundaryConditionsView) {
-      this.boundaryConditionsView.remove();
-    }
-    this.boundaryConditionsView = new BoundaryConditionsView({
-      collection: this.model.boundaryConditions
-    });
-    app.registerRenderSubview(this, this.boundaryConditionsView, "boundary-conditions-container");
-  },
-  renderDomainViewer: function(domainPath=null) {
-    if(this.domainViewer) {
-      this.domainViewer.remove()
-    }
-    if(domainPath && domainPath !== "viewing") {
-      let self = this;
-      let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath
-      let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr
-      app.getXHR(endpoint, {
-        always: function (err, response, body) {
-          let domain = new Domain(body.domain);
-          self.domainViewer = new DomainViewer({
-            parent: self,
-            model: domain,
-            domainPath: domainPath
-          });
-          app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
-        }
-      });
-    }else{
-      this.domainViewer = new DomainViewer({
-        parent: this,
-        model: this.model.domain,
-        domainPath: domainPath
-      });
-      app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
-    }
-  },
-  renderSpeciesView: function () {
-    if(this.speciesEditor) {
-      this.speciesEditor.remove()
-    }
-    this.speciesEditor = new SpeciesEditorView({
-      collection: this.model.species,
-      spatial: this.model.is_spatial,
-      defaultMode: this.model.defaultMode
-    });
-    app.registerRenderSubview(this, this.speciesEditor, 'species-editor-container');
-  },
-  renderInitialConditions: function () {
-    if(this.initialConditionsEditor) {
-      this.initialConditionsEditor.remove();
-    }
-    this.initialConditionsEditor = new InitialConditionsEditorView({
-      collection: this.model.initialConditions,
-    });
-    app.registerRenderSubview(this, this.initialConditionsEditor, 'initial-conditions-editor-container');
-  },
-  renderParametersView: function () {
-    if(this.parametersEditor) {
-      this.parametersEditor.remove()
-    }
-    this.parametersEditor = new ParametersEditorView({collection: this.model.parameters});
-    app.registerRenderSubview(this, this.parametersEditor, 'parameters-editor-container');
-  },
-  renderReactionsView: function () {
-    if(this.reactionsEditor) {
-      this.reactionsEditor.remove()
-    }
-    this.reactionsEditor = new ReactionsEditorView({collection: this.model.reactions});
-    app.registerRenderSubview(this, this.reactionsEditor, 'reactions-editor-container');
-  },
-  renderEventsView: function () {
-    if(this.eventsEditor){
-      this.eventsEditor.remove();
-    }
-    this.eventsEditor = new EventsEditorView({collection: this.model.eventsCollection});
-    app.registerRenderSubview(this, this.eventsEditor, 'events-editor-container');
-  },
-  renderRulesView: function () {
-    if(this.rulesEditor){
-      this.rulesEditor.remove();
-    }
-    this.rulesEditor = new RulesEditorView({collection: this.model.rules});
-    app.registerRenderSubview(this, this.rulesEditor, 'rules-editor-container');
-  },
-  renderSystemVolumeView: function () {
-    if(this.systemVolumeView) {
-      this.systemVolumeView.remove()
-    }
-    this.systemVolumeView = new InputView ({
-      parent: this,
-      required: true,
-      name: 'system-volume',
-      label: 'Volume: ',
-      tests: tests.valueTests,
-      modelKey: 'volume',
-      valueType: 'number',
-      value: this.model.volume,
-    });
-    app.registerRenderSubview(this, this.systemVolumeView, 'edit-volume')
-    if(this.model.defaultMode === "continuous") {
-      $(this.queryByHook("system-volume-container")).collapse("hide")
-    }
-    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -426,66 +214,6 @@ let ModelEditor = PageView.extend({
   clickDownloadPNGButton: function (e) {
     let pngButton = $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0]
     pngButton.click()
-  },
-  getInitialDefaultMode: function () {
-    var self = this;
-    if(document.querySelector('#defaultModeModal')) {
-      document.querySelector('#defaultModeModal').remove();
-    }
-    let modal = $(modals.renderDefaultModeModalHtml()).modal();
-    let continuous = document.querySelector('#defaultModeModal .concentration-btn');
-    let discrete = document.querySelector('#defaultModeModal .population-btn');
-    let dynamic = document.querySelector('#defaultModeModal .hybrid-btn');
-    continuous.addEventListener('click', function (e) {
-      self.setInitialDefaultMode(modal, "continuous");
-    });
-    discrete.addEventListener('click', function (e) {
-      self.setInitialDefaultMode(modal, "discrete");
-    });
-    dynamic.addEventListener('click', function (e) {
-      self.setInitialDefaultMode(modal, "dynamic");
-    });
-  },
-  setAllSpeciesModes: function (prevMode) {
-    let self = this;
-    this.model.species.forEach(function (specie) { 
-      specie.mode = self.model.defaultMode;
-      self.model.species.trigger('update-species', specie.compID, specie, false, true);
-    });
-    let switchToDynamic = (!Boolean(prevMode) || prevMode !== "dynamic") && this.model.defaultMode === "dynamic";
-    let switchFromDynamic = Boolean(prevMode) && prevMode === "dynamic" && this.model.defaultMode !== "dynamic";
-    if(switchToDynamic || switchFromDynamic) {
-      this.speciesEditor.renderEditSpeciesView();
-      this.speciesEditor.renderViewSpeciesView();
-    }
-  },
-  setDefaultMode: function (e) {
-    let prevMode = this.model.defaultMode;
-    this.model.defaultMode = e.target.dataset.name;
-    this.speciesEditor.defaultMode = e.target.dataset.name;
-    this.setAllSpeciesModes(prevMode);
-    this.toggleVolumeContainer();
-  },
-  setInitialDefaultMode: function (modal, mode) {
-    var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'};
-    modal.modal('hide');
-    $(this.queryByHook(dataHooks[mode])).prop('checked', true);
-    this.model.defaultMode = mode;
-    this.speciesEditor.defaultMode = mode;
-    this.setAllSpeciesModes();
-    this.toggleVolumeContainer();
-  },
-  toggleVolumeContainer: function () {
-    if(!this.model.is_spatial) {
-      if(this.model.defaultMode === "continuous") {
-        $(this.queryByHook("system-volume-container")).collapse("hide");
-      }else{
-        $(this.queryByHook("system-volume-container")).collapse("show");
-      }
-    }
-  },
-  updateVolumeViewer: function (e) {
-    $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume)
   }
 });
 

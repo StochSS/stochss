@@ -28,7 +28,8 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
-                  StochSSAPIError, report_error
+                  StochSSParamSweepNotebook, StochSSSciopeNotebook, StochSSAPIError, report_error, \
+                  StochSSFolder
 
 log = logging.getLogger('stochss')
 
@@ -233,17 +234,18 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug("The path to the workflow: %s", path)
         body = json.loads(self.get_query_argument(name='data'))
-        if body['plt_data'] == "None":
-            body['plt_data'] = None
         log.debug("Plot args passed to the plot: %s", body)
         try:
-            wkfl = StochSSJob(path=path)
-            if "plt_type" in body.keys():
-                fig = wkfl.get_plot_from_results(**body)
-                wkfl.print_logs(log)
+            job = StochSSJob(path=path)
+            if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
+                fig = job.get_plot_from_results(data_keys=body['data_keys'],
+                                                plt_key=body['plt_key'], add_config=True)
+                job.print_logs(log)
             else:
-                log.info("Loading the plot...")
-                fig = wkfl.get_results_plot(**body)
+                fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
+                                                       kwargs=body['plt_key'], add_config=True)
+                job.print_logs(log)
+            fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
             log.debug("Plot figure: %s", fig)
             self.write(fig)
         except StochSSAPIError as err:
@@ -285,13 +287,18 @@ class WorkflowNotebookHandler(APIHandler):
             else:
                 log.info("Creating notebook workflow for %s", file_obj.get_file())
             log.debug("Type of workflow to be run: %s", wkfl_type)
-            notebook = StochSSNotebook(**kwargs)
-            notebooks = {"gillespy":notebook.create_es_notebook,
-                         "spatial":notebook.create_ses_notebook,
-                         "1d_parameter_sweep":notebook.create_1dps_notebook,
-                         "2d_parameter_sweep":notebook.create_2dps_notebook,
-                         "sciope_model_exploration":notebook.create_sme_notebook,
-                         "model_inference":notebook.create_smi_notebook}
+            if wkfl_type in ("1d_parameter_sweep", "2d_parameter_sweep"):
+                notebook = StochSSParamSweepNotebook(**kwargs)
+                notebooks = {"1d_parameter_sweep":notebook.create_1d_notebook,
+                             "2d_parameter_sweep":notebook.create_2d_notebook}
+            elif wkfl_type in ("sciope_model_exploration", "model_inference"):
+                notebook = StochSSSciopeNotebook(**kwargs)
+                notebooks = {"sciope_model_exploration":notebook.create_me_notebook,
+                             "model_inference":notebook.create_mi_notebook}
+            else:
+                notebook = StochSSNotebook(**kwargs)
+                notebooks = {"gillespy":notebook.create_es_notebook,
+                             "spatial":notebook.create_ses_notebook}
             resp = notebooks[wkfl_type]()
             notebook.print_logs(log)
             log.debug("Response: %s", resp)
@@ -389,6 +396,37 @@ class UpadteWorkflowAPIHandler(APIHandler):
         try:
             wkfl = StochSSWorkflow(path=path)
             resp = wkfl.update_wkfl_format()
+            log.debug("Response Message: %s", resp)
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class JobPresentationAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for publishing job presentations.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Publish a job presentation.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the job: %s", path)
+        name = self.get_query_argument(name="name")
+        log.debug("Name of the job presentation: %s", name)
+        try:
+            folder = StochSSFolder(path=path)
+            log.info("Publishing the %s presentation", folder.get_name())
+            resp = folder.publish_presentation(name=name)
+            log.info(resp['message'])
             log.debug("Response Message: %s", resp)
             self.write(resp)
         except StochSSAPIError as err:
