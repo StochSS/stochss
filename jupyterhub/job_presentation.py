@@ -141,7 +141,7 @@ def make_zip_for_download(job):
     write_json(path=os.path.join(job_path, job['job']['mdlPath'].split('/').pop()),
                body=job['job']['model'])
     info = {"annotation": "", "wkfl_model": job['job']['mdlPath'].split('/').pop(),
-            "start_time": job['job']['startTime'], "type": job['job']['startTime'],
+            "start_time": job['job']['startTime'], "type": job['job']['type'],
             "source_model": os.path.join(job['name'], job['job']['mdlPath'].split('/').pop())}
     write_json(path=os.path.join(job_path, "info.json"), body=info)
     if "No logs" in job['job']['logs']:
