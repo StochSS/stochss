@@ -289,7 +289,7 @@ let WorkflowManager = PageView.extend({
       let hadActiveJob = Boolean(this.model.activeJob.status)
       app.getXHR(this.model.url(), {
         success: function (err, response, body) {
-          self.model.set(body);
+          self.model.set({jobs: body.jobs, activeJob: body.activeJob});
           if(!Boolean(self.model.activeJob.status)){
             self.removeActiveJob();
           }else if(!hadActiveJob && Boolean(self.model.activeJob.status)) {
