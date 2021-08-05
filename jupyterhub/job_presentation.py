@@ -130,9 +130,9 @@ def make_zip_for_download(job):
     '''
     tmp_dir = tempfile.TemporaryDirectory()
     res_path = os.path.join(tmp_dir.name, job['name'],
-                            '/'.join(job['job']['directory'].split('/')[2:]), "results.p")
+                            '/'.join(job['job']['directory'].split('/')[2:]), "results")
     Path(res_path).mkdir(parents=True)
-    with open(res_path, "wb") as res_file:
+    with open(os.path.join(res_path, "results.p"), "wb") as res_file:
         pickle.dump(job['results'], res_file)
     job_path = os.path.dirname(res_path)
     Path(os.path.join(job_path, "RUNNING")).touch()
