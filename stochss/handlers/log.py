@@ -44,7 +44,7 @@ def setup_stream_handler():
     handler = logging.StreamHandler()
     fmt = '%(color)s[%(levelname)1.1s %(asctime)s StochSS '
     fmt += '%(filename)s:%(lineno)d]%(end_color)s %(message)s'
-    formatter = LogFormatter(fmt=fmt, datefmt='%H:%M:%S')
+    formatter = LogFormatter(fmt=fmt, datefmt='%H:%M:%S', color=True)
     handler.setFormatter(formatter)
     handler.setLevel(logging.WARNING)
     log.addHandler(handler)
@@ -58,7 +58,7 @@ def setup_file_handler():
     ----------
     '''
     handler = logging.FileHandler(".user-logs.txt")
-    fmt = '%(color)s%(asctime)s%(end_color)s$ %(message)s'
+    fmt = '%(asctime)s$ %(message)s'
     formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
     handler.setFormatter(formatter)
     handler.setLevel(logging.INFO)
