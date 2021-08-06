@@ -1,4 +1,4 @@
-
+include .env
 include jupyterhub/.env
 
 ifeq ($(OS),Windows_NT)
@@ -130,11 +130,10 @@ run:    create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(DOCKER_ROOT_DIR):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-		bash -c "cd /stochss; npm install; npm run webpack;pip install --no-cache-dir -e .; cd /home/jovyan;  start-notebook.sh "
+		bash -c "cd /home/jovyan;  start-notebook.sh "
 
 
 build_and_run: build run
