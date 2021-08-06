@@ -133,7 +133,9 @@ run:    create_working_dir
 		-v $(DOCKER_ROOT_DIR):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
-		$(DOCKER_STOCHSS_IMAGE):latest
+		$(DOCKER_STOCHSS_IMAGE):latest \
+		bash -c "cd /stochss; npm install; npm run webpack; cd /home/jovyan; start-notebook.sh "
+
 
 build_and_run: build run
 
