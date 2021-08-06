@@ -57,11 +57,6 @@ module.exports = View.extend({
     }
     $(this.queryByHook("timestep-size-value")).html(this.model.timestepSize);
   },
-  update: function (e) {
-  },
-  updateValid: function () {
-    this.model.parent.updateValid()
-  },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
@@ -69,6 +64,8 @@ module.exports = View.extend({
     this.model.timestepSize = Number("1e-" + e.target.value);
     $(this.queryByHook("view-timestep-size")).html(this.model.timestepSize);
   },
+  update: function (e) {},
+  updateValid: function () {},
   updateViewer: function (e) {
     $(this.queryByHook("view-end-sim")).html("0 to " + this.model.endSim);
     $(this.queryByHook("view-time-step")).html(this.model.timeStep);
@@ -91,7 +88,7 @@ module.exports = View.extend({
           valueType: 'number',
           value: this.model.endSim
         });
-      },
+      }
     },
     inputTimeUnit: {
       hook: 'time-units',
@@ -100,13 +97,12 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'time-units',
-          label: '',
           tests: tests.valueTests,
           modelKey: 'timeStep',
           valueType: 'number',
           value: this.model.timeStep
         });
-      },
-    },
-  },
+      }
+    }
+  }
 });
