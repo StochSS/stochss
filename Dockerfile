@@ -39,18 +39,4 @@ USER jovyan
 #ENV PATH="/usr/local/julia-1.4.2/bin:${PATH}"
 
 #RUN julia -e 'using Pkg; Pkg.add("IJulia")'
-#RUN julia -e 'using Pkg; Pkg.add("Plots")'
 #RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
-
-RUN npm install
-
-RUN npm run webpack
-
-#RUN julia -e 'using Pkg; Pkg.add("IJulia")'
-#RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
-
-RUN pip install --no-cache-dir -e .
-
-RUN rm -r /home/jovyan/work
-
-WORKDIR /home/jovyan

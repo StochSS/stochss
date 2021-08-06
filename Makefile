@@ -1,17 +1,6 @@
 
-include jupyterhub/.env
-
-ifeq ($(OS),Windows_NT)
-include .win32.env
-	DOCKER_ROOT_DIR := $(shell cmd.exe /C "echo %cd%")
-	DOCKER_WORKING_DIR ?= $(DOCKER_ROOT_DIR)\local_data
-	DOCKER_SETUP_COMMAND := setup.bat $(subst /,\\\,$(DOCKER_WORKING_DIR))
-else
 include .env
-	DOCKER_ROOT_DIR := $(PWD)
-	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
-	DOCKER_SETUP_COMMAND := bash -c "if [ ! -d \"$(DOCKER_WORKING_DIR)\" ] && [ -z ${DOCKER_WORKING_DIR+\"if_var_set\"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
-endif
+include jupyterhub/.env
 
 .DEFAULT_GOAL=build_and_run
 
@@ -57,14 +46,23 @@ cert:
 	@echo "Generating certificate..."
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
 
+webpack:
+	npm run webpack
+
+watch:
+	npm run watch
+
+deps:
+	npm install
+
 build_home_page:
 	npm run build-home
 
-build_hub: build_home_page check-files network volumes
+build_hub: deps build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build
 
-build_hub_clean: build_home_page check-files network volumes
+build_hub_clean: deps build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build --no-cache
 
@@ -101,15 +99,17 @@ clean_notebook_server:
 
 hub: build_hub build run_hub_dev
 
-build_clean:
+build_clean: deps webpack
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	 	--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 create_working_dir:
-	$(DOCKER_SETUP_COMMAND)
+	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
+	bash -c "if [ ! -d "$(DOCKER_WORKING_DIR)" ] && [ -z ${DOCKER_WORKING_DIR+"if_var_set"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
 
-build:  
+
+build:  deps webpack
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	  	-t $(DOCKER_STOCHSS_IMAGE):latest .
@@ -118,7 +118,7 @@ test:   create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(DOCKER_ROOT_DIR):/stochss \
+		-v $(PWD):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
@@ -130,7 +130,7 @@ run:    create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(DOCKER_ROOT_DIR):/stochss \
+		-v $(PWD):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest
@@ -141,23 +141,8 @@ run_bash:
 	docker run -it --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(DOCKER_ROOT_DIR):/stochss \
+		-v $(PWD):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
-watch:
-	docker run -it --rm \
-		--name $(DOCKER_STOCHSS_IMAGE) \
-		--env-file .env \
-		-v $(DOCKER_ROOT_DIR):/stochss \
-		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
-		-p 8888:8888 \
-		$(DOCKER_STOCHSS_IMAGE):latest \
-		bash -c "cd /stochss; npm run watch & sleep 10; cd /home/jovyan; start-notebook.sh "
-
-update:
-	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss
-
-
-.PHONY: network volumes check-files pull notebook_image build
