@@ -127,6 +127,7 @@ test:   create_working_dir
 build_and_test: build test
 
 run:    create_working_dir
+	python3 launch_webbrowser.py &
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
@@ -148,6 +149,7 @@ run_bash:
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
 watch:
+	python3 launch_webbrowser.py &
 	docker run -it --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
