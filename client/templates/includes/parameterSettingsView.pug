@@ -16,9 +16,9 @@ div#parameter-settings.card
 
           a.nav-link.tab(data-hook="parameter-settings-view-tab" data-toggle="tab" href="#view-parameter-settings") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-psweep-settings" data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "collapse-psweep-settings" data-hook="collapse") -
 
-  div.collapse(class="show", id="collapse-psweep-settings")
+  div.collapse(class="show" id=this.model.elementID + "collapse-psweep-settings")
 
     div.card-body.tab-content
 

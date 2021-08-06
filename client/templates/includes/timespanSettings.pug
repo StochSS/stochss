@@ -16,14 +16,14 @@ div#preview-settings.card
 
           a.nav-link.tab(data-hook="timespan-view-tab" data-toggle="tab" href="#view-timespan") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-preview-settings" data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "collapse-preview-settings" data-hook="collapse") -
 
   div.card-body
 
     p.mb-0
       | Timespan settings are used for the preview and all workflows created using this model.
 
-    div.collapse.tab-content(class="show" id="collapse-preview-settings" data-hook="timespan-container")
+    div.collapse.tab-content(class="show" id=this.model.elementID + "collapse-preview-settings" data-hook="timespan-container")
 
       div.tab-pane.active(id="edit-timespan" data-hook="edit-timespan")
 

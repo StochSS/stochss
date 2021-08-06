@@ -32,5 +32,16 @@ module.exports = State.extend({
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
+  },
+  derived: {
+    elementID: {
+      deps: ["parent"],
+      fn: function () {
+        if(this.parent) {
+          return this.parent.elementID + "Set-";
+        }
+        return "Set-"
+      }
+    }
   }
 });
