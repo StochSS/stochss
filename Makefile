@@ -134,7 +134,7 @@ run:    create_working_dir
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-		bash -c "cd /stochss; npm install; npm run webpack; cd /home/jovyan; start-notebook.sh "
+		bash -c "cd /stochss; npm install; npm run webpack;pip install --no-cache-dir -e .; cd /home/jovyan;  start-notebook.sh "
 
 
 build_and_run: build run
@@ -156,7 +156,7 @@ watch:
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-		bash -c "cd /stochss; npm run watch & sleep 10; cd /home/jovyan; start-notebook.sh "
+		bash -c "cd /stochss;pip install --no-cache-dir -e .; npm run watch & sleep 10; cd /home/jovyan; start-notebook.sh "
 
 update:
 	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss

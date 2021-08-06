@@ -19,7 +19,8 @@ RUN python -m pip install --no-cache-dir -r requirements.txt
 
 COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
-#COPY --chown=jovyan:users . /stochss  # since /stochss is mounted in the 'run', this is redundant
+#TODO: remove following line: since /stochss is mounted in the 'run', this is redundant
+#COPY --chown=jovyan:users . /stochss  
 
 COPY --chown=jovyan:users stochss-logo.png $JUPYTER_CONFIG_DIR/custom/logo.png
 
@@ -49,7 +50,7 @@ USER jovyan
 #RUN julia -e 'using Pkg; Pkg.add("IJulia")'
 #RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
 
-RUN pip install --no-cache-dir -e .
+#RUN pip install --no-cache-dir -e 
 
 RUN rm -r /home/jovyan/work
 
