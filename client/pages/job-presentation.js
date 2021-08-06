@@ -27,7 +27,7 @@ let Job = require("../models/job");
 //views
 let PageView = require('./base');
 let ModelView = require('../model-view/model-view');
-let ResultsView = require('../views/workflow-results');
+let ResultsView = require('../views/job-results-view');
 let SettingsView = require('../views/settings-viewer');
 //templates
 let template = require('../templates/pages/jobPresentation.pug');

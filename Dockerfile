@@ -29,17 +29,17 @@ COPY --chown=jovyan:users jupyter_notebook_config.py $JUPYTER_CONFIG_DIR/jupyter
 
 USER root
 
-RUN wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.4/julia-1.4.2-linux-x86_64.tar.gz
-RUN tar -xvzf julia-1.4.2-linux-x86_64.tar.gz
-RUN mv julia-1.4.2 /usr/local/
-RUN chown -R jovyan:users /usr/local/julia-1.4.2/
+#RUN wget -q https://julialang-s3.julialang.org/bin/linux/x64/1.4/julia-1.4.2-linux-x86_64.tar.gz
+#RUN tar -xvzf julia-1.4.2-linux-x86_64.tar.gz
+#RUN mv julia-1.4.2 /usr/local/
+#RUN chown -R jovyan:users /usr/local/julia-1.4.2/
 
 USER jovyan
 
-ENV PATH="/usr/local/julia-1.4.2/bin:${PATH}"
+#ENV PATH="/usr/local/julia-1.4.2/bin:${PATH}"
 
-RUN julia -e 'using Pkg; Pkg.add("IJulia")'
-RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
+#RUN julia -e 'using Pkg; Pkg.add("IJulia")'
+#RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
 
 RUN pip install --no-cache-dir -e .
 

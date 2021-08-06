@@ -27,28 +27,44 @@ module.exports = View.extend({
   events: function () {
     let events = {};
     events['change [data-hook=' + this.model.elementID + '-slider'] = 'setParameterRangeValue';
+    events['change [data-hook=' + this.model.elementID + '-fixed'] = 'setParameterRangeFixed';
     events['input [data-hook=' + this.model.elementID + '-slider'] = 'viewParameterRangeValue';
     return events;
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     let self = this;
-    this.parameter = this.parent.model.model.parameters.filter(function (param) {
-      return param.compID === self.model.paramID
-    })[0];
+    this.model.fixed = false;
+    this.showFixed = Boolean(attrs.showFixed) ? attrs.showFixed : false;
     let value = this.model.range[0].toString().includes('.') ? this.model.range[0] : this.model.range[0].toFixed(1)
     this.parent.tsPlotData.parameters[this.model.name] = value;
+    this.parent.fixedParameters[this.model.name] = value;
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(!this.showFixed){
+      $(this.queryByHook(this.model.elementID + "-fixed-container")).css("display", "none");
+    }else{
+      $(this.queryByHook(this.model.elementID + '-slider')).prop("disabled", !this.model.fixed);
+    }
+  },
+  setParameterRangeFixed: function (e) {
+    this.model.fixed = e.target.checked;
+    $(this.queryByHook(this.model.elementID + '-slider')).prop("disabled", !this.model.fixed);
+    this.parent.getPlot("psweep");
   },
   setParameterRangeValue: function (e) {
     var value = this.model.range[e.target.value];
     if(!value.toString().includes(".")) {
       value = value.toFixed(1)
     }
-    this.parent.tsPlotData.parameters[this.model.name] = value;
-    this.parent.getPlot("ts-psweep");
+    if(this.showFixed) {
+      this.parent.fixedParameters[this.model.name] = value;
+      this.parent.getPlot("psweep");
+    }else{
+      this.parent.tsPlotData.parameters[this.model.name] = value;
+      this.parent.getPlot("ts-psweep");
+    }
   },
   viewParameterRangeValue: function (e) {
     let value = this.model.range[e.target.value];

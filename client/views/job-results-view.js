@@ -27,12 +27,12 @@ let Plotly = require('../lib/plotly');
 let InputView = require('./input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
-let SweepParametersView = require('./sweep-parameter-range');
+let SweepParametersView = require('./sweep-parameter-range-view');
 //templates
-let gillespyResultsTemplate = require('../templates/includes/gillespyResults.pug');
-let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsemble.pug');
-let parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResults.pug');
-let parameterScanTemplate = require('../templates/includes/parameterScanResults.pug');
+let gillespyResultsTemplate = require('../templates/includes/gillespyResultsView.pug');
+let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsembleView.pug');
+let parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResultsView.pug');
+let parameterScanTemplate = require('../templates/includes/parameterScanResultsView.pug');
 
 module.exports = View.extend({
   events: {
@@ -55,10 +55,10 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : false;
     this.tooltips = Tooltips.parameterSweepResults;
     this.plots = {};
     this.plotArgs = {};
-    this.mode = Boolean(attrs.mode) ? attrs.mode : "edit";
   },
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
@@ -70,7 +70,7 @@ module.exports = View.extend({
       this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
     }
     View.prototype.render.apply(this, arguments);
-    if(this.mode === "presentation") {
+    if(this.readOnly) {
       $(this.queryByHook("job-presentation")).css("display", "none");
       if(!isParameterScan){
         $(this.queryByHook("convert-to-notebook")).css("display", "none");
@@ -84,24 +84,20 @@ module.exports = View.extend({
       var type = isEnsemble ? "stddevran" : "trajectories";
     }else{
       this.tsPlotData = {"parameters":{}};
+      this.fixedParameters = {};
       var type = "ts-psweep";
-      if(!isParameterScan) {
-        this.renderSpeciesOfInterestView();
-        this.renderFeatureExtractionView();
-        if(isEnsemble) {
-          this.renderEnsembleAggragatorView();
-        }else{
-          $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
-        }
-        this.getPlot("psweep");
-      }
+      this.renderSpeciesOfInterestView();
+      this.renderFeatureExtractionView();
       if(isEnsemble) {
+        this.renderEnsembleAggragatorView();
         this.renderPlotTypeSelectView();
         this.tsPlotData["type"] = "stddevran"
       }else{
+        $(this.queryByHook('ensemble-aggragator-container')).css("display", "none");
         $(this.queryByHook('plot-type-header')).css("display", "none");
         this.tsPlotData["type"] = "trajectories"
       }
+      this.getPlot("psweep");
       this.renderSweepParameterView();
     }
     this.getPlot(type);
@@ -141,22 +137,20 @@ module.exports = View.extend({
     let self = this;
     this.cleanupPlotContainer(type);
     let data = this.getPlotData(type);
-    if(type === "psweep" && Boolean(this.plots[data.plt_key])) {
-      this.plotFigure(this.plots[data.plt_key], type);
-    }else if(type === "ts-psweep" && Boolean(this.plots[data.plt_type + data.plt_key])) {
-      this.plotFigure(this.plots[data.plt_type + data.plt_key], type);
+    if(data === null) { return };
+    let storageKey = JSON.stringify(data);
+    data['plt_data'] = this.getPlotLayoutData();
+    if(Boolean(this.plots[storageKey])) {
+      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt'];
+      if(renderTypes.includes(type)) {
+        this.plotFigure(this.plots[storageKey], type);
+      }
     }else{
       let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
       let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
       app.getXHR(endpoint, {
         success: function (err, response, body) {
-          if(type === "psweep") {
-            self.plots[data.plt_key] = body;
-          }else if(type === "ts-psweep"){
-            self.plots[data.plt_type + data.plt_key] = body;
-          }else{
-            self.plots[type] = body;
-          }
+          self.plots[storageKey] = body;
           self.plotFigure(body, type);
         },
         error: function (err, response, body) {
@@ -170,28 +164,43 @@ module.exports = View.extend({
   getPlotData: function (type) {
     let data = {};
     if(type === 'psweep'){
-      let key = this.getPsweepKey();
-      data['plt_key'] = key;
-    }else if(type === "ts-psweep" || type === "ts-psweep-mp") {
-      if(type === "ts-psweep-mp"){
-        data['plt_type'] = "mltplplt";
-      }else{
-        data['plt_type'] = this.tsPlotData['type'];
+      data['sim_type'] = "ParameterSweep";
+      if(this.model.settings.parameterSweepSettings.parameters.length <= 2) {
+        data['data_keys'] = {}
+      }else {
+        let dataKeys = this.getDataKeys(false);
+        let paramDiff = this.model.settings.parameterSweepSettings.parameters.length - Object.keys(dataKeys).length
+        if(paramDiff <= 0) {
+          $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
+          $(this.queryByHook("too-many-params")).css("display", "block");
+          return null;
+        }
+        if(paramDiff > 2) {
+          $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
+          $(this.queryByHook("too-few-params")).css("display", "block");
+          return null;
+        }
+        $(this.queryByHook("too-few-params")).css("display", "none");
+        $(this.queryByHook("too-many-params")).css("display", "none");
+        data['data_keys'] = dataKeys;
       }
-      let key = this.getTSPsweepKey()
-      data['plt_key'] = key;
-    }else if(type === "mltplplt"){
-      data['plt_type'] = type;
-      data['plt_key'] = null;
-    }else{
+      data['plt_key'] = this.getPlotKey(type);
+    }else if(type === "ts-psweep" || type === "ts-psweep-mp") {
+      data['sim_type'] = "GillesPy2_PS";
+      data['data_keys'] = this.getDataKeys(true);
+      data['plt_key'] = type === "ts-psweep-mp" ? "mltplplt" : this.tsPlotData.type;
+    }else {
+      data['sim_type'] = "GillesPy2";
+      data['data_keys'] = {};
       data['plt_key'] = type;
     }
-    if(Object.keys(this.plotArgs).length){
-      data['plt_data'] = this.plotArgs;
-    }else{
-      data['plt_data'] = null;
-    }
     return data
+  },
+  getPlotLayoutData: function () {
+    if(Object.keys(this.plotArgs).length){
+      return this.plotArgs;
+    }
+    return null
   },
   getPlotForEnsembleAggragator: function (e) {
     this.model.settings.resultsSettings.reducer = e.target.value;
@@ -208,38 +217,50 @@ module.exports = View.extend({
     this.model.settings.parameterSweepSettings.speciesOfInterest = species;
     this.getPlot('psweep')
   },
-  getPsweepKey: function () {
-    let speciesOfInterest = this.model.settings.parameterSweepSettings.speciesOfInterest.name;
-    let featureExtractor = this.model.settings.resultsSettings.mapper;
-    let key = speciesOfInterest + "-" + featureExtractor
-    let realizations = this.model.settings.simulationSettings.realizations;
-    let algorithm = this.model.settings.simulationSettings.algorithm;
-    if(algorithm !== "ODE" && realizations > 1){
-      let ensembleAggragator = this.model.settings.resultsSettings.reducer;
-      key += ("-" + ensembleAggragator);
+  getPlotKey: function (type) {
+    if(type === "psweep") {
+      let realizations = this.model.settings.simulationSettings.realizations;
+      let algorithm = this.model.settings.simulationSettings.algorithm;
+      let plt_key = {
+        species: this.model.settings.parameterSweepSettings.speciesOfInterest.name,
+        mapper: this.model.settings.resultsSettings.mapper,
+        reducer: algorithm !== "ODE" && realizations > 1 ? this.model.settings.resultsSettings.reducer : null
+      }
+      return plt_key;
     }
-    return key;
   },
   getTSPlotForType: function (e) {
-    this.tsPlotData['type'] = e.target.value;
-    let display = this.tsPlotData['type'] === "trajectories" ? "inline-block" : "none";
+    this.tsPlotData.type = e.target.value;
+    let display = this.tsPlotData.type === "trajectories" ? "inline-block" : "none";
     $(this.queryByHook("multiple-plots")).css("display", display);
     this.getPlot("ts-psweep");
   },
-  getTSPsweepKey: function () {
+  getDataKeys: function (full) {
+    if(full) { return this.tsPlotData.parameters; }
     let self = this;
-    let strs = Object.keys(this.tsPlotData.parameters).map(function (key) {
-      return key + ":" + self.tsPlotData.parameters[key]
+    let parameters = {};
+    this.model.settings.parameterSweepSettings.parameters.forEach(function (param) {
+      if(param.fixed){
+        parameters[param.name] = self.fixedParameters[param.name];
+      }
     });
-    let key = strs.join(",");
-    return key;
+    return parameters;
+  },
+  getType: function (storageKey) {
+    let plotData = JSON.parse(storageKey)
+    if(plotData.sim_type === "GillesPy2") { return plotData.plt_key }
+    if(plotData.sim_type === "GillesPy2_PS") { return "ts-psweep"}
+    return "psweep"
   },
   handleCollapsePlotContainerClick: function (e) {
     app.changeCollapseButtonText(this, e);
     let type = e.target.dataset.type;
-    if(!this.plots[type]){
-      this.getPlot(type);
+    if(['psweep', 'ts-psweep'].includes(type)) { return }
+    for (var storageKey in this.plots) {
+      let data = JSON.parse(storageKey)
+      if(data.plt_key === type) { return }
     }
+    this.getPlot(type);
   },
   handleConvertToNotebookClick: function (e) {
     let self = this;
@@ -260,7 +281,8 @@ module.exports = View.extend({
   },
   handleDownloadJSONClick: function (e) {
     let type = e.target.dataset.type;
-    let jsonData = this.plots[type];
+    let storageKey = JSON.stringify(this.getPlotData(type))
+    let jsonData = this.plots[storageKey];
     let dataStr = JSON.stringify(jsonData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
     let exportFileDefaultName = type + '-plot.json';
@@ -391,32 +413,44 @@ module.exports = View.extend({
     app.registerRenderSubview(this, speciesOfInterestView, "specie-of-interest-list");
   },
   renderSweepParameterView: function () {
-    let sweepParameterView = this.renderCollection(
+    let tsSweepParameterView = this.renderCollection(
       this.model.settings.parameterSweepSettings.parameters,
       SweepParametersView,
-      this.queryByHook("parameter-ranges")
+      this.queryByHook("ts-parameter-ranges")
     );
+    if(this.model.settings.parameterSweepSettings.parameters.length > 2) {
+      let options = {viewOptions: {showFixed: true, parent: this}};
+      let psSweepParameterView = this.renderCollection(
+        this.model.settings.parameterSweepSettings.parameters,
+        SweepParametersView,
+        this.queryByHook("ps-parameter-ranges"),
+        options
+      );
+    }
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
-    for (var type in this.plots) {
-      let fig = this.plots[type]
+    for (var storageKey in this.plots) {
+      let type = this.getType(storageKey);
+      let fig = this.plots[storageKey]
       fig.layout.title.text = e.target.value
       this.plotFigure(fig, type)
     }
   },
   setXAxis: function (e) {
     this.plotArgs['xaxis'] = e.target.value
-    for (var type in this.plots) {
-      let fig = this.plots[type]
+    for (var storageKey in this.plots) {
+      let type = this.getType(storageKey);
+      let fig = this.plots[storageKey]
       fig.layout.xaxis.title.text = e.target.value
       this.plotFigure(fig, type)
     }
   },
   setYAxis: function (e) {
     this.plotArgs['yaxis'] = e.target.value
-    for (var type in this.plots) {
-      let fig = this.plots[type]
+    for (var storageKey in this.plots) {
+      let type = this.getType(storageKey);
+      let fig = this.plots[storageKey]
       fig.layout.yaxis.title.text = e.target.value
       this.plotFigure(fig, type)
     }

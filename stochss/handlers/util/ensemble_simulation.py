@@ -18,13 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import os
-import json
 import pickle
 import logging
 import traceback
 
 import numpy
-import plotly
 from gillespy2 import TauHybridSolver
 
 from .stochss_job import StochSSJob
@@ -91,28 +89,6 @@ class EnsembleSimulation(StochSSJob):
         return False
 
 
-    @classmethod
-    def __store_result_plots(cls, results):
-        try:
-            plots = {"trajectories":results.plotplotly(return_plotly_figure=True)}
-            if len(results) > 1:
-                plots['stddevran'] = results.plotplotly_std_dev_range(return_plotly_figure=True)
-                std_res = results.stddev_ensemble()
-                plots['stddev'] = std_res.plotplotly(return_plotly_figure=True)
-                avg_res = results.average_ensemble()
-                plots['avg'] = avg_res.plotplotly(return_plotly_figure=True)
-            for _, plot in plots.items():
-                plot["config"] = {"responsive":True}
-            with open('results/plots.json', 'w') as plots_file:
-                json.dump(plots, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
-                          indent=4, sort_keys=True)
-        except Exception as err:
-            message = f"Error storing result plots: {err}\n{traceback.format_exc()}"
-            log.error(message)
-            return message
-        return False
-
-
     def __update_timespan(self):
         if "timespanSettings" in self.settings.keys():
             keys = self.settings['timespanSettings'].keys()
@@ -163,9 +139,8 @@ class EnsembleSimulation(StochSSJob):
         pkl_err = self.__store_pickled_results(results=results)
         if verbose:
             log.info("Storing the polts of the results")
-        plt_err = self.__store_result_plots(results=results)
-        if pkl_err and plt_err:
+        if pkl_err:
             message = "An unexpected error occured with the result object"
-            trace = f"{pkl_err}\n{plt_err}"
+            trace = str(pkl_err)
             raise StochSSJobResultsError(message, trace)
         return None

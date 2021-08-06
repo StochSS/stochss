@@ -21,6 +21,8 @@ let path = require('path');
 //support files
 let app = require('../app');
 let modals = require('../modals');
+//models
+let Model = require('../models/model');
 //views
 let View = require('ampersand-view');
 let WorkflowListing = require("./workflow-listing");
@@ -53,10 +55,10 @@ module.exports = View.extend({
     app.changeCollapseButtonText(this, e);
   },
   handleEnsembleSimulationClick: function (e) {
-    app.newWorkflow(this, this.model.model.directory, this.model.model.is_spatial, "Ensemble Simulation")
+    this.newWorkflow("Ensemble Simulation")
   },
   handleParameterSweepClick: function (e) {
-    app.newWorkflow(this, this.model.model.directory, this.model.model.is_spatial, "Parameter Sweep")
+    this.newWorkflow("Parameter Sweep")
   },
   handleTrashModelClick: function () {
     if(document.querySelector('#moveToTrashConfirmModal')) {
@@ -78,6 +80,26 @@ module.exports = View.extend({
         }
       });
     });
+  },
+  newWorkflow: function (type) {
+    let model = new Model({
+      directory: o.original._path
+    });
+    app.getXHR(model.url(), {
+      success: function (err, response, body) {
+        model.set(body);
+        model.updateValid();
+        if(model.valid){
+          app.newWorkflow(this, this.model.model.directory, this.model.model.is_spatial, type);
+        }else{
+          let title = "Model Errors Detected";
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory;
+          let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
+          $(modals.modelErrorHtml(title, message)).modal();
+        }
+      }
+    });
+    app.newWorkflow(this, this.model.model.directory, this.model.model.is_spatial, type);
   },
   renderWorkflowCollection: function () {
     if(this.workflowCollectionView){

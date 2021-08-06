@@ -29,6 +29,9 @@ module.exports = State.extend({
     steps: 'any',
     hasChangedRange: 'boolean' 
   },
+  session: {
+    fixed: 'boolean'
+  },
   derived: {
     elementID: {
       deps: ["collection"],

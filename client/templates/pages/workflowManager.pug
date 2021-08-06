@@ -36,9 +36,9 @@ section.page
 
   div(data-hook="status-container")
 
-  div.card.card-body(data-hook="jobs-container" style="display: none;")
+  div.card(data-hook="jobs-container" style="display: none;")
 
-    div
+    div.card-header.pb-0
 
       h3.inline Jobs
 
@@ -46,18 +46,18 @@ section.page
 
     div.collapse.show(id="job-listing-container")
 
-      hr
+      div.card-body
 
-      div.row
+        div.row
 
-        div.col-md-3: h6 <b>Job</b>
-        div.col-md-4: h6 <b>Start Time</b>
-        div.col-md-3: h6 <b>Status</b>
-        div.col-md-2: h6 <b>Remove</b>
+          div.col-md-3: h6 <b>Job</b>
+          div.col-md-4: h6 <b>Start Time</b>
+          div.col-md-3: h6 <b>Status</b>
+          div.col-md-2: h6 <b>Remove</b>
 
-      div.mb-3.head
+        div.mb-3.head
 
-      div(data-hook="job-listing")
+        div(data-hook="job-listing")
 
   div.mt-4(data-hook="active-job-header-container" style="display: none")
 
@@ -69,11 +69,11 @@ section.page
 
   div(data-hook="settings-viewer-container")
 
-  div.card
+  div#review-model-section.card(style="display: none;")
 
     div.card-header
 
-      h3.inline(id="model-viewer-header") "Review Model: "
+      h3.inline(id="model-viewer-header") Review Model: 
 
       button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-model" data-hook="collapse-model") +
 

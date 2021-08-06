@@ -25,7 +25,6 @@ import itertools
 import traceback
 
 import numpy
-import plotly
 
 from gillespy2 import TauHybridSolver
 
@@ -137,42 +136,6 @@ class ParameterSweep(StochSSJob):
 
 
     @classmethod
-    def __store_result_plots(cls, job):
-        try:
-            mappers = ["min", "max", "avg", "var", "final"]
-            if "solver" in job.settings.keys():
-                solver_name = job.settings['solver'].name
-            else:
-                solver_name = job.model.get_best_solver().name
-            if "ODE" not in solver_name and job.settings['number_of_trajectories'] > 1:
-                keys = list(itertools.product(job.list_of_species, mappers,
-                                              ["min", "max", "avg", "var"]))
-            else:
-                keys = list(itertools.product(job.list_of_species, mappers))
-            plot_figs = {}
-            for key in keys:
-                key = list(key)
-                trace_list = job.get_plotly_traces(keys=key)
-                plt_data = {'title':f"<b>Parameter Sweep - Variable: {key[0]}</b>"}
-                job.get_plotly_layout_data(plt_data=plt_data)
-                layout = plotly.graph_objs.Layout(title=dict(text=plt_data['title'], x=0.5),
-                                                  xaxis=dict(title=plt_data['xaxis_label']),
-                                                  yaxis=dict(title=plt_data['yaxis_label']))
-
-                fig = dict(data=trace_list, layout=layout, config={"responsive": True})
-                plot_figs['-'.join(key)] = fig
-
-            with open('results/plots.json', 'w') as plots_file:
-                json.dump(plot_figs, plots_file, cls=plotly.utils.PlotlyJSONEncoder,
-                          indent=4, sort_keys=True)
-        except Exception as err:
-            message = f"Error storing result plots: {err}\n{traceback.format_exc()}"
-            log.error(message)
-            return message
-        return False
-
-
-    @classmethod
     def __store_results(cls, job):
         try:
             with open('results/results.json', 'w') as json_file:
@@ -246,8 +209,7 @@ class ParameterSweep(StochSSJob):
                 log.info("Storing the polts of the results")
             res_err = self.__store_results(job=job)
             self.__store_csv_results(job=job)
-            plt_err = self.__store_result_plots(job=job)
-            if pkl_err and res_err and plt_err:
-                self.__report_result_error(trace=f"{res_err}\n{pkl_err}\n{plt_err}")
+            if pkl_err and res_err:
+                self.__report_result_error(trace=f"{res_err}\n{pkl_err}")
         elif pkl_err:
             self.__report_result_error(trace=pkl_err)
