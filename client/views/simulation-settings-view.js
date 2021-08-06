@@ -78,7 +78,7 @@ module.exports = View.extend({
     app.changeCollapseButtonText(this, e);
   },
   disableInputFieldByAlgorithm: function () {
-    let isAutomatic = this.model.isAutomatic
+    let isAutomatic = this.model.isAutomatic;
     let isODE = this.model.algorithm === "ODE";
     let isSSA = this.model.algorithm === "SSA";
     let isLeaping = this.model.algorithm === "Tau-Leaping";
@@ -111,25 +111,25 @@ module.exports = View.extend({
   },
   update: function (e) {},
   updateViewATol: function (e) {
-    $(this.queryByHook("view-a-tol")).html(this.model.absoluteTol)
+    $(this.queryByHook("view-a-tol")).html(this.model.absoluteTol);
   },
   updateViewRTol: function (e) {
-    $(this.queryByHook("view-r-tol")).html(this.model.relativeTol)
+    $(this.queryByHook("view-r-tol")).html(this.model.relativeTol);
   },
   updateViewSeed: function (e) {
-    $(this.queryByHook("view-seed")).html(this.model.seed)
+    $(this.queryByHook("view-seed")).html(this.model.seed);
   },
   updateViewTauTol: function (e) {
-    $(this.queryByHook("view-tau-tol")).html(this.model.tauTol)
+    $(this.queryByHook("view-tau-tol")).html(this.model.tauTol);
   },
   updateViewTraj: function (e) {
-    $(this.queryByHook("view-realizations")).html(this.model.realizations)
+    $(this.queryByHook("view-realizations")).html(this.model.realizations);
   },
   updateValid: function (e) {},
   updateViewer: function () {
     $(this.queryByHook("view-algorithm")).html(this.algorithm);
     let hideDeterministic = this.model.isAutomatic || this.model.algorithm === "SSA" || this.model.algorithm === "Tau-Leaping";
-    let hideStochastic = this.model.isAutomatic || this.model.algorithm === "ODE" 
+    let hideStochastic = this.model.isAutomatic || this.model.algorithm === "ODE" ;
     if(hideDeterministic) {
       $(this.queryByHook("view-deterministic-settings")).css("display", "none");
     }else{
