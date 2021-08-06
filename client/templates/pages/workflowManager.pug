@@ -32,7 +32,37 @@ section.page
 
     button.btn.btn-outline-primary.box-shadow(data-hook="save-model") Update Model
 
-  div(data-hook="settings-container")
+  div.card
+
+    div.card-header.pb-0
+
+      h3.inline Settings
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-wkfl-settings" data-hook="collapse-settings") -
+
+    div.collapse(class="show" id="collapse-wkfl-settings" data-hook="workflow-editor-container")
+
+      div.card-body
+
+        div(data-hook="settings-container")
+
+        div.mdl-edit-btn
+
+          button.btn.btn-primary.box-shadow(data-hook="save") Save
+
+          div.mdl-edit-btn.saving-status(data-hook="saving-workflow")
+
+            div.spinner-grow
+
+            span Saving...
+
+          div.mdl-edit-btn.saved-status(data-hook="saved-workflow")
+
+            span Saved
+
+          button.btn.btn-primary.box-shadow(data-hook="start-job") Start Workflow
+    
+          button.btn.btn-primary.box-shadow(data-hook="edit-model") Edit Model
 
   div(data-hook="status-container")
 

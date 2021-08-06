@@ -20,8 +20,6 @@ let $ = require('jquery');
 //support files
 let app = require('../app');
 let Tooltips = require('../tooltips');
-//models
-let Model = require('../models/model');
 //views
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');

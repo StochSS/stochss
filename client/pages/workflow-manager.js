@@ -23,6 +23,7 @@ let _ = require('underscore');
 let app = require('../app');
 let modals = require('../modals');
 //models
+let Model = require('../models/model');
 let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
@@ -46,6 +47,10 @@ let WorkflowManager = PageView.extend({
     'change [data-hook=model-location]' : 'handleLocationSelect',
     'click [data-hook=project-breadcrumb]' : 'handleReturnToProject',
     'click [data-hook=save-model]' : 'handleSaveWorkflow',
+    'click [data-hook=collapse-settings]' : 'changeCollapseButtonText',
+    'click [data-hook=save]' : 'clickSaveHandler',
+    'click [data-hook=start-job]'  : 'clickStartJobHandler',
+    'click [data-hook=edit-model]' : 'clickEditModelHandler',
     'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
     'click [data-hook=collapse-model]' : 'changeCollapseButtonText',
     'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
@@ -88,6 +93,67 @@ let WorkflowManager = PageView.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  clickEditModelHandler: function (e) {
+    this.handleSaveWorkflow(e, _.bind(function () {
+      let queryStr = "?path=" + this.model.model;
+      let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+      window.location.href = endpoint;
+    }, this));
+  },
+  clickSaveHandler: function (e) {
+    this.saving();
+    this.handleSaveWorkflow(e, _.bind(this.saved, this));
+  },
+  clickStartJobHandler: function (e) {
+    this.saving();
+    let self = this;
+    let type = this.model.type === "Ensemble Simulation" ? "gillespy" : "parameterSweep";
+    let data = {"settings": this.model.settings.toJSON(),
+                "mdl_path": this.model.model,
+                "type": type, "time_stamp": this.getTimeStamp()};
+    let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
+    let initEndpoint = path.join(app.getApiPath(), "workflow/init-job") + queryStr;
+    app.getXHR(initEndpoint, {
+      success: function (err, response, body) {
+        self.saved();
+        let runQuery = "?path=" + body + "&type=" + type;
+        let runEndpoint = path.join(app.getApiPath(), "workflow/run-job") + runQuery;
+        app.getXHR(runEndpoint, {
+          success: function (err, response, body) {
+            self.updateWorkflow(true);
+          }
+        });
+      }
+    });
+  },
+  getTimeStamp: function () {
+    if(!this.model.newFormat) {
+      return null;
+    }
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    if(month < 10){
+      month = "0" + month
+    }
+    var day = date.getDate();
+    if(day < 10){
+      day = "0" + day
+    }
+    var hours = date.getHours();
+    if(hours < 10){
+      hours = "0" + hours
+    }
+    var minutes = date.getMinutes();
+    if(minutes < 10){
+      minutes = "0" + minutes
+    }
+    var seconds = date.getSeconds();
+    if(seconds < 10){
+      seconds = "0" + seconds
+    }
+    return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
   handleLocationSelect: function (e) {
     let value = e.srcElement.value;
@@ -134,7 +200,7 @@ let WorkflowManager = PageView.extend({
           $(self.queryByHook("src-model")).css("display", "none");
           let oldFormRdyState = !self.model.newFormat && self.model.activeJob.status === "ready";
           if(oldFormRdyState || self.model.newFormat) {
-            self.renderSettingsView();
+            self.setupSettingsView();
           }
         }
       }
@@ -241,21 +307,23 @@ let WorkflowManager = PageView.extend({
     });
     app.registerRenderSubview(this, this.statusView, "status-container");
   },
-  renderSettingsView: function () {
+  renderSettingsView: function (options) {
     if(this.settingsView) {
       this.settingsView.remove();
     }
-    this.settingsView = new SettingsView({
-      model: this.model.settings
-    });
+    this.settingsView = new SettingsView(options);
     app.registerRenderSubview(this, this.settingsView, "settings-container");
   },
   renderSettingsViewerView: function () {
     if(this.settingsViewerView) {
       this.settingsViewerView.remove();
     }
-    this.settingsViewerView = new SettingsViewerView({
-      model: this.model.activeJob.settings
+    this.settingsViewerView = new SettingsView({
+      model: this.model.activeJob.settings,
+      newFormat: this.model.newFormat,
+      readOnly: true,
+      stochssModel: this.model.activeJob.model,
+      type: this.model.type
     });
     app.registerRenderSubview(this, this.settingsViewerView, "settings-viewer-container");
   },
@@ -263,7 +331,7 @@ let WorkflowManager = PageView.extend({
     let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";
     let newFormNotArchive = this.model.newFormat && this.model.model;
     if(!this.models && (oldFormRdyState || newFormNotArchive)) {
-      this.renderSettingsView();
+      this.setupSettingsView();
     }else if(this.settingsView) {
       this.settingsView.remove();
     }
@@ -278,10 +346,51 @@ let WorkflowManager = PageView.extend({
       this.renderActiveJob();
     }
   },
+  saved: function () {
+    $(this.queryByHook('saving-workflow')).css("display", "none");
+    $(this.queryByHook('saved-workflow')).css("display", "inline-block");
+  },
+  saving: function () {
+    $(this.queryByHook('saving-workflow')).css("display", "inline-block");
+    $(this.queryByHook('saved-workflow')).css("display", "none");
+  },
   setActiveJob: function (job) {
     this.model.activeJob = job;
     this.removeActiveJob();
     this.renderActiveJob();
+  },
+  setupSettingsView: function () {
+    if(this.model.newFormat) {
+      $(this.queryByHook("start-job")).text("Start New Job");
+    }
+    if(this.model.type === "Parameter Sweep"){
+      if(this.model.settings.parameterSweepSettings.parameters.length < 1) {
+        $(this.queryByHook("start-job")).prop("disabled", true);
+      }
+      this.model.settings.parameterSweepSettings.parameters.on("add remove", _.bind(function (e) {
+        let numParams = this.model.settings.parameterSweepSettings.parameters.length;
+        $(this.queryByHook("start-job")).prop("disabled", numParams < 1);
+      }, this))
+    }
+    let options = {
+      model: this.model.settings,
+      newFormat: this.model.newFormat,
+      type: this.model.type
+    }
+    if(this.model.type === "Parameter Sweep") {
+      let self = this;
+      options['stochssModel'] = new Model({
+        directory: this.model.model
+      });
+      app.getXHR(options.stochssModel.url(), {
+        success: function (err, response, body) {
+          options.stochssModel.set(body);
+          self.renderSettingsView(options);
+        }
+      });
+    }else {
+      this.renderSettingsView(options);
+    }
   },
   updateWorkflow: function (newJob) {
     let self = this;
