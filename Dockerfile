@@ -40,3 +40,9 @@ USER jovyan
 
 #RUN julia -e 'using Pkg; Pkg.add("IJulia")'
 #RUN julia -e 'using Pkg; Pkg.add(PackageSpec(url="https://github.com/stochss/gillespy2lia", rev="main"))'
+
+RUN pip install --no-cache-dir -e .
+
+RUN rm -r /home/jovyan/work
+
+WORKDIR /home/jovyan

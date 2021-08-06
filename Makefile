@@ -146,3 +146,10 @@ run_bash:
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
+
+
+update:
+	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss
+
+
+.PHONY: network volumes check-files pull notebook_image build
