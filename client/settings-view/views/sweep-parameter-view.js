@@ -49,8 +49,8 @@ module.exports = View.extend({
     })[0];
     if(!this.viewMode) {
       this.model.updateVariable(this.parameter);
+      this.model.collection.on('add update-target remove', this.renderTargetSelectView, this);
     }
-    this.model.collection.on('add update-target remove', this.renderTargetSelectView, this);
   },
   render: function (attrs, options) {
     this.template = this.viewMode ? viewTemplate : editTemplate;
