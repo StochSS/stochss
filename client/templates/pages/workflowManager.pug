@@ -97,7 +97,17 @@ section.page
 
   div(data-hook="workflow-info-container")
 
-  div(data-hook="settings-viewer-container")
+  div#review-settings-section.card(style="display: none;")
+
+    div.card-header
+
+      h3.inline(id="settings-viewer-header") Review Settings
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#review-settings-container" data-hook="collapse-review-settings") +
+
+    div.collapse(id="review-settings-container")
+
+      div.card-body(data-hook="settings-viewer-container")
 
   div#review-model-section.card(style="display: none;")
 

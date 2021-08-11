@@ -51,6 +51,7 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=start-job]'  : 'clickStartJobHandler',
     'click [data-hook=edit-model]' : 'clickEditModelHandler',
     'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-review-settings]' : 'changeCollapseButtonText',
     'click [data-hook=collapse-model]' : 'changeCollapseButtonText',
     'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
   },
@@ -208,6 +209,7 @@ let WorkflowManager = PageView.extend({
   removeActiveJob: function () {
     $(this.queryByHook("active-job-header-container")).css("display", "none");
     $("#review-model-section").css("display", "none");
+    $("#review-settings-section").css("display", "none");
     if(this.resultsView) {
       this.resultsView.remove();
     }
@@ -317,6 +319,7 @@ let WorkflowManager = PageView.extend({
     if(this.settingsViewerView) {
       this.settingsViewerView.remove();
     }
+    $("#review-settings-section").css("display", "block");
     this.settingsViewerView = new SettingsView({
       model: this.model.activeJob.settings,
       newFormat: this.model.newFormat,
