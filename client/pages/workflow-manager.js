@@ -27,14 +27,13 @@ let Model = require('../models/model');
 let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
-let SettingsView = require('../views/settings');
+let SettingsView = require('../settings-view/settings-view');
 let LogsView = require('../views/job-info-view');
 let SelectView = require('ampersand-select-view');
 let ModelView = require('../model-view/model-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
 let ResultsView = require('../views/job-results-view');
-let SettingsViewerView = require('../views/settings-viewer');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
 

@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
-let Tooltips = require('../tooltips');
+let app = require('../../app');
+let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let ParameterView = require('./sweep-parameter-view');
 //templates
-let template = require('../templates/includes/parameterSettingsView.pug');
+let template = require('../templates/parameterSettingsView.pug');
 
 module.exports = View.extend({
   template: template,
