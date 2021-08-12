@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let app = require('../app');
 //views
 let View = require('ampersand-view');
+let LogsView = require('./views/job-logs-view');
 let ResultsView = require('./views/job-results-view');
 //templates
 let template = require('./jobView.pug');
@@ -37,6 +38,18 @@ module.exports = View.extend({
   	if(this.model.status !== "error") {
       this.renderResultsView();
     }
+    if(!this.readOnly) {
+      this.renderLogsView();
+    }
+  },
+  renderLogsView: function () {
+    if(this.logsView) {
+      this.logsView.remove();
+    }
+    this.logsView = new LogsView({
+      logs: this.model.logs
+    });
+    app.registerRenderSubview(this, this.logsView, "workflow-info-container");
   },
   renderResultsView: function () {
     if(this.resultsView) {

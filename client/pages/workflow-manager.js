@@ -28,7 +28,6 @@ let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
 let SettingsView = require('../settings-view/settings-view');
-let LogsView = require('../views/job-info-view');
 let SelectView = require('ampersand-select-view');
 let ModelView = require('../model-view/model-view');
 let StatusView = require('../views/workflow-status');
@@ -213,8 +212,7 @@ let WorkflowManager = PageView.extend({
     if(this.activeJobView) {
       this.activeJobView.remove();
     }
-    if(this.logsView) {
-      this.logsView.remove();
+    if(this.settingsViewerView) {
       this.modelView.remove();
       this.settingsViewerView.remove();
     }
@@ -230,7 +228,6 @@ let WorkflowManager = PageView.extend({
       titleType: this.model.type
     });
     app.registerRenderSubview(this, this.activeJobView, "active-job-container");
-    this.renderLogsView();
     this.renderSettingsViewerView();
     this.renderModelView();
   },
@@ -243,15 +240,6 @@ let WorkflowManager = PageView.extend({
       JobListingView,
       this.queryByHook("job-listing")
     );
-  },
-  renderLogsView: function () {
-    if(this.logsView) {
-      this.logsView.remove();
-    }
-    this.logsView = new LogsView({
-      logs: this.model.activeJob.logs
-    });
-    app.registerRenderSubview(this, this.logsView, "workflow-info-container");
   },
   renderModelLocationSelectView: function (model) {
     if(this.modelLocationSelectView) {
