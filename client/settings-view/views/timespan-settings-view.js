@@ -46,14 +46,14 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
-      $(this.queryByHook('timespan-edit-tab')).addClass("disabled");
+      $(this.queryByHook(this.model.elementID + '-timespan-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
         e.preventDefault();
         return false;
       });
-      $(this.queryByHook('timespan-view-tab')).tab('show');
-      $(this.queryByHook('edit-timespan')).removeClass('active');
-      $(this.queryByHook('view-timespan')).addClass('active');
+      $(this.queryByHook(this.model.elementID + '-timespan-view-tab')).tab('show');
+      $(this.queryByHook(this.model.elementID + '-edit-timespan')).removeClass('active');
+      $(this.queryByHook(this.model.elementID + '-view-timespan')).addClass('active');
     }
     $(this.queryByHook("timestep-size-value")).html(this.model.timestepSize);
   },

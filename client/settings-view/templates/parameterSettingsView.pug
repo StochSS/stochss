@@ -10,11 +10,11 @@ div#parameter-settings.card
 
         li.nav-item
 
-          a.nav-link.tab.active(data-hook="parameter-settings-edit-tab" data-toggle="tab" href="#edit-parameter-settings") Edit
+          a.nav-link.tab.active(data-hook=this.model.elementID + "-parameter-settings-edit-tab" data-toggle="tab" href="#" + this.model.elementID + "-edit-parameter-settings") Edit
 
         li.nav-item
 
-          a.nav-link.tab(data-hook="parameter-settings-view-tab" data-toggle="tab" href="#view-parameter-settings") View
+          a.nav-link.tab(data-hook=this.model.elementID + "-parameter-settings-view-tab" data-toggle="tab" href="#" + this.model.elementID + "-view-parameter-settings") View
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "collapse-psweep-settings" data-hook="collapse") -
 
@@ -22,7 +22,7 @@ div#parameter-settings.card
 
     div.card-body.tab-content
 
-      div.tab-pane.active(id="edit-parameter-settings" data-hook="edit-parameter-settings")
+      div.tab-pane.active(id=this.model.elementID + "-edit-parameter-settings" data-hook=this.model.elementID + "-edit-parameter-settings")
 
         div.verticle-space
           
@@ -78,7 +78,7 @@ div#parameter-settings.card
 
         button.btn.btn-outline-secondary.box-shadow(data-hook="add-ps-parameter") Add Parameter
 
-      div.tab-pane(id="view-parameter-settings" data-hook="view-parameter-settings")
+      div.tab-pane(id=this.model.elementID + "-view-parameter-settings" data-hook=this.model.elementID + "-view-parameter-settings")
 
         div
 

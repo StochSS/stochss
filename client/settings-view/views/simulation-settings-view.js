@@ -51,14 +51,14 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
-      $(this.queryByHook('sim-settings-edit-tab')).addClass("disabled");
+      $(this.queryByHook(this.model.elementID + '-sim-settings-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
         e.preventDefault();
         return false;
       });
-      $(this.queryByHook('sim-settings-view-tab')).tab('show');
-      $(this.queryByHook('edit-sim-settings')).removeClass('active');
-      $(this.queryByHook('view-sim-settings')).addClass('active');
+      $(this.queryByHook(this.model.elementID + '-sim-settings-view-tab')).tab('show');
+      $(this.queryByHook(this.model.elementID + '-edit-sim-settings')).removeClass('active');
+      $(this.queryByHook(this.model.elementID + '-view-sim-settings')).addClass('active');
     }else {
       if(!this.model.isAutomatic){
         $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));

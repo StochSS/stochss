@@ -49,14 +49,14 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
-      $(this.queryByHook('parameter-settings-edit-tab')).addClass("disabled");
+      $(this.queryByHook(this.model.elementID + '-parameter-settings-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
         e.preventDefault();
         return false;
       });
-      $(this.queryByHook('parameter-settings-view-tab')).tab('show');
-      $(this.queryByHook('edit-parameter-settings')).removeClass('active');
-      $(this.queryByHook('view-parameter-settings')).addClass('active');
+      $(this.queryByHook(this.model.elementID + '-parameter-settings-view-tab')).tab('show');
+      $(this.queryByHook(this.model.elementID + '-edit-parameter-settings')).removeClass('active');
+      $(this.queryByHook(this.model.elementID + '-view-parameter-settings')).addClass('active');
     }else{
       this.model.parameters.on("add remove", function () {
         let disable = this.model.parameters.length >= 6 || this.model.parameters.length >= this.stochssModel.parameters.length;

@@ -10,11 +10,11 @@ div#simulation-settings.card
 
         li.nav-item
 
-          a.nav-link.tab.active(data-hook="sim-settings-edit-tab" data-toggle="tab" href="#edit-sim-settings") Edit
+          a.nav-link.tab.active(data-hook=this.model.elementID + "-sim-settings-edit-tab" data-toggle="tab" href="#" + this.model.elementID + "-edit-sim-settings") Edit
 
         li.nav-item
 
-          a.nav-link.tab(data-hook="sim-settings-view-tab" data-toggle="tab" href="#view-sim-settings") View
+          a.nav-link.tab(data-hook=this.model.elementID + "-sim-settings-view-tab" data-toggle="tab" href="#" + this.model.elementID + "-view-sim-settings") View
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "collapse-settings", data-hook="collapse-settings-view") -
 
@@ -22,7 +22,7 @@ div#simulation-settings.card
 
     div.card-body.tab-content
 
-      div.tab-pane.active(id="edit-sim-settings" data-hook="edit-sim-settings")
+      div.tab-pane.active(id=this.model.elementID + "-edit-sim-settings" data-hook=this.model.elementID + "-edit-sim-settings")
 
         div.mx-1.head.align-items-baseline
 
@@ -136,7 +136,7 @@ div#simulation-settings.card
 
               div.col-sm-4(data-hook="tau-tolerance")
 
-      div.tab-pane(id="view-sim-settings" data-hook="view-sim-settings")
+      div.tab-pane(id=this.model.elementID + "-view-sim-settings" data-hook=this.model.elementID + "-view-sim-settings")
 
         div
 
