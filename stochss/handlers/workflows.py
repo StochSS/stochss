@@ -245,7 +245,8 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
                 fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
                                                        kwargs=body['plt_key'], add_config=True)
                 job.print_logs(log)
-            fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
+            if "plt_data" in body.keys():
+                fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
             log.debug("Plot figure: %s", fig)
             self.write(fig)
         except StochSSAPIError as err:
