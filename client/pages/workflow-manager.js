@@ -33,7 +33,7 @@ let SelectView = require('ampersand-select-view');
 let ModelView = require('../model-view/model-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
-let ResultsView = require('../views/job-results-view');
+let ActiveJobView = require('../job-view/job-view');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
 
@@ -210,8 +210,8 @@ let WorkflowManager = PageView.extend({
     $(this.queryByHook("active-job-header-container")).css("display", "none");
     $("#review-model-section").css("display", "none");
     $("#review-settings-section").css("display", "none");
-    if(this.resultsView) {
-      this.resultsView.remove();
+    if(this.activeJobView) {
+      this.activeJobView.remove();
     }
     if(this.logsView) {
       this.logsView.remove();
@@ -224,9 +224,12 @@ let WorkflowManager = PageView.extend({
       $(this.queryByHook("active-job-header")).text("Job: " + this.model.activeJob.name);
       $(this.queryByHook("active-job-header-container")).css("display", "block");
     }
-    if(this.model.activeJob.status !== "error") {
-      this.renderResultsView();
-    }
+    this.activeJobView = new ActiveJobView({
+      model: this.model.activeJob,
+      wkflName: this.model.name,
+      titleType: this.model.type
+    });
+    app.registerRenderSubview(this, this.activeJobView, "active-job-container");
     this.renderLogsView();
     this.renderSettingsViewerView();
     this.renderModelView();
@@ -289,15 +292,6 @@ let WorkflowManager = PageView.extend({
       readOnly: true
     });
     app.registerRenderSubview(this, this.modelView, "model-viewer-container");
-  },
-  renderResultsView: function () {
-    if(this.resultsView) {
-      this.resultsView.remove();
-    }
-    this.resultsView = new ResultsView({
-      model: this.model.activeJob
-    });
-    app.registerRenderSubview(this, this.resultsView, "workflow-results-container");
   },
   renderStatusView: function () {
     if(this.statusView) {
