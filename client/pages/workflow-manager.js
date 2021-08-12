@@ -27,12 +27,12 @@ let Model = require('../models/model');
 let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
-let SettingsView = require('../settings-view/settings-view');
 let SelectView = require('ampersand-select-view');
 let ModelView = require('../model-view/model-view');
+let ActiveJobView = require('../job-view/job-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
-let ActiveJobView = require('../job-view/job-view');
+let SettingsView = require('../settings-view/settings-view');
 //templates
 let template = require('../templates/pages/workflowManager.pug');
 
@@ -50,7 +50,6 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=start-job]'  : 'clickStartJobHandler',
     'click [data-hook=edit-model]' : 'clickEditModelHandler',
     'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
-    'click [data-hook=collapse-review-settings]' : 'changeCollapseButtonText',
     'click [data-hook=collapse-model]' : 'changeCollapseButtonText',
     'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
   },
@@ -208,16 +207,16 @@ let WorkflowManager = PageView.extend({
   removeActiveJob: function () {
     $(this.queryByHook("active-job-header-container")).css("display", "none");
     $("#review-model-section").css("display", "none");
-    $("#review-settings-section").css("display", "none");
     if(this.activeJobView) {
+      this.activeJobView.removeSubviews();
       this.activeJobView.remove();
     }
-    if(this.settingsViewerView) {
+    if(this.modelView) {
       this.modelView.remove();
-      this.settingsViewerView.remove();
     }
   },
   renderActiveJob: function () {
+    this.removeActiveJob();
     if(this.model.newFormat) {
       $(this.queryByHook("active-job-header")).text("Job: " + this.model.activeJob.name);
       $(this.queryByHook("active-job-header-container")).css("display", "block");
@@ -225,10 +224,10 @@ let WorkflowManager = PageView.extend({
     this.activeJobView = new ActiveJobView({
       model: this.model.activeJob,
       wkflName: this.model.name,
-      titleType: this.model.type
+      titleType: this.model.type,
+      newFormat: this.model.newFormat
     });
     app.registerRenderSubview(this, this.activeJobView, "active-job-container");
-    this.renderSettingsViewerView();
     this.renderModelView();
   },
   renderJobListingView: function () {
@@ -296,20 +295,6 @@ let WorkflowManager = PageView.extend({
     }
     this.settingsView = new SettingsView(options);
     app.registerRenderSubview(this, this.settingsView, "settings-container");
-  },
-  renderSettingsViewerView: function () {
-    if(this.settingsViewerView) {
-      this.settingsViewerView.remove();
-    }
-    $("#review-settings-section").css("display", "block");
-    this.settingsViewerView = new SettingsView({
-      model: this.model.activeJob.settings,
-      newFormat: this.model.newFormat,
-      readOnly: true,
-      stochssModel: this.model.activeJob.model,
-      type: this.model.type
-    });
-    app.registerRenderSubview(this, this.settingsViewerView, "settings-viewer-container");
   },
   renderSubviews: function () {
     let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";

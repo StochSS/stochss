@@ -3,3 +3,15 @@ div#job-view
   div(data-hook="job-results-container")
 
   div(data-hook="job-info-container")
+
+  div#review-settings-section.card
+
+    div.card-header.pb-0
+
+      h3.inline(id="settings-viewer-header")=this.settingsHeader
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#review-settings-container" data-hook="collapse-review-settings") +
+
+    div.collapse(id="review-settings-container")
+
+      div.card-body(data-hook="settings-viewer-container")

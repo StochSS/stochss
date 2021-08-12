@@ -16,22 +16,29 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery')
 //support files
 let app = require('../app');
 //views
 let View = require('ampersand-view');
 let LogsView = require('./views/job-logs-view');
 let ResultsView = require('./views/job-results-view');
+let SettingsView = require('../settings-view/settings-view');
 //templates
 let template = require('./jobView.pug');
 
 module.exports = View.extend({
   template: template,
+  events: {
+    'click [data-hook=collapse-review-settings]' : 'changeCollapseButtonText',
+  },
   initialize: function (attrs, options) {
   	View.prototype.initialize.apply(this, arguments);
   	this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : false;
   	this.wkflName = attrs.wkflName;
   	this.titleType = attrs.titleType;
+    this.newFormat = attrs.newFormat;
+    this.settingsHeader = this.readOnly ? "Settings" : "Review Settings";
   },
   render: function (attrs, options) {
   	View.prototype.render.apply(this, arguments);
@@ -41,6 +48,15 @@ module.exports = View.extend({
     if(!this.readOnly) {
       this.renderLogsView();
     }
+    this.renderSettingsView();
+  },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  removeSubviews: function () {
+    this.resultsView.remove();
+    this.logsView.remove();
+    this.settingsView.remove();
   },
   renderLogsView: function () {
     if(this.logsView) {
@@ -49,7 +65,7 @@ module.exports = View.extend({
     this.logsView = new LogsView({
       logs: this.model.logs
     });
-    app.registerRenderSubview(this, this.logsView, "workflow-info-container");
+    app.registerRenderSubview(this, this.logsView, "job-info-container");
   },
   renderResultsView: function () {
     if(this.resultsView) {
@@ -61,6 +77,19 @@ module.exports = View.extend({
       wkflName: this.wkflName,
       titleType: this.titleType
     });
-    app.registerRenderSubview(this, this.resultsView, "workflow-results-container");
+    app.registerRenderSubview(this, this.resultsView, "job-results-container");
+  },
+  renderSettingsView: function () {
+    if(this.settingsView) {
+      this.settingsView.remove();
+    }
+    this.settingsView = new SettingsView({
+      model: this.model.settings,
+      newFormat: this.newFormat,
+      readOnly: true,
+      stochssModel: this.model.model,
+      type: this.titleType
+    });
+    app.registerRenderSubview(this, this.settingsView, "settings-viewer-container");
   }
 });
