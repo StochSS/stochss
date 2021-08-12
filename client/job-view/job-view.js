@@ -22,6 +22,7 @@ let app = require('../app');
 //views
 let View = require('ampersand-view');
 let LogsView = require('./views/job-logs-view');
+let ModelView = require('../model-view/model-view');
 let ResultsView = require('./views/job-results-view');
 let SettingsView = require('../settings-view/settings-view');
 //templates
@@ -31,6 +32,7 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=collapse-review-settings]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-model]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
   	View.prototype.initialize.apply(this, arguments);
@@ -39,6 +41,7 @@ module.exports = View.extend({
   	this.titleType = attrs.titleType;
     this.newFormat = attrs.newFormat;
     this.settingsHeader = this.readOnly ? "Settings" : "Review Settings";
+    this.modelHeader = (this.readOnly ? "Model: " : "Review Model: ") + this.model.model.name;
   },
   render: function (attrs, options) {
   	View.prototype.render.apply(this, arguments);
@@ -49,47 +52,41 @@ module.exports = View.extend({
       this.renderLogsView();
     }
     this.renderSettingsView();
+    this.renderModelView();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
-  removeSubviews: function () {
-    this.resultsView.remove();
-    this.logsView.remove();
-    this.settingsView.remove();
-  },
   renderLogsView: function () {
-    if(this.logsView) {
-      this.logsView.remove();
-    }
-    this.logsView = new LogsView({
+    let logsView = new LogsView({
       logs: this.model.logs
     });
-    app.registerRenderSubview(this, this.logsView, "job-info-container");
+    app.registerRenderSubview(this, logsView, "job-info-container");
+  },
+  renderModelView: function () {
+    let modelView = new ModelView({
+      model: this.model.model,
+      readOnly: true
+    });
+    app.registerRenderSubview(this, modelView, "model-viewer-container");
   },
   renderResultsView: function () {
-    if(this.resultsView) {
-      this.resultsView.remove();
-    }
-    this.resultsView = new ResultsView({
+    let resultsView = new ResultsView({
       model: this.model,
       readOnly: this.readOnly,
       wkflName: this.wkflName,
       titleType: this.titleType
     });
-    app.registerRenderSubview(this, this.resultsView, "job-results-container");
+    app.registerRenderSubview(this, resultsView, "job-results-container");
   },
   renderSettingsView: function () {
-    if(this.settingsView) {
-      this.settingsView.remove();
-    }
-    this.settingsView = new SettingsView({
+    let settingsView = new SettingsView({
       model: this.model.settings,
       newFormat: this.newFormat,
       readOnly: true,
       stochssModel: this.model.model,
       type: this.titleType
     });
-    app.registerRenderSubview(this, this.settingsView, "settings-viewer-container");
+    app.registerRenderSubview(this, settingsView, "settings-viewer-container");
   }
 });

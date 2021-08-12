@@ -15,3 +15,17 @@ div#job-view
     div.collapse(id="review-settings-container")
 
       div.card-body(data-hook="settings-viewer-container")
+
+  div#review-model-section.card
+
+    div.card-header.pb-0
+
+      h3.inline(id="model-viewer-header")=this.modelHeader
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-model" data-hook="collapse-model") +
+
+    div.collapse(id="collapse-model")
+
+      div.card-body(data-hook="model-viewer-container")
+
+  div.mb-2(data-hook="computational-resources-container")

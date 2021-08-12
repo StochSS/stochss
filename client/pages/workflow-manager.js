@@ -28,7 +28,6 @@ let Workflow = require('../models/workflow');
 //views
 let PageView = require('./base');
 let SelectView = require('ampersand-select-view');
-let ModelView = require('../model-view/model-view');
 let ActiveJobView = require('../job-view/job-view');
 let StatusView = require('../views/workflow-status');
 let JobListingView = require('../views/job-listing');
@@ -50,7 +49,6 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=start-job]'  : 'clickStartJobHandler',
     'click [data-hook=edit-model]' : 'clickEditModelHandler',
     'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
-    'click [data-hook=collapse-model]' : 'changeCollapseButtonText',
     'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
   },
   initialize: function (attrs, options) {
@@ -208,11 +206,7 @@ let WorkflowManager = PageView.extend({
     $(this.queryByHook("active-job-header-container")).css("display", "none");
     $("#review-model-section").css("display", "none");
     if(this.activeJobView) {
-      this.activeJobView.removeSubviews();
       this.activeJobView.remove();
-    }
-    if(this.modelView) {
-      this.modelView.remove();
     }
   },
   renderActiveJob: function () {
@@ -228,7 +222,6 @@ let WorkflowManager = PageView.extend({
       newFormat: this.model.newFormat
     });
     app.registerRenderSubview(this, this.activeJobView, "active-job-container");
-    this.renderModelView();
   },
   renderJobListingView: function () {
     if(this.jobListingView) {
@@ -266,19 +259,6 @@ let WorkflowManager = PageView.extend({
       unselectedText: "-- Select Model --"
     });
     app.registerRenderSubview(this, modelSelectView, "model-file");
-  },
-  renderModelView: function () {
-    if(this.modelView) {
-      this.modelView.remove();
-    }
-    $("#review-model-section").css("display", "block")
-    let header = "Review Model: " + this.model.activeJob.model.name;
-    $("#model-viewer-header").html(header);
-    this.modelView = new ModelView({
-      model: this.model.activeJob.model,
-      readOnly: true
-    });
-    app.registerRenderSubview(this, this.modelView, "model-viewer-container");
   },
   renderStatusView: function () {
     if(this.statusView) {
@@ -324,8 +304,8 @@ let WorkflowManager = PageView.extend({
     $(this.queryByHook('saved-workflow')).css("display", "none");
   },
   setActiveJob: function (job) {
-    this.model.activeJob = job;
     this.removeActiveJob();
+    this.model.activeJob = job;
     this.renderActiveJob();
   },
   setupSettingsView: function () {
