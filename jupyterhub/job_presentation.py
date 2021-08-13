@@ -53,7 +53,7 @@ class JobAPIHandler(BaseHandler):
         log.debug("Name to the file: %s", file)
         self.set_header('Content-Type', 'application/json')
         try:
-            path = os.path.join("/cache/presentation_cache", file, "job.json")
+            path = os.path.join("/tmp/presentation_cache", file, "job.json")
             if os.path.exists(path):
                 job = StochSSJob(path=path).load()
             else:
@@ -202,5 +202,5 @@ class StochSSJob(StochSSBase):
         Attributes
         ----------
         '''
-        with open(self.path, "rb") as job_file:
+        with open(self.path, "r") as job_file:
             return json.load(job_file)
