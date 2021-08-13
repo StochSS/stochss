@@ -109,6 +109,7 @@ def process_job_presentation(path, file=None, for_download=False):
         if not os.path.exists(dirname):
             os.mkdir(dirname)
         job_dir = os.path.join(dirname, file)
+        job['job']['directory'] = job_dir
         os.mkdir(job_dir)
         with open(os.path.join(job_dir, "job.json"), "w") as job_file:
             json.dump(job['job'], job_file, sort_keys=True, indent=4)
