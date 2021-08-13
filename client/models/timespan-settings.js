@@ -25,6 +25,17 @@ module.exports = State.extend({
     timeStep: 'any',
     timestepSize: 'number'
   },
+  derived: {
+    elementID: {
+      deps: ["parent"],
+      fn: function () {
+        if(this.parent) {
+          return this.parent.elementID + "TS-";
+        }
+        return "TS-"
+      }
+    }
+  },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
   },

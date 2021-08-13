@@ -19,20 +19,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 let path = require('path');
 //support files
-let app = require('../app');
-let modals = require('../modals');
-let Tooltips = require('../tooltips');
-let Plotly = require('../lib/plotly');
+let app = require('../../app');
+let modals = require('../../modals');
+let Tooltips = require('../../tooltips');
+let Plotly = require('../../lib/plotly');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let SweepParametersView = require('./sweep-parameter-range-view');
 //templates
-let gillespyResultsTemplate = require('../templates/includes/gillespyResultsView.pug');
-let gillespyResultsEnsembleTemplate = require('../templates/includes/gillespyResultsEnsembleView.pug');
-let parameterSweepResultsTemplate = require('../templates/includes/parameterSweepResultsView.pug');
-let parameterScanTemplate = require('../templates/includes/parameterScanResultsView.pug');
+let gillespyResultsTemplate = require('../templates/gillespyResultsView.pug');
+let gillespyResultsEnsembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
+let parameterSweepResultsTemplate = require('../templates/parameterSweepResultsView.pug');
+let parameterScanTemplate = require('../templates/parameterScanResultsView.pug');
 
 module.exports = View.extend({
   events: {
@@ -55,7 +55,9 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : true;
+    this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : false;
+    this.wkflName = attrs.wkflName;
+    this.titleType = attrs.titleType;
     this.tooltips = Tooltips.parameterSweepResults;
     this.plots = {};
     this.plotArgs = {};
@@ -64,7 +66,7 @@ module.exports = View.extend({
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
                      this.model.settings.simulationSettings.algorithm !== "ODE";
     let isParameterScan = this.model.settings.parameterSweepSettings.parameters.length > 2
-    if(this.parent.model.type === "Parameter Sweep"){
+    if(this.titleType === "Parameter Sweep"){
       this.template = isParameterScan ? parameterScanTemplate : parameterSweepResultsTemplate;
     }else{
       this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
@@ -78,7 +80,7 @@ module.exports = View.extend({
     }else if(app.getBasePath() === "/") {
       $(this.queryByHook("job-presentation")).css("display", "none");
     }
-    if(this.parent.model.type === "Ensemble Simulation") {
+    if(this.titleType === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";
     }else{
       this.tsPlotData = {"parameters":{}};
@@ -262,9 +264,9 @@ module.exports = View.extend({
   },
   handleConvertToNotebookClick: function (e) {
     let self = this;
-    if(this.parent.model.type === "Ensemble Simulation") {
+    if(this.titleType === "Ensemble Simulation") {
       var type = "gillespy";
-    }else if(this.parent.model.type === "Parameter Sweep" && this.model.settings.parameterSweepSettings.parameters.length > 1) {
+    }else if(this.titleType === "Parameter Sweep" && this.model.settings.parameterSweepSettings.parameters.length > 1) {
       var type = "2d_parameter_sweep";
     }else{
       var type = "1d_parameter-sweep";
@@ -308,7 +310,7 @@ module.exports = View.extend({
   handlePresentationClick: function (e) {
     let self = this;
     this.startAction();
-    let name = this.parent.model.name + "_" + this.model.name;
+    let name = this.wkflName + "_" + this.model.name;
     let queryStr = "?path=" + this.model.directory + "&name=" + name;
     let endpoint = path.join(app.getApiPath(), "job/presentation") + queryStr;
     app.getXHR(endpoint, {
@@ -354,7 +356,7 @@ module.exports = View.extend({
   plotMultiplePlots: function (e) {
     let type = e.target.dataset.type;
     let data = this.getPlotData(type);
-    var queryStr = "?path=" + this.model.directory + "&wkfl=" + this.parent.model.name;
+    var queryStr = "?path=" + this.model.directory + "&wkfl=" + this.wkflName;
     queryStr += "&job=" + this.model.name + "&data=" + JSON.stringify(data);
     let endpoint = path.join(app.getBasePath(), "stochss/multiple-plots") + queryStr;
     window.open(endpoint);

@@ -27,7 +27,7 @@ let Tooltips = require("../tooltips");
 var PageView = require('../pages/base');
 let ModelView = require('../model-view/model-view');
 var ParticleViewer = require('../views/view-particle');
-var TimespanSettingsView = require('../views/timespan-settings');
+var TimespanSettingsView = require('../settings-view/views/timespan-settings-view');
 var ModelStateButtonsView = require('../views/model-state-buttons');
 var QuickviewDomainTypes = require('../views/quickview-domain-types');
 //models

@@ -29,6 +29,17 @@ module.exports = State.extend({
   collections: {
     parameters: SweepParameters
   },
+  derived: {
+    elementID: {
+      deps: ["parent"],
+      fn: function () {
+        if(this.parent) {
+          return this.parent.elementID + "PS-";
+        }
+        return "PS-"
+      }
+    }
+  },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },

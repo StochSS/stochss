@@ -18,16 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
-let Tooltips = require('../tooltips');
-//models
-let Model = require('../models/model');
+let app = require('../../app');
+let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let ParameterView = require('./sweep-parameter-view');
 //templates
-let template = require('../templates/includes/parameterSettingsView.pug');
+let template = require('../templates/parameterSettingsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -40,21 +38,34 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.parameterSweepSettings;
-    if(this.readOnly) {
-      this.stochssModel = attrs.stochssModel;
-      this.renderSubviews();
-    }else{
-      this.stochssModel = new Model({
-        directory: attrs.modelDirectory
-      });
-      let self = this;
-      app.getXHR(this.stochssModel.url(), {
-        success: function (err, response, body) {
-          self.stochssModel.set(body);
-          self.renderSubviews();
-        }
-      });
+    this.stochssModel = attrs.stochssModel;
+    if(!this.readOnly) {
+      if(!Boolean(this.model.speciesOfInterest.name)) {
+        this.model.speciesOfInterest = this.stochssModel.species.at(0);
+      }
+      this.model.updateVariables(this.stochssModel.parameters);
     }
+  },
+  render: function () {
+    View.prototype.render.apply(this, arguments);
+    if(this.readOnly) {
+      $(this.queryByHook(this.model.elementID + '-parameter-settings-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook(this.model.elementID + '-parameter-settings-view-tab')).tab('show');
+      $(this.queryByHook(this.model.elementID + '-edit-parameter-settings')).removeClass('active');
+      $(this.queryByHook(this.model.elementID + '-view-parameter-settings')).addClass('active');
+    }else{
+      this.model.parameters.on("add remove", function () {
+        let disable = this.model.parameters.length >= 6 || this.model.parameters.length >= this.stochssModel.parameters.length;
+        $(this.queryByHook("add-ps-parameter")).prop("disabled", disable);
+      }, this)
+      this.renderSpeciesOfInterestView();
+      this.renderEditSweepParameters();
+    }
+    this.renderViewSweepParameters();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -101,33 +112,6 @@ module.exports = View.extend({
       value: soi
     });
     app.registerRenderSubview(this, speciesOfInterestView, "variable-of-interest-list");
-  },
-  renderSubviews: function () {
-    if(!this.readOnly) {
-      if(!Boolean(this.model.speciesOfInterest.name)) {
-        this.model.speciesOfInterest = this.stochssModel.species.at(0);
-      }
-      this.model.updateVariables(this.stochssModel.parameters);
-    }
-    View.prototype.render.apply(this, arguments);
-    if(this.readOnly) {
-      $(this.queryByHook('parameter-settings-edit-tab')).addClass("disabled");
-      $(".nav .disabled>a").on("click", function(e) {
-        e.preventDefault();
-        return false;
-      });
-      $(this.queryByHook('parameter-settings-view-tab')).tab('show');
-      $(this.queryByHook('edit-parameter-settings')).removeClass('active');
-      $(this.queryByHook('view-parameter-settings')).addClass('active');
-    }else{
-      this.model.parameters.on("add remove", function () {
-        let disable = this.model.parameters.length >= 6 || this.model.parameters.length >= this.stochssModel.parameters.length;
-        $(this.queryByHook("add-ps-parameter")).prop("disabled", disable);
-      }, this)
-      this.renderSpeciesOfInterestView();
-      this.renderEditSweepParameters();
-    }
-    this.renderViewSweepParameters();
   },
   renderViewSweepParameters: function () {
     if(this.viewSweepParameters) {
