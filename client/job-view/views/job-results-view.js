@@ -319,8 +319,7 @@ module.exports = View.extend({
         let title = body.message;
         let linkHeaders = "Shareable Presentation Link";
         let links = body.links;
-        let name = self.model.name
-        $(modals.presentationLinks(title, name, linkHeaders, links)).modal();
+        $(modals.presentationLinks(title, linkHeaders, links)).modal();
         let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
         copyBtn.addEventListener('click', function (e) {
           app.copyToClipboard(links.presentation)
