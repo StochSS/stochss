@@ -81,6 +81,7 @@ let JobPresentationPage = PageView.extend({
     this.template = notFound ? errorTemplate : template
     PageView.prototype.render.apply(this, arguments);
     if(!notFound) {
+      document.head.appendChild(domify(headTemplate()));
       this.renderJobView();
     }
   },
