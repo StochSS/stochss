@@ -52,6 +52,7 @@ let JobPresentationPage = PageView.extend({
     let endpoint = "api/job/load" + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {
+        self.title = body.name;
         self.titleType = body.titleType;
         self.model.set(body);
         self.renderSubviews(false);
@@ -82,7 +83,7 @@ let JobPresentationPage = PageView.extend({
   renderJobView: function () {
     let jobView = new JobView({
       model: this.model,
-      wkflName: this.model.name,
+      wkflName: this.title,
       titleType: this.titleType,
       newFormat: true,
       readOnly: true
