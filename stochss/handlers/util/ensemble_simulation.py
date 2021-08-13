@@ -49,12 +49,18 @@ class EnsembleSimulation(StochSSJob):
             Path to the ensemble simulation job
         '''
         super().__init__(path=path)
+
+        # Setup the stochss-compute instance.
+        from stochss_compute import RemoteSimulation, ComputeServer
+
         if not preview:
             try:
                 self.settings = self.load_settings()
                 self.g_model, self.s_model = self.load_models()
             except StochSSAPIError as err:
                 log.error(str(err))
+
+        self.compute = RemoteSimulation.on(ComputeServer("localhost", port=1234)).with_model(self.g_model)
 
 
     def __get_run_settings(self):
@@ -109,10 +115,12 @@ class EnsembleSimulation(StochSSJob):
         verbose : bool
             Indicates whether or not to print debug statements
         '''
+
         if preview:
             if verbose:
                 log.info("Running %s preview simulation", self.g_model.name)
-            results = self.g_model.run(timeout=5)
+            # results = self.g_model.run(timeout=5)
+            results = self.compute.run(timeout=5).resolve()
             if verbose:
                 log.info("%s preview simulation has completed", self.g_model.name)
                 log.info("Generate result plot for %s preview", self.g_model.name)
@@ -125,11 +133,13 @@ class EnsembleSimulation(StochSSJob):
         if self.settings['simulationSettings']['isAutomatic']:
             self.__update_timespan()
             is_ode = self.g_model.get_best_solver().name in ["ODESolver", "ODECSolver"]
-            results = self.g_model.run(number_of_trajectories=1 if is_ode else 100)
+            # results = self.g_model.run(number_of_trajectories=1 if is_ode else 100)
+            results = self.compute.run(number_of_trajectories=1 if is_ode else 100).resolve()
         else:
             kwargs = self.__get_run_settings()
             self.__update_timespan()
-            results = self.g_model.run(**kwargs)
+            # results = self.g_model.run(**kwargs)
+            results = self.compute.run(**kwargs).resolve()
         if verbose:
             log.info("The ensemble simulation has completed")
             log.info("Storing the results as pickle and csv")
