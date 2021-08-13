@@ -132,6 +132,31 @@ class PlotJobResultsAPIHandler(BaseHandler):
         self.finish()
 
 
+class DownloadCSVAPIHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Handler for getting result plots based on plot type.
+    ################################################################################################
+    '''
+    async def get(self):
+        '''
+        Retrieve a plot figure of the job results based on the plot type in the request body.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        log.debug("The path to the workflow: %s", path)
+        body = json.loads(self.get_query_argument(name='data'))
+        log.debug("Plot args passed to the plot: %s", body)
+        try:
+            job = StochSSJob(path=path)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
 def process_job_presentation(path, file=None, for_download=False):
     '''
     Get the job presentation data from the file.
