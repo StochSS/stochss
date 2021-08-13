@@ -44,6 +44,17 @@ module.exports = {
       inject: false
     })
   ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          name: 'common',
+          chunks: 'initial',
+          minChunks: 2
+        }
+      }
+    }
+  },
   module: {
     rules: [
       {
