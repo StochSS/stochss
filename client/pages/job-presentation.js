@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 let path = require('path');
-let domify = require('domify');
 let domReady = require('domready');
 let bootstrap = require('bootstrap');
 //support files
@@ -29,7 +28,6 @@ let Job = require("../models/job");
 let PageView = require('./base');
 let JobView = require('../job-view/job-view');
 //templates
-let headTemplate = require('!pug-loader!../templates/head.pug');
 let template = require('../templates/pages/jobPresentation.pug');
 let loadingTemplate = require('../templates/pages/loadingPage.pug');
 let errorTemplate = require('../templates/pages/errorTemplate.pug');
@@ -40,7 +38,6 @@ import fontawesomeStyles from '@fortawesome/fontawesome-free/css/svg-with-js.min
 
 let JobPresentationPage = PageView.extend({
   template: loadingTemplate,
-  autoRender: true,
   initialize: function () {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
@@ -70,7 +67,7 @@ let JobPresentationPage = PageView.extend({
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
-    document.head.appendChild(domify(headTemplate()));
+    document.head.appendChild('<style id="plotly.js-style-modebar-0dcf74"></style>');
     $(this.queryByHook("loading-header")).html(`Loading ${this.fileType}`);
     $(this.queryByHook("loading-target")).css("display", "none");
     $(this.queryByHook("loading-spinner")).css("display", "block");
@@ -81,7 +78,6 @@ let JobPresentationPage = PageView.extend({
     this.template = notFound ? errorTemplate : template
     PageView.prototype.render.apply(this, arguments);
     if(!notFound) {
-      document.head.appendChild(domify(headTemplate()));
       this.renderJobView();
     }
   },
