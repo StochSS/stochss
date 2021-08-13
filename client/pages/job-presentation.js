@@ -26,9 +26,7 @@ let app = require("../app");
 let Job = require("../models/job");
 //views
 let PageView = require('./base');
-let ModelView = require('../model-view/model-view');
-let ResultsView = require('../job-view/views/job-results-view');
-let SettingsView = require('../settings-view/settings-view');
+let JobView = require('../job-view/job-view');
 //templates
 let template = require('../templates/pages/jobPresentation.pug');
 let loadingTemplate = require('../templates/pages/loadingPage.pug');
@@ -54,6 +52,7 @@ let JobPresentationPage = PageView.extend({
     let endpoint = "api/job/load" + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {
+        self.titleType = body.titleType;
         self.model.set(body);
         self.renderSubviews(false);
       },
@@ -77,31 +76,18 @@ let JobPresentationPage = PageView.extend({
     this.template = notFound ? errorTemplate : template
     PageView.prototype.render.apply(this, arguments);
     if(!notFound) {
-      this.renderResultsContainer();
-      this.renderSettingsContainer();
-      this.renderModelContainer();
+      this.renderJobView();
     }
   },
-  renderModelContainer: function () {
-    let modelView = new ModelView({
-      model: this.model.model,
-      readOnly: true
-    });
-    app.registerRenderSubview(this, modelView, "job-model");
-  },
-  renderResultsContainer: function () {
-    let resultsView = new ResultsView({
+  renderJobView: function () {
+    let jobView = new JobView({
       model: this.model,
+      wkflName: this.model.name,
+      titleType: this.titleType,
+      newFormat: true,
       readOnly: true
     });
-    app.registerRenderSubview(this, resultsView, "job-results");
-  },
-  renderSettingsContainer: function () {
-    let settingsView = new SettingsView({
-      model: this.model.settings,
-      mode: "presentation"
-    });
-    app.registerRenderSubview(this, settingsView, "job-settings");
+    app.registerRenderSubview(this, jobView, "job-view");
   }
 });
 
