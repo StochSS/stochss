@@ -67,7 +67,6 @@ let JobPresentationPage = PageView.extend({
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
-    document.head.appendChild('<style id="plotly.js-style-modebar-0dcf74"></style>');
     $(this.queryByHook("loading-header")).html(`Loading ${this.fileType}`);
     $(this.queryByHook("loading-target")).css("display", "none");
     $(this.queryByHook("loading-spinner")).css("display", "block");
