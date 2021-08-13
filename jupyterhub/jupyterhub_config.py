@@ -28,7 +28,9 @@ sys.path.append('/srv/jupyterhub/') # pylint: disable=wrong-import-position
 # API Handlers
 from model_presentation import JsonFileAPIHandler, DownModelPresentationAPIHandler
 from notebook_presentation import NotebookAPIHandler, DownNotebookPresentationAPIHandler
-from job_presentation import JobAPIHandler, DownJobPresentationAPIHandler, PlotJobResultsAPIHandler
+from job_presentation import (
+    JobAPIHandler, DownJobPresentationAPIHandler, PlotJobResultsAPIHandler, DownloadCSVAPIHandler
+)
 # Page handlers
 from handlers import (
     HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler
@@ -96,7 +98,8 @@ c.JupyterHub.extra_handlers = [
          DownNotebookPresentationAPIHandler),
         (r"/stochss/api/job/load\/?", JobAPIHandler),
         (r"/stochss/job/download_presentation/(\w+)/(.+)\/?", DownJobPresentationAPIHandler),
-        (r"/stochss/api/workflow/plot-results\/?", PlotJobResultsAPIHandler)
+        (r"/stochss/api/workflow/plot-results\/?", PlotJobResultsAPIHandler),
+        (r"/stochss/api/job/download-csv\/?", DownloadCSVAPIHandler)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
