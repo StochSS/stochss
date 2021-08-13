@@ -28,6 +28,7 @@ let Job = require("../models/job");
 let PageView = require('./base');
 let JobView = require('../job-view/job-view');
 //templates
+let headTemplate = require('!pug-loader!../templates/head.pug');
 let template = require('../templates/pages/jobPresentation.pug');
 let loadingTemplate = require('../templates/pages/loadingPage.pug');
 let errorTemplate = require('../templates/pages/errorTemplate.pug');
@@ -67,6 +68,7 @@ let JobPresentationPage = PageView.extend({
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
+    document.head.appendChild(domify(headTemplate()));
     $(this.queryByHook("loading-header")).html(`Loading ${this.fileType}`);
     $(this.queryByHook("loading-target")).css("display", "none");
     $(this.queryByHook("loading-spinner")).css("display", "block");
