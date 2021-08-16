@@ -33,7 +33,8 @@ from job_presentation import (
 )
 # Page handlers
 from handlers import (
-    HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler
+    HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler,
+    MultiplePlotsHandler
 )
 
 ## Class for authenticating users.
@@ -91,6 +92,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/present-job\/?", JobPresentationHandler),
         (r"/stochss/present-model\/?", ModelPresentationHandler),
         (r"/stochss/present-notebook\/?", NotebookPresentationHandler),
+        (r"/stochss/multiple-plots\/?", MultiplePlotsHandler),
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
         (r"/stochss/download_presentation/(\w+)/(.+)\/?", DownModelPresentationAPIHandler),
         (r"/stochss/api/notebook/load\/?", NotebookAPIHandler),
