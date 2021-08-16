@@ -179,6 +179,15 @@ class StochSSJob(StochSSBase):
         return f_results
 
 
+    def __get_filtered_ensemble_results(self, data_keys):
+        result = self.__get_pickled_results()
+        if data_keys:
+            key = [f"{name}:{value}" for name, value in data_keys.items()]
+            key = ','.join(key)
+            result = result[key]
+        return result
+
+
     @classmethod
     def __get_fixed_keys_and_dims(cls, settings, fixed):
         p_len = len(settings['parameterSweepSettings']['parameters'])
@@ -303,50 +312,6 @@ class StochSSJob(StochSSBase):
         return resp, kwargs
 
 
-    def generate_csv_zip(self):
-        '''
-        Create a zip archive of the csv results for download
-
-        Atrributes
-        ----------
-        '''
-        status = self.get_status()
-        if status == "error":
-            message = f"The job experienced an error during run: {status}"
-            raise StochSSJobError(message, traceback.format_exc())
-        if status != "complete":
-            message = f"The job has not finished running: {status}."
-            raise StochSSJobNotCompleteError(message, traceback.format_exc())
-
-        csv_path = self.get_csv_path(full=True)
-        if os.path.exists(csv_path + ".zip"):
-            message = f"{csv_path}.zip already exists."
-            return {"Message":message, "Path":csv_path.replace(self.user_dir+"/", "") + ".zip"}
-        csv_folder = StochSSFolder(path=csv_path)
-        return csv_folder.generate_zip_file()
-
-
-    def get_csv_path(self, full=False):
-        '''
-        Return the path to the csv directory
-
-        Attributes
-        ----------
-        '''
-        res_path = self.__get_results_path(full=full)
-        if not os.path.exists(res_path):
-            message = f"Could not find the results directory: {res_path}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc())
-
-        try:
-            res_files = os.listdir(res_path)
-            csv_path = list(filter(lambda file: self.__is_csv_dir(file=file), res_files))[0]
-            return os.path.join(res_path, csv_path)
-        except IndexError as err:
-            message = f"Could not find the job results csv directory: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
-
-
     def get_model_path(self, full=False, external=False):
         '''
         Return the path to the model file
@@ -405,6 +370,49 @@ class StochSSJob(StochSSBase):
         return {"kwargs":kwargs, "type":wkfl_type}
 
 
+    def get_csvzip_from_results(self, data_keys, proc_key, name):
+        '''
+        Get the csv files of the plot data for download.
+
+        Attributes
+        ----------
+        data_keys : dict
+            Dictionary of param names and values used to identify the correct data.
+        proc_key : str
+            Type post processing to preform.
+        name : str
+            Name of the csv directory
+        '''
+        try:
+            self.log("info", "Getting job results...")
+            result = self.__get_filtered_ensemble_results(data_keys)
+            self.log("info", "Processing results...")
+            if plt_key == "stddev":
+                result = result.stddev_ensemble()
+            elif plt_key == "avg":
+                result = result.average_ensemble()
+            self.log("info", "Generating CSV files...")
+            tmp_dir = tempfile.TemporaryDirectory()
+            result.to_csv(path=tmp_dir.name, nametag=name, stamp="")
+            if data_keys:
+                csv_path = os.path.join(tmp_dir.name, name, "parameters.csv")
+                with open(csv_path, "w") as csv_file:
+                    csv_writer = csv.writer(csv_file)
+                    csv_writer.writerow(list(data_keys.keys()))
+                    csv_writer.writerow(list(data_keys.values()))
+            self.log("info", "Generating zip archive...")
+            shutil.make_archive(os.path.join(tmp_dir.name, name), "zip", tmp_dir.name, name)
+            path = os.path.join(tmp_dir.name, f"{name}.zip")
+            with open(path, "rb") as zip_file:
+                return zip_file.read()
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested results are not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err 
+
+
     def get_plot_from_results(self, data_keys, plt_key, add_config=False):
         '''
         Get the plotly figure for the results of a job
@@ -419,11 +427,7 @@ class StochSSJob(StochSSBase):
         self.log("debug", f"Key identifying the plot to generate: {plt_key}")
         try:
             self.log("info", "Loading the results...")
-            result = self.__get_pickled_results()
-            if data_keys:
-                key = [f"{name}:{value}" for name, value in data_keys.items()]
-                key = ','.join(key)
-                result = result[key]
+            result = self.__get_filtered_ensemble_results(data_keys)
             self.log("info", "Generating the plot...")
             if plt_key == "mltplplt":
                 fig = result.plotplotly(return_plotly_figure=True, multiple_graphs=True)
