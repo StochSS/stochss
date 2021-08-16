@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
-let tests = require('./tests');
-let Tooltips = require('../tooltips');
+let app = require('../../app');
+let tests = require('../../views/tests');
+let Tooltips = require('../../tooltips');
 //views
-let InputView = require('./input');
+let InputView = require('../../views/input');
 let View = require('ampersand-view');
 //templates
-let template = require('../templates/includes/simulationSettingsView.pug');
+let template = require('../templates/simulationSettingsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -40,7 +40,7 @@ module.exports = View.extend({
     'change [data-hook=trajectories]' : 'updateViewTraj',
     'change [data-hook=seed]' : 'updateViewSeed',
     'change [data-hook=tau-tolerance]' : 'updateViewTauTol',
-    'click [data-hook=collapse]' :  'changeCollapseButtonText'
+    'click [data-hook=collapse-settings-view]' :  'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -51,14 +51,14 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
-      $(this.queryByHook('sim-settings-edit-tab')).addClass("disabled");
+      $(this.queryByHook(this.model.elementID + '-sim-settings-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
         e.preventDefault();
         return false;
       });
-      $(this.queryByHook('sim-settings-view-tab')).tab('show');
-      $(this.queryByHook('edit-sim-settings')).removeClass('active');
-      $(this.queryByHook('view-sim-settings')).addClass('active');
+      $(this.queryByHook(this.model.elementID + '-sim-settings-view-tab')).tab('show');
+      $(this.queryByHook(this.model.elementID + '-edit-sim-settings')).removeClass('active');
+      $(this.queryByHook(this.model.elementID + '-view-sim-settings')).addClass('active');
     }else {
       if(!this.model.isAutomatic){
         $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));
@@ -78,7 +78,7 @@ module.exports = View.extend({
     app.changeCollapseButtonText(this, e);
   },
   disableInputFieldByAlgorithm: function () {
-    let isAutomatic = this.model.isAutomatic
+    let isAutomatic = this.model.isAutomatic;
     let isODE = this.model.algorithm === "ODE";
     let isSSA = this.model.algorithm === "SSA";
     let isLeaping = this.model.algorithm === "Tau-Leaping";
@@ -111,25 +111,25 @@ module.exports = View.extend({
   },
   update: function (e) {},
   updateViewATol: function (e) {
-    $(this.queryByHook("view-a-tol")).html(this.model.absoluteTol)
+    $(this.queryByHook("view-a-tol")).html(this.model.absoluteTol);
   },
   updateViewRTol: function (e) {
-    $(this.queryByHook("view-r-tol")).html(this.model.relativeTol)
+    $(this.queryByHook("view-r-tol")).html(this.model.relativeTol);
   },
   updateViewSeed: function (e) {
-    $(this.queryByHook("view-seed")).html(this.model.seed)
+    $(this.queryByHook("view-seed")).html(this.model.seed);
   },
   updateViewTauTol: function (e) {
-    $(this.queryByHook("view-tau-tol")).html(this.model.tauTol)
+    $(this.queryByHook("view-tau-tol")).html(this.model.tauTol);
   },
   updateViewTraj: function (e) {
-    $(this.queryByHook("view-realizations")).html(this.model.realizations)
+    $(this.queryByHook("view-realizations")).html(this.model.realizations);
   },
   updateValid: function (e) {},
   updateViewer: function () {
     $(this.queryByHook("view-algorithm")).html(this.algorithm);
     let hideDeterministic = this.model.isAutomatic || this.model.algorithm === "SSA" || this.model.algorithm === "Tau-Leaping";
-    let hideStochastic = this.model.isAutomatic || this.model.algorithm === "ODE" 
+    let hideStochastic = this.model.isAutomatic || this.model.algorithm === "ODE" ;
     if(hideDeterministic) {
       $(this.queryByHook("view-deterministic-settings")).css("display", "none");
     }else{

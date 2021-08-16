@@ -29,6 +29,17 @@ module.exports = State.extend({
     seed: 'number',
     tauTol: 'number'
   },
+  derived: {
+    elementID: {
+      deps: ["parent"],
+      fn: function () {
+        if(this.parent) {
+          return this.parent.elementID + "SS-";
+        }
+        return "SS-"
+      }
+    }
+  },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   }

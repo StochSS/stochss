@@ -18,14 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 var $ = require('jquery');
 //support files
-let app = require('../app');
-var tests = require('./tests');
-var Tooltips = require('../tooltips');
+let app = require('../../app');
+var tests = require('../../views/tests');
+var Tooltips = require('../../tooltips');
 //views
 var View = require('ampersand-view');
-var InputView = require('./input');
+var InputView = require('../../views/input');
 //templates
-var template = require('../templates/includes/timespanSettings.pug');
+var template = require('../templates/timespanSettingsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -46,21 +46,16 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
-      $(this.queryByHook('timespan-edit-tab')).addClass("disabled");
+      $(this.queryByHook(this.model.elementID + '-timespan-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
         e.preventDefault();
         return false;
       });
-      $(this.queryByHook('timespan-view-tab')).tab('show');
-      $(this.queryByHook('edit-timespan')).removeClass('active');
-      $(this.queryByHook('view-timespan')).addClass('active');
+      $(this.queryByHook(this.model.elementID + '-timespan-view-tab')).tab('show');
+      $(this.queryByHook(this.model.elementID + '-edit-timespan')).removeClass('active');
+      $(this.queryByHook(this.model.elementID + '-view-timespan')).addClass('active');
     }
     $(this.queryByHook("timestep-size-value")).html(this.model.timestepSize);
-  },
-  update: function (e) {
-  },
-  updateValid: function () {
-    this.model.parent.updateValid()
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -69,6 +64,8 @@ module.exports = View.extend({
     this.model.timestepSize = Number("1e-" + e.target.value);
     $(this.queryByHook("view-timestep-size")).html(this.model.timestepSize);
   },
+  update: function (e) {},
+  updateValid: function () {},
   updateViewer: function (e) {
     $(this.queryByHook("view-end-sim")).html("0 to " + this.model.endSim);
     $(this.queryByHook("view-time-step")).html(this.model.timeStep);
@@ -91,7 +88,7 @@ module.exports = View.extend({
           valueType: 'number',
           value: this.model.endSim
         });
-      },
+      }
     },
     inputTimeUnit: {
       hook: 'time-units',
@@ -100,13 +97,12 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'time-units',
-          label: '',
           tests: tests.valueTests,
           modelKey: 'timeStep',
           valueType: 'number',
           value: this.model.timeStep
         });
-      },
-    },
-  },
+      }
+    }
+  }
 });

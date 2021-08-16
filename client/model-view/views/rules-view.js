@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let katex = require('katex');
 //support files
 let app = require('../../app');
 let Tooltips = require('../../tooltips');
@@ -42,6 +43,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
+    this.renderDocs();
     if(this.readOnly) {
       $(this.queryByHook('rules-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
@@ -64,6 +66,15 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  renderDocs: function () {
+    let options = {
+      displayMode: true,
+      output: 'html',
+      maxSize: 5
+    };
+    katex.render("dx/dt = f(W)", this.queryByHook("rr-doc-func"), options);
+    katex.render("x = f(V)", this.queryByHook("ar-doc-func"), options);
   },
   renderEditRules: function () {
     if(this.rulesView) {
