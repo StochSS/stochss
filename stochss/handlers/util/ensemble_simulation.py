@@ -73,8 +73,7 @@ class EnsembleSimulation(StochSSJob):
         try:
             results.to_csv(path="results", nametag="results_csv", stamp=self.get_time_stamp())
         except Exception as err:
-            log.error("Error storing csv results: %s\n%s",
-                      str(err), traceback.format_exc())
+            log.error(f"Error storing csv results: {err}\n{traceback.format_exc()}")
 
 
     @classmethod
@@ -111,11 +110,11 @@ class EnsembleSimulation(StochSSJob):
         '''
         if preview:
             if verbose:
-                log.info("Running %s preview simulation", self.g_model.name)
+                log.info(f"Running {self.g_model.name} preview simulation")
             results = self.g_model.run(timeout=5)
             if verbose:
-                log.info("%s preview simulation has completed", self.g_model.name)
-                log.info("Generate result plot for %s preview", self.g_model.name)
+                log.info(f"{self.g_model.name} preview simulation has completed")
+                log.info(f"Generate result plot for {self.g_model.name} preview")
             plot = results.plotplotly(return_plotly_figure=True)
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}

@@ -68,14 +68,14 @@ class ParameterSweep1D():
                 else:
                     m_data = [func_map[m_key](x[species]) for x in results]
                 if verbose:
-                    log.debug('  %s population %s=%s', m_key, species, m_data)
+                    log.debug(f'  {m_key} population {species}={m_data}')
                 std = numpy.std(m_data)
                 for r_key in self.REDUCER_KEYS:
                     r_data = func_map[r_key](m_data)
                     self.results[species][m_key][r_key][index, 0] = r_data
                     self.results[species][m_key][r_key][index, 1] = std
                     if verbose:
-                        log.debug('    %s std of ensemble m:%s s:%s', r_key, r_data, std)
+                        log.debug(f'    {r_key} std of ensemble m:{r_data} s:{std}')
 
 
     def __feature_extraction(self, results, index, verbose=False):
@@ -89,7 +89,7 @@ class ParameterSweep1D():
                     data = func_map[key](spec_res)
                 self.results[species][key][index, 0] = data
                 if verbose:
-                    log.debug('  %s population %s=%s', key, species, data)
+                    log.debug(f'  {key} population {species}={data}')
 
 
     def __setup_results(self, solver_name):
@@ -229,11 +229,11 @@ class ParameterSweep1D():
                 tmp_mdl = copy.deepcopy(self.model)
                 tmp_mdl.listOfParameters[self.param['parameter']].set_expression(val)
             if verbose:
-                log.info("%s --> running: %s=%s", job_id, self.param['parameter'], val)
+                log.info(f"{job_id} --> running: {self.param['parameter']}={val}")
             try:
                 tmp_res = tmp_mdl.run(**self.settings)
             except Exception as err:
-                log.error("%s\n%s", err, traceback.format_exc())
+                log.error(f"{err}\n{traceback.format_exc()}")
             else:
                 key = f"{self.param['parameter']}:{val}"
                 self.ts_results[key] = tmp_res

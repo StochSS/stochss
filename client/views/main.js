@@ -104,6 +104,8 @@ module.exports = View.extend({
   autoRender: true,
   initialize: function () {
       this.listenTo(App, 'page', this.handleNewPage);
+      this.homePath = window.location.pathname.startsWith("/user") ? "/hub/spawn" : "stochss/home"
+    
   },
   events: {
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
@@ -128,8 +130,6 @@ module.exports = View.extend({
       }
     });
 
-    var homePath = window.location.pathname.startsWith("/user") ? "/hub/stochss" : "stochss/home"
-    $(this.queryByHook("home-link")).prop('href', homePath);
     let self = this;
     let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
     $("#user-logs").html(message)

@@ -756,6 +756,7 @@ module.exports = View.extend({
     });
   },
   newWorkflow: function (o, type) {
+    let self = this;
     let model = new Model({
       directory: o.original._path
     });
@@ -764,7 +765,7 @@ module.exports = View.extend({
         model.set(body);
         model.updateValid();
         if(model.valid){
-          app.newWorkflow(this, o.original._path, o.type === "spatial", type);
+          app.newWorkflow(self, o.original._path, o.type === "spatial", type);
         }else{
           let title = "Model Errors Detected";
           let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory;
