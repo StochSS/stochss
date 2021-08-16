@@ -10,22 +10,22 @@ div#preview-settings.card
 
         li.nav-item
 
-          a.nav-link.tab.active(data-hook="timespan-edit-tab" data-toggle="tab" href="#edit-timespan") Edit
+          a.nav-link.tab.active(data-hook=this.model.elementID + "-timespan-edit-tab" data-toggle="tab" href="#" + this.model.elementID + "-edit-timespan") Edit
 
         li.nav-item
 
-          a.nav-link.tab(data-hook="timespan-view-tab" data-toggle="tab" href="#view-timespan") View
+          a.nav-link.tab(data-hook=this.model.elementID + "-timespan-view-tab" data-toggle="tab" href="#" + this.model.elementID + "-view-timespan") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-preview-settings" data-hook="collapse") -
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "collapse-preview-settings" data-hook="collapse") -
 
   div.card-body
 
     p.mb-0
       | Timespan settings are used for the preview and all workflows created using this model.
 
-    div.collapse.tab-content(class="show" id="collapse-preview-settings" data-hook="timespan-container")
+    div.collapse.tab-content(class="show" id=this.model.elementID + "collapse-preview-settings" data-hook="timespan-container")
 
-      div.tab-pane.active(id="edit-timespan" data-hook="edit-timespan")
+      div.tab-pane.active(id=this.model.elementID + "-edit-timespan" data-hook=this.model.elementID + "-edit-timespan")
 
         hr
 
@@ -82,7 +82,7 @@ div#preview-settings.card
                   data-hook="timestep-size-slider"
                 )
 
-      div.tab-pane(id="view-timespan" data-hook="view-timespan")
+      div.tab-pane(id=this.model.elementID + "-view-timespan" data-hook=this.model.elementID + "-view-timespan")
 
         hr
 

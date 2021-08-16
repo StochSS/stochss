@@ -20,7 +20,7 @@ let $ = require('jquery');
 //views
 let View = require('ampersand-view');
 //templates
-let template = require('../templates/includes/sweepParameterRange.pug');
+let template = require('../templates/sweepParameterRange.pug');
 
 module.exports = View.extend({
   template: template,
