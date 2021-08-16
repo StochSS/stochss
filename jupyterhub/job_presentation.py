@@ -489,6 +489,21 @@ class ParameterSweep1D():
     '''
 
     @classmethod
+    def __process_results(cls, results, species, mapper="final", reducer="avg"):
+        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
+                    "var": numpy.var, "final": lambda res: res[-1]}
+        map_results = [[func_map[mapper](traj[species]) for traj in result] for result in results]
+        if len(map_results[0]) > 1:
+            data = [[func_map[reducer](map_result),
+                     numpy.std(map_result)] for map_result in map_results]
+            visible = True
+        else:
+            data = [[map_result[0], 0] for map_result in map_results]
+            visible = False
+        return numpy.array(data), visible
+
+
+    @classmethod
     def plot(cls, results, species, param, mapper="final", reducer="avg"):
         '''
         Plot the results with error bar from time series results.
@@ -506,17 +521,8 @@ class ParameterSweep1D():
         reducer : str
             Key indicating the ensemble aggragation function to use.
         '''
-        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
-                    "var": numpy.var, "final": lambda res: res[-1]}
-        map_results = [[func_map[mapper](traj[species]) for traj in result] for result in results]
-        if len(map_results[0]) > 1:
-            data = [[func_map[reducer](map_result),
-                     numpy.std(map_result)] for map_result in map_results]
-            visible = True
-        else:
-            data = [[map_result[0], 0] for map_result in map_results]
-            visible = False
-        data = numpy.array(data)
+        data, visible = cls.__process_results(results=results, species=species,
+                                              mapper=mapper, reducer=reducer)
 
         error_y = dict(type="data", array=data[:, 1], visible=visible)
         trace_list = [plotly.graph_objs.Scatter(x=param['range'],
@@ -539,6 +545,22 @@ class ParameterSweep2D():
     '''
 
     @classmethod
+    def __process_results(cls, results, species, mapper="final", reducer="avg"):
+        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
+                    "var": numpy.var, "final": lambda res: res[-1]}
+        data = []
+        for p_results in results:
+            map_results = [[func_map[mapper](traj[species]) for traj in result]
+                            for result in p_results]
+            if len(map_results[0]) > 1:
+                red_results = [func_map[reducer](map_result) for map_result in map_results]
+            else:
+                red_results = [map_result[0] for map_result in map_results]
+            data.append(red_results)
+        return numpy.array(data)
+
+
+    @classmethod
     def plot(cls, results, species, params, mapper="final", reducer="avg"):
         '''
         Plot the results with error bar from time series results.
@@ -556,18 +578,8 @@ class ParameterSweep2D():
         reducer : str
             Key indicating the ensemble aggragation function to use.
         '''
-        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
-                    "var": numpy.var, "final": lambda res: res[-1]}
-        data = []
-        for p_results in results:
-            map_results = [[func_map[mapper](traj[species]) for traj in result]
-                            for result in p_results]
-            if len(map_results[0]) > 1:
-                red_results = [func_map[reducer](map_result) for map_result in map_results]
-            else:
-                red_results = [map_result[0] for map_result in map_results]
-            data.append(red_results)
-        data = numpy.array(data)
+        data = cls.__process_results(results=results, species=species,
+                                     mapper=mapper, reducer=reducer)
 
         trace_list = [plotly.graph_objs.Heatmap(z=data, x=params[0]['range'],
                                                 y=params[1]['range'])]

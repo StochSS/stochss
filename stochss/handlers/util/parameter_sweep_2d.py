@@ -107,6 +107,22 @@ class ParameterSweep2D():
             self.results[species] = spec_res
 
 
+    @classmethod
+    def __process_results(cls, results, species, mapper="final", reducer="avg"):
+        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
+                    "var": numpy.var, "final": lambda res: res[-1]}
+        data = []
+        for p_results in results:
+            map_results = [[func_map[mapper](traj[species]) for traj in result]
+                            for result in p_results]
+            if len(map_results[0]) > 1:
+                red_results = [func_map[reducer](map_result) for map_result in map_results]
+            else:
+                red_results = [map_result[0] for map_result in map_results]
+            data.append(red_results)
+        return numpy.array(data)
+
+
     def get_plotly_layout_data(self, plt_data):
         '''
         Get plotly axes labels for layout
@@ -187,18 +203,8 @@ class ParameterSweep2D():
         reducer : str
             Key indicating the ensemble aggragation function to use.
         '''
-        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
-                    "var": numpy.var, "final": lambda res: res[-1]}
-        data = []
-        for p_results in results:
-            map_results = [[func_map[mapper](traj[species]) for traj in result]
-                            for result in p_results]
-            if len(map_results[0]) > 1:
-                red_results = [func_map[reducer](map_result) for map_result in map_results]
-            else:
-                red_results = [map_result[0] for map_result in map_results]
-            data.append(red_results)
-        data = numpy.array(data)
+        data = cls.__process_results(results=results, species=species,
+                                     mapper=mapper, reducer=reducer)
 
         trace_list = [plotly.graph_objs.Heatmap(z=data, x=params[0]['range'],
                                                 y=params[1]['range'])]

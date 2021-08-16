@@ -92,6 +92,21 @@ class ParameterSweep1D():
                     log.debug('  %s population %s=%s', key, species, data)
 
 
+    @classmethod
+    def __process_results(cls, results, species, mapper="final", reducer="avg"):
+        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
+                    "var": numpy.var, "final": lambda res: res[-1]}
+        map_results = [[func_map[mapper](traj[species]) for traj in result] for result in results]
+        if len(map_results[0]) > 1:
+            data = [[func_map[reducer](map_result),
+                     numpy.std(map_result)] for map_result in map_results]
+            visible = True
+        else:
+            data = [[map_result[0], 0] for map_result in map_results]
+            visible = False
+        return numpy.array(data), visible
+
+
     def __setup_results(self, solver_name):
         for species in self.list_of_species:
             spec_res = {}
@@ -184,17 +199,8 @@ class ParameterSweep1D():
         reducer : str
             Key indicating the ensemble aggragation function to use.
         '''
-        func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
-                    "var": numpy.var, "final": lambda res: res[-1]}
-        map_results = [[func_map[mapper](traj[species]) for traj in result] for result in results]
-        if len(map_results[0]) > 1:
-            data = [[func_map[reducer](map_result),
-                     numpy.std(map_result)] for map_result in map_results]
-            visible = True
-        else:
-            data = [[map_result[0], 0] for map_result in map_results]
-            visible = False
-        data = numpy.array(data)
+        data, visible = cls.__process_results(results=results, species=species,
+                                              mapper=mapper, reducer=reducer)
 
         error_y = dict(type="data", array=data[:, 1], visible=visible)
         trace_list = [plotly.graph_objs.Scatter(x=param['range'],
