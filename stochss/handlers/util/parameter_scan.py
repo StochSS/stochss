@@ -74,7 +74,7 @@ class ParameterScan():
             try:
                 tmp_result = tmp_mdl.run(**self.settings)
             except Exception as err:
-                log.error("%s\n%s", err, traceback.format_exc())
+                log.error(f"{err}\n{traceback.format_exc()}")
             else:
                 self.ts_results[result_key] = tmp_result
 
