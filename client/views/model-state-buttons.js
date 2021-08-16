@@ -41,6 +41,7 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.validate = attrs.validate;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -53,6 +54,10 @@ module.exports = View.extend({
       $(this.queryByHook("presentation")).css("display", "none");
     }else if(app.getBasePath() === "/") {
       $(this.queryByHook("presentation")).css("display", "none");
+    }
+    if(this.validate && !this.model.valid) {
+      let errorMsg = $(this.parent.queryByHook("error-detected-msg"))
+      this.displayError(errorMsg)
     }
   },
   clickSaveHandler: function (e) {
@@ -371,6 +376,7 @@ module.exports = View.extend({
       specCollapseBtn.click()
       specCollapseBtn.html('-')
     }
+    this.switchToEditTab(this.parent.modelView.speciesView, "species");
   },
   openDomainSection: function () {
     let domainSection = $(this.parent.modelView.domainViewer.queryByHook("domain-container"))
@@ -387,6 +393,7 @@ module.exports = View.extend({
       paramCollapseBtn.click()
       paramCollapseBtn.html('-')
     }
+    this.switchToEditTab(this.parent.modelView.parametersView, "parameters");
   },
   openReactionsSection: function (isCollection = false) {
     let error = this.model.error
@@ -396,6 +403,7 @@ module.exports = View.extend({
       reacCollapseBtn.click()
       reacCollapseBtn.html('-')
     }
+    this.switchToEditTab(this.parent.modelView.reactionsView, "reactions");
     if(!isCollection) {
       var reaction = this.model.reactions.filter(function (r) {
         return r.compID === error.id
@@ -417,6 +425,7 @@ module.exports = View.extend({
       evtCollapseBtn.click()
       evtCollapseBtn.html('-')
     }
+    this.switchToEditTab(this.parent.modelView.eventsView, "events");
     var event = this.model.eventsCollection.filter(function (e) {
       return e.compID === error.id
     })[0]
@@ -424,9 +433,9 @@ module.exports = View.extend({
     event.detailsView.openAdvancedSection()
   },
   openRulesSection: function () {
-    let advSection = $(this.parent.queryByHook("me-advanced-section"))
+    let advSection = $(this.parent.modelView.queryByHook("me-advanced-section"))
     if(!advSection.hasClass("show")) {
-      let advCollapseBtn = $(this.parent.queryByHook("collapse-me-advanced-section"))
+      let advCollapseBtn = $(this.parent.modelView.queryByHook("collapse-me-advanced-section"))
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
@@ -436,20 +445,22 @@ module.exports = View.extend({
       ruleCollapseBtn.click()
       ruleCollapseBtn.html('-')
     }
+    this.switchToEditTab(this.parent.modelView.rulesView, "rules");
   },
   openVolumeSection: function () {
-    let advSection = $(this.parent.queryByHook("me-advanced-section"))
+    let advSection = $(this.parent.modelView.queryByHook("me-advanced-section"))
     if(!advSection.hasClass("show")) {
-      let advCollapseBtn = $(this.parent.queryByHook("collapse-me-advanced-section"))
+      let advCollapseBtn = $(this.parent.modelView.queryByHook("collapse-me-advanced-section"))
       advCollapseBtn.click()
       advCollapseBtn.html('-')
     }
-    let volSection = $(this.parent.queryByHook("system-volume-section"))
+    let volSection = $(this.parent.modelView.queryByHook("system-volume-section"))
     if(!volSection.hasClass("show")) {
-      let volCollapseBtn = $(this.parent.queryByHook("collapse-system-volume"))
+      let volCollapseBtn = $(this.parent.modelView.queryByHook("collapse-system-volume"))
       volCollapseBtn.click()
       volCollapseBtn.html('-')
     }
+    this.switchToEditTab(this.parent.modelView, "system-volume");
   },
   openTimespanSection: function () {
     let tspnSection = $(this.parent.modelSettings.queryByHook("timespan-container"))
@@ -457,6 +468,15 @@ module.exports = View.extend({
       let tspnCollapseBtn = $(this.parent.modelSettings.queryByHook("collapse"))
       tspnCollapseBtn.click()
       tspnCollapseBtn.html('-')
+    }
+    this.switchToEditTab(this.parent.modelSettings, "timespan");
+  },
+  switchToEditTab: function (view, section) {
+    let elementID = Boolean(view.model && view.model.elementID) ? view.model.elementID + "-" : "";
+    if($(view.queryByHook(elementID + 'view-' + section)).hasClass('active')) {
+      $(view.queryByHook(elementID + section + '-edit-tab')).tab('show');
+      $(view.queryByHook(elementID + 'edit-' + section)).addClass('active');
+      $(view.queryByHook(elementID + 'view-' + section)).removeClass('active');
     }
   }
 });
