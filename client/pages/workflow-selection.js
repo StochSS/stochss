@@ -89,7 +89,7 @@ let workflowSelection = PageView.extend({
     this.model.updateValid();
     let invalid = !this.model.valid;
     if(invalid) {
-      let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + this.model.directory;
+      let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + this.model.directory + '&validate';
       let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
       $(this.queryByHook('invalid-model-message')).html(message);
       $(this.queryByHook('invalid-model-message')).css('display', 'block');
