@@ -79,6 +79,9 @@ module.exports = View.extend({
       }
     }else if(app.getBasePath() === "/") {
       $(this.queryByHook("job-presentation")).css("display", "none");
+    }else if(!this.parent.newFormat) {
+      $(this.queryByHook("job-presentation")).prop("disabled", true);
+      $(this.queryByHook("update-format-message")).css("display", "block");
     }
     if(this.titleType === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";

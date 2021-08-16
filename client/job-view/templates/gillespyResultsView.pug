@@ -64,22 +64,27 @@ div#workflow-results.card
               disabled
             ) Download JSON
 
-      button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
+      div
 
-      button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
+        button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
 
-      button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
+        button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
 
-      div.saving-status(data-hook="job-action-start")
+        button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
 
-        div.spinner-grow
+        div.saving-status(data-hook="job-action-start")
 
-        span Publishing ...
+          div.spinner-grow
 
-      div.saved-status(data-hook="job-action-end")
+          span Publishing ...
 
-        span Published
+        div.saved-status(data-hook="job-action-end")
 
-      div.save-error-status(data-hook="job-action-err")
+          span Published
 
-        span Error
+        div.save-error-status(data-hook="job-action-err")
+
+          span Error
+
+      div.text-info(data-hook="update-format-message" style="display: none;")
+        | To publish you job the workflows format must be updated.

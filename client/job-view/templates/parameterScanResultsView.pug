@@ -185,18 +185,23 @@ div#workflow-results.card
 
                     div.mt-3(data-hook="ps-parameter-ranges")
 
-      button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish Presentation
+      div
 
-      div.saving-status(data-hook="job-action-start")
+        button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish Presentation
 
-        div.spinner-grow
+        div.saving-status(data-hook="job-action-start")
 
-        span Publishing ...
+          div.spinner-grow
 
-      div.saved-status(data-hook="job-action-end")
+          span Publishing ...
 
-        span Published
+        div.saved-status(data-hook="job-action-end")
 
-      div.save-error-status(data-hook="job-action-err")
+          span Published
 
-        span Error
+        div.save-error-status(data-hook="job-action-err")
+
+          span Error
+
+      div.text-info(data-hook="update-format-message" style="display: none;")
+        | To publish you job the workflows format must be updated.
