@@ -17,11 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import csv
 import json
 import shutil
 import pickle
 import string
 import hashlib
+import tempfile
 
 import datetime
 import traceback
@@ -31,13 +33,11 @@ import plotly
 from escapism import escape
 
 from .stochss_base import StochSSBase
-from .stochss_folder import StochSSFolder
 from .stochss_model import StochSSModel
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
 from .stochss_spatial_model import StochSSSpatialModel
-from .stochss_errors import StochSSJobError, StochSSJobNotCompleteError, \
-                            StochSSFileNotFoundError, StochSSFileExistsError, \
+from .stochss_errors import StochSSFileNotFoundError, StochSSFileExistsError, \
                             FileNotJSONFormatError, PlotNotAvailableError, \
                             StochSSPermissionsError, StochSSJobResultsError
 
@@ -387,9 +387,9 @@ class StochSSJob(StochSSBase):
             self.log("info", "Getting job results...")
             result = self.__get_filtered_ensemble_results(data_keys)
             self.log("info", "Processing results...")
-            if plt_key == "stddev":
+            if proc_key == "stddev":
                 result = result.stddev_ensemble()
-            elif plt_key == "avg":
+            elif proc_key == "avg":
                 result = result.average_ensemble()
             self.log("info", "Generating CSV files...")
             tmp_dir = tempfile.TemporaryDirectory()

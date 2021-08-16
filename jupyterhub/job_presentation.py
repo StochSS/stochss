@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import csv
 import json
 import shutil
 import pickle
@@ -350,9 +351,9 @@ class StochSSJob(StochSSBase):
         '''
         try:
             result = self.__get_filtered_ensemble_results(data_keys)
-            if plt_key == "stddev":
+            if proc_key == "stddev":
                 result = result.stddev_ensemble()
-            elif plt_key == "avg":
+            elif proc_key == "avg":
                 result = result.average_ensemble()
             tmp_dir = tempfile.TemporaryDirectory()
             result.to_csv(path=tmp_dir.name, nametag=name, stamp="")
@@ -371,7 +372,7 @@ class StochSSJob(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except KeyError as err:
             message = f"The requested results are not available: {str(err)}"
-            raise PlotNotAvailableError(message, traceback.format_exc()) from err 
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
     def get_plot_from_results(self, data_keys, plt_key, add_config=False):
