@@ -54,6 +54,7 @@ let ModelEditor = PageView.extend({
     var self = this;
     let urlParams = new URLSearchParams(window.location.search)
     var directory = urlParams.get('path');
+    let validate = urlParams.has('validate')
     var modelFile = directory.split('/').pop();
     var name = this.getFileName(decodeURI(modelFile));
     var isSpatial = modelFile.split('.').pop().startsWith('s');
@@ -78,7 +79,7 @@ let ModelEditor = PageView.extend({
           self.queryByHook("project-breadcrumb-links").style.display = "block"
           self.queryByHook("model-name-header").style.display = "none"
         }
-        self.renderSubviews();
+        self.renderSubviews(validate);
         self.model.updateValid()
       }
     })
@@ -135,14 +136,15 @@ let ModelEditor = PageView.extend({
     });
     app.registerRenderSubview(this, this.modelView, "model-view-container")
   },
-  renderSubviews: function () {
+  renderSubviews: function (validate) {
     this.renderModelView()
     this.modelSettings = new TimespanSettingsView({
       parent: this,
       model: this.model.modelSettings,
     });
     this.modelStateButtons = new ModelStateButtonsView({
-      model: this.model
+      model: this.model,
+      validate: validate
     });
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
     app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
