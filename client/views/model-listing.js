@@ -70,10 +70,10 @@ module.exports = View.extend({
     document.querySelector("#" + this.model.elementID + "-annotation").focus();
   },
   handleEnsembleSimulationClick: function (e) {
-    app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Ensemble Simulation")
+    this.newWorkflow("Ensemble Simulation")
   },
   handleParameterSweepClick: function (e) {
-    app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep")
+    this.newWorkflow("Parameter Sweep")
   },
   handleTrashModelClick: function (e) {
     if(document.querySelector('#moveToTrashConfirmModal')) {
@@ -93,6 +93,26 @@ module.exports = View.extend({
           self.parent.update("Model");
         }
       });
+    });
+  },
+  newWorkflow: function (type) {
+    let self = this;
+    let model = new Model({
+      directory: this.model.directory
+    });
+    app.getXHR(model.url(), {
+      success: function (err, response, body) {
+        model.set(body);
+        model.updateValid();
+        if(model.valid){
+          app.newWorkflow(self, self.model.directory, self.model.is_spatial, type);
+        }else{
+          let title = "Model Errors Detected";
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory;
+          let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
+          $(modals.modelErrorHtml(title, message)).modal();
+        }
+      }
     });
   },
   updateAnnotation: function (e) {
