@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-import sys
 import os
-import docker
-import webbrowser
-import time
 import re
 import signal
+import sys
+import time
+import webbrowser
+try:
+    import docker
+except ImportError:
+    print("ERROR: to use the StochSS webbrowser launcher, you must have the python docker module installed.")
+    print(" https://pypi.org/project/docker/")
+    print("try 'pip install docker' or 'pip3 install docker'")
+    sys.exit(0)
+    
 
 def signal_handler(signal, frame):
     docker_client=docker.from_env()

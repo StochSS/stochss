@@ -1,5 +1,16 @@
-include .env
 include jupyterhub/.env
+
+
+ifeq ($(shell python -c "import sys;print(sys.version_info[0])" 2>/dev/null),3)
+	PYTHON_EXE := python
+	PYTHON_MSG := "python is v3"
+else ifeq ($(shell python3 -c "import sys;print(sys.version_info[0])" 2>/dev/null),3)
+	PYTHON_EXE := python3
+	PYTHON_MSG := "python3 is v3"
+else
+	PYTHON_EXE := 
+	PYTHON_MSG := "python not found"
+endif
 
 ifeq ($(OS),Windows_NT)
 include .win32.env
@@ -14,6 +25,17 @@ include .env
 endif
 
 .DEFAULT_GOAL=build_and_run
+
+check_python:
+	@echo $(PYTHON_MSG)
+	@echo $(PYTHON_EXE)
+	@echo "python -c \"import sys;print(sys.version_info[0])\""
+	@echo $(shell python -c "import sys;print(sys.version_info[0])")
+	@echo "python3 -c \"import sys;print(sys.version_info[0])\")"
+	@echo $(shell python3 -c "import sys;print(sys.version_info[0])")
+
+check_launch_webbrowser:
+	$(PYTHON_EXE) launch_webbrowser.py 
 
 network:
 	@docker network inspect $(DOCKER_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(DOCKER_NETWORK_NAME)
@@ -127,7 +149,7 @@ test:   create_working_dir
 build_and_test: build test
 
 run:    create_working_dir
-	python3 launch_webbrowser.py &
+	$(PYTHON_EXE) launch_webbrowser.py &
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
@@ -149,7 +171,7 @@ run_bash:
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
 watch:
-	python3 launch_webbrowser.py &
+	$(PYTHON_EXE) launch_webbrowser.py &
 	docker run -it --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
