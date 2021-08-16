@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 import os
 import re
-import signal
 import sys
 import time
 import webbrowser
@@ -13,15 +12,6 @@ except ImportError:
     print("try 'pip install docker' or 'pip3 install docker'")
     sys.exit(0)
     
-
-def signal_handler(signal, frame):
-    docker_client=docker.from_env()
-    stochss_container = docker_client.containers.get("stochss-lab")
-    stochss_container.stop()
-    sys.exit(0)
-
-signal.signal(signal.SIGINT, signal_handler)
-signal.signal(signal.SIGHUP, signal_handler)
 
 print("Welcome to the StochSS webbrowser launcher!")
 print("Initializing docker...")
