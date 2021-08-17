@@ -40,7 +40,7 @@ while not container_started:
         jupyter_url=jupyter_url_sequence[0]
         jupyter_url=jupyter_url.replace('0.0.0.0','127.0.0.1')
         print(f"Opening StochSS webpage...\n")
-        webbrowser.open_new(jupyter_url)
+        webbrowser.open_new_tab(jupyter_url)
         print("Welcome to StochSS!\n\nYou can access your local StochSS service with this URL:\n\n")
         print(jupyter_url+"\n")
         time.sleep(5)
