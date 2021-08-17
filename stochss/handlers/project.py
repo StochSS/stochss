@@ -53,7 +53,7 @@ class LoadProjectBrowserAPIHandler(APIHandler):
             self.set_header('Content-Type', 'application/json')
             folder = StochSSFolder(path="")
             data = folder.get_project_list()
-            log.debug("List of projects: %s", data)
+            log.debug(f"List of projects: {data}")
             self.write(data)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -76,12 +76,12 @@ class LoadProjectAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the project directory: %s", path)
+        log.debug(f"The path to the project directory: {path}")
         log.info("Loading project data")
         try:
             project = StochSSProject(path=path)
             s_project = project.load()
-            log.debug("Contents of the project: %s", s_project)
+            log.debug(f"Contents of the project: {s_project}")
             self.write(s_project)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -104,14 +104,14 @@ class NewProjectAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the new project directory: %s", path)
-        log.info("Creating %s project", path.split('/').pop())
+        log.debug(f"The path to the new project directory: {path}")
+        log.info(f"Creating {path.split('/').pop()} project")
         try:
             project = StochSSProject(path=path, new=True)
             resp = {"message":f"Successfully created the project: {project.get_file()}",
                     "path":project.path}
-            log.debug("Response: %s", resp)
-            log.info("Successfully created %s project", project.get_file())
+            log.debug(f"Response: {resp}")
+            log.info(f"Successfully created {project.get_file()} project")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -135,14 +135,14 @@ class NewModelAPIHandler(APIHandler):
         log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("Path to the project: %s", path)
+        log.debug(f"Path to the project: {path}")
         file = self.get_query_argument(name="mdlFile")
-        log.debug("Name to the file: %s", file)
+        log.debug(f"Name to the file: {file}")
         try:
             project = StochSSProject(path=path)
             resp = project.add_model(file=file, new=True)
             project.print_logs(log)
-            log.debug("Response: %s", resp)
+            log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -166,14 +166,14 @@ class AddExistingModelAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("Path to the model: %s", path)
+        log.debug(f"Path to the model: {path}")
         try:
             folder = StochSSFolder(path="")
             # file will be excluded if test passes
             test = lambda ext, root, file: bool(".wkfl" in root or f"{path}" in root or \
                                                 "trash" in root.split("/"))
             data = folder.get_file_list(ext=[".mdl", ".smdl"], test=test)
-            log.debug("List of models: %s", data)
+            log.debug(f"List of models: {data}")
             self.write(data)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -190,19 +190,19 @@ class AddExistingModelAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("Path to the project: %s", path)
+        log.debug(f"Path to the project: {path}")
         mdl_path = self.get_query_argument(name="mdlPath")
-        log.debug("Path to the model: %s", mdl_path)
+        log.debug(f"Path to the model: {mdl_path}")
         try:
             project = StochSSProject(path=path)
             log.info("Loading model data")
             model_class = StochSSModel if mdl_path.endswith(".mdl") else StochSSSpatialModel
             model = model_class(path=mdl_path)
-            log.info("Adding %s to %s", model.get_file(), project.get_file())
+            log.info(f"Adding {model.get_file()} to {project.get_file()}")
             resp = project.add_model(file=model.get_file(), model=model.load())
             project.print_logs(log)
-            log.info("Successfully added %s to %s", model.get_file(), project.get_file())
-            log.debug("Response: %s", resp)
+            log.info(f"Successfully added {model.get_file()} to {project.get_file()}")
+            log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -225,20 +225,20 @@ class ExtractModelAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         src_path = self.get_query_argument(name="srcPath")
-        log.debug("Path to the target model: %s", src_path)
+        log.debug(f"Path to the target model: {src_path}")
         dst_path = self.get_query_argument(name="dstPath")
-        log.debug("Destination path for the target model: %s", dst_path)
+        log.debug(f"Destination path for the target model: {dst_path}")
         try:
             src_model = StochSSModel(path=src_path)
-            log.info("Extracting %s", src_model.get_file())
+            log.info(f"Extracting {src_model.get_file()}")
             dst_model = StochSSModel(path=dst_path, new=True, model=src_model.load())
             dirname = dst_model.get_dir_name()
             if not dirname:
                 dirname = "/"
             message = f"The Model {src_model.get_file()} was extracted to "
             message += f"{dirname} in files as {dst_model.get_file()}"
-            log.debug("Response message: %s", message)
-            log.info("Successfully extracted %s to %s", src_model.get_file(), dirname)
+            log.debug(f"Response message: {message}")
+            log.info(f"Successfully extracted {src_model.get_file()} to {dirname}")
             self.write(message)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -261,15 +261,15 @@ class ExtractWorkflowAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         src_path = self.get_query_argument(name="srcPath")
-        log.debug("Path to the target model: %s", src_path)
+        log.debug(f"Path to the target model: {src_path}")
         dst_path = self.get_query_argument(name="dstPath")
-        log.debug("Destination path for the target model: %s", dst_path)
+        log.debug(f"Destination path for the target model: {dst_path}")
         try:
-            log.info("Extracting %s", src_path.split('/').pop())
+            log.info(f"Extracting {src_path.split('/').pop()}")
             project = StochSSProject(path=os.path.dirname(os.path.dirname(src_path)))
             resp = project.extract_workflow(src=src_path, dst=dst_path)
             project.print_logs(log)
-            log.debug("Response message: %s", resp)
+            log.debug(f"Response message: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -292,11 +292,11 @@ class ProjectMetaDataAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("Path to the project directory: %s", path)
+        log.debug(f"Path to the project directory: {path}")
         data = json.loads(self.request.body.decode())
-        log.debug("Meta-data to be saved: %s", data)
+        log.debug(f"Meta-data to be saved: {data}")
         try:
-            log.info("Saving metadata for %s", path.split('/').pop())
+            log.info(f"Saving metadata for {path.split('/').pop()}")
             project = StochSSProject(path=path)
             project.update_meta_data(data=data)
             log.info("Successfully saved the metadata")
@@ -350,11 +350,11 @@ class UpdateAnnotationAPIHandler(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
-        log.debug("Path to the project directory: %s", path)
+        log.debug(f"Path to the project directory: {path}")
         data = json.loads(self.request.body.decode())['annotation'].strip()
-        log.debug("Annotation to be saved: %s", data)
+        log.debug(f"Annotation to be saved: {data}")
         try:
-            log.info("Saving the annotation for %s", path.split('/').pop())
+            log.info(f"Saving the annotation for {path.split('/').pop()}")
             project = StochSSProject(path=path)
             project.update_annotation(annotation=data)
             log.info("Successfully saved the annotation")
@@ -378,7 +378,7 @@ class UpadteProjectAPIHandler(APIHandler):
         ----------
         '''
         path = self.get_query_argument(name="path")
-        log.debug("The path to the project: %s", path)
+        log.debug(f"The path to the project: {path}")
         try:
             proj = StochSSProject(path=path)
             proj.update_project_format()

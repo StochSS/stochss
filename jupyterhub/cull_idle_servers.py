@@ -59,29 +59,29 @@ def parse_date(date_string):
 
     Returned datetime object will always be timezone-aware
     """
-    dt = dateutil.parser.parse(date_string)
-    if not dt.tzinfo:
+    date = dateutil.parser.parse(date_string)
+    if not date.tzinfo:
         # assume naive timestamps are UTC
-        dt = dt.replace(tzinfo=timezone.utc)
-    return dt
+        date = date.replace(tzinfo=timezone.utc)
+    return date
 
 
-def format_td(td):
+def format_td(t_delta):
     """
     Nicely format a timedelta object
 
     as HH:MM:SS
     """
-    if td is None:
+    if t_delta is None:
         return "unknown"
-    if isinstance(td, str):
-        return td
-    seconds = int(td.total_seconds())
-    h = seconds // 3600
+    if isinstance(t_delta, str):
+        return t_delta
+    seconds = int(t_delta.total_seconds())
+    hour = seconds // 3600
     seconds = seconds % 3600
-    m = seconds // 60
+    mins = seconds // 60
     seconds = seconds % 60
-    return "{h:02}:{m:02}:{seconds:02}".format(h=h, m=m, seconds=seconds)
+    return "{h:02}:{m:02}:{seconds:02}".format(h=hour, m=mins, seconds=seconds)
 
 
 @coroutine
@@ -322,9 +322,9 @@ def cull_idle(
     for user in users:
         futures.append((user['name'], handle_user(user)))
 
-    for (name, f) in futures:
+    for (name, future) in futures:
         try:
-            result = yield f
+            result = yield future
         except Exception:
             app_log.exception("Error processing %s", name)
         else:
@@ -347,7 +347,8 @@ if __name__ == '__main__':
     define(
         'max_age',
         default=0,
-        help="The maximum age (in seconds) of servers that should be culled even if they are active",
+        help="The maximum age (in seconds) of servers \
+                that should be culled even if they are active",
     )
     define(
         'cull_users',
@@ -372,11 +373,11 @@ if __name__ == '__main__':
 
     try:
         AsyncHTTPClient.configure("tornado.curl_httpclient.CurlAsyncHTTPClient")
-    except ImportError as e:
+    except ImportError as err:
         app_log.warning(
             "Could not load pycurl: %s\n"
             "pycurl is recommended if you have a large number of users.",
-            e,
+            err,
         )
 
     loop = IOLoop.current()

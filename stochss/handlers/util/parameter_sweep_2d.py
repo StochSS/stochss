@@ -69,12 +69,12 @@ class ParameterSweep2D():
                 else:
                     m_data = [func_map[m_key](x[species]) for x in results]
                 if verbose:
-                    log.debug('  %s population %s=%s', m_key, species, m_data)
+                    log.debug(f'  {m_key} population {species}={m_data}')
                 for r_key in self.REDUCER_KEYS:
                     r_data = func_map[r_key](m_data)
                     self.results[species][m_key][r_key][i_ndx, j_ndx] = r_data
                     if verbose:
-                        log.debug('    %s of ensemble = %s', r_key, r_data)
+                        log.debug(f'    {r_key} of ensemble = {r_data}')
 
 
     def __feature_extraction(self, results, i_ndx, j_ndx, verbose=False):
@@ -88,7 +88,7 @@ class ParameterSweep2D():
                     data = func_map[key](spec_res)
                 self.results[species][key][i_ndx, j_ndx] = data
                 if verbose:
-                    log.debug('  %s population %s=%s', key, species, data)
+                    log.debug(f'  {key} population {species}={data}')
 
 
     def __setup_results(self, solver_name):
@@ -246,7 +246,7 @@ class ParameterSweep2D():
                 try:
                     tmp_res = tmp_mdl.run(**self.settings)
                 except Exception as err:
-                    log.error("%s\n%s", err, traceback.format_exc())
+                    log.error(f"{err}\n{traceback.format_exc()}")
                 else:
                     key = f"{self.params[0]['parameter']}:{val1},"
                     key += f"{self.params[1]['parameter']}:{val2}"

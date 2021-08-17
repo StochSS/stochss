@@ -119,8 +119,7 @@ class ParameterSweep(StochSSJob):
                     csv_writer = csv.writer(csv_file)
                     job.to_csv(keys=key, csv_writer=csv_writer)
         except Exception as err:
-            log.error("Error storing csv results: %s\n%s",
-                      str(err), traceback.format_exc())
+            log.error(f"Error storing csv results: {err}\n{traceback.format_exc()}")
 
 
     @classmethod
@@ -193,13 +192,13 @@ class ParameterSweep(StochSSJob):
             sim_type = "2D parameter sweep"
             job = ParameterSweep2D(**kwargs)
         if verbose:
-            log.info("Running the %s", sim_type)
+            log.info(f"Running the {sim_type}")
         job.run(job_id=self.get_file(), verbose=verbose)
         if not job.ts_results:
             message = "All simulations failed to complete."
             raise StochSSJobError(message)
         if verbose:
-            log.info("The %s has completed", sim_type)
+            log.info(f"The {sim_type} has completed")
             log.info("Storing the results as pickle and csv")
         if not 'results' in os.listdir():
             os.mkdir('results')
