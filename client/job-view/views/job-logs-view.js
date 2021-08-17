@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 //support files
-let app = require('../app');
+let app = require('../../app');
 //views
 let View = require('ampersand-view');
 //tempates
-let template = require('../templates/includes/jobInfoView.pug');
+let template = require('../templates/jobLogsView.pug');
 
 module.exports = View.extend({
   template: template,
@@ -42,7 +42,7 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    if(this.parent.model.activeJob.status === "error") {
+    if(this.parent.model.status === "error") {
       $(this.queryByHook("job-info")).collapse("show");
       $(this.queryByHook("collapse-info")).html("-");
     }

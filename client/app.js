@@ -155,7 +155,8 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   }
   let self = parent;
   let ext = isSpatial ? /.smdl/g : /.mdl/g
-  let name = mdlPath.split('/').pop().replace(ext, "")
+  let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
+  let name = mdlPath.split('/').pop().replace(ext, typeCode)
   let modal = $(modals.newWorkflowHtml(name, type)).modal();
   let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
   let input = document.querySelector('#newWorkflowModal #workflowNameInput');
@@ -176,8 +177,7 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   });
   okBtn.addEventListener('click', function (e) {
     modal.modal("hide");
-    let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
-    let wkflFile = input.value.trim() + typeCode + ".wkfl";
+    let wkflFile = input.value.trim() + ".wkfl";
     if(mdlPath.includes(".proj") && !mdlPath.includes(".wkgp")){
       var wkflPath = path.join(path.dirname(mdlPath), "WorkflowGroup1.wkgp", wkflFile);
     }else{

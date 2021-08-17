@@ -32,7 +32,37 @@ section.page
 
     button.btn.btn-outline-primary.box-shadow(data-hook="save-model") Update Model
 
-  div(data-hook="settings-container")
+  div.card
+
+    div.card-header.pb-0
+
+      h3.inline Settings
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-wkfl-settings" data-hook="collapse-settings") -
+
+    div.collapse(class="show" id="collapse-wkfl-settings" data-hook="workflow-editor-container")
+
+      div.card-body
+
+        div(data-hook="settings-container")
+
+        div.mdl-edit-btn
+
+          button.btn.btn-primary.box-shadow(data-hook="save") Save
+
+          div.mdl-edit-btn.saving-status(data-hook="saving-workflow")
+
+            div.spinner-grow
+
+            span Saving...
+
+          div.mdl-edit-btn.saved-status(data-hook="saved-workflow")
+
+            span Saved
+
+          button.btn.btn-primary.box-shadow(data-hook="start-job") Start Workflow
+    
+          button.btn.btn-primary.box-shadow(data-hook="edit-model") Edit Model
 
   div(data-hook="status-container")
 
@@ -63,25 +93,7 @@ section.page
 
     h2(data-hook="active-job-header") Job:
 
-  div(data-hook="workflow-results-container")
-
-  div(data-hook="workflow-info-container")
-
-  div(data-hook="settings-viewer-container")
-
-  div#review-model-section.card(style="display: none;")
-
-    div.card-header
-
-      h3.inline(id="model-viewer-header") Review Model: 
-
-      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-model" data-hook="collapse-model") +
-
-    div.collapse(id="collapse-model")
-
-      div.card-body(data-hook="model-viewer-container")
-
-  div.mb-2(data-hook="computational-resources-container")
+  div(data-hook="active-job-container")
 
   button.btn.btn-primary.box-shadow(data-hook="return-to-project-btn" style="display: none;") Return to Project
 

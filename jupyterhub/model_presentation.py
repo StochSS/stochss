@@ -43,14 +43,14 @@ class JsonFileAPIHandler(BaseHandler):
         ----------
         '''
         owner = self.get_query_argument(name="owner")
-        log.debug("Container id of the owner: %s", owner)
+        log.debug(f"Container id of the owner: {owner}")
         file = self.get_query_argument(name="file")
-        log.debug("Name to the file: %s", file)
+        log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/json')
         try:
             model = get_presentation_from_user(owner=owner, file=file, kwargs={"file": file},
                                                process_func=process_model_presentation)
-            log.debug("Contents of the json file: %s", model)
+            log.debug(f"Contents of the json file: {model}")
             self.write(model)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
@@ -70,15 +70,15 @@ class DownModelPresentationAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
-        log.debug("Container id of the owner: %s", owner)
-        log.debug("Name to the file: %s", file)
+        log.debug(f"Container id of the owner: {owner}")
+        log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/json')
         model = get_presentation_from_user(owner=owner, file=file,
                                            kwargs={"for_download": True},
                                            process_func=process_model_presentation)
         ext = file.split(".").pop()
         self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
-        log.debug("Contents of the json file: %s", model)
+        log.debug(f"Contents of the json file: {model}")
         self.write(model)
         self.finish()
 

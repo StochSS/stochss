@@ -82,24 +82,24 @@ module.exports = View.extend({
     });
   },
   newWorkflow: function (type) {
+    let self = this;
     let model = new Model({
-      directory: o.original._path
+      directory: this.model.model.directory
     });
     app.getXHR(model.url(), {
       success: function (err, response, body) {
         model.set(body);
         model.updateValid();
         if(model.valid){
-          app.newWorkflow(this, this.model.model.directory, this.model.model.is_spatial, type);
+          app.newWorkflow(self, self.model.model.directory, self.model.model.is_spatial, type);
         }else{
           let title = "Model Errors Detected";
-          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory;
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory + '&validate';
           let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
           $(modals.modelErrorHtml(title, message)).modal();
         }
       }
     });
-    app.newWorkflow(this, this.model.model.directory, this.model.model.is_spatial, type);
   },
   renderWorkflowCollection: function () {
     if(this.workflowCollectionView){

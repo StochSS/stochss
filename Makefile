@@ -1,8 +1,41 @@
-
-include .env
 include jupyterhub/.env
 
+
+ifeq ($(shell python -c "import sys;print(sys.version_info[0])" 2>/dev/null),3)
+	PYTHON_EXE := python
+	PYTHON_MSG := "python is v3"
+else ifeq ($(shell python3 -c "import sys;print(sys.version_info[0])" 2>/dev/null),3)
+	PYTHON_EXE := python3
+	PYTHON_MSG := "python3 is v3"
+else
+	PYTHON_EXE := 
+	PYTHON_MSG := "python not found"
+endif
+
+ifeq ($(OS),Windows_NT)
+include .win32.env
+	DOCKER_ROOT_DIR := $(shell cmd.exe /C "echo %cd%")
+	DOCKER_WORKING_DIR ?= $(DOCKER_ROOT_DIR)\local_data
+	DOCKER_SETUP_COMMAND := setup.bat $(subst /,\\\,$(DOCKER_WORKING_DIR))
+else
+include .env
+	DOCKER_ROOT_DIR := $(PWD)
+	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
+	DOCKER_SETUP_COMMAND := bash -c "if [ ! -d \"$(DOCKER_WORKING_DIR)\" ] && [ -z ${DOCKER_WORKING_DIR+\"if_var_set\"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
+endif
+
 .DEFAULT_GOAL=build_and_run
+
+check_python:
+	@echo $(PYTHON_MSG)
+	@echo $(PYTHON_EXE)
+	@echo "python -c \"import sys;print(sys.version_info[0])\""
+	@echo $(shell python -c "import sys;print(sys.version_info[0])")
+	@echo "python3 -c \"import sys;print(sys.version_info[0])\")"
+	@echo $(shell python3 -c "import sys;print(sys.version_info[0])")
+
+check_launch_webbrowser:
+	$(PYTHON_EXE) launch_webbrowser.py 
 
 network:
 	@docker network inspect $(DOCKER_NETWORK_NAME) >/dev/null 2>&1 || docker network create $(DOCKER_NETWORK_NAME)
@@ -46,23 +79,14 @@ cert:
 	@echo "Generating certificate..."
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
 
-webpack:
-	npm run webpack
-
-watch:
-	npm run watch
-
-deps:
-	npm install
-
 build_home_page:
 	npm run build-home
 
-build_hub: deps build_home_page check-files network volumes
+build_hub: build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build
 
-build_hub_clean: deps build_home_page check-files network volumes
+build_hub_clean: build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	cd ./jupyterhub && docker-compose build --no-cache
 
@@ -99,17 +123,15 @@ clean_notebook_server:
 
 hub: build_hub build run_hub_dev
 
-build_clean: deps webpack
+build_clean:
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	 	--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 create_working_dir:
-	#if DOCKER_WORKING_DIR is defined and its value does not exist, create a directory at its path and copy Examples into it
-	bash -c "if [ ! -d "$(DOCKER_WORKING_DIR)" ] && [ -z ${DOCKER_WORKING_DIR+"if_var_set"}]; then mkdir $(DOCKER_WORKING_DIR); mkdir $(DOCKER_WORKING_DIR)/Examples;cp -r public_models/* $(DOCKER_WORKING_DIR)/Examples;fi"
+	$(DOCKER_SETUP_COMMAND)
 
-
-build:  deps webpack
+build:  
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
 	  	-t $(DOCKER_STOCHSS_IMAGE):latest .
@@ -118,7 +140,7 @@ test:   create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(PWD):/stochss \
+		-v $(DOCKER_ROOT_DIR):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
@@ -127,13 +149,15 @@ test:   create_working_dir
 build_and_test: build test
 
 run:    create_working_dir
+	$(PYTHON_EXE) launch_webbrowser.py &
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(PWD):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
-		$(DOCKER_STOCHSS_IMAGE):latest
+		$(DOCKER_STOCHSS_IMAGE):latest \
+		bash -c "cd /home/jovyan;  start-notebook.sh "
+
 
 build_and_run: build run
 
@@ -141,12 +165,21 @@ run_bash:
 	docker run -it --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
-		-v $(PWD):/stochss \
+		-v $(DOCKER_ROOT_DIR):/stochss \
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
 		/bin/bash
-
+watch:
+	$(PYTHON_EXE) launch_webbrowser.py &
+	docker run -it --rm \
+		--name $(DOCKER_STOCHSS_IMAGE) \
+		--env-file .env \
+		-v $(DOCKER_ROOT_DIR):/stochss \
+		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
+		-p 8888:8888 \
+		$(DOCKER_STOCHSS_IMAGE):latest \
+		bash -c "cd /stochss;pip install --no-cache-dir -e .; npm run watch & sleep 10; cd /home/jovyan; start-notebook.sh "
 
 update:
 	docker exec -it $(DOCKER_STOCHSS_IMAGE) python -m pip install -e /stochss
