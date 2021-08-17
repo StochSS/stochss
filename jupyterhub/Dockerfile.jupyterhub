@@ -1,6 +1,6 @@
 ARG JUPYTERHUB_VERSION
 #FROM jupyterhub/jupyterhub-onbuild:$JUPYTERHUB_VERSION
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 USER root
 
