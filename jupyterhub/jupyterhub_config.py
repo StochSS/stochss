@@ -101,7 +101,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/api/job/load\/?", JobAPIHandler),
         (r"/stochss/job/download_presentation/(\w+)/(.+)\/?", DownJobPresentationAPIHandler),
         (r"/stochss/api/workflow/plot-results\/?", PlotJobResultsAPIHandler),
-        (r"/stochss/api/job/download-csv\/?", DownloadCSVAPIHandler)
+        (r"/stochss/api/job/csv\/?", DownloadCSVAPIHandler)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
@@ -203,7 +203,7 @@ def get_user_cpu_count_or_fail():
     '''
     log = logging.getLogger()
     reserve_count = int(os.environ['RESERVED_CPUS'])
-    log.info("RESERVED_CPUS environment variable is set to %s", reserve_count)
+    log.info(f"RESERVED_CPUS environment variable is set to {reserve_count}")
     # Round up to an even number of reserved cpus
     if reserve_count % 2 > 0:
         message = "Increasing reserved cpu count by one so it's an even number."
@@ -211,7 +211,7 @@ def get_user_cpu_count_or_fail():
         log.warning(message)
         reserve_count += 1
     total_cpus = os.cpu_count()
-    log.info("Total cpu count as reported by os.count: %s", total_cpus)
+    log.info(f"Total cpu count as reported by os.count: {total_cpus}")
     if reserve_count >= total_cpus:
         e_message = "RESERVED_CPUS environment cannot be greater than or equal to the number of"
         e_message += " cpus returned by os.cpu_count()"
@@ -223,8 +223,8 @@ def get_user_cpu_count_or_fail():
     if user_cpu_count % 2 > 0 and user_cpu_count > 1:
         user_cpu_count -= 1
     c.StochSS.reserved_cpu_count = reserve_count
-    log.info('Using %s logical cpus for user containers...', user_cpu_count)
-    log.info('Reserving %s logical cpus for hub container and underlying OS', reserve_count)
+    log.info(f'Using {user_cpu_count} logical cpus for user containers...')
+    log.info(f'Reserving {reserve_count} logical cpus for hub container and underlying OS')
     return user_cpu_count
 
 c.StochSS.user_cpu_count = get_user_cpu_count_or_fail()
@@ -259,8 +259,8 @@ def pre_spawn_hook(spawner):
     palloc = c.StochSS.user_cpu_alloc
     div = len(palloc) // 2
     reserved = c.StochSS.reserved_cpu_count
-    log.warning('Reserved CPUs: %s', reserved)
-    log.warning('Number of user containers using each logical core: %s', palloc)
+    log.warning(f'Reserved CPUs: {reserved}')
+    log.warning(f'Number of user containers using each logical core: {palloc}')
     # We want to allocate logical cores that are on the same physical core
     # whenever possible.
     #
@@ -290,18 +290,17 @@ def pre_spawn_hook(spawner):
         avail_cpus = palloc
         least_used_cpu = min(avail_cpus)
         cpu1_index = avail_cpus.index(least_used_cpu)
-        log.info("User %s to use logical cpu %s", spawner.user.name, str(cpu1_index))
+        log.info(f"User {spawner.user.name} to use logical cpu {cpu1_index}")
         palloc[cpu1_index] += 1
-        spawner.extra_host_config['cpuset_cpus'] = '{}'.format(cpu1_index)
+        spawner.extra_host_config['cpuset_cpus'] = f'{cpu1_index}'
     else:
         least_used_cpu = min(avail_cpus)
         cpu1_index = avail_cpus.index(least_used_cpu)
         palloc[cpu1_index] += 1
         cpu2_index = cpu1_index+div
         palloc[cpu2_index] += 1
-        log.info("User %s to use logical cpus %s and %s",
-                 spawner.user.name, str(cpu1_index), str(cpu2_index))
-        spawner.extra_host_config['cpuset_cpus'] = '{},{}'.format(cpu1_index, cpu2_index)
+        log.info(f"User {spawner.user.name} to use logical cpus {cpu1_index} and {cpu2_index}")
+        spawner.extra_host_config['cpuset_cpus'] = f'{cpu1_index},{cpu2_index}'
 
 
 def post_stop_hook(spawner):
@@ -315,11 +314,11 @@ def post_stop_hook(spawner):
         cpu1_index, cpu2_index = spawner.extra_host_config['cpuset_cpus'].split(',')
         palloc[int(cpu1_index)] -= 1
         palloc[int(cpu2_index)] -= 1
-        log.warning('Reserved CPUs: %s', reserved)
-        log.warning('Number of user containers using each logical core: %s', palloc)
+        log.warning(f'Reserved CPUs: {reserved}')
+        log.warning(f'Number of user containers using each logical core: {palloc}')
     except Exception as err:
         message = "Exception thrown due to cpuset_cpus not being set (power user)"
-        log.error("%s\n%s", message, err)
+        log.error(f"{message}\n{err}")
         # Exception thrown due to cpuset_cpus not being set (power user)
         pass
 

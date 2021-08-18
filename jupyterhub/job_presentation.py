@@ -54,9 +54,9 @@ class JobAPIHandler(BaseHandler):
         ----------
         '''
         owner = self.get_query_argument(name="owner")
-        log.debug("Container id of the owner: %s", owner)
+        log.debug(f"Container id of the owner: {owner}")
         file = self.get_query_argument(name="file")
-        log.debug("Name to the file: %s", file)
+        log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/json')
         try:
             path = os.path.join("/tmp/presentation_cache", file)
@@ -65,7 +65,7 @@ class JobAPIHandler(BaseHandler):
             else:
                 job = get_presentation_from_user(owner=owner, file=file, kwargs={"file": file},
                                                  process_func=process_job_presentation)
-            log.debug("Contents of the json file: %s", job)
+            log.debug(f"Contents of the json file: {job}")
             self.write(job)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
@@ -85,8 +85,8 @@ class DownJobPresentationAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
-        log.debug("Container id of the owner: %s", owner)
-        log.debug("Name to the file: %s", file)
+        log.debug(f"Container id of the owner: {owner}")
+        log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/zip')
         job, name = get_presentation_from_user(owner=owner, file=file,
                                                kwargs={"for_download": True},
@@ -111,9 +111,9 @@ class PlotJobResultsAPIHandler(BaseHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the workflow: %s", path)
+        log.debug(f"The path to the workflow: {path}")
         body = json.loads(self.get_query_argument(name='data'))
-        log.debug("Plot args passed to the plot: %s", body)
+        log.debug(f"Plot args passed to the plot: {body}")
         try:
             job = StochSSJob(path=path)
             if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
@@ -126,7 +126,7 @@ class PlotJobResultsAPIHandler(BaseHandler):
                 job.print_logs(log)
             if "plt_data" in body.keys():
                 fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
-            log.debug("Plot figure: %s", fig)
+            log.debug(f"Plot figure: {fig}")
             self.write(fig)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -146,13 +146,21 @@ class DownloadCSVAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
-        self.set_header('Content-Type', 'application/json')
+        self.set_header('Content-Type', 'application/zip')
         path = self.get_query_argument(name="path")
-        log.debug("The path to the workflow: %s", path)
-        body = json.loads(self.get_query_argument(name='data'))
-        log.debug("Plot args passed to the plot: %s", body)
+        csv_type = self.get_query_argument(name="type")
+        data = json.loads(self.get_query_argument(name="data", default=None))
         try:
             job = StochSSJob(path=path)
+            name = job.load()['name']
+            self.set_header('Content-Disposition', f'attachment; filename="{name}.zip"')
+            if csv_type == "time series":
+                csv_data = job.get_csvzip_from_results(**data, name=name)
+            elif csv_type == "psweep":
+                csv_data = job.get_psweep_csvzip_from_results(fixed=data, name=name)
+            # else:
+            #     csv_data = job.get_full_csvzip_from_results(name=name)
+            self.write(csv_data)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
@@ -388,11 +396,8 @@ class StochSSJob(StochSSBase):
         add_config : bool
             Whether or not to add the config key to the plot fig
         '''
-        self.log("debug", f"Key identifying the plot to generate: {plt_key}")
         try:
-            self.log("info", "Loading the results...")
             result = self.__get_filtered_ensemble_results(data_keys)
-            self.log("info", "Generating the plot...")
             if plt_key == "mltplplt":
                 fig = result.plotplotly(return_plotly_figure=True, multiple_graphs=True)
             elif plt_key == "stddevran":
@@ -405,13 +410,56 @@ class StochSSJob(StochSSBase):
                 fig = result.plotplotly(return_plotly_figure=True)
             if add_config and plt_key != "mltplplt":
                 fig["config"] = {"responsive":True}
-            self.log("info", "Loading the plot...")
             return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except KeyError as err:
             message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
+
+
+    def get_psweep_csvzip_from_results(self, fixed, name):
+        '''
+        Get the csv file of the parameter sweep plot data for download
+
+        Attributes
+        ----------
+        fixed : dict
+            Dictionary for parameters that remain at a fixed value.
+        '''
+        settings = self.load()['settings']
+        try:
+            dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
+            params = list(filter(lambda param: param['name'] not in fixed.keys(),
+                                 settings['parameterSweepSettings']['parameters']))
+            tmp_dir = tempfile.TemporaryDirectory()
+            if dims == 1:
+                kwargs = {"results": self.__get_filtered_1d_results(f_keys)}
+                kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
+                ParameterSweep1D.to_csv(
+                    param=params[0], kwargs=kwargs, path=tmp_dir.name, nametag=name
+                )
+            else:
+                kwargs = {"results": self.__get_filtered_2d_results(f_keys, params[0])}
+                kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
+                ParameterSweep2D.to_csv(
+                    params=params, kwargs=kwargs, path=tmp_dir.name, nametag=name
+                )
+            if fixed:
+                csv_path = os.path.join(tmp_dir.name, name, "parameters.csv")
+                with open(csv_path, "w") as csv_file:
+                    csv_writer = csv.writer(csv_file)
+                    csv_writer.writerow(list(fixed.keys()))
+                    csv_writer.writerow(list(fixed.values()))
+            shutil.make_archive(os.path.join(tmp_dir.name, name), "zip", tmp_dir.name, name)
+            with open(os.path.join(tmp_dir.name, f"{name}.zip"), "rb") as zip_file:
+                return zip_file.read()
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested results are not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
@@ -426,26 +474,21 @@ class StochSSJob(StochSSBase):
         kwarps : dict
             Dictionary of keys used for post proccessing the results.
         '''
-        self.log("debug", f"Key identifying the plot to generate: {kwargs}")
         settings = self.load()['settings']
         try:
-            self.log("info", "Loading the results...")
             dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
             params = list(filter(lambda param: param['name'] not in fixed.keys(),
                                  settings['parameterSweepSettings']['parameters']))
             if dims == 1:
                 kwargs['param'] = params[0]
                 kwargs['results'] = self.__get_filtered_1d_results(f_keys)
-                self.log("info", "Generating the plot...")
                 fig = ParameterSweep1D.plot(**kwargs)
             else:
                 kwargs['params'] = params
                 kwargs['results'] = self.__get_filtered_2d_results(f_keys, params[0])
-                self.log("info", "Generating the plot...")
                 fig = ParameterSweep2D.plot(**kwargs)
             if add_config:
                 fig['config'] = {"responsive": True}
-            self.log("info", "Loading the plot...")
             return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
@@ -489,6 +532,17 @@ class ParameterSweep1D():
     '''
 
     @classmethod
+    def __get_csv_data(cls, results=None, species=None, mapper=None, reducer=None):
+        data = []
+        for specie in species:
+            p_data, _ = cls.__process_results(
+                results=results, species=specie, mapper=mapper, reducer=reducer
+            )
+            data.extend([list(p_data[:,0]), list(p_data[:,1])])
+        return data
+
+
+    @classmethod
     def __process_results(cls, results, species, mapper="final", reducer="avg"):
         func_map = {"min": numpy.min, "max": numpy.max, "avg": numpy.mean,
                     "var": numpy.var, "final": lambda res: res[-1]}
@@ -501,6 +555,18 @@ class ParameterSweep1D():
             data = [[map_result[0], 0] for map_result in map_results]
             visible = False
         return numpy.array(data), visible
+
+
+    @classmethod
+    def __write_csv_file(cls, path, header, param, data):
+        with open(path, "w") as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(header)
+            for i, val in enumerate(param['range']):
+                line = [val]
+                for col in data:
+                    line.append(col[i])
+                csv_writer.writerow(line)
 
 
     @classmethod
@@ -537,12 +603,68 @@ class ParameterSweep1D():
         return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
 
 
+    @classmethod
+    def to_csv(cls, param, kwargs, path=None, nametag="results_csv"):
+        '''
+        Output the post-process results as a series of CSV files.
+
+        Attributes
+        ----------
+        param : dict
+            Sweep parameter object
+        kwargs : dict
+            Filtered results and full list of Model species
+        path : str
+            Parent path to the csv directory
+        nametag : str
+            Name of the csv directory
+        '''
+        if path is None:
+            directory = os.path.join(".", str(nametag))
+        else:
+            directory = os.path.join(path, str(nametag))
+        os.mkdir(directory)
+        # Define header row for all files
+        header = [param['name']]
+        for specie in kwargs['species']:
+            header.extend([specie, f"{specie}-stddev"])
+        # Get all CSV file data
+        mappers = ['min', 'max', 'avg', 'var', 'final']
+        if len(kwargs['results'][0].data) == 1:
+            for mapper in mappers:
+                path = os.path.join(directory, f"{mapper}.csv")
+                # Get csv data for a mapper
+                data = cls.__get_csv_data(**kwargs, mapper=mapper)
+                # Write csv file
+                cls.__write_csv_file(path, header, param, data)
+        else:
+            reducers = mappers[:-1]
+            for mapper in mappers:
+                for reducer in reducers:
+                    path = os.path.join(directory, f"{mapper}-{reducer}.csv")
+                    # Get csv data for a mapper and a reducer
+                    data = cls.__get_csv_data(**kwargs, mapper=mapper, reducer=reducer)
+                    # Write csv file
+                    cls.__write_csv_file(path, header, param, data)
+
+
 class ParameterSweep2D():
     '''
     ################################################################################################
     StochSS 2D parameter sweep job object
     ################################################################################################
     '''
+
+    @classmethod
+    def __get_csv_data(cls, results=None, species=None, mapper=None, reducer=None):
+        data = []
+        for specie in species:
+            p_data = cls.__process_results(
+                results=results, species=specie, mapper=mapper, reducer=reducer
+            )
+            data.append([list(_data) for _data in p_data])
+        return data
+
 
     @classmethod
     def __process_results(cls, results, species, mapper="final", reducer="avg"):
@@ -558,6 +680,19 @@ class ParameterSweep2D():
                 red_results = [map_result[0] for map_result in map_results]
             data.append(red_results)
         return numpy.array(data)
+
+
+    @classmethod
+    def __write_csv_file(cls, path, header, params, data):
+        with open(path, "w") as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(header)
+            for i, val1 in enumerate(params[0]['range']):
+                for j, val2 in enumerate(params[1]['range']):
+                    line = [val1, val2]
+                    for col in data:
+                        line.append(col[i][j])
+                    csv_writer.writerow(line)
 
 
     @classmethod
@@ -590,3 +725,47 @@ class ParameterSweep2D():
                                           yaxis=dict(title=f"<b>{params[1]['name']}</b>"))
         fig = dict(data=trace_list, layout=layout)
         return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+
+
+    @classmethod
+    def to_csv(cls, params, kwargs, path=None, nametag="results_csv"):
+        '''
+        Output the post-process results as a series of CSV files.
+
+        Attributes
+        ----------
+        params : list
+            List of sweep parameter objects
+        kwargs : dict
+            Filtered results and full list of Model species
+        path : str
+            Parent path to the csv directory
+        nametag : str
+            Name of the csv directory
+        '''
+        if path is None:
+            directory = os.path.join(".", str(nametag))
+        else:
+            directory = os.path.join(path, str(nametag))
+        os.mkdir(directory)
+        # Define header row for all files
+        header = [params[0]['name'], params[1]['name']]
+        header.extend(kwargs['species'])
+        # Get all CSV file data
+        mappers = ['min', 'max', 'avg', 'var', 'final']
+        if len(kwargs['results'][0][0].data) == 1:
+            for mapper in mappers:
+                path = os.path.join(directory, f"{mapper}.csv")
+                # Get csv data for a mapper
+                data = cls.__get_csv_data(**kwargs, mapper=mapper)
+                # Write csv file
+                cls.__write_csv_file(path, header, params, data)
+        else:
+            reducers = mappers[:-1]
+            for mapper in mappers:
+                for reducer in reducers:
+                    path = os.path.join(directory, f"{mapper}-{reducer}.csv")
+                    # Get csv data for a mapper and a reducer
+                    data = cls.__get_csv_data(**kwargs, mapper=mapper, reducer=reducer)
+                    # Write csv file
+                    cls.__write_csv_file(path, header, params, data)
