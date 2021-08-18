@@ -456,7 +456,7 @@ class DownloadCSVZipAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/zip')
         path = self.get_query_argument(name="path")
         csv_type = self.get_query_argument(name="type")
-        data = self.get_query_argument(name="data")
+        data = json.loads(self.get_query_argument(name="data", default=None))
         try:
             job = StochSSJob(path=path)
             name = job.get_name()
