@@ -63,7 +63,7 @@ StochSS uses [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#) as the 
 
 ### Run Locally
 
-To run JupyterHub locally run `make hub` and go to `127.0.0.1:8888` .
+To run JupyterHub locally run `make hub` and go to `http://127.0.0.1:8000/` .
 
 ### Set Up A Staging Server
 
