@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
+import csv
 import json
 import copy
 import logging
@@ -59,37 +61,15 @@ class ParameterSweep1D():
         self.ts_results = {}
 
 
-    def __ensemble_feature_extraction(self, results, index, verbose=False):
-        func_map = {"min":numpy.min, "max":numpy.max, "avg":numpy.mean, "var":numpy.var}
-        for species in self.list_of_species:
-            for m_key in self.MAPPER_KEYS:
-                if m_key == "final":
-                    m_data = [x[species][-1] for x in results]
-                else:
-                    m_data = [func_map[m_key](x[species]) for x in results]
-                if verbose:
-                    log.debug(f'  {m_key} population {species}={m_data}')
-                std = numpy.std(m_data)
-                for r_key in self.REDUCER_KEYS:
-                    r_data = func_map[r_key](m_data)
-                    self.results[species][m_key][r_key][index, 0] = r_data
-                    self.results[species][m_key][r_key][index, 1] = std
-                    if verbose:
-                        log.debug(f'    {r_key} std of ensemble m:{r_data} s:{std}')
-
-
-    def __feature_extraction(self, results, index, verbose=False):
-        func_map = {"min":numpy.min, "max":numpy.max, "avg":numpy.mean, "var":numpy.var}
-        for species in self.list_of_species:
-            spec_res = results[species]
-            for key in self.MAPPER_KEYS:
-                if key == "final":
-                    data = spec_res[-1]
-                else:
-                    data = func_map[key](spec_res)
-                self.results[species][key][index, 0] = data
-                if verbose:
-                    log.debug(f'  {key} population {species}={data}')
+    @classmethod
+    def __get_csv_data(cls, results=None, species=None, mapper=None, reducer=None):
+        data = []
+        for specie in species:
+            p_data, _ = cls.__process_results(
+                results=results, species=specie, mapper=mapper, reducer=reducer
+            )
+            data.extend([list(p_data[:,0]), list(p_data[:,1])])
+        return data
 
 
     @classmethod
@@ -107,78 +87,16 @@ class ParameterSweep1D():
         return numpy.array(data), visible
 
 
-    def __setup_results(self, solver_name):
-        for species in self.list_of_species:
-            spec_res = {}
-            if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
-                for m_key in self.MAPPER_KEYS:
-                    spec_res[m_key] = {}
-                    for r_key in self.REDUCER_KEYS:
-                        spec_res[m_key][r_key] = numpy.zeros((len(self.param['range']), 2))
-            else:
-                for key in self.MAPPER_KEYS:
-                    spec_res[key] = numpy.zeros((len(self.param['range']), 2))
-            self.results[species] = spec_res
-
-
-    def get_plotly_layout_data(self, plt_data):
-        '''
-        Get plotly axes labels for layout
-
-        Attributes
-        ----------
-        plt_data : dict
-            Existing layout data
-        '''
-        if "xaxis_label" not in plt_data:
-            plt_data['xaxis_label'] = f"<b>{self.param['parameter']}</b>"
-        if "yaxis_label" not in plt_data:
-            plt_data['yaxis_label'] = "<b>Population</b>"
-
-
-    def get_plotly_traces(self, keys):
-        '''
-        Get the plotly trace list
-
-        Attributes
-        ----------
-        key : list
-            Identifiers for the results data
-        '''
-        if len(keys) > 2:
-            results = self.results[keys[0]][keys[1]][keys[2]]
-        else:
-            results = self.results[keys[0]][keys[1]]
-
-        visible = "number_of_trajectories" in self.settings.keys() and \
-                                    self.settings['number_of_trajectories'] > 1
-        error_y = dict(type="data", array=results[:, 1], visible=visible)
-
-        trace_list = [plotly.graph_objs.Scatter(x=self.param['range'],
-                                                y=results[:, 0], error_y=error_y)]
-        return trace_list
-
-
-    # def plot(self, keys=None):
-    #     '''
-    #     Plot the results based on the keys using matplotlib
-
-    #     Attributes
-    #     ----------
-    #     key : list
-    #         Identifiers for the results data
-    #     '''
-    #     if len(keys) > 2:
-    #         results = self.results[keys[0]][keys[1]][keys[2]]
-    #     else:
-    #         results = self.results[keys[0]][keys[1]]
-
-    #     matplotlib.pyplot.subplots(figsize=(8, 8))
-    #     matplotlib.pyplot.title(f"Parameter Sweep - Variable: {keys[0]}")
-    #     matplotlib.pyplot.errorbar(self.param['range'], results[:, 0], results[:, 1])
-    #     matplotlib.pyplot.xlabel(self.param['parameter'],
-    #                              fontsize=16, fontweight='bold')
-    #     matplotlib.pyplot.ylabel("Population", fontsize=16, fontweight='bold')
+    @classmethod
+    def __write_csv_file(cls, path, header, param, data):
+        with open(path, "w") as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(header)
+            for i, val in enumerate(param['range']):
+                line = [val]
+                for col in data:
+                    line.append(col[i])
+                csv_writer.writerow(line)
 
 
     @classmethod
@@ -226,8 +144,7 @@ class ParameterSweep1D():
             solver_name = self.settings['solver'].name
         else:
             solver_name = self.model.get_best_solver().name
-        self.__setup_results(solver_name=solver_name)
-        for i, val in enumerate(self.param['range']):
+        for val in self.param['range']:
             if solver_name in ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]:
                 tmp_mdl = self.model
                 self.settings['variables'] = {self.param['parameter']:val}
@@ -243,34 +160,48 @@ class ParameterSweep1D():
             else:
                 key = f"{self.param['parameter']}:{val}"
                 self.ts_results[key] = tmp_res
-                if "ODE" not in solver_name and self.settings['number_of_trajectories'] > 1:
-                    self.__ensemble_feature_extraction(results=tmp_res, index=i, verbose=verbose)
-                else:
-                    self.__feature_extraction(results=tmp_res, index=i, verbose=verbose)
 
 
-    def to_csv(self, keys, csv_writer):
+    @classmethod
+    def to_csv(cls, param, kwargs, path=None, nametag="results_csv"):
         '''
-        Convert self.results to a csv file
+        Output the post-process results as a series of CSV files.
 
         Attributes
         ----------
-        key : list
-            Identifiers for the results data
-        csv_writer : obj
-            CSV file writer.
+        param : dict
+            Sweep parameter object
+        kwargs : dict
+            Filtered results and full list of Model species
+        path : str
+            Parent path to the csv directory
+        nametag : str
+            Name of the csv directory
         '''
-        results = []
-        names = [self.param['parameter']]
-        for species in self.list_of_species:
-            names.extend([species, f"{species}-stddev"])
-            if len(keys) > 1:
-                results.append(self.results[species][keys[0]][keys[1]])
-            else:
-                results.append(self.results[species][keys[0]])
-        csv_writer.writerow(names)
-        for i, step in enumerate(self.param['range']):
-            line = [step]
-            for res in results:
-                line.extend([res[i, 0], res[i, 1]])
-            csv_writer.writerow(line)
+        if path is None:
+            directory = os.path.join(".", str(nametag))
+        else:
+            directory = os.path.join(path, str(nametag))
+        os.mkdir(directory)
+        # Define header row for all files
+        header = [param['name']]
+        for specie in kwargs['species']:
+            header.extend([specie, f"{specie}-stddev"])
+        # Get all CSV file data
+        mappers = ['min', 'max', 'avg', 'var', 'final']
+        if len(kwargs['results'][0].data) == 1:
+            for mapper in mappers:
+                path = os.path.join(directory, f"{mapper}.csv")
+                # Get csv data for a mapper
+                data = cls.__get_csv_data(**kwargs, mapper=mapper)
+                # Write csv file
+                cls.__write_csv_file(path, header, param, data)
+        else:
+            reducers = mappers[:-1]
+            for mapper in mappers:
+                for reducer in reducers:
+                    path = os.path.join(directory, f"{mapper}-{reducer}.csv")
+                    # Get csv data for a mapper and a reducer
+                    data = cls.__get_csv_data(**kwargs, mapper=mapper, reducer=reducer)
+                    # Write csv file
+                    cls.__write_csv_file(path, header, param, data)
