@@ -161,7 +161,7 @@ class ParameterSweep(StochSSJob):
             raise StochSSJobError(message)
         if verbose:
             log.info(f"The {sim_type} has completed")
-            log.info("Storing the results as pickle and csv")
+            log.info("Storing the results as pickle.")
         if not 'results' in os.listdir():
             os.mkdir('results')
         pkl_err = self.__store_pickled_results(job=job)
