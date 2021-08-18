@@ -64,6 +64,13 @@ div#workflow-results.card
               disabled
             ) Download JSON
 
+            button.btn.btn-primary.box-shadow(
+              data-hook="trajectories-plot-csv"
+              data-target="download-plot-csv"
+              data-type="trajectories"
+              disabled
+            ) Download as .csv
+
       div
 
         button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook

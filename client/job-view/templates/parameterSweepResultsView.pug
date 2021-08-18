@@ -84,6 +84,13 @@ div#workflow-results.card
                     disabled
                   ) Download JSON
 
+                  button.btn.btn-primary.box-shadow(
+                    data-hook="ts-psweep-plot-csv"
+                    data-target="download-plot-csv"
+                    data-type="ts-psweep"
+                    disabled
+                  ) Download as .csv
+
                 div.col-md-3
 
                   div.head(data-hook="plot-type-header")
@@ -162,6 +169,13 @@ div#workflow-results.card
                   data-type="psweep"
                   disabled
                 ) Download JSON
+
+                button.btn.btn-primary.box-shadow(
+                  data-hook="psweep-plot-csv"
+                  data-target="download-plot-csv"
+                  data-type="psweep"
+                  disabled
+                ) Download as .csv
               
       div
 
