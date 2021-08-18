@@ -410,7 +410,7 @@ class StochSSJob(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except KeyError as err:
             message = f"The requested results are not available: {str(err)}"
-            raise PlotNotAvailableError(message, traceback.format_exc()) from err 
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
     def get_plot_from_results(self, data_keys, plt_key, add_config=False):
@@ -451,6 +451,53 @@ class StochSSJob(StochSSBase):
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
+    def get_psweep_csvzip_from_results(self, fixed, name):
+        '''
+        Get the csv file of the parameter sweep plot data for download
+
+        Attributes
+        ----------
+        fixed : dict
+            Dictionary for parameters that remain at a fixed value.
+        '''
+        settings = self.load_settings()
+        try:
+            self.log("info", "Loading job results...")
+            dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
+            params = list(filter(lambda param: param['name'] not in fixed.keys(),
+                                 settings['parameterSweepSettings']['parameters']))
+            tmp_dir = tempfile.TemporaryDirectory()
+            if dims == 1:
+                kwargs = {"results": self.__get_filtered_1d_results(f_keys)}
+                kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
+                self.log("info", "Generating CSV files...")
+                ParameterSweep1D.to_csv(
+                    param=params[0], kwargs=kwargs, path=tmp_dir.name, nametag=name
+                )
+            else:
+                kwargs = {"results": self.__get_filtered_2d_results(f_keys, params[0])}
+                kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
+                self.log("info", "Generating CSV files...")
+                ParameterSweep1D.to_csv(
+                    param=params[0], kwargs=kwargs, path=tmp_dir.name, nametag=name
+                )
+            if fixed:
+                csv_path = os.path.join(tmp_dir.name, name, "parameters.csv")
+                with open(csv_path, "w") as csv_file:
+                    csv_writer = csv.writer(csv_file)
+                    csv_writer.writerow(list(fixed.keys()))
+                    csv_writer.writerow(list(fixed.values()))
+            shutil.make_archive(os.path.join(tmp_dir.name, name), "zip", tmp_dir.name, name)
+            with open(os.path.join(tmp_dir.name, f"{name}.zip"), "rb") as zip_file:
+                return zip_file.read()
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested results are not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
+
+
     def get_psweep_plot_from_results(self, fixed, kwargs, add_config=False):
         '''
         Generate and return the parameter sweep plot form the time series results.
@@ -462,7 +509,7 @@ class StochSSJob(StochSSBase):
         kwarps : dict
             Dictionary of keys used for post proccessing the results.
         '''
-        self.log("debug", f"Key identifying the plot to generate: {kwargs}")
+        self.log("debug", f"Keys identifying the plot to generate: {kwargs}")
         settings = self.load_settings()
         try:
             self.log("info", "Loading the results...")
