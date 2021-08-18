@@ -478,8 +478,8 @@ class StochSSJob(StochSSBase):
                 kwargs = {"results": self.__get_filtered_2d_results(f_keys, params[0])}
                 kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
                 self.log("info", "Generating CSV files...")
-                ParameterSweep1D.to_csv(
-                    param=params[0], kwargs=kwargs, path=tmp_dir.name, nametag=name
+                ParameterSweep2D.to_csv(
+                    params=params, kwargs=kwargs, path=tmp_dir.name, nametag=name
                 )
             if fixed:
                 csv_path = os.path.join(tmp_dir.name, name, "parameters.csv")
