@@ -49,6 +49,7 @@ module.exports = View.extend({
     'click [data-hook=multiple-plots]' : 'plotMultiplePlots',
     'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
     'click [data-target=download-json]' : 'handleDownloadJSONClick',
+    'click [data-target=download-plot-csv]' : 'handlePlotCSVClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
     'click [data-hook=download-results-csv]' : 'handleDownloadResultsCsvClick',
     'click [data-hook=job-presentation]' : 'handlePresentationClick'
@@ -132,9 +133,18 @@ module.exports = View.extend({
       $(this.queryByHook(type + "-edit-plot")).prop("disabled", true);
       $(this.queryByHook(type + "-download-png-custom")).prop("disabled", true);
       $(this.queryByHook(type + "-download-json")).prop("disabled", true);
+      $(this.queryByHook(type + "-plot-csv")).prop("disabled", true);
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
     }
     $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
+  },
+  downloadCSV: function (csvType, data) {
+    var queryStr = "?path=" + this.model.directory + "&type=" + csvType;
+    if(data) {
+      queryStr += "&data=" + JSON.stringify(data);
+    }
+    let endpoint = path.join(app.getApiPath(), "job/csv") + queryStr;
+    app.getXHR(endpoint);
   },
   getPlot: function (type) {
     let self = this;
@@ -310,6 +320,20 @@ module.exports = View.extend({
       }
     });
   },
+  handlePlotCSVClick: function (e) {
+    let type = e.target.dataset.type;
+    if(type !== "psweep") {
+      var data = {
+        data_keys: type === "ts-psweep" ? this.getDataKeys(true) : {},
+        proc_key: type === "ts-psweep" ? this.tsPlotData.type : type
+      }
+      var csvType = "time series"
+    }else{
+      var data = this.getDataKeys(false)
+      var csvType = "psweep"
+    }
+    this.downloadCSV(csvType, data);
+  },
   handlePresentationClick: function (e) {
     let self = this;
     this.startAction();
@@ -351,6 +375,7 @@ module.exports = View.extend({
     $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
     $(this.queryByHook(type + "-download-png-custom")).prop("disabled", false);
     $(this.queryByHook(type + "-download-json")).prop("disabled", false);
+    $(this.queryByHook(type + "-plot-csv")).prop("disabled", false);
     if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
       $(this.queryByHook("multiple-plots")).prop("disabled", false);
     }
