@@ -144,7 +144,7 @@ module.exports = View.extend({
       queryStr += "&data=" + JSON.stringify(data);
     }
     let endpoint = path.join(app.getApiPath(), "job/csv") + queryStr;
-    app.getXHR(endpoint);
+    window.open(endpoint);
   },
   getPlot: function (type) {
     let self = this;
