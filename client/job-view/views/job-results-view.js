@@ -51,7 +51,7 @@ module.exports = View.extend({
     'click [data-target=download-json]' : 'handleDownloadJSONClick',
     'click [data-target=download-plot-csv]' : 'handlePlotCSVClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
-    'click [data-hook=download-results-csv]' : 'handleDownloadResultsCsvClick',
+    'click [data-hook=download-results-csv]' : 'handleFullCSVClick',
     'click [data-hook=job-presentation]' : 'handlePresentationClick'
   },
   initialize: function (attrs, options) {
@@ -310,15 +310,8 @@ module.exports = View.extend({
     let pngButton = $('div[data-hook=' + type + '-plot] a[data-title*="Download plot as a png"]')[0];
     pngButton.click();
   },
-  handleDownloadResultsCsvClick: function (e) {
-    let self = this;
-    let queryStr = "?path=" + this.model.directory + "&action=resultscsv";
-    let endpoint = path.join(app.getApiPath(), "file/download-zip") + queryStr;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        window.open(path.join("files", body.Path));
-      }
-    });
+  handleFullCSVClick: function (e) {
+    this.downloadCSV("full", null);
   },
   handlePlotCSVClick: function (e) {
     let type = e.target.dataset.type;
