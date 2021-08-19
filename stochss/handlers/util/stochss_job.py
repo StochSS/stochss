@@ -113,16 +113,20 @@ class StochSSJob(StochSSBase):
     def __get_1d_fixed_list(cls, results):
         keys = [key.split(',') for key in results.keys()]
         p_names = [param.split(':')[0] for param in keys[0]]
+        if len(p_names) < 2:
+            return [{}]
         _f_keys = []
         for name in p_names:
             for key in keys:
                 f_key = list(filter(lambda key_el, key=key, name=name: name not in key_el, key))
                 _f_keys.append(",".join(f_key))
         f_keys = sorted(list(set(_f_keys)))
+        print(f_keys)
         fixed_list = []
         for key in f_keys:
             data = [_data.split(':') for _data in key.split(',')]
-            fixed = {_data[0]: _data[1] for _data in data}
+            print(data)
+            fixed = {_fixed[0]: _fixed[1] for _fixed in data}
             fixed_list.append(fixed)
         return fixed_list
 
@@ -130,7 +134,12 @@ class StochSSJob(StochSSBase):
     @classmethod
     def __get_2d_fixed_list(cls, results):
         keys = [key.split(',') for key in results.keys()]
-        p_names = list(combinations([param.split(':')[0] for param in keys[0]], 2))
+        p_names = [param.split(':')[0] for param in keys[0]]
+        if len(p_names) < 2:
+            return None
+        elif len(p_names) < 3:
+            return [{}]
+        p_names = list(combinations(p_names, 2))
         _f_keys = []
         for names in p_names:
             for key in keys:
@@ -223,10 +232,12 @@ class StochSSJob(StochSSBase):
 
 
     def __get_full_2dpsweep_csv(self, b_path, results, get_name, name):
+        fixed_list = self.__get_2d_fixed_list(results)
+        if fixed_list is None:
+            return
         settings = self.load_settings()
         td_path = os.path.join(b_path, "2D_Resutls")
         os.mkdir(td_path)
-        fixed_list = self.__get_2d_fixed_list(results)
         for i, fixed in enumerate(fixed_list):
             params = list(filter(lambda param, fixed=fixed: param['name'] not in fixed.keys(),
                                  settings['parameterSweepSettings']['parameters']))
