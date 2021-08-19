@@ -137,7 +137,7 @@ class StochSSJob(StochSSBase):
         p_names = [param.split(':')[0] for param in keys[0]]
         if len(p_names) < 2:
             return None
-        elif len(p_names) < 3:
+        if len(p_names) < 3:
             return [{}]
         p_names = list(combinations(p_names, 2))
         _f_keys = []
@@ -228,7 +228,8 @@ class StochSSJob(StochSSBase):
             ParameterSweep1D.to_csv(
                 param=param, kwargs=kwargs, path=od_path, nametag=get_name(name, i)
             )
-            self.__write_parameters_csv(path=od_path, name=get_name(name, i), data_keys=fixed)
+            if fixed:
+                self.__write_parameters_csv(path=od_path, name=get_name(name, i), data_keys=fixed)
 
 
     def __get_full_2dpsweep_csv(self, b_path, results, get_name, name):
@@ -246,7 +247,8 @@ class StochSSJob(StochSSBase):
             ParameterSweep2D.to_csv(
                 params=params, kwargs=kwargs, path=td_path, nametag=get_name(name, i)
             )
-            self.__write_parameters_csv(path=td_path, name=get_name(name, i), data_keys=fixed)
+            if fixed:
+                self.__write_parameters_csv(path=td_path, name=get_name(name, i), data_keys=fixed)
 
 
     def __get_full_timeseries_csv(self, b_path, results, get_name, name):
