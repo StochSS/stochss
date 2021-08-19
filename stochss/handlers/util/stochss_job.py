@@ -27,6 +27,8 @@ import tempfile
 
 import datetime
 import traceback
+from itertools import combinations
+
 import numpy
 import plotly
 
@@ -107,8 +109,49 @@ class StochSSJob(StochSSBase):
                             self.__get_settings_path(full=True))
 
 
-    def __get_settings_path(self, full=False):
-        return os.path.join(self.get_path(full=full), "settings.json")
+    @classmethod
+    def __get_1d_fixed_list(cls, results):
+        keys = [key.split(',') for key in results.keys()]
+        p_names = [param.split(':')[0] for param in keys[0]]
+        _f_keys = []
+        for name in p_names:
+            for key in keys:
+                f_key = list(filter(lambda key_el, key=key, name=name: name not in key_el, key))
+                _f_keys.append(",".join(f_key))
+        f_keys = sorted(list(set(_f_keys)))
+        fixed_list = []
+        for key in f_keys:
+            data = [_data.split(':') for _data in key.split(',')]
+            fixed = {_data[0]: _data[1] for _data in data}
+            fixed_list.append(fixed)
+        return fixed_list
+
+
+    @classmethod
+    def __get_2d_fixed_list(cls, results):
+        keys = [key.split(',') for key in results.keys()]
+        p_names = list(combinations([param.split(':')[0] for param in keys[0]], 2))
+        _f_keys = []
+        for names in p_names:
+            for key in keys:
+                test = lambda key_el, names=names: names[0] not in key_el and names[1] not in key_el
+                f_key = list(filter(lambda key_el, test=test: test(key_el), key))
+                _f_keys.append(",".join(f_key))
+        f_keys = sorted(list(set(_f_keys)))
+        fixed_list = []
+        for key in f_keys:
+            data = [_data.split(':') for _data in key.split(',')]
+            fixed = {_data[0]: _data[1] for _data in data}
+            fixed_list.append(fixed)
+        return fixed_list
+
+
+    @classmethod
+    def __get_csvzip(cls, dirname, name):
+        shutil.make_archive(os.path.join(dirname, name), "zip", dirname, name)
+        path = os.path.join(dirname, f"{name}.zip")
+        with open(path, "rb") as zip_file:
+            return zip_file.read()
 
 
     def __get_extract_dst_path(self, mdl_file):
@@ -130,31 +173,6 @@ class StochSSJob(StochSSBase):
         if wkgp_name != self.get_name(path=mdl_file):
             mdl_file = f"{wkgp_name}.{mdl_file.split('.').pop()}"
         return os.path.join(wkgp_path, mdl_file)
-
-
-    def __get_info_path(self, full=False):
-        '''
-        Return the path to the info.json file
-
-        Attributes
-        ----------
-        full : bool
-            Indicates whether or not to get the full path or local path
-        '''
-        return os.path.join(self.get_path(full=full), "info.json")
-
-
-    @classmethod
-    def __get_presentation_links(cls, file):
-        safe_chars = set(string.ascii_letters + string.digits)
-        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
-        query_str = f"?owner={hostname}&file={file}"
-        present_link = f"https://live.stochss.org/stochss/present-job{query_str}"
-        dl_base = "https://live.stochss.org/stochss/job/download_presentation"
-        downloadlink = os.path.join(dl_base, hostname, file)
-        open_link = f"https://open.stochss.org?open={downloadlink}"
-        links = {"presentation": present_link, "download": downloadlink, "open": open_link}
-        return links
 
 
     def __get_filtered_1d_results(self, f_keys):
@@ -188,6 +206,48 @@ class StochSSJob(StochSSBase):
         return result
 
 
+    def __get_full_1dpsweep_csv(self, b_path, results, get_name, name):
+        settings = self.load_settings()
+        od_path = os.path.join(b_path, "1D_Resutls")
+        os.mkdir(od_path)
+        fixed_list = self.__get_1d_fixed_list(results)
+        for i, fixed in enumerate(fixed_list):
+            param = list(filter(lambda param, fixed=fixed: param['name'] not in fixed.keys(),
+                                settings['parameterSweepSettings']['parameters']))[0]
+            kwargs = {'results': self.__get_filtered_1d_results(fixed)}
+            kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
+            ParameterSweep1D.to_csv(
+                param=param, kwargs=kwargs, path=od_path, nametag=get_name(name, i)
+            )
+            self.__write_parameters_csv(path=od_path, name=get_name(name, i), data_keys=fixed)
+
+
+    def __get_full_2dpsweep_csv(self, b_path, results, get_name, name):
+        settings = self.load_settings()
+        td_path = os.path.join(b_path, "2D_Resutls")
+        os.mkdir(td_path)
+        fixed_list = self.__get_2d_fixed_list(results)
+        for i, fixed in enumerate(fixed_list):
+            params = list(filter(lambda param, fixed=fixed: param['name'] not in fixed.keys(),
+                                 settings['parameterSweepSettings']['parameters']))
+            kwargs = {"results": self.__get_filtered_2d_results(fixed, params[0])}
+            kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
+            ParameterSweep2D.to_csv(
+                params=params, kwargs=kwargs, path=td_path, nametag=get_name(name, i)
+            )
+            self.__write_parameters_csv(path=td_path, name=get_name(name, i), data_keys=fixed)
+
+
+    def __get_full_timeseries_csv(self, b_path, results, get_name, name):
+        ts_path = os.path.join(b_path, "Time_Series")
+        os.makedirs(ts_path)
+        for i, (key, result) in enumerate(results.items()):
+            data = [_data.split(':') for _data in key.split(',')]
+            data_keys = {_data[0]: _data[1] for _data in data}
+            result.to_csv(path=ts_path, nametag=get_name(name, i), stamp="")
+            self.__write_parameters_csv(path=ts_path, name=get_name(name, i), data_keys=data_keys)
+
+
     @classmethod
     def __get_fixed_keys_and_dims(cls, settings, fixed):
         p_len = len(settings['parameterSweepSettings']['parameters'])
@@ -204,22 +264,49 @@ class StochSSJob(StochSSBase):
         return dims, f_keys
 
 
+    def __get_info_path(self, full=False):
+        return os.path.join(self.get_path(full=full), "info.json")
+
+
     def __get_pickled_results(self):
         path = os.path.join(self.__get_results_path(full=True), "results.p")
         with open(path, "rb") as results_file:
             return pickle.load(results_file)
 
 
-    def __get_results_path(self, full=False):
-        '''
-        Return the path to the results directory
+    @classmethod
+    def __get_presentation_links(cls, file):
+        safe_chars = set(string.ascii_letters + string.digits)
+        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+        query_str = f"?owner={hostname}&file={file}"
+        present_link = f"https://live.stochss.org/stochss/present-job{query_str}"
+        dl_base = "https://live.stochss.org/stochss/job/download_presentation"
+        downloadlink = os.path.join(dl_base, hostname, file)
+        open_link = f"https://open.stochss.org?open={downloadlink}"
+        links = {"presentation": present_link, "download": downloadlink, "open": open_link}
+        return links
 
-        Attributes
-        ----------
-        full : bool
-            Indicates whether or not to get the full path or local path
-        '''
+
+    def __get_results_path(self, full=False):
         return os.path.join(self.get_path(full=full), "results")
+
+
+    def __get_run_logs(self):
+        path = os.path.join(self.get_path(full=True), "logs.txt")
+        try:
+            with open(path, "r") as file:
+                logs = file.read()
+            self.log("debug", f"Contents of the log file: {logs}")
+            if logs:
+                return logs
+            return "No logs were recoded for this job."
+        except FileNotFoundError as err:
+            message = f"Could not find the log file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+
+
+    def __get_settings_path(self, full=False):
+        return os.path.join(self.get_path(full=full), "settings.json")
 
 
     def __is_csv_dir(self, file):
@@ -270,6 +357,15 @@ class StochSSJob(StochSSBase):
                                                               "parameters": parameters}
 
 
+    @classmethod
+    def __write_parameters_csv(cls, path, name, data_keys):
+        csv_path = os.path.join(path, name, "parameters.csv")
+        with open(csv_path, "w") as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(list(data_keys.keys()))
+            csv_writer.writerow(list(data_keys.values()))
+
+
     def duplicate_as_new(self, stamp):
         '''
         Get all data needed to create a new job that
@@ -310,6 +406,65 @@ class StochSSJob(StochSSBase):
         kwargs = {"path":dst_path, "new":True, "model":model}
         resp = {"message":f"A copy of the model in {self.path} has been created"}
         return resp, kwargs
+
+
+    def get_csvzip_from_results(self, data_keys, proc_key, name):
+        '''
+        Get the csv files of the plot data for download.
+
+        Attributes
+        ----------
+        data_keys : dict
+            Dictionary of param names and values used to identify the correct data.
+        proc_key : str
+            Type post processing to preform.
+        name : str
+            Name of the csv directory
+        '''
+        try:
+            self.log("info", "Getting job results...")
+            result = self.__get_filtered_ensemble_results(data_keys)
+            self.log("info", "Processing results...")
+            if proc_key == "stddev":
+                result = result.stddev_ensemble()
+            elif proc_key == "avg":
+                result = result.average_ensemble()
+            self.log("info", "Generating CSV files...")
+            tmp_dir = tempfile.TemporaryDirectory()
+            result.to_csv(path=tmp_dir.name, nametag=name, stamp="")
+            if data_keys:
+                self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=data_keys)
+            self.log("info", "Generating zip archive...")
+            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested results are not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
+
+
+    def get_full_csvzip_from_results(self, name):
+        '''
+        Get the csv files for the full set of results data
+
+        Attributes
+        ----------
+        name : str
+            Name of the csv directory.
+        '''
+        results = self.__get_pickled_results()
+        tmp_dir = tempfile.TemporaryDirectory()
+        if not isinstance(results, dict):
+            results.to_csv(path=tmp_dir.name, nametag=name, stamp="")
+            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+        def get_name(b_name, tag):
+            return f"{b_name}_{tag}"
+        b_path = os.path.join(tmp_dir.name, get_name(name, "full"))
+        self.__get_full_timeseries_csv(b_path, results, get_name, name)
+        self.__get_full_1dpsweep_csv(b_path, results, get_name, name)
+        self.__get_full_2dpsweep_csv(b_path, results, get_name, name)
+        return self.__get_csvzip(dirname=tmp_dir.name, name=get_name(name, "full"))
 
 
     def get_model_path(self, full=False, external=False):
@@ -368,49 +523,6 @@ class StochSSJob(StochSSBase):
         kwargs = {"path":path, "new":True, "settings":settings,
                   "models":{"s_model":s_model, "model":g_model}}
         return {"kwargs":kwargs, "type":wkfl_type}
-
-
-    def get_csvzip_from_results(self, data_keys, proc_key, name):
-        '''
-        Get the csv files of the plot data for download.
-
-        Attributes
-        ----------
-        data_keys : dict
-            Dictionary of param names and values used to identify the correct data.
-        proc_key : str
-            Type post processing to preform.
-        name : str
-            Name of the csv directory
-        '''
-        try:
-            self.log("info", "Getting job results...")
-            result = self.__get_filtered_ensemble_results(data_keys)
-            self.log("info", "Processing results...")
-            if proc_key == "stddev":
-                result = result.stddev_ensemble()
-            elif proc_key == "avg":
-                result = result.average_ensemble()
-            self.log("info", "Generating CSV files...")
-            tmp_dir = tempfile.TemporaryDirectory()
-            result.to_csv(path=tmp_dir.name, nametag=name, stamp="")
-            if data_keys:
-                csv_path = os.path.join(tmp_dir.name, name, "parameters.csv")
-                with open(csv_path, "w") as csv_file:
-                    csv_writer = csv.writer(csv_file)
-                    csv_writer.writerow(list(data_keys.keys()))
-                    csv_writer.writerow(list(data_keys.values()))
-            self.log("info", "Generating zip archive...")
-            shutil.make_archive(os.path.join(tmp_dir.name, name), "zip", tmp_dir.name, name)
-            path = os.path.join(tmp_dir.name, f"{name}.zip")
-            with open(path, "rb") as zip_file:
-                return zip_file.read()
-        except FileNotFoundError as err:
-            message = f"Could not find the results pickle file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
-        except KeyError as err:
-            message = f"The requested results are not available: {str(err)}"
-            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
     def get_plot_from_results(self, data_keys, plt_key, add_config=False):
@@ -482,14 +594,8 @@ class StochSSJob(StochSSBase):
                     params=params, kwargs=kwargs, path=tmp_dir.name, nametag=name
                 )
             if fixed:
-                csv_path = os.path.join(tmp_dir.name, name, "parameters.csv")
-                with open(csv_path, "w") as csv_file:
-                    csv_writer = csv.writer(csv_file)
-                    csv_writer.writerow(list(fixed.keys()))
-                    csv_writer.writerow(list(fixed.values()))
-            shutil.make_archive(os.path.join(tmp_dir.name, name), "zip", tmp_dir.name, name)
-            with open(os.path.join(tmp_dir.name, f"{name}.zip"), "rb") as zip_file:
-                return zip_file.read()
+                self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=fixed)
+            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -536,52 +642,6 @@ class StochSSJob(StochSSBase):
         except KeyError as err:
             message = f"The requested plot is not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
-
-
-    def update_fig_layout(self, fig=None, plt_data=None):
-        '''
-        Update the figure layout.
-
-        Attributes
-        ----------
-        fig : dict
-            Plotly figure to be updated
-        plt_data : dict
-            Title and axes data for the plot
-        '''
-        self.log("debug", f"Title and axis data for the plot: {plt_data}")
-        try:
-            if plt_data is None:
-                return fig
-            for key in plt_data.keys():
-                if key == "title":
-                    fig['layout']['title']['text'] = plt_data[key]
-                else:
-                    fig['layout'][key]['title']['text'] = plt_data[key]
-            return fig
-        except KeyError as err:
-            message = f"The requested plot is not available: {str(err)}"
-            raise PlotNotAvailableError(message, traceback.format_exc()) from err
-
-
-    def get_run_logs(self):
-        '''
-        Return the contents of the log file'
-
-        Attributes
-        ----------
-        '''
-        path = os.path.join(self.get_path(full=True), "logs.txt")
-        try:
-            with open(path, "r") as file:
-                logs = file.read()
-            self.log("debug", f"Contents of the log file: {logs}")
-            if logs:
-                return logs
-            return "No logs were recoded for this job."
-        except FileNotFoundError as err:
-            message = f"Could not find the log file: {str(err)}"
-            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     @classmethod
@@ -656,7 +716,7 @@ class StochSSJob(StochSSBase):
         finally:
             settings = self.load_settings(model=model)
             if os.path.exists(os.path.join(self.path, "logs.txt")):
-                logs = self.get_run_logs()
+                logs = self.__get_run_logs()
             else:
                 logs = ""
             self.job = {"mdlPath":mdl_path, "model":model, "settings":settings,
@@ -819,6 +879,32 @@ class StochSSJob(StochSSBase):
         with open(self.__get_settings_path(full=True), "w") as settings_file:
             json.dump(settings, settings_file, indent=4, sort_keys=True)
         return {"message":"The plot was successfully saved", "data":plot}
+
+
+    def update_fig_layout(self, fig=None, plt_data=None):
+        '''
+        Update the figure layout.
+
+        Attributes
+        ----------
+        fig : dict
+            Plotly figure to be updated
+        plt_data : dict
+            Title and axes data for the plot
+        '''
+        self.log("debug", f"Title and axis data for the plot: {plt_data}")
+        try:
+            if plt_data is None:
+                return fig
+            for key in plt_data.keys():
+                if key == "title":
+                    fig['layout']['title']['text'] = plt_data[key]
+                else:
+                    fig['layout'][key]['title']['text'] = plt_data[key]
+            return fig
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
     def update_info(self, new_info, new=False):
