@@ -465,8 +465,8 @@ class DownloadCSVZipAPIHandler(APIHandler):
                 csv_data = job.get_csvzip_from_results(**data, name=name)
             elif csv_type == "psweep":
                 csv_data = job.get_psweep_csvzip_from_results(fixed=data, name=name)
-            # else:
-            #     csv_data = job.get_full_csvzip_from_results(name=name)
+            else:
+                csv_data = job.get_full_csvzip_from_results(name=name)
             self.write(csv_data)
         except StochSSAPIError as err:
             report_error(self, log, err)
