@@ -130,10 +130,8 @@ module.exports = View.extend({
     Plotly.purge(el);
     $(this.queryByHook(type + "-plot")).empty();
     if(type === "ts-psweep" || type === "psweep"){
+      $(this.queryByHook(type + "-download")).prop("disabled", true);
       $(this.queryByHook(type + "-edit-plot")).prop("disabled", true);
-      $(this.queryByHook(type + "-download-png-custom")).prop("disabled", true);
-      $(this.queryByHook(type + "-download-json")).prop("disabled", true);
-      $(this.queryByHook(type + "-plot-csv")).prop("disabled", true);
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
     }
     $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
@@ -366,9 +364,7 @@ module.exports = View.extend({
     Plotly.newPlot(el, figure);
     $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
     $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
-    $(this.queryByHook(type + "-download-png-custom")).prop("disabled", false);
-    $(this.queryByHook(type + "-download-json")).prop("disabled", false);
-    $(this.queryByHook(type + "-plot-csv")).prop("disabled", false);
+    $(this.queryByHook(type + "-download")).prop("disabled", false);
     if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
       $(this.queryByHook("multiple-plots")).prop("disabled", false);
     }

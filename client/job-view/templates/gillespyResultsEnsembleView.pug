@@ -50,26 +50,32 @@ div#workflow-results.card
             
             button.btn.btn-primary.box-shadow(data-hook="stddevran-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="stddevran-download-png-custom"
-              data-target="download-png-custom"
-              data-type="stddevran"
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="stddevran-download"
+              data-hook="stddevran-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
               disabled
-            ) Download PNG
+            ) Download <span class="caret"></span>
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="stddevran-download-json"
-              data-target="download-json"
-              data-type="stddevran"
-              disabled
-            ) Download JSON
-
-            button.btn.btn-primary.box-shadow(
-              data-hook="stddevran-plot-csv"
-              data-target="download-plot-csv"
-              data-type="stddevran"
-              disabled
-            ) Download Plot Results as .csv
+            ul.dropdown-menu(aria-labelledby="#stddevran-download")
+              li.dropdown-item(
+                data-hook="stddevran-download-png-custom"
+                data-target="download-png-custom"
+                data-type="stddevran"
+              ) Plot as .png
+              li.dropdown-item(
+                data-hook="stddevran-download-json"
+                data-target="download-json"
+                data-type="stddevran"
+              ) Plot as .json
+              li.dropdown-item(
+                data-hook="stddevran-plot-csv"
+                data-target="download-plot-csv"
+                data-type="stddevran"
+              ) Plot Results as .csv
 
       div.card
 
@@ -98,26 +104,32 @@ div#workflow-results.card
 
             button.btn.btn-primary.box-shadow(data-hook="multiple-plots", data-type="mltplplt" disabled) Multiple Plots
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="trajectories-download-png-custom"
-              data-target="download-png-custom"
-              data-type="trajectories"
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="trajectories-download"
+              data-hook="trajectories-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
               disabled
-            ) Download PNG
+            ) Download <span class="caret"></span>
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="trajectories-download-json"
-              data-target="download-json"
-              data-type="trajectories"
-              disabled
-            ) Download JSON
-
-            button.btn.btn-primary.box-shadow(
-              data-hook="trajectories-plot-csv"
-              data-target="download-plot-csv"
-              data-type="trajectories"
-              disabled
-            ) Download Plot Results as .csv
+            ul.dropdown-menu(aria-labelledby="#trajectories-download")
+              li.dropdown-item(
+                data-hook="trajectories-download-png-custom"
+                data-target="download-png-custom"
+                data-type="trajectories"
+              ) Plot as .png
+              li.dropdown-item(
+                data-hook="trajectories-download-json"
+                data-target="download-json"
+                data-type="trajectories"
+              ) Plot as .json
+              li.dropdown-item(
+                data-hook="trajectories-plot-csv"
+                data-target="download-plot-csv"
+                data-type="trajectories"
+              ) Plot Results as .csv
 
       div.card
 
@@ -144,26 +156,32 @@ div#workflow-results.card
 
             button.btn.btn-primary.box-shadow(data-hook="stddev-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="stddev-download-png-custom"
-              data-target="download-png-custom"
-              data-type="stddev"
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="stddev-download"
+              data-hook="stddev-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
               disabled
-            ) Download PNG
+            ) Download <span class="caret"></span>
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="stddev-download-json"
-              data-target="download-json"
-              data-type="stddev"
-              disabled
-            ) Download JSON
-
-            button.btn.btn-primary.box-shadow(
-              data-hook="stddev-plot-csv"
-              data-target="download-plot-csv"
-              data-type="stddev"
-              disabled
-            ) Download Plot Results as .csv
+            ul.dropdown-menu(aria-labelledby="#stddev-download")
+              li.dropdown-item(
+                data-hook="stddev-download-png-custom"
+                data-target="download-png-custom"
+                data-type="stddev"
+              ) Plot as .png
+              li.dropdown-item(
+                data-hook="stddev-download-json"
+                data-target="download-json"
+                data-type="stddev"
+              ) Plot as .json
+              li.dropdown-item(
+                data-hook="stddev-plot-csv"
+                data-target="download-plot-csv"
+                data-type="stddev"
+              ) Plot Results as .csv
 
       div.card
 
@@ -190,26 +208,32 @@ div#workflow-results.card
 
             button.btn.btn-primary.box-shadow(data-hook="avg-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="avg-download-png-custom"
-              data-target="download-png-custom"
-              data-type="avg"
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="avg-download"
+              data-hook="avg-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
               disabled
-            ) Download PNG
+            ) Download <span class="caret"></span>
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="avg-download-json"
-              data-target="download-json"
-              data-type="avg"
-              disabled
-            ) Download JSON
-
-            button.btn.btn-primary.box-shadow(
-              data-hook="avg-plot-csv"
-              data-target="download-plot-csv"
-              data-type="avg"
-              disabled
-            ) Download Plot Results as .csv
+            ul.dropdown-menu(aria-labelledby="#avg-download")
+              li.dropdown-item(
+                data-hook="avg-download-png-custom"
+                data-target="download-png-custom"
+                data-type="avg"
+              ) Plot as .png
+              li.dropdown-item(
+                data-hook="avg-download-json"
+                data-target="download-json"
+                data-type="avg"
+              ) Plot as .json
+              li.dropdown-item(
+                data-hook="avg-plot-csv"
+                data-target="download-plot-csv"
+                data-type="avg"
+              ) Plot Results as .csv
 
       div
 

@@ -50,26 +50,32 @@ div#workflow-results.card
 
             button.btn.btn-primary.box-shadow(data-hook="trajectories-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="trajectories-download-png-custom"
-              data-target="download-png-custom"
-              data-type="trajectories"
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="trajectories-download"
+              data-hook="trajectories-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
               disabled
-            ) Download PNG
+            ) Download <span class="caret"></span>
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="trajectories-download-json"
-              data-target="download-json"
-              data-type="trajectories"
-              disabled
-            ) Download JSON
-
-            button.btn.btn-primary.box-shadow(
-              data-hook="trajectories-plot-csv"
-              data-target="download-plot-csv"
-              data-type="trajectories"
-              disabled
-            ) Download Plot Results as .csv
+            ul.dropdown-menu(aria-labelledby="#trajectories-download")
+              li.dropdown-item(
+                data-hook="trajectories-download-png-custom"
+                data-target="download-png-custom"
+                data-type="trajectories"
+              ) Plot as .png
+              li.dropdown-item(
+                data-hook="trajectories-download-json"
+                data-target="download-json"
+                data-type="trajectories"
+              ) Plot as .json
+              li.dropdown-item(
+                data-hook="trajectories-plot-csv"
+                data-target="download-plot-csv"
+                data-type="trajectories"
+              ) Plot Results as .csv
 
       div
 

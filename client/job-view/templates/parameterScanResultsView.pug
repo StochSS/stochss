@@ -70,26 +70,32 @@ div#workflow-results.card
 
                   button.btn.btn-primary.box-shadow(data-hook="multiple-plots" data-type="ts-psweep-mp" style="display: none;" disabled) Multiple Plots
 
-                  button.btn.btn-primary.box-shadow(
-                    data-hook="ts-psweep-download-png-custom"
-                    data-target="download-png-custom"
-                    data-type="ts-psweep"
+                  button.btn.btn-primary.box-shadow.dropdown-toggle(
+                    id="ts-psweep-download"
+                    data-hook="ts-psweep-download"
+                    data-toggle="dropdown",
+                    aria-haspopup="true",
+                    aria-expanded="false",
+                    type="button"
                     disabled
-                  ) Download PNG
+                  ) Download <span class="caret"></span>
 
-                  button.btn.btn-primary.box-shadow(
-                    data-hook="ts-psweep-download-json"
-                    data-target="download-json"
-                    data-type="ts-psweep"
-                    disabled
-                  ) Download JSON
-
-                  button.btn.btn-primary.box-shadow(
-                    data-hook="ts-psweep-plot-csv"
-                    data-target="download-plot-csv"
-                    data-type="ts-psweep"
-                    disabled
-                  ) Download Plot Results as .csv
+                  ul.dropdown-menu(aria-labelledby="#ts-psweep-download")
+                    li.dropdown-item(
+                      data-hook="ts-psweep-download-png-custom"
+                      data-target="download-png-custom"
+                      data-type="ts-psweep"
+                    ) Plot as .png
+                    li.dropdown-item(
+                      data-hook="ts-psweep-download-json"
+                      data-target="download-json"
+                      data-type="ts-psweep"
+                    ) Plot as .json
+                    li.dropdown-item(
+                      data-hook="ts-psweep-plot-csv"
+                      data-target="download-plot-csv"
+                      data-type="ts-psweep"
+                    ) Plot Results as .csv
 
                 div.col-md-3
 
@@ -170,26 +176,32 @@ div#workflow-results.card
 
                     button.btn.btn-primary.box-shadow(data-hook="psweep-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-                    button.btn.btn-primary.box-shadow(
-                      data-hook="psweep-download-png-custom"
-                      data-target="download-png-custom"
-                      data-type="psweep"
+                    button.btn.btn-primary.box-shadow.dropdown-toggle(
+                      id="psweep-download"
+                      data-hook="psweep-download"
+                      data-toggle="dropdown",
+                      aria-haspopup="true",
+                      aria-expanded="false",
+                      type="button"
                       disabled
-                    ) Download PNG
+                    ) Download <span class="caret"></span>
 
-                    button.btn.btn-primary.box-shadow(
-                      data-hook="psweep-download-json"
-                      data-target="download-json"
-                      data-type="psweep"
-                      disabled
-                    ) Download JSON
-
-                    button.btn.btn-primary.box-shadow(
-                      data-hook="psweep-plot-csv"
-                      data-target="download-plot-csv"
-                      data-type="psweep"
-                      disabled
-                    ) Download Plot Results as .csv
+                    ul.dropdown-menu(aria-labelledby="#psweep-download")
+                      li.dropdown-item(
+                        data-hook="psweep-download-png-custom"
+                        data-target="download-png-custom"
+                        data-type="psweep"
+                      ) Plot as .png
+                      li.dropdown-item(
+                        data-hook="psweep-download-json"
+                        data-target="download-json"
+                        data-type="psweep"
+                      ) Plot as .json
+                      li.dropdown-item(
+                        data-hook="psweep-plot-csv"
+                        data-target="download-plot-csv"
+                        data-type="psweep"
+                      ) Plot Results as .csv
 
                   div.col-md-3
 
