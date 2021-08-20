@@ -25,6 +25,7 @@ import logging
 import tempfile
 import traceback
 
+from itertools import combinations
 from pathlib import Path
 
 import numpy
@@ -272,6 +273,48 @@ class StochSSJob(StochSSBase):
         super().__init__(path=path)
 
 
+    @classmethod
+    def __get_1d_fixed_list(cls, results):
+        keys = [key.split(',') for key in results.keys()]
+        p_names = [param.split(':')[0] for param in keys[0]]
+        if len(p_names) < 2:
+            return [{}]
+        _f_keys = []
+        for name in p_names:
+            for key in keys:
+                f_key = list(filter(lambda key_el, key=key, name=name: name not in key_el, key))
+                _f_keys.append(",".join(f_key))
+        fixed_list = [key.split(',') for key in sorted(list(set(_f_keys)))]
+        return fixed_list
+
+
+    @classmethod
+    def __get_2d_fixed_list(cls, results):
+        keys = [key.split(',') for key in results.keys()]
+        p_names = [param.split(':')[0] for param in keys[0]]
+        if len(p_names) < 2:
+            return None
+        if len(p_names) < 3:
+            return [{}]
+        p_names = list(combinations(p_names, 2))
+        _f_keys = []
+        for names in p_names:
+            for key in keys:
+                test = lambda key_el, names=names: names[0] not in key_el and names[1] not in key_el
+                f_key = list(filter(lambda key_el, test=test: test(key_el), key))
+                _f_keys.append(",".join(f_key))
+        fixed_list = [key.split(',') for key in sorted(list(set(_f_keys)))]
+        return fixed_list
+
+
+    @classmethod
+    def __get_csvzip(cls, dirname, name):
+        shutil.make_archive(os.path.join(dirname, name), "zip", dirname, name)
+        path = os.path.join(dirname, f"{name}.zip")
+        with open(path, "rb") as zip_file:
+            return zip_file.read()
+
+
     def __get_filtered_1d_results(self, f_keys):
         results = self.__get_pickled_results()
         f_results = []
@@ -301,6 +344,54 @@ class StochSSJob(StochSSBase):
             key = ','.join(key)
             result = result[key]
         return result
+
+
+    def __get_full_1dpsweep_csv(self, b_path, results, get_name, name):
+        settings = self.load()['settings']
+        od_path = os.path.join(b_path, "1D_Resutls")
+        os.mkdir(od_path)
+        fixed_list = self.__get_1d_fixed_list(results)
+        for i, fixed in enumerate(fixed_list):
+            d_keys = dict([key.split(":") for key in fixed])
+            param = list(filter(lambda param, d_keys=d_keys: param['name'] not in d_keys.keys(),
+                                settings['parameterSweepSettings']['parameters']))[0]
+            kwargs = {'results': self.__get_filtered_1d_results(fixed)}
+            kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
+            ParameterSweep1D.to_csv(
+                param=param, kwargs=kwargs, path=od_path, nametag=get_name(name, i)
+            )
+            if fixed:
+                self.__write_parameters_csv(path=od_path, name=get_name(name, i), data_keys=d_keys)
+
+
+    def __get_full_2dpsweep_csv(self, b_path, results, get_name, name):
+        fixed_list = self.__get_2d_fixed_list(results)
+        if fixed_list is None:
+            return
+        settings = self.load()['settings']
+        td_path = os.path.join(b_path, "2D_Resutls")
+        os.mkdir(td_path)
+        for i, fixed in enumerate(fixed_list):
+            d_keys = dict([key.split(":") for key in fixed])
+            params = list(filter(lambda param, d_keys=d_keys: param['name'] not in d_keys.keys(),
+                                 settings['parameterSweepSettings']['parameters']))
+            kwargs = {"results": self.__get_filtered_2d_results(fixed, params[0])}
+            kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
+            ParameterSweep2D.to_csv(
+                params=params, kwargs=kwargs, path=td_path, nametag=get_name(name, i)
+            )
+            if fixed:
+                self.__write_parameters_csv(path=td_path, name=get_name(name, i), data_keys=d_keys)
+
+
+    def __get_full_timeseries_csv(self, b_path, results, get_name, name):
+        ts_path = os.path.join(b_path, "Time_Series")
+        os.makedirs(ts_path)
+        for i, (key, result) in enumerate(results.items()):
+            data = [_data.split(':') for _data in key.split(',')]
+            data_keys = {_data[0]: _data[1] for _data in data}
+            result.to_csv(path=ts_path, nametag=get_name(name, i), stamp="")
+            self.__write_parameters_csv(path=ts_path, name=get_name(name, i), data_keys=data_keys)
 
 
     @classmethod
@@ -333,15 +424,13 @@ class StochSSJob(StochSSBase):
         return True
 
 
-    def load(self):
-        '''
-        Loads a job presentation from cache
-
-        Attributes
-        ----------
-        '''
-        with open(os.path.join(self.path, "job.json"), "r") as job_file:
-            return json.load(job_file)
+    @classmethod
+    def __write_parameters_csv(cls, path, name, data_keys):
+        csv_path = os.path.join(path, name, "parameters.csv")
+        with open(csv_path, "w") as csv_file:
+            csv_writer = csv.writer(csv_file)
+            csv_writer.writerow(list(data_keys.keys()))
+            csv_writer.writerow(list(data_keys.values()))
 
 
     def get_csvzip_from_results(self, data_keys, proc_key, name):
@@ -358,29 +447,49 @@ class StochSSJob(StochSSBase):
             Name of the csv directory
         '''
         try:
+            self.log("info", "Getting job results...")
             result = self.__get_filtered_ensemble_results(data_keys)
+            self.log("info", "Processing results...")
             if proc_key == "stddev":
                 result = result.stddev_ensemble()
             elif proc_key == "avg":
                 result = result.average_ensemble()
+            self.log("info", "Generating CSV files...")
             tmp_dir = tempfile.TemporaryDirectory()
             result.to_csv(path=tmp_dir.name, nametag=name, stamp="")
             if data_keys:
-                csv_path = os.path.join(tmp_dir.name, name, "parameters.csv")
-                with open(csv_path, "w") as csv_file:
-                    csv_writer = csv.writer(csv_file)
-                    csv_writer.writerow(list(data_keys.keys()))
-                    csv_writer.writerow(list(data_keys.values()))
-            shutil.make_archive(os.path.join(tmp_dir.name, name), "zip", tmp_dir.name, name)
-            path = os.path.join(tmp_dir.name, f"{name}.zip")
-            with open(path, "rb") as zip_file:
-                return zip_file.read()
+                self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=data_keys)
+            self.log("info", "Generating zip archive...")
+            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except KeyError as err:
             message = f"The requested results are not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
+
+
+    def get_full_csvzip_from_results(self, name):
+        '''
+        Get the csv files for the full set of results data
+
+        Attributes
+        ----------
+        name : str
+            Name of the csv directory.
+        '''
+        results = self.__get_pickled_results()
+        tmp_dir = tempfile.TemporaryDirectory()
+        if not isinstance(results, dict):
+            results.to_csv(path=tmp_dir.name, nametag=name, stamp="")
+            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+        def get_name(b_name, tag):
+            return f"{b_name}_{tag}"
+        b_path = os.path.join(tmp_dir.name, get_name(name, "full"))
+        self.__get_full_timeseries_csv(b_path, results, get_name, name)
+        self.__get_full_1dpsweep_csv(b_path, results, get_name, name)
+        self.__get_full_2dpsweep_csv(b_path, results, get_name, name)
+        return self.__get_csvzip(dirname=tmp_dir.name, name=get_name(name, "full"))
 
 
     def get_plot_from_results(self, data_keys, plt_key, add_config=False):
@@ -430,6 +539,7 @@ class StochSSJob(StochSSBase):
         '''
         settings = self.load()['settings']
         try:
+            self.log("info", "Loading job results...")
             dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
             params = list(filter(lambda param: param['name'] not in fixed.keys(),
                                  settings['parameterSweepSettings']['parameters']))
@@ -437,24 +547,20 @@ class StochSSJob(StochSSBase):
             if dims == 1:
                 kwargs = {"results": self.__get_filtered_1d_results(f_keys)}
                 kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
+                self.log("info", "Generating CSV files...")
                 ParameterSweep1D.to_csv(
                     param=params[0], kwargs=kwargs, path=tmp_dir.name, nametag=name
                 )
             else:
                 kwargs = {"results": self.__get_filtered_2d_results(f_keys, params[0])}
                 kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
+                self.log("info", "Generating CSV files...")
                 ParameterSweep2D.to_csv(
                     params=params, kwargs=kwargs, path=tmp_dir.name, nametag=name
                 )
             if fixed:
-                csv_path = os.path.join(tmp_dir.name, name, "parameters.csv")
-                with open(csv_path, "w") as csv_file:
-                    csv_writer = csv.writer(csv_file)
-                    csv_writer.writerow(list(fixed.keys()))
-                    csv_writer.writerow(list(fixed.values()))
-            shutil.make_archive(os.path.join(tmp_dir.name, name), "zip", tmp_dir.name, name)
-            with open(os.path.join(tmp_dir.name, f"{name}.zip"), "rb") as zip_file:
-                return zip_file.read()
+                self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=fixed)
+            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -496,6 +602,17 @@ class StochSSJob(StochSSBase):
         except KeyError as err:
             message = f"The requested plot is not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
+
+
+    def load(self):
+        '''
+        Loads a job presentation from cache
+
+        Attributes
+        ----------
+        '''
+        with open(os.path.join(self.path, "job.json"), "r") as job_file:
+            return json.load(job_file)
 
 
     def update_fig_layout(self, fig=None, plt_data=None):
