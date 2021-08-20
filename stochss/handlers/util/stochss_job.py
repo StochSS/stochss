@@ -212,11 +212,8 @@ class StochSSJob(StochSSBase):
             d_keys = dict([key.split(":") for key in fixed])
             param = list(filter(lambda param, d_keys=d_keys: param['name'] not in d_keys.keys(),
                                 settings['parameterSweepSettings']['parameters']))[0]
-            try:
-                kwargs = {'results': self.__get_filtered_1d_results(fixed)}
-                kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
-            except IndexError:
-                raise Exception(f"{len(kwargs['results'])}, {fixed}")
+            kwargs = {'results': self.__get_filtered_1d_results(fixed)}
+            kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
             ParameterSweep1D.to_csv(
                 param=param, kwargs=kwargs, path=od_path, nametag=get_name(name, i)
             )
@@ -313,15 +310,6 @@ class StochSSJob(StochSSBase):
 
     def __get_settings_path(self, full=False):
         return os.path.join(self.get_path(full=full), "settings.json")
-
-
-    def __is_csv_dir(self, file):
-        if "results_csv" not in file:
-            return False
-        path = os.path.join(self.__get_results_path(), file)
-        if not os.path.isdir(path):
-            return False
-        return True
 
 
     @classmethod
