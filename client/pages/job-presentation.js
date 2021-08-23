@@ -61,7 +61,7 @@ let JobPresentationPage = PageView.extend({
         self.renderSubviews(true);
       }
     });
-    let downloadStart = "https://staging.stochss.org/stochss/job/download_presentation";
+    let downloadStart = "https://live.stochss.org/stochss/job/download_presentation";
     this.downloadLink = downloadStart + "/" + owner + "/" + file;
     this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
   },
