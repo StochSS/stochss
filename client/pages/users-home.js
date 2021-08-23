@@ -64,6 +64,9 @@ let usersHomePage = PageView.extend({
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
+    if(app.getBasePath() === "/") {
+      $("#presentations").css("display", "none");
+    }
   },
   validateName(input) {
     var error = ""
