@@ -22,7 +22,7 @@ module.exports = State.extend({
   session: {
     file: 'string',
     link: 'string',
-    size: 'number'
+    size: 'number',
     tag: 'string'
   },
   initialize: function (attrs, options) {
@@ -33,11 +33,11 @@ module.exports = State.extend({
     let tags = ["B", "KB", "MB", "GB", "TB"];
     var size = this.size;
     var tag_index = 0;
-    while(size >= 10e3) {
-      size = size / 10e3;
+    while(size >= 1e3) {
+      size = size / 1e3;
       tag_index += 1;
     }
-    this.size = Number.parseFloat(size).toFixed(2);
+    this.size = Number(Number.parseFloat(size).toFixed(2));
     this.tag = tags[tag_index]
   }
 });
