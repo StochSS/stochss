@@ -19,9 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
+import string
 import traceback
 
 import requests
+from escapism import escape
 
 from .stochss_base import StochSSBase
 from .stochss_file import StochSSFile
@@ -332,6 +334,31 @@ class StochSSFolder(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+
+
+    @classmethod
+    def get_presentations(cls):
+        '''
+        Get the list of presentations from the users presentation directory.
+
+        Attributes
+        ----------
+        '''
+        path = os.path.join(cls.user_dir, ".presentations")
+        presentations = []
+        if not os.path.isdir(path):
+            return presentations
+        for file in os.listdir(path):
+            file_path = os.path.join(path, file)
+            safe_chars = set(string.ascii_letters + string.digits)
+            hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+            query_str = f"?owner={hostname}&file={file}"
+            link = f"https://staging.stochss.org/stochss/present-model{query_str}"
+            presentation = {
+                "file": file, "link": link, "size": os.path.getsize(file_path)
+            }
+            presentations.append(presentation)
+        return presentations
 
 
     def get_project_list(self):
