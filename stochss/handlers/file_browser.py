@@ -684,10 +684,18 @@ class UploadFileFromLinkAPIHandler(APIHandler):
         cmd = self.get_query_argument(name="cmd", default=None)
         log.debug(f"The command for the upload script: {cmd}")
         script = '/stochss/stochss/handlers/util/scripts/upload_remote_file.py'
-        if cmd is None:
+        if cmd == "validate":
+            folder = StochSSFolder(path="")
+            resp = {'exists': folder.validate_upload_link(remote_path=path)}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+        elif cmd is None:
+            overwrite = self.get_query_argument(name='overwrite', default=False)
             outfile = f"{str(uuid.uuid4()).replace('-', '_')}.tmp"
             log.debug(f"Response file name: {outfile}")
             exec_cmd = [script, f'{path}', f'{outfile}'] # Script commands for read run_cmd
+            if overwrite:
+                exec_cmd.append('-o')
             log.debug(f"Exec command: {exec_cmd}")
             pipe = subprocess.Popen(exec_cmd)
             resp = {"responsePath": outfile}
