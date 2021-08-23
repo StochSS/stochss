@@ -353,7 +353,7 @@ class StochSSFolder(StochSSBase):
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
             query_str = f"?owner={hostname}&file={file}"
-            link = f"https://staging.stochss.org/stochss/present-model{query_str}"
+            link = f"https://live.stochss.org/stochss/present-model{query_str}"
             presentation = {
                 "file": file, "link": link, "size": os.path.getsize(file_path)
             }
