@@ -1,0 +1,26 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-6
+
+      a.pl-2(href=this.model.link)=this.model.file
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook="copy-link") Copy Link
+
+    div.col-sm-2
+
+      div=this.model.size + " " + this.model.tag
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X
+
+  div.text-success(data-hook="copy-link-success" style="display: none;") Link copied to clipboard
+  
+  div.text-danger(data-hook="copy-link-failed" style="display: none;")
