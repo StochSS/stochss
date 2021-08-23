@@ -21,8 +21,13 @@ let path = require('path');
 //support files
 let app = require('../app');
 let modals = require('../modals');
+//collections
+let Collection = require('ampersand-collection');
+//model
+let Presentation = require('../models/presentation')
 //views
 let PageView = require('./base');
+let PresentationView = require('../views/presentation-view');
 //templates
 let template = require('../templates/pages/usersHome.pug');
 
@@ -44,6 +49,14 @@ let usersHomePage = PageView.extend({
       let queryString = "?path=" + urlParams.get("open") + "&action=open";
       let endpoint = path.join(app.getBasePath(), 'stochss/loading-page') + queryString;
       window.location.href = endpoint;
+    }else{
+      let self = this;
+      let endpoint = path.join(app.getApiPath(), "file/presentations")
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
+          self.renderPresentationView(body.presentations);
+        }
+      });
     }
   },
   render: function (attrs, options) {
@@ -165,6 +178,15 @@ let usersHomePage = PageView.extend({
   },
   navToPage: function (endpoint) {
     window.location.href = endpoint
+  },
+  renderPresentationView: function (presentations) {
+    let options = {model: Presentation};
+    let presentCollection = new Collection(presentations, options);
+    this.renderCollection(
+      presentCollection,
+      PresentationView,
+      this.queryByHook("presentation-list")
+    );
   }
 });
 
