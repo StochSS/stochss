@@ -348,10 +348,10 @@ class StochSSFolder(StochSSBase):
         presentations = []
         if not os.path.isdir(path):
             return presentations
+        safe_chars = set(string.ascii_letters + string.digits)
+        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
-            safe_chars = set(string.ascii_letters + string.digits)
-            hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
             query_str = f"?owner={hostname}&file={file}"
             link = f"https://staging.stochss.org/stochss/present-model{query_str}"
             presentation = {
