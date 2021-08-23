@@ -764,3 +764,29 @@ class NotebookPresentationAPIHandler(APIHandler):
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
+
+
+class PresentationListAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting the users full list of presentations.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get the list of presentations.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        try:
+            log.info("Loading presentations...")
+            presentations = StochSSFolder.get_presentations()
+            log.debug(f"List of presentations: {presentations}")
+            log.info("Loading complete.")
+            self.write({"presentations": presentations})
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
