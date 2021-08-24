@@ -349,7 +349,8 @@ class StochSSFolder(StochSSBase):
         if not os.path.isdir(path):
             return presentations
         safe_chars = set(string.ascii_letters + string.digits)
-        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+        # hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+        hostname = "brumsey@unca.edu"
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
             query_str = f"?owner={hostname}&file={file}"

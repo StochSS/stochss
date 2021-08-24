@@ -129,9 +129,9 @@ module.exports = View.extend({
         App.currentPage = newView;
       }
     });
-    if(app.getBasePath() === "/") {
-      $("#presentation-nav-link").css("display", "none");
-    }
+    // if(app.getBasePath() === "/") {
+    //   $("#presentation-nav-link").css("display", "none");
+    // }
     let self = this;
     let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
     $("#user-logs").html(message)
