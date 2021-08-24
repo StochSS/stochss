@@ -16,22 +16,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let jstree = require('jstree');
-let path = require('path');
+// let jstree = require('jstree');
+// let path = require('path');
 let $ = require('jquery');
 let _ = require('underscore');
 //support files
-let app = require('../app');
+// let app = require('../app');
 let modals = require('../modals');
 //models
 let Model = require('../models/model');
 //views
-let View = require('ampersand-view');
+// let View = require('ampersand-view');
 //templates
-let template = require('../templates/includes/fileBrowserView.pug');
+// let template = require('../templates/includes/fileBrowserView.pug');
 
-module.exports = View.extend({
-  template: template,
+// module.exports = View.extend({
+  // template: template,
   events: {
     'click [data-hook=collapse-browse-files]' : 'changeCollapseButtonText',
     'click [data-hook=refresh-jstree]' : 'refreshJSTree',
@@ -46,179 +46,179 @@ module.exports = View.extend({
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
   },
-  initialize: function (attrs, options) {
-    View.prototype.initialize.apply(this, arguments)
-    var self = this
-    this.root = "none"
-    if(attrs && attrs.root){
-      this.root = attrs.root
-    }
-    this.ajaxData = {
-      "url" : function (node) {
-        if(node.parent === null){
-          var endpoint = path.join(app.getApiPath(), "file/browser-list")+"?path="+self.root
-          if(self.root !== "none") {
-            endpoint += "&isRoot=True"
-          }
-          return endpoint
-        }
-        return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
-      },
-      "dataType" : "json",
-      "data" : function (node) {
-        return { 'id' : node.id}
-      },
-    }
-    this.treeSettings = {
-      'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
-      'core': {'multiple' : false, 'animation': 0,
-        'check_callback': function (op, node, par, pos, more) {
-          if(op === "rename_node" && self.validateName(pos, true) !== ""){
-            document.querySelector("#renameSpecialCharError").style.display = "block"
-            setTimeout(function () {
-              document.querySelector("#renameSpecialCharError").style.display = "none"
-            }, 5000)
-            return false
-          }
-          if(op === 'move_node' && more && more.core) {
-            var newDir = par.original._path !== "/" ? par.original._path : ""
-            var file = node.original._path.split('/').pop()
-            var oldPath = node.original._path
-            let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
-            var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
-            app.getXHR(endpoint, {
-              success: function (err, response, body) {
-                node.original._path = path.join(newDir, file)
-                if((node.type === "nonspatial" || node.type === "spatial") && (oldPath.includes("trash") || newDir.includes("trash"))) {
-                  self.updateParent("Archive");
-                }else if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.includes(".wkgp")) {
-                  self.updateParent(node.type)
-                }
-              },
-              error: function (err, response, body) {
-                body = JSON.parse(body)
-                if(par.type === 'root'){
-                  $('#models-jstree-view').jstree().refresh()
-                }else{
-                  $('#models-jstree-view').jstree().refresh_node(par);
-                }
-              }
-            });
-          }else{
-            let isMove = op === 'move_node'
-            let validSrc = Boolean(node && node.type && node.original && node.original.text !== "trash")
-            let validDst = Boolean(more && more.ref && more.ref.type && more.ref.original)
-            let validDsts = ["root", "folder"]
-            let isModel = Boolean(validSrc && (node.type === "nonspatial" || node.type === "spatial"))
-            let isWorkflow = Boolean(validSrc && node.type === "workflow")
-            let isWkgp = Boolean(validSrc && node.type === "workflow-group")
-            let isNotebook = Boolean(validSrc && node.type === "notebook")
-            let isOther = Boolean(validSrc && !isModel && !isWorkflow && !isWkgp && !isNotebook)
-            let trashAction = Boolean((validSrc && node.original._path.includes("trash")) || (validDst && more.ref.original.text === "trash"))
-            // Check if files are being move directly into the trash and remain static with respect to the trash
-            if(isMove && validDst && path.dirname(more.ref.original._path).includes("trash")) { return false }
-            if(isMove && validSrc && validDst && node.original._path.includes("trash") && more.ref.original.text === 'trash') { return false }
-            // Check if workflow is running
-            if(isMove && isWorkflow && node.original._status && node.original._status === "running") { return false };
-            // Check if model, workflow, or workflow group is moving to or from trash
-            if(isMove && (isModel || isWorkflow) && !trashAction) { return false };
-            if(isMove && isWkgp && !(self.parent.model.newFormat && trashAction)) { return false };
-            // Check if model, workflow, or workflow group is moving from trash to the correct location
-            if(isMove && validSrc && node.original._path.includes("trash")) {
-              if(isWkgp && (!self.parent.model.newFormat || (validDst && more.ref.type !== "root"))) { return false };
-              if(isWorkflow && validDst && more.ref.type !== "workflow-group") { return false };
-              if(isModel && validDst) {
-                if(!self.parent.model.newFormat && more.ref.type !== "root") { return false };
-                let length = node.original.text.split(".").length;
-                let modelName = node.original.text.split(".").slice(0, length - 1).join(".")
-                if(self.parent.model.newFormat && (more.ref.type !== "workflow-group" || !more.ref.original.text.startsWith(modelName))) { return false };
-              }
-            }
-            // Check if notebook or other file is moving to a valid location.
-            if(isOther && validDst && !validDsts.includes(more.ref.type)) { return false };
-            validDsts.push("workflow-group")
-            if(isNotebook && validDst && !validDsts.includes(more.ref.type)) { return false };
-            if(isMove && validDst && validDsts.includes(more.ref.type)){
-              if(!more.ref.state.loaded) { return false };
-              var exists = false
-              var BreakException = {}
-              var text = node.text
-              if(!isNaN(text.split(' ').pop().split('.').join(""))){
-                text = text.replace(text.split(' ').pop(), '').trim()
-              }
-              if(more.ref.text !== "trash"){
-                try{
-                  more.ref.children.forEach(function (child) {
-                    var child_node = $('#models-jstree-view').jstree().get_node(child)
-                    exists = child_node.text === text
-                    if(exists) { throw BreakException; };
-                  })
-                }catch { return false; };
-              }
-            }
-            if(isMove && more && (pos != 0 || more.pos !== "i") && !more.core) { return false }
-            return true
-          }
-        },
-        'themes': {'stripes': true, 'variant': 'large'},
-        'data': self.ajaxData,
-      },
-      'types' : {
-        'root' : {"icon": "jstree-icon jstree-folder"},
-        'folder' : {"icon": "jstree-icon jstree-folder"},
-        'spatial' : {"icon": "jstree-icon jstree-file"},
-        'nonspatial' : {"icon": "jstree-icon jstree-file"},
-        'project' : {"icon": "jstree-icon jstree-file"},
-        'workflow-group' : {"icon": "jstree-icon jstree-folder"},
-        'workflow' : {"icon": "jstree-icon jstree-file"},
-        'notebook' : {"icon": "jstree-icon jstree-file"},
-        'domain' : {"icon": "jstree-icon jstree-file"},
-        'sbml-model' : {"icon": "jstree-icon jstree-file"},
-        'other' : {"icon": "jstree-icon jstree-file"},
-      },  
-    }
-    this.setupJstree()
-  },
-  render: function () {
-    View.prototype.render.apply(this, arguments)
+  // initialize: function (attrs, options) {
+    // View.prototype.initialize.apply(this, arguments)
+    // var self = this
+    // this.root = "none"
+    // if(attrs && attrs.root){
+    //   this.root = attrs.root
+    // }
+    // this.ajaxData = {
+    //   "url" : function (node) {
+    //     if(node.parent === null){
+    //       var endpoint = path.join(app.getApiPath(), "file/browser-list")+"?path="+self.root
+    //       if(self.root !== "none") {
+    //         endpoint += "&isRoot=True"
+    //       }
+    //       return endpoint
+    //     }
+    //     return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
+    //   },
+    //   "dataType" : "json",
+    //   "data" : function (node) {
+    //     return { 'id' : node.id}
+    //   },
+    // }
+    // this.treeSettings = {
+    //   'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
+    //   'core': {'multiple' : false, 'animation': 0,
+        // 'check_callback': function (op, node, par, pos, more) {
+        //   if(op === "rename_node" && self.validateName(pos, true) !== ""){
+        //     document.querySelector("#renameSpecialCharError").style.display = "block"
+        //     setTimeout(function () {
+        //       document.querySelector("#renameSpecialCharError").style.display = "none"
+        //     }, 5000)
+        //     return false
+        //   }
+          // if(op === 'move_node' && more && more.core) {
+          //   var newDir = par.original._path !== "/" ? par.original._path : ""
+          //   var file = node.original._path.split('/').pop()
+          //   var oldPath = node.original._path
+          //   let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
+          //   var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
+          //   app.getXHR(endpoint, {
+          //     success: function (err, response, body) {
+          //       node.original._path = path.join(newDir, file)
+          //       if((node.type === "nonspatial" || node.type === "spatial") && (oldPath.includes("trash") || newDir.includes("trash"))) {
+          //         self.updateParent("Archive");
+          //       }else if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.includes(".wkgp")) {
+          //         self.updateParent(node.type)
+          //       }
+          //     },
+          //     error: function (err, response, body) {
+          //       body = JSON.parse(body)
+          //       if(par.type === 'root'){
+          //         $('#models-jstree-view').jstree().refresh()
+          //       }else{
+          //         $('#models-jstree-view').jstree().refresh_node(par);
+          //       }
+          //     }
+          //   });
+          // }else{
+          //   let isMove = op === 'move_node'
+          //   let validSrc = Boolean(node && node.type && node.original && node.original.text !== "trash")
+          //   let validDst = Boolean(more && more.ref && more.ref.type && more.ref.original)
+          //   let validDsts = ["root", "folder"]
+          //   let isModel = Boolean(validSrc && (node.type === "nonspatial" || node.type === "spatial"))
+          //   let isWorkflow = Boolean(validSrc && node.type === "workflow")
+          //   let isWkgp = Boolean(validSrc && node.type === "workflow-group")
+          //   let isNotebook = Boolean(validSrc && node.type === "notebook")
+          //   let isOther = Boolean(validSrc && !isModel && !isWorkflow && !isWkgp && !isNotebook)
+          //   let trashAction = Boolean((validSrc && node.original._path.includes("trash")) || (validDst && more.ref.original.text === "trash"))
+          //   // Check if files are being move directly into the trash and remain static with respect to the trash
+          //   if(isMove && validDst && path.dirname(more.ref.original._path).includes("trash")) { return false }
+          //   if(isMove && validSrc && validDst && node.original._path.includes("trash") && more.ref.original.text === 'trash') { return false }
+          //   // Check if workflow is running
+          //   if(isMove && isWorkflow && node.original._status && node.original._status === "running") { return false };
+          //   // Check if model, workflow, or workflow group is moving to or from trash
+          //   if(isMove && (isModel || isWorkflow) && !trashAction) { return false };
+          //   if(isMove && isWkgp && !(self.parent.model.newFormat && trashAction)) { return false };
+          //   // Check if model, workflow, or workflow group is moving from trash to the correct location
+          //   if(isMove && validSrc && node.original._path.includes("trash")) {
+          //     if(isWkgp && (!self.parent.model.newFormat || (validDst && more.ref.type !== "root"))) { return false };
+          //     if(isWorkflow && validDst && more.ref.type !== "workflow-group") { return false };
+          //     if(isModel && validDst) {
+          //       if(!self.parent.model.newFormat && more.ref.type !== "root") { return false };
+          //       let length = node.original.text.split(".").length;
+          //       let modelName = node.original.text.split(".").slice(0, length - 1).join(".")
+          //       if(self.parent.model.newFormat && (more.ref.type !== "workflow-group" || !more.ref.original.text.startsWith(modelName))) { return false };
+          //     }
+          //   }
+          //   // Check if notebook or other file is moving to a valid location.
+          //   if(isOther && validDst && !validDsts.includes(more.ref.type)) { return false };
+          //   validDsts.push("workflow-group")
+          //   if(isNotebook && validDst && !validDsts.includes(more.ref.type)) { return false };
+          //   if(isMove && validDst && validDsts.includes(more.ref.type)){
+          //     if(!more.ref.state.loaded) { return false };
+          //     var exists = false
+          //     var BreakException = {}
+          //     var text = node.text
+          //     if(!isNaN(text.split(' ').pop().split('.').join(""))){
+          //       text = text.replace(text.split(' ').pop(), '').trim()
+          //     }
+          //     if(more.ref.text !== "trash"){
+          //       try{
+          //         more.ref.children.forEach(function (child) {
+          //           var child_node = $('#models-jstree-view').jstree().get_node(child)
+          //           exists = child_node.text === text
+          //           if(exists) { throw BreakException; };
+          //         })
+          //       }catch { return false; };
+          //     }
+          //   }
+          //   if(isMove && more && (pos != 0 || more.pos !== "i") && !more.core) { return false }
+          //   return true
+          // }
+      //   },
+      //   'themes': {'stripes': true, 'variant': 'large'},
+      //   'data': self.ajaxData,
+      // },
+    //   'types' : {
+    //     'root' : {"icon": "jstree-icon jstree-folder"},
+    //     'folder' : {"icon": "jstree-icon jstree-folder"},
+    //     'spatial' : {"icon": "jstree-icon jstree-file"},
+    //     'nonspatial' : {"icon": "jstree-icon jstree-file"},
+    //     'project' : {"icon": "jstree-icon jstree-file"},
+    //     'workflow-group' : {"icon": "jstree-icon jstree-folder"},
+    //     'workflow' : {"icon": "jstree-icon jstree-file"},
+    //     'notebook' : {"icon": "jstree-icon jstree-file"},
+    //     'domain' : {"icon": "jstree-icon jstree-file"},
+    //     'sbml-model' : {"icon": "jstree-icon jstree-file"},
+    //     'other' : {"icon": "jstree-icon jstree-file"},
+    //   },  
+    // }
+    // this.setupJstree()
+  // },
+  // render: function () {
+    // View.prototype.render.apply(this, arguments)
     var self = this;
-    this.nodeForContextMenu = "";
-    this.jstreeIsLoaded = false
-    window.addEventListener('pageshow', function (e) {
-      var navType = window.performance.navigation.type
-      if(navType === 2){
-        window.location.reload()
-      }
-    });
-  },
-  updateParent: function (type) {
-    let models = ["nonspatial", "spatial", "sbml", "model"]
-    let workflows = ["workflow", "notebook"]
-    if(models.includes(type)) {
-      this.parent.update("Model")
-    }else if(workflows.includes(type)) {
-      this.parent.update("Workflow")
-    }else if(type === "workflow-group") {
-      this.parent.update("WorkflowGroup")
-    }else if(type === "Archive") {
-      this.parent.update(type);
-    }
-  },
-  refreshJSTree: function () {
-    this.jstreeIsLoaded = false
-    $('#models-jstree-view').jstree().deselect_all(true)
-    $('#models-jstree-view').jstree().refresh()
-  },
-  refreshInitialJSTree: function () {
-    var self = this;
-    var count = $('#models-jstree-view').jstree()._model.data['#'].children.length;
-    if(count == 0) {
-      self.refreshJSTree();
-      setTimeout(function () {
-        self.refreshInitialJSTree();
-      }, 3000);
-    }
-  },
+    // this.nodeForContextMenu = "";
+    // this.jstreeIsLoaded = false
+    // window.addEventListener('pageshow', function (e) {
+    //   var navType = window.performance.navigation.type
+    //   if(navType === 2){
+    //     window.location.reload()
+    //   }
+    // });
+  // },
+  // updateParent: function (type) {
+  //   let models = ["nonspatial", "spatial", "sbml", "model"]
+  //   let workflows = ["workflow", "notebook"]
+  //   if(models.includes(type)) {
+  //     this.parent.update("Model")
+  //   }else if(workflows.includes(type)) {
+  //     this.parent.update("Workflow")
+  //   }else if(type === "workflow-group") {
+  //     this.parent.update("WorkflowGroup")
+  //   }else if(type === "Archive") {
+  //     this.parent.update(type);
+  //   }
+  // },
+  // refreshJSTree: function () {
+  //   this.jstreeIsLoaded = false
+  //   $('#models-jstree-view').jstree().deselect_all(true)
+  //   $('#models-jstree-view').jstree().refresh()
+  // },
+  // refreshInitialJSTree: function () {
+  //   var self = this;
+  //   var count = $('#models-jstree-view').jstree()._model.data['#'].children.length;
+  //   if(count == 0) {
+  //     self.refreshJSTree();
+  //     setTimeout(function () {
+  //       self.refreshInitialJSTree();
+  //     }, 3000);
+  //   }
+  // },
   selectNode: function (node, fileName) {
     let self = this
     if(!this.jstreeIsLoaded || !$('#models-jstree-view').jstree().is_loaded(node) && $('#models-jstree-view').jstree().is_loading(node)) {
@@ -634,22 +634,22 @@ module.exports = View.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.open(endpoint)
   },
-  validateName(input, rename = false) {
-    var error = ""
-    if(input.endsWith('/')) {
-      error = 'forward'
-    }
-    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-    if(rename) {
-      invalidChars += "/"
-    }
-    for(var i = 0; i < input.length; i++) {
-      if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both"
-      }
-    }
-    return error
-  },
+  // validateName(input, rename = false) {
+  //   var error = ""
+  //   if(input.endsWith('/')) {
+  //     error = 'forward'
+  //   }
+  //   var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+  //   if(rename) {
+  //     invalidChars += "/"
+  //   }
+  //   for(var i = 0; i < input.length; i++) {
+  //     if(invalidChars.includes(input.charAt(i))) {
+  //       error = error === "" || error === "special" ? "special" : "both"
+  //     }
+  //   }
+  //   return error
+  // },
   newWorkflowGroup: function (o) {
     var self = this
     if(document.querySelector("#newWorkflowGroupModal")) {
@@ -988,12 +988,12 @@ module.exports = View.extend({
       }
     });
   },
-  setupJstree: function () {
+  // setupJstree: function () {
     var self = this;
-    $.jstree.defaults.contextmenu.items = (o, cb) => {
-      let nodeType = o.original.type
-      let zipTypes = ["workflow", "folder", "other", "root", "workflow-group"]
-      let asZip = zipTypes.includes(nodeType)
+    // $.jstree.defaults.contextmenu.items = (o, cb) => {
+      // let nodeType = o.original.type
+      // let zipTypes = ["workflow", "folder", "other", "root", "workflow-group"]
+      // let asZip = zipTypes.includes(nodeType)
       // refresh context menu option
       let refresh = {
         "Refresh" : {
@@ -1473,63 +1473,63 @@ module.exports = View.extend({
         return $.extend(open, common)
       }
     }
-    $(document).ready(function () {
-      $(document).on('shown.bs.modal', function (e) {
-        $('[autofocus]', e.target).focus();
-      });
-      $(document).on('dnd_start.vakata', function (data, element, helper, event) {
-        $('#models-jstree-view').jstree().load_all()
-      });
-      $('#models-jstree-view').jstree(self.treeSettings).bind("loaded.jstree", function (event, data) {
-        self.jstreeIsLoaded = true
-      }).bind("refresh.jstree", function (event, data) {
-        self.jstreeIsLoaded = true
-      });
-      $('#models-jstree-view').on('click.jstree', function(e) {
-        var parent = e.target.parentElement
-        var _node = parent.children[parent.children.length - 1]
-        var node = $('#models-jstree-view').jstree().get_node(_node)
-        if(_node.nodeName === "A" && $('#models-jstree-view').jstree().is_loaded(node) && node.type === "folder"){
-          $('#models-jstree-view').jstree().refresh_node(node)
-        }else{
-          let optionsButton = $(self.queryByHook("options-for-node"))
-          if(!self.nodeForContextMenu){
-            optionsButton.prop('disabled', false)
-          }
-          optionsButton.text("Actions for " + node.original.text)
-          self.nodeForContextMenu = node;
-        }
-      });
-      $('#models-jstree-view').on('dblclick.jstree', function(e) {
-        var file = e.target.text
-        var node = $('#models-jstree-view').jstree().get_node(e.target)
-        var _path = node.original._path;
-        if(!_path.includes(".proj/trash/")){
-          if(file.endsWith('.mdl') || file.endsWith('.smdl')){
-            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
-          }else if(file.endsWith('.ipynb')){
-            var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
-            window.open(notebookPath, '_blank')
-          }else if(file.endsWith('.sbml')){
-            var openPath = path.join(app.getBasePath(), "edit", _path)
-            window.open(openPath, '_blank')
-          }else if(file.endsWith('.proj')){
-            window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
-          }else if(file.endsWith('.wkfl')){
-            window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
-          }else if(file.endsWith('.domn')) {
-            let queryStr = "?domainPath=" + _path
-            window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
-          }else if(node.type === "folder" && $('#models-jstree-view').jstree().is_open(node) && $('#models-jstree-view').jstree().is_loaded(node)){
-            $('#models-jstree-view').jstree().refresh_node(node)
-          }else if(node.type === "other"){
-            var openPath = path.join(app.getBasePath(), "view", _path);
-            window.open(openPath, "_blank");
-          }
-        }
-      });
-    })
-  },
+    // $(document).ready(function () {
+      // $(document).on('shown.bs.modal', function (e) {
+      //   $('[autofocus]', e.target).focus();
+      // });
+      // $(document).on('dnd_start.vakata', function (data, element, helper, event) {
+      //   $('#models-jstree-view').jstree().load_all()
+      // });
+      // $('#models-jstree-view').jstree(self.treeSettings).bind("loaded.jstree", function (event, data) {
+      //   self.jstreeIsLoaded = true
+      // }).bind("refresh.jstree", function (event, data) {
+      //   self.jstreeIsLoaded = true
+      // });
+      // $('#models-jstree-view').on('click.jstree', function(e) {
+      //   var parent = e.target.parentElement
+      //   var _node = parent.children[parent.children.length - 1]
+      //   var node = $('#models-jstree-view').jstree().get_node(_node)
+      //   if(_node.nodeName === "A" && $('#models-jstree-view').jstree().is_loaded(node) && node.type === "folder"){
+      //     $('#models-jstree-view').jstree().refresh_node(node)
+      //   }else{
+      //     let optionsButton = $(self.queryByHook("options-for-node"))
+      //     if(!self.nodeForContextMenu){
+      //       optionsButton.prop('disabled', false)
+      //     }
+      //     optionsButton.text("Actions for " + node.original.text)
+      //     self.nodeForContextMenu = node;
+      //   }
+      // });
+      // $('#models-jstree-view').on('dblclick.jstree', function(e) {
+      //   var file = e.target.text
+      //   var node = $('#models-jstree-view').jstree().get_node(e.target)
+      //   var _path = node.original._path;
+      //   if(!_path.includes(".proj/trash/")){
+      //     if(file.endsWith('.mdl') || file.endsWith('.smdl')){
+      //       window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+_path;
+      //     }else if(file.endsWith('.ipynb')){
+      //       var notebookPath = path.join(app.getBasePath(), "notebooks", _path)
+      //       window.open(notebookPath, '_blank')
+      //     }else if(file.endsWith('.sbml')){
+      //       var openPath = path.join(app.getBasePath(), "edit", _path)
+      //       window.open(openPath, '_blank')
+      //     }else if(file.endsWith('.proj')){
+      //       window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+_path;
+      //     }else if(file.endsWith('.wkfl')){
+      //       window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+_path+"&type=none";
+      //     }else if(file.endsWith('.domn')) {
+      //       let queryStr = "?domainPath=" + _path
+      //       window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+      //     }else if(node.type === "folder" && $('#models-jstree-view').jstree().is_open(node) && $('#models-jstree-view').jstree().is_loaded(node)){
+      //       $('#models-jstree-view').jstree().refresh_node(node)
+      //     }else if(node.type === "other"){
+      //       var openPath = path.join(app.getBasePath(), "view", _path);
+      //       window.open(openPath, "_blank");
+      //     }
+      //   }
+      // });
+    // })
+  // },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   }

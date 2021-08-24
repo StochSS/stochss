@@ -33,6 +33,7 @@ let Model = require('../models/model');
 let PageView = require('./base');
 let EditProjectView = require('../views/edit-project'); // from project browser
 let PresentationView = require('../views/presentation-view'); // form presentation browser
+let JSTreeView = require('../views/jstree-view');
 //templates
 let template = require('../templates/pages/fileBrowser.pug');
 
@@ -76,120 +77,125 @@ let FileBrowser = PageView.extend({
       }
     });
     // End block from presentation browser
-    this.root = "none"
-    this.ajaxData = {
-      "url" : function (node) {
-        if(node.parent === null){
-          return path.join(app.getApiPath(), "file/browser-list")+"?path="+self.root
-        }
-        return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
-      },
-      "dataType" : "json",
-      "data" : function (node) {
-        return { 'id' : node.id}
-      },
-    }
-    this.treeSettings = {
-      'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
-      'core': {'multiple' : false, 'animation': 0,
-        'check_callback': function (op, node, par, pos, more) {
-          if(op === "rename_node" && self.validateName(pos, true) !== ""){
-            document.querySelector("#renameSpecialCharError").style.display = "block"
-            setTimeout(function () {
-              document.querySelector("#renameSpecialCharError").style.display = "none"
-            }, 5000)
-            return false
-          }
-          if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.original && path.dirname(more.ref.original._path).split("/").includes("trash")){
-            return false
-          }
-          if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder' && more.ref.text !== "trash"){
-            if(!more.ref.state.loaded){
-              return false
-            }
-            var exists = false
-            var BreakException = {}
-            try{
-              more.ref.children.forEach(function (child) {
-                var child_node = $('#models-jstree').jstree().get_node(child)
-                exists = child_node.text === node.text
-                if(exists){
-                  throw BreakException;
-                }
-              })
-            }catch{
-              return false;
-            }
-          }
-          if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
-            return false
-          }
-          if(op === 'move_node' && more && more.core) {
-            var newDir = par.type !== "root" ? par.original._path : ""
-            var file = node.original._path.split('/').pop()
-            var oldPath = node.original._path
-            let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
-            var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
-            app.getXHR(endpoint, {
-              success: function (err, response, body) {
-                node.original._path = path.join(newDir, file);
-                if(node.type === "folder") {
-                  $('#models-jstree').jstree().refresh_node(node);
-                }else if(newDir.endsWith("trash")) {
-                  $(self.queryByHook('empty-trash')).prop('disabled', false);
-                  $('#models-jstree').jstree().refresh_node(par);
-                }else if(oldPath.split("/").includes("trash")) {
-                  $('#models-jstree').jstree().refresh_node(par);
-                }
-              },
-              error: function (err, response, body) {
-                body = JSON.parse(body);
-                $('#models-jstree').jstree().refresh();
-              }
-            });
-          }
-          return true
-        },
-        'themes': {'stripes': true, 'variant': 'large'},
-        'data': this.ajaxData,
-      },
-      'types' : {
-        'root' : {"icon": "jstree-icon jstree-folder"},
-        'folder' : {"icon": "jstree-icon jstree-folder"},
-        'spatial' : {"icon": "jstree-icon jstree-file"},
-        'nonspatial' : {"icon": "jstree-icon jstree-file"},
-        'project' : {"icon": "jstree-icon jstree-file"},
-        'workflow-group' : {"icon": "jstree-icon jstree-file"},
-        'workflow' : {"icon": "jstree-icon jstree-file"},
-        'notebook' : {"icon": "jstree-icon jstree-file"},
-        'domain' : {"icon": "jstree-icon jstree-file"},
-        'sbml-model' : {"icon": "jstree-icon jstree-file"},
-        'other' : {"icon": "jstree-icon jstree-file"},
-      },  
-    }
+    // this.root = "none"
+    // this.ajaxData = {
+    //   "url" : function (node) {
+    //     if(node.parent === null){
+    //       return path.join(app.getApiPath(), "file/browser-list")+"?path="+self.root
+    //     }
+    //     return path.join(app.getApiPath(), "file/browser-list")+"?path="+ node.original._path
+    //   },
+    //   "dataType" : "json",
+    //   "data" : function (node) {
+    //     return { 'id' : node.id}
+    //   },
+    // }
+    // this.treeSettings = {
+    //   'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
+    //   'core': {'multiple' : false, 'animation': 0,
+        // 'check_callback': function (op, node, par, pos, more) {
+        //   if(op === "rename_node" && self.validateName(pos, true) !== ""){
+        //     document.querySelector("#renameSpecialCharError").style.display = "block"
+        //     setTimeout(function () {
+        //       document.querySelector("#renameSpecialCharError").style.display = "none"
+        //     }, 5000)
+        //     return false
+        //   }
+          // if(op === 'move_node' && node && node.type && node.type === "workflow" && node.original && node.original._status && node.original._status === "running"){
+          //   return false
+          // }
+          // if(op === 'move_node' && more && more.ref && more.ref.type && !(more.ref.type == 'folder' || more.ref.type == 'root')){
+          //   return false
+          // }
+          // if(op === 'move_node' && more && more.ref && more.ref.original && path.dirname(more.ref.original._path).split("/").includes("trash")){
+          //   return false
+          // }
+          // if(op === 'move_node' && more && more.ref && more.ref.type && more.ref.type === 'folder' && more.ref.text !== "trash"){
+          //   if(!more.ref.state.loaded){
+          //     return false
+          //   }
+          //   var exists = false
+          //   var BreakException = {}
+          //   try{
+          //     more.ref.children.forEach(function (child) {
+          //       var child_node = $('#models-jstree').jstree().get_node(child)
+          //       exists = child_node.text === node.text
+          //       if(exists){
+          //         throw BreakException;
+          //       }
+          //     })
+          //   }catch{
+          //     return false;
+          //   }
+          // }
+          // if(op === 'move_node' && more && (pos != 0 || more.pos !== "i") && !more.core){
+          //   return false
+          // }
+          // if(op === 'move_node' && more && more.core) {
+          //   var newDir = par.type !== "root" ? par.original._path : ""
+          //   var file = node.original._path.split('/').pop()
+          //   var oldPath = node.original._path
+          //   let queryStr = "?srcPath="+oldPath+"&dstPath="+path.join(newDir, file)
+          //   var endpoint = path.join(app.getApiPath(), "file/move")+queryStr
+          //   app.getXHR(endpoint, {
+          //     success: function (err, response, body) {
+          //       node.original._path = path.join(newDir, file);
+          //       if(node.type === "folder") {
+          //         $('#models-jstree').jstree().refresh_node(node);
+          //       }else if(newDir.endsWith("trash")) {
+          //         $(self.queryByHook('empty-trash')).prop('disabled', false);
+          //         $('#models-jstree').jstree().refresh_node(par);
+          //       }else if(oldPath.split("/").includes("trash")) {
+          //         $('#models-jstree').jstree().refresh_node(par);
+          //       }
+          //     },
+          //     error: function (err, response, body) {
+          //       body = JSON.parse(body);
+          //       $('#models-jstree').jstree().refresh();
+          //     }
+          //   });
+          // }
+          // return true
+      //   },
+      //   'themes': {'stripes': true, 'variant': 'large'},
+      //   'data': this.ajaxData,
+      // },
+  //     'types' : {
+  //       'root' : {"icon": "jstree-icon jstree-folder"},
+  //       'folder' : {"icon": "jstree-icon jstree-folder"},
+  //       'spatial' : {"icon": "jstree-icon jstree-file"},
+  //       'nonspatial' : {"icon": "jstree-icon jstree-file"},
+  //       'project' : {"icon": "jstree-icon jstree-file"},
+  //       'workflow-group' : {"icon": "jstree-icon jstree-file"},
+  //       'workflow' : {"icon": "jstree-icon jstree-file"},
+  //       'notebook' : {"icon": "jstree-icon jstree-file"},
+  //       'domain' : {"icon": "jstree-icon jstree-file"},
+  //       'sbml-model' : {"icon": "jstree-icon jstree-file"},
+  //       'other' : {"icon": "jstree-icon jstree-file"},
+  //     },  
+  //   }
   },
-  render: function () {
-    var self = this;
-    this.nodeForContextMenu = "";
-    this.renderWithTemplate();
-    this.jstreeIsLoaded = false
-    window.addEventListener('pageshow', function (e) {
-      var navType = window.performance.navigation.type
-      if(navType === 2){
-        window.location.reload()
-      }
+  render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments)
+    let jstreeView = new JSTreeView({
+      configKey: "file"
     });
-    this.setupJstree(function () {
-      setTimeout(function () {
-        self.refreshInitialJSTree();
-      }, 3000);
-    });
+    app.registerRenderSubview(this, jstreeView, "jstree-view-container");
+    // var self = this;
+    // this.nodeForContextMenu = "";
+    // this.renderWithTemplate();
+    // this.jstreeIsLoaded = false
+    // window.addEventListener('pageshow', function (e) {
+    //   var navType = window.performance.navigation.type
+    //   if(navType === 2){
+    //     window.location.reload()
+    //   }
+    // });
+    // this.setupJstree(function () {
+    //   setTimeout(function () {
+    //     self.refreshInitialJSTree();
+    //   }, 3000);
+    // });
     $(document).on('hide.bs.modal', '.modal', function (e) {
       e.target.remove()
     });
@@ -217,21 +223,21 @@ let FileBrowser = PageView.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
-  refreshJSTree: function () {
-    this.jstreeIsLoaded = false
-    $('#models-jstree').jstree().deselect_all(true)
-    $('#models-jstree').jstree().refresh()
-  },
-  refreshInitialJSTree: function () {
-    var self = this;
-    var count = $('#models-jstree').jstree()._model.data['#'].children.length;
-    if(count == 0) {
-      self.refreshJSTree();
-      setTimeout(function () {
-        self.refreshInitialJSTree();
-      }, 3000);
-    }
-  },
+  // refreshJSTree: function () {
+  //   this.jstreeIsLoaded = false
+  //   $('#models-jstree').jstree().deselect_all(true)
+  //   $('#models-jstree').jstree().refresh()
+  // },
+  // refreshInitialJSTree: function () {
+  //   var self = this;
+  //   var count = $('#models-jstree').jstree()._model.data['#'].children.length;
+  //   if(count == 0) {
+  //     self.refreshJSTree();
+  //     setTimeout(function () {
+  //       self.refreshInitialJSTree();
+  //     }, 3000);
+  //   }
+  // },
   selectNode: function (node, fileName) {
     let self = this
     if(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
@@ -648,22 +654,22 @@ let FileBrowser = PageView.extend({
     var endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.open(endpoint)
   },
-  validateName: function (input, rename = false) {
-    var error = ""
-    if(input.endsWith('/')) {
-      error = 'forward'
-    }
-    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-    if(rename) {
-      invalidChars += "/"
-    }
-    for(var i = 0; i < input.length; i++) {
-      if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both"
-      }
-    }
-    return error
-  },
+  // validateName: function (input, rename = false) {
+  //   var error = ""
+  //   if(input.endsWith('/')) {
+  //     error = 'forward'
+  //   }
+  //   var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+  //   if(rename) {
+  //     invalidChars += "/"
+  //   }
+  //   for(var i = 0; i < input.length; i++) {
+  //     if(invalidChars.includes(input.charAt(i))) {
+  //       error = error === "" || error === "special" ? "special" : "both"
+  //     }
+  //   }
+  //   return error
+  // },
   newProjectOrWorkflowGroup: function (o, isProject) {
     var self = this
     if(document.querySelector("#newProjectModal")) {
@@ -995,15 +1001,15 @@ let FileBrowser = PageView.extend({
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
-      let optionsButton = $(self.queryByHook("options-for-node"))
-      if(!self.nodeForContextMenu){
-        optionsButton.prop('disabled', false)
-      }
-      optionsButton.text("Actions for " + o.original.text)
-      self.nodeForContextMenu = o;
-      let nodeType = o.original.type
-      let zipTypes = ["workflow", "folder", "other", "project", "workflow-group"]
-      let asZip = zipTypes.includes(nodeType)
+      // let optionsButton = $(self.queryByHook("options-for-node"))
+      // if(!self.nodeForContextMenu){
+      //   optionsButton.prop('disabled', false)
+      // }
+      // optionsButton.text("Actions for " + o.original.text)
+      // self.nodeForContextMenu = o;
+      // let nodeType = o.original.type
+      // let zipTypes = ["workflow", "folder", "other", "project", "workflow-group"]
+      // let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
         "Download" : {
@@ -1462,32 +1468,32 @@ let FileBrowser = PageView.extend({
         return $.extend(open, common)
       }
     }
-    $(document).on('shown.bs.modal', function (e) {
-      $('[autofocus]', e.target).focus();
-    });
-    $(document).on('dnd_start.vakata', function (data, element, helper, event) {
-      $('#models-jstree').jstree().load_all()
-    });
-    $('#models-jstree').jstree(this.treeSettings).bind("loaded.jstree", function (event, data) {
-      self.jstreeIsLoaded = true
-    }).bind("refresh.jstree", function (event, data) {
-      self.jstreeIsLoaded = true
-    });
-    $('#models-jstree').on('click.jstree', function(e) {
-      var parent = e.target.parentElement
-      var _node = parent.children[parent.children.length - 1]
-      var node = $('#models-jstree').jstree().get_node(_node)
-      if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node) && node.type === "folder"){
-        $('#models-jstree').jstree().refresh_node(node)
-      }else{
-        let optionsButton = $(self.queryByHook("options-for-node"))
-        if(!self.nodeForContextMenu){
-          optionsButton.prop('disabled', false)
-        }
-        optionsButton.text("Actions for " + node.original.text)
-        self.nodeForContextMenu = node;
-      }
-    });
+    // $(document).on('shown.bs.modal', function (e) {
+    //   $('[autofocus]', e.target).focus();
+    // });
+    // $(document).on('dnd_start.vakata', function (data, element, helper, event) {
+    //   $('#models-jstree').jstree().load_all()
+    // });
+    // $('#models-jstree').jstree(this.treeSettings).bind("loaded.jstree", function (event, data) {
+    //   self.jstreeIsLoaded = true
+    // }).bind("refresh.jstree", function (event, data) {
+    //   self.jstreeIsLoaded = true
+    // });
+    // $('#models-jstree').on('click.jstree', function(e) {
+    //   var parent = e.target.parentElement
+    //   var _node = parent.children[parent.children.length - 1]
+    //   var node = $('#models-jstree').jstree().get_node(_node)
+    //   if(_node.nodeName === "A" && $('#models-jstree').jstree().is_loaded(node) && node.type === "folder"){
+    //     $('#models-jstree').jstree().refresh_node(node)
+    //   }else{
+    //     let optionsButton = $(self.queryByHook("options-for-node"))
+    //     if(!self.nodeForContextMenu){
+    //       optionsButton.prop('disabled', false)
+    //     }
+    //     optionsButton.text("Actions for " + node.original.text)
+    //     self.nodeForContextMenu = node;
+    //   }
+    // });
     $('#models-jstree').on('dblclick.jstree', function(e) {
       var file = e.target.text
       var node = $('#models-jstree').jstree().get_node(e.target)

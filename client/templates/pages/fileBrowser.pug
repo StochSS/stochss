@@ -59,13 +59,7 @@ section.page
 
       div.card-body
 
-        div.alert-warning(class="collapse", id="extension-warning" data-hook="extension-warning") You should avoid changing the file extension unless you know what you are doing!
-
-        div.alert-warning(class="collapse", id="rename-warning" data-hook="rename-warning") MESSAGE
-
-        div.alert-danger(id="renameSpecialCharError" style="display: none;") Names can only include the following characters: (0-9), (a-z), (A-Z) and (., -, _, (, or ))
-
-        div#models-jstree
+        div(data-hook="jstree-view-container")
 
         button.btn.btn-primary.inline.box-shadow(
           id="new-file-directory",
