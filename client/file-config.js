@@ -89,7 +89,7 @@ types = {
   'other' : {"icon": "jstree-icon jstree-file"},
 }
 
-validateMove = (view, node, more) => {
+validateMove = (view, node, more, pos) => {
   // Check if workflow is running
   let validSrc = Boolean(node && node.type && node.original && node.original.text !== "trash");
   let isWorkflow = Boolean(validSrc && node.type === "workflow");

@@ -96,7 +96,7 @@ updateParent = (view, type) => {
   }
 }
 
-validateMove = (view, node, more) => {
+validateMove = (view, node, more, pos) => {
   // Check if files are being move directly into the trash and remain static with respect to the trash
   let validDst = Boolean(more && more.ref && more.ref.type && more.ref.original);
   if(validDst && path.dirname(more.ref.original._path).includes("trash")) { return false };
