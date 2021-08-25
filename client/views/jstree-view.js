@@ -33,10 +33,11 @@ let template = require('../templates/includes/jstreeView.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
-    'click [data-hook=new-project]' : 'handleCreateProjectClick',
-    'click [data-hook=new-model]' : 'handleCreateModelClick',
-    'click [data-hook=new-domain]' : 'handleCreateDomain',
+    'click [data-hook=fb-new-directory]' : 'handleCreateDirectoryClick',
+    'click [data-hook=fb-new-project]' : 'handleCreateProjectClick',
+    'click [data-hook=fb-new-model]' : 'handleCreateModelClick',
+    'click [data-hook=fb-new-domain]' : 'handleCreateDomain',
+    'click [data-hook=fb-import-model]' : 'handleImportModelClick',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -89,6 +90,7 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    this.config.setup(this);
     window.addEventListener('pageshow', function (e) {
       let navType = window.performance.navigation.type;
       if(navType === 2){
@@ -160,7 +162,7 @@ module.exports = View.extend({
     if(document.querySelector('#newDirectoryModal')) {
       document.querySelector('#newDirectoryModal').remove();
     }
-    let modal = $(modals.createDirectoryHtml()).modal();
+    let modal = $(modals.createDirectoryHtml()).modal('show');
     let okBtn = document.querySelector('#newDirectoryModal .ok-model-btn');
     let input = document.querySelector('#newDirectoryModal #directoryNameInput');
     this.addInputKeyupEvent(input, okBtn);
@@ -194,8 +196,7 @@ module.exports = View.extend({
     this.addInputValidateEvent(input, okBtn, "#newModelModal", "#modelNameInput", {inProject: inProject});
     okBtn.addEventListener('click', (e) => {
       modal.modal('hide');
-      let ext = isSpatial ? "smdl" : "mdl";
-      let file = `${input.value.trim()}.${ext}`;
+      let file = `${input.value.trim()}.${isSpatial ? "smdl" : "mdl"}`;
       if(inProject) {
         this.addProjectModel(dirname, file);
       }else{
@@ -203,15 +204,109 @@ module.exports = View.extend({
       }
     });
   },
+  createProject: function (node, dirname) {
+    if(document.querySelector("#newProjectModal")) {
+      document.querySelector("#newProjectModal").remove();
+    }
+    let modal = $(modals.createProjectHtml()).modal();
+    let okBtn = document.querySelector('#newProjectModal .ok-model-btn');
+    let input = document.querySelector('#newProjectModal #projectNameInput');
+    this.addInputKeyupEvent(input, okBtn);
+    this.addInputValidateEvent(input, okBtn, "#newProjectModal", "#projectNameInput");
+    okBtn.addEventListener("click", function (e) {
+      modal.modal('hide');
+      let queryStr = "?path=" + path.join(dirname, `${input.value.trim()}.proj`);
+      let endpoint = path.join(app.getApiPath(), "project/new-project") + queryStr;
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          let queryStr = "?path=" + body.path;
+          let endpoint = path.join(app.getBasePath(), 'stochss/project/manager') + queryStr;
+          window.location.href = endpoint;
+        },
+        error: (err, response, body) => {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
+          let errorModel = $(modals.errorHtml(body.Reason, body.Message)).modal();
+        }
+      });
+    });
+  },
   handleCreateDirectoryClick: function (e) {
     let dirname = this.root === "none" ? "" : this.root;
     this.createDirectory(null, dirname);
+  },
+  handleImportModelClick: function () {
+    this.importModel(null);
   },
   handleCreateModelClick: function (e) {
     let dirname = this.root === "none" ? "" : this.root;
     let inProject = this.root !== "none";
     let isSpatial = e.target.dataset.type === "spatial";
     this.createModel(null, dirname, isSpatial, inProject);
+  },
+  handleCreateProjectClick: function (e) {
+    let dirname = this.root === "none" ? "" : this.root;
+    this.createProject(null, dirname);
+  },
+  handleCreateDomain: function (e) {
+    let dirname = this.root === "none" ? "/" : this.root;
+    let queryStr = "?domainPath=" + dirname + "&new";
+    window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
+  },
+  importModel: function (node) {
+    if(document.querySelector('#importModelModal')){
+      document.querySelector('#importModelModal').remove();
+    }
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path=" + this.root;
+    app.getXHR(mdlListEP, {
+      always: (err, response, body) => {
+        let modal = $(modals.importModelHtml(body.files)).modal();
+        let okBtn = document.querySelector('#importModelModal .ok-model-btn');
+        let select = document.querySelector('#importModelModal #modelFileSelect');
+        let location = document.querySelector('#importModelModal #modelPathSelect');
+        select.addEventListener("change", (e) => {
+          okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
+          if(body.paths[e.target.value].length >= 2) {
+            var locations = body.paths[e.target.value].map((path) => {
+              return `<option>${path}</option>`;
+            });
+            locations.unshift(`<option value="">Select a location</option>`);
+            locations = locations.join(" ");
+            $("#modelPathSelect").find('option').remove().end().append(locations);
+            $("#location-container").css("display", "block");
+          }else{
+            $("#location-container").css("display", "none");
+            $("#modelPathSelect").find('option').remove().end();
+          }
+        });
+        location.addEventListener("change", (e) => {
+          okBtn.disabled = !Boolean(e.target.value);
+        });
+        okBtn.addEventListener("click", (e) => {
+          modal.modal('hide');
+          let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
+          let queryStr = "?path=" + this.root + "&mdlPath=" + mdlPath;
+          let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryStr;
+          app.postXHR(endpoint, null, {
+            success: (err, response, body) => {
+              if(document.querySelector("#successModal")) {
+                document.querySelector("#successModal").remove();
+              }
+              let successModal = $(modals.successHtml(body.message)).modal();
+              this.config.updateParent(this, "model");
+              this.refreshJSTree(null);
+            },
+            error: function (err, response, body) {
+              if(document.querySelector("#errorModal")) {
+                document.querySelector("#errorModal").remove();
+              }
+              let errorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+            }
+          });
+        });
+      }
+    });
   },
   refreshInitialJSTree: function () {
     let count = $('#files-jstree').jstree()._model.data['#'].children.length;
@@ -262,14 +357,13 @@ module.exports = View.extend({
         let node = $('#files-jstree').jstree().get_node(_node);
         if(_node.nodeName === "A" && $('#files-jstree').jstree().is_loaded(node) && node.type === "folder"){
           this.refreshJSTree(node);
-        }else{
-          let optionsButton = $(this.queryByHook("options-for-node"));
-          if(this.nodeForContextMenu === null){
-            optionsButton.prop('disabled', false);
-          }
-          optionsButton.text("Actions for " + node.original.text);
-          this.nodeForContextMenu = node;
         }
+        let optionsButton = $(this.queryByHook("options-for-node"));
+        if(this.nodeForContextMenu === null){
+          optionsButton.prop('disabled', false);
+        }
+        optionsButton.text("Actions for " + node.original.text);
+        this.nodeForContextMenu = node;
       });
       $('#files-jstree').on('dblclick.jstree', (e) => {
         this.config.doubleClick(this, e);
