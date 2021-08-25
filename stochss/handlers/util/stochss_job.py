@@ -27,7 +27,6 @@ import tempfile
 
 import datetime
 import traceback
-from itertools import combinations
 
 import numpy
 import plotly
@@ -110,40 +109,6 @@ class StochSSJob(StochSSBase):
 
 
     @classmethod
-    def __get_1d_fixed_list(cls, results):
-        keys = [key.split(',') for key in results.keys()]
-        p_names = [param.split(':')[0] for param in keys[0]]
-        if len(p_names) < 2:
-            return [{}]
-        _f_keys = []
-        for name in p_names:
-            for key in keys:
-                f_key = list(filter(lambda key_el, key=key, name=name: name not in key_el, key))
-                _f_keys.append(",".join(f_key))
-        fixed_list = [key.split(',') for key in sorted(list(set(_f_keys)))]
-        return fixed_list
-
-
-    @classmethod
-    def __get_2d_fixed_list(cls, results):
-        keys = [key.split(',') for key in results.keys()]
-        p_names = [param.split(':')[0] for param in keys[0]]
-        if len(p_names) < 2:
-            return None
-        if len(p_names) < 3:
-            return [{}]
-        p_names = list(combinations(p_names, 2))
-        _f_keys = []
-        for names in p_names:
-            for key in keys:
-                test = lambda key_el, names=names: names[0] not in key_el and names[1] not in key_el
-                f_key = list(filter(lambda key_el, test=test: test(key_el), key))
-                _f_keys.append(",".join(f_key))
-        fixed_list = [key.split(',') for key in sorted(list(set(_f_keys)))]
-        return fixed_list
-
-
-    @classmethod
     def __get_csvzip(cls, dirname, name):
         shutil.make_archive(os.path.join(dirname, name), "zip", dirname, name)
         path = os.path.join(dirname, f"{name}.zip")
@@ -201,48 +166,6 @@ class StochSSJob(StochSSBase):
             key = ','.join(key)
             result = result[key]
         return result
-
-
-    def __get_full_1dpsweep_csv(self, b_path, results, get_name, name):
-        settings = self.load_settings()
-        od_path = os.path.join(b_path, "1D_Resutls")
-        os.mkdir(od_path)
-        fixed_list = self.__get_1d_fixed_list(results)
-        for i, fixed in enumerate(fixed_list):
-            nametag = get_name(name, i)
-            self.log("info", f"\tGenerating CSV files for {nametag}...")
-            d_keys = dict([key.split(":") for key in fixed])
-            param = list(filter(lambda param, d_keys=d_keys: param['name'] not in d_keys.keys(),
-                                settings['parameterSweepSettings']['parameters']))[0]
-            kwargs = {'results': self.__get_filtered_1d_results(fixed)}
-            kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
-            ParameterSweep1D.to_csv(
-                param=param, kwargs=kwargs, path=od_path, nametag=nametag
-            )
-            if fixed:
-                self.__write_parameters_csv(path=od_path, name=nametag, data_keys=d_keys)
-
-
-    def __get_full_2dpsweep_csv(self, b_path, results, get_name, name):
-        fixed_list = self.__get_2d_fixed_list(results)
-        if fixed_list is None:
-            return
-        settings = self.load_settings()
-        td_path = os.path.join(b_path, "2D_Resutls")
-        os.mkdir(td_path)
-        for i, fixed in enumerate(fixed_list):
-            nametag = get_name(name, i)
-            self.log("info", f"\tGenerating CSV files for {nametag}...")
-            d_keys = dict([key.split(":") for key in fixed])
-            params = list(filter(lambda param, d_keys=d_keys: param['name'] not in d_keys.keys(),
-                                 settings['parameterSweepSettings']['parameters']))
-            kwargs = {"results": self.__get_filtered_2d_results(fixed, params[0])}
-            kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
-            ParameterSweep2D.to_csv(
-                params=params, kwargs=kwargs, path=td_path, nametag=nametag
-            )
-            if fixed:
-                self.__write_parameters_csv(path=td_path, name=nametag, data_keys=d_keys)
 
 
     def __get_full_timeseries_csv(self, b_path, results, get_name, name):
@@ -466,10 +389,6 @@ class StochSSJob(StochSSBase):
         b_path = os.path.join(tmp_dir.name, get_name(name, "full"))
         self.log("info", "Generating time series CSV files...")
         self.__get_full_timeseries_csv(b_path, results, get_name, name)
-        self.log("info", "Generating CSV files for 1D results...")
-        self.__get_full_1dpsweep_csv(b_path, results, get_name, name)
-        self.log("info", "Generating CSV files for 2D results...")
-        self.__get_full_2dpsweep_csv(b_path, results, get_name, name)
         return self.__get_csvzip(dirname=tmp_dir.name, name=get_name(name, "full"))
 
 
