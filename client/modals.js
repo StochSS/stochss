@@ -254,6 +254,97 @@ let templates = {
     }
 
 module.exports = {
+  createDirectoryHtml: () => {
+    let title = "New Directory";
+    let modalID = "newDirectoryModal";
+    let inputID = "directoryNameInput";
+    let label = "Name:";
+    let value = "";
+
+    return templates.input(modalID, inputID, title, label, value);
+  },
+  createModelHtml: (isSpatial) => {
+    let title = `New ${isSpatial ? 'Spatial Model' : 'Model'}`;
+    let modalID = "newModelModal";
+    let inputID = "modelNameInput";
+    let label = "Name:";
+    let value = "";
+    
+    return templates.input(modalID, inputID, title, label, value);
+  },
+  createProjectHtml : () => {
+    let modalID = "newProjectModal";
+    let inputID = "projectNameInput";
+    let title = "New Project";
+    let label = "Project Name";
+    let value = "";
+
+    return templates.input(modalID, inputID, title, label, value);
+  },
+  emptyTrashConfirmHtml : () => {
+    let modalID = "emptyTrashConfirmModal";
+    let title = "Are you sure you want to permanently erase the items in the Trash?";
+
+    return templates.confirmation(modalID, title);
+  },
+  errorHtml: (title, error) => {
+    let modalID = "errorModal";
+
+    return templates.message(modalID, title, error);
+  },
+  importModelHtml : (files) => {
+    let modalID = "importModelModal";
+    let fileID = "modelFileSelect";
+    let locationID = "modelPathSelect";
+    let title = "Add Existing Model to Project";
+    let label = "Models: ";
+    files = files.map(function (file) {
+      return `<option value="${file[0]}">${file[1]}</option>`;
+    });
+    files.unshift(`<option value="">-- Select a model --</option>`);
+    files = files.join(" ");
+
+    return templates.fileSelect(modalID, fileID, locationID, title, label, files);
+  },
+  successHtml : (message) => {
+    let modalID = "successModal";
+    let title = "Success!";
+
+    return templates.message(modalID, title, message);
+  },
+  uploadFileHtml : (type, isSafariV14Plus) => {
+    let modalID = "uploadFileModal";
+    let title = `Upload a ${type}`;
+    var accept = "";
+    if(type === "model") {
+      accept = 'accept=".json, .mdl, .smdl"';
+    }else if(type === "sbml") {
+      accept = 'accept=".xml, .sbml"';
+    }else if(type === "file" && isSafariV14Plus){
+      // only used if using Safari v14+ and only needed to fix upload issue
+      accept = 'accept=".json, .mdl, .smdl, .xml, .sbml, .ipynb, .zip, .md, .csv, .p, .omex, .domn, .txt, .pdf, audio/*, video/*, image/*"';
+    }
+    
+    return templates.upload(modalID, title, accept);
+  },
+  uploadFileErrorsHtml : (file, type, statusMessage, errors) => {
+    let modalID = "uploadFileErrorsModal";
+    let types = {mdl: "model file", sbml: "sbml file", smdl: "spatial model file", zip: "zip archive"};
+    if(type === "file") {
+      type = types[file.split('.').pop()];
+    }else{
+      type += " file";
+    }
+    let title = `Errors uploading ${file} as a ${type}`;
+    for(var i = 0; i < errors.length; i++) {
+      errors[i] = `<b>Error</b>: ${errors[i]}`;
+    }
+    let message = `<p>${errors.join("<br>")}</p><p><b>Upload status</b>: ${statusMessage}</p>`;
+
+    return templates.message(modalID, title, message);
+  },
+      
+    
     deleteFileHtml : (fileType) => {
         let modalID = "deleteFileModal"
         let title = `Permanently delete this ${fileType}?`
@@ -269,12 +360,6 @@ module.exports = {
           return templates.confirmation_with_message(modalID, title, message);
         }
         return templates.confirmation(modalID, title)
-    },
-    emptyTrashConfirmHtml : () => {
-      let modalID = "emptyTrashConfirmModal"
-      let title = "Are you sure you want to permanently erase the items in the Trash?"
-
-      return templates.confirmation(modalID, title)
     },
     operationInfoModalHtml : (page) => {
         let modalID = "operationInfoModal"
@@ -368,37 +453,6 @@ module.exports = {
         let message = errors.join("<br>")
 
         return templates.message(modalID, title, message)
-    },
-    uploadFileErrorsHtml : (file, type, statusMessage, errors) => {
-        let modalID = "sbmlToModelModal"
-        let types = {"mdl":"model file", "sbml":"sbml file", "smdl":"spatial model file", "zip":"zip archive"}
-        if(type === "file") {
-          type = types[file.split('.').pop()]
-        }else{
-          type += " file"
-        }
-        let title = `Errors uploading ${file} as a ${type}`
-        for(var i = 0; i < errors.length; i++) {
-            errors[i] = "<b>Error</b>: " + errors[i]
-        }
-        let message = `<p>${errors.join("<br>")}</p><p><b>Upload status</b>: ${statusMessage}</p>`
-
-        return templates.message(modalID, title, message)
-    },
-    uploadFileHtml : (type, isSafariV14Plus) => {
-        let modalID = "uploadFileModal"
-        let title = `Upload a ${type}`
-        var accept = "";
-        if(type === "model") {
-          accept = 'accept=".json, .mdl, .smdl"'
-        }else if(type === "sbml") {
-          accept = 'accept=".xml, .sbml"'
-        }else if(type === "file" && isSafariV14Plus){
-          // only used if using Safari v14+ and only needed to fix upload issue
-          accept = 'accept=".json, .mdl, .smdl, .xml, .sbml, .ipynb, .zip, .md, .csv, .p, .omex, .domn, .txt, .pdf, audio/*, video/*, image/*"'
-        }
-        
-        return templates.upload(modalID, title, accept)
     },
     duplicateWorkflowHtml : (wkflFile, body) => {
         let modalID = "duplicateWorkflowModal"
