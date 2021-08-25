@@ -38,6 +38,7 @@ module.exports = View.extend({
     'click [data-hook=fb-new-model]' : 'handleCreateModelClick',
     'click [data-hook=fb-new-domain]' : 'handleCreateDomain',
     'click [data-hook=fb-import-model]' : 'handleImportModelClick',
+    'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -254,6 +255,12 @@ module.exports = View.extend({
     let queryStr = "?domainPath=" + dirname + "&new";
     window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
   },
+  handleUploadFileClick: function (e) {
+    let dirname = this.root === "none" ? "/" : this.root;
+    let inProject = this.root !== "none";
+    let type = e.target.dataset.type;
+    this.uploadFile(null, dirname, type, inProject);
+  },
   importModel: function (node) {
     if(document.querySelector('#importModelModal')){
       document.querySelector('#importModelModal').remove();
@@ -317,13 +324,13 @@ module.exports = View.extend({
       }, 3000);
     }
   },
-  refreshJSTree: function (par) {
-    if(par === null || par.type === 'root'){
+  refreshJSTree: function (node) {
+    if(node === null || node.type === 'root'){
       this.jstreeIsLoaded = false
       $('#files-jstree').jstree().deselect_all(true)
       $('#files-jstree').jstree().refresh();
     }else{
-      $('#files-jstree').jstree().refresh_node(par);
+      $('#files-jstree').jstree().refresh_node(node);
     }
   },
   setupJstree: function (cb) {
@@ -338,8 +345,7 @@ module.exports = View.extend({
       optionsButton.text("Actions for " + o.original.text);
       this.nodeForContextMenu = o;
     }
-
-    $(document).ready(() => {
+    $(() => {
       $(document).on('shown.bs.modal', (e) => {
         $('[autofocus]', e.target).focus();
       });
@@ -385,5 +391,92 @@ module.exports = View.extend({
       }
     }
     return error
+  },
+  uploadFile: function (node, dirname, type, inProject) {
+    if(document.querySelector('#uploadFileModal')) {
+      document.querySelector('#uploadFileModal').remove()
+    }
+    if(this.isSafariV14Plus == undefined){
+      let browser = app.getBrowser();
+      this.isSafariV14Plus = (browser.name === "Safari" && browser.version >= 14)
+    }
+    let modal = $(modals.uploadFileHtml(type, this.isSafariV14Plus)).modal();
+    let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
+    let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
+    let input = document.querySelector('#uploadFileModal #fileNameInput');
+    let fileCharErrMsg = document.querySelector('#uploadFileModal #fileSpecCharError');
+    let nameEndErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError');
+    let nameCharErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError');
+    let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage');
+    let getOptions = (file) => {
+      if(!inProject) { return {saveAs: true}; };
+      if(file.name.endsWith(".mdl") || (type === "model" && file.name.endsWith(".json"))) {
+        return {saveAs: false};
+      }
+      if(file.name.endsWith(".sbml") || (type === "sbml" && file.name.endsWith(".xml"))) {
+        return {saveAs: false};
+      }
+      return {saveAs: true};
+    }
+    let validateFile = () => {
+      let options = getOptions(fileInput.files[0])
+      let fileErr = !fileInput.files.length ? "" : this.validateName(fileInput.files[0].name, options);
+      let nameErr = this.validateName(input.value, options);
+      if(!fileInput.files.length) {
+        uploadBtn.disabled = true;
+        fileCharErrMsg.style.display = 'none';
+      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
+        uploadBtn.disabled = false;
+        fileCharErrMsg.style.display = 'none';
+      }else{
+        uploadBtn.disabled = true;
+        fileCharErrMsg.style.display = 'block';
+      }
+      return nameErr;
+    }
+    fileInput.addEventListener('change', (e) => {
+      validateFile();
+    });
+    input.addEventListener("input", (e) => {
+      let nameErr = validateFile();
+      nameCharErrMsg.style.display = nameErr === "both" || nameErr === "special" ? "block" : "none";
+      nameEndErrMsg.style.display = nameErr === "both" || nameErr === "forward" ? "block" : "none";
+      nameUsageMsg.style.display = nameErr !== "" ? "block" : "none";
+    });
+    uploadBtn.addEventListener('click', (e) => {
+      modal.modal('hide');
+      let file = fileInput.files[0];
+      let options = getOptions(file)
+      let fileinfo = {type: type, name: "", path: dirname};
+      if(Boolean(input.value) && this.validateName(input.value.trim(), options) === ""){
+        fileinfo.name = input.value.trim();
+      }
+      let formData = new FormData();
+      formData.append("datafile", file);
+      formData.append("fileinfo", JSON.stringify(fileinfo));
+      let endpoint = path.join(app.getApiPath(), 'file/upload');
+      app.postXHR(endpoint, formData, {
+        success: (err, response, body) => {
+          body = JSON.parse(body);
+          this.refreshJSTree(node);
+          if(inProject && ['mdl', 'smdl', 'sbml'].includes(body.file.split('.').pop())) {
+            this.config.updateParent("model")
+          }
+          if(body.errors.length > 0){
+            if(document.querySelector("#uploadFileErrorsModal")) {
+              document.querySelector("#uploadFileErrorsModal").remove();
+            }
+            let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, body.message, body.errors)).modal();
+          }
+        },
+        error: (err, response, body) => {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
+          body = JSON.parse(body);
+          let zipErrorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+        }
+      }, false);
+    });
   }
 });
