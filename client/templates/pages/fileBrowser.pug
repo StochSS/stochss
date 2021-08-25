@@ -60,29 +60,3 @@ section.page
       div.card-body
 
         div(data-hook="jstree-view-container")
-
-        button.btn.btn-primary.inline.box-shadow(
-          id="new-file-directory",
-          data-hook="new-file-directory",
-          data-toggle="dropdown",
-          aria-haspopup="true",
-          aria-expanded="false",
-          type="button"
-        ) <b>+</b>
-
-        ul.dropdown-menu(aria-labelledby="new-file-directory")
-          li.dropdown-item(id="new-directory" data-hook="new-directory") Create Directory
-          li.dropdown-item(id="new-project" data-hook="new-project") Create Project
-          li.dropdown-item(id="new-model" data-hook="new-model" data-type="model") Create Model
-          li.dropdown-item(id="new-model" data-hook="new-model" data-type="spatial") Create Spatial Model (beta)
-          li.dropdown-item(id="new-model" data-hook="new-domain") Create Domain (beta)
-          li.dropdown-divider
-          li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model
-          li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="sbml") Upload SBML Model
-          li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="file") Upload File
-
-        button.btn.btn-primary.box-shadow(id="options-for-node" data-hook="options-for-node" disabled) Actions
-        
-        button.btn.btn-primary.inline.box-shadow(id="refresh-jstree" data-hook="refresh-jstree") Refresh
-
-        button.btn.btn-primary.inline.box-shadow(id="empty-trash" data-hook="empty-trash") Empty Trash
