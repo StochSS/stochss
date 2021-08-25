@@ -21,6 +21,7 @@ let path = require('path');
 let jstree = require('jstree');
 //support files
 let app = require('../app');
+let modals = require('../modals');
 //config
 let FileConfig = require('../file-config')
 let ProjectConfig = require('../project-config');
@@ -31,6 +32,12 @@ let template = require('../templates/includes/jstreeView.pug');
 
 module.exports = View.extend({
   template: template,
+  events: {
+    'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
+    'click [data-hook=new-project]' : 'handleCreateProjectClick',
+    'click [data-hook=new-model]' : 'handleCreateModelClick',
+    'click [data-hook=new-domain]' : 'handleCreateDomain',
+  },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.config = attrs.configKey === "file" ? FileConfig : ProjectConfig;
@@ -60,7 +67,7 @@ module.exports = View.extend({
         'multiple': false,
         'animation': 0,
         'check_callback': (op, node, par, pos, more) => {
-          if(op === "rename_node" && this.validateName(pos, true) !== ""){
+          if(op === "rename_node" && this.validateName(pos, {rename: true}) !== ""){
             let err = $("#renameSpecialCharError");
             err.css("display", "block");
             setTimeout(() => {
@@ -71,7 +78,7 @@ module.exports = View.extend({
           if(op === 'move_node' && more && more.core) {
             this.config.move(this, par, node);
           }else if(op === "move_node") {
-            return this.config.validateMove(this, node, more);
+            return this.config.validateMove(this, node, more, pos);
           }
         },
         'themes': {'stripes': true, 'variant': 'large'},
@@ -93,6 +100,118 @@ module.exports = View.extend({
         this.refreshInitialJSTree();
       }, 3000);
     });
+  },
+  addInputKeyupEvent: function (input, okBtn) {
+    input.addEventListener("keyup", (event) => {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+  },
+  addInputValidateEvent: function (input, okBtn, modalID, inputID, {inProject = false}={}) {
+    input.addEventListener("input", (e) => {
+      let endErrMsg = document.querySelector(`${modalID} ${inputID}EndCharError`);
+      let charErrMsg = document.querySelector(`${modalID} ${inputID}SpecCharError`);
+      let error = this.validateName(input.value, {saveAs: !inProject});
+      okBtn.disabled = error !== "" || input.value.trim() === "";
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none";
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none";
+    });
+  },
+  addModel: function (dirname, file) {
+    let queryStr = "?path=" + path.join(dirname, file);
+    let existEP = path.join(app.getApiPath(), "model/exists") + queryStr;
+    app.getXHR(existEP, {
+      always: (err, response, body) => {
+        if(body.exists) {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
+          let title = "Model Already Exists";
+          let message = "A model already exists with that name";
+          let errorModel = $(modals.errorHtml(title, message)).modal();
+        }else{
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+          window.location.href = endpoint;
+        }
+      }
+    });
+  },
+  addProjectModel: function (dirname, file) {
+    let queryStr = "?path=" + dirname + "&mdlFile=" + file;
+    let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryStr;
+    app.getXHR(newMdlEP, {
+      success: (err, response, body) => {
+        let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + "?path=" + body.path;
+        window.location.href = endpoint;
+      },
+      error: (err, response, body) => {
+        if(document.querySelector("#errorModal")) {
+          document.querySelector("#errorModal").remove();
+        }
+        let title = "Model Already Exists";
+        let message = "A model already exists with that name";
+        let errorModel = $(modals.errorHtml(title, message)).modal();
+      }
+    });
+  },
+  createDirectory: function (node, dirname) {
+    if(document.querySelector('#newDirectoryModal')) {
+      document.querySelector('#newDirectoryModal').remove();
+    }
+    let modal = $(modals.createDirectoryHtml()).modal();
+    let okBtn = document.querySelector('#newDirectoryModal .ok-model-btn');
+    let input = document.querySelector('#newDirectoryModal #directoryNameInput');
+    this.addInputKeyupEvent(input, okBtn);
+    this.addInputValidateEvent(input, okBtn, "#newDirectoryModal", "#directoryNameInput");
+    okBtn.addEventListener('click', (e) => {
+      modal.modal('hide');
+      let queryStr = "?path=" + path.join(dirname, input.value.trim());
+      let endpoint = path.join(app.getApiPath(), "directory/create") + queryStr;
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          this.refreshJSTree(node)
+        },
+        error: (err, response, body) => {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
+          body = JSON.parse(body);
+          let errorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+        }
+      });
+    });
+  },
+  createModel: function (node, dirname, isSpatial, inProject) {
+    if(document.querySelector('#newModelModal')) {
+      document.querySelector('#newModelModal').remove();
+    }
+    let modal = $(modals.createModelHtml(isSpatial)).modal();
+    let okBtn = document.querySelector('#newModelModal .ok-model-btn');
+    let input = document.querySelector('#newModelModal #modelNameInput');
+    this.addInputKeyupEvent(input, okBtn);
+    this.addInputValidateEvent(input, okBtn, "#newModelModal", "#modelNameInput", {inProject: inProject});
+    okBtn.addEventListener('click', (e) => {
+      modal.modal('hide');
+      let ext = isSpatial ? "smdl" : "mdl";
+      let file = `${input.value.trim()}.${ext}`;
+      if(inProject) {
+        this.addProjectModel(dirname, file);
+      }else{
+        this.addModel(dirname, file);
+      }
+    });
+  },
+  handleCreateDirectoryClick: function (e) {
+    let dirname = this.root === "none" ? "" : this.root;
+    this.createDirectory(null, dirname);
+  },
+  handleCreateModelClick: function (e) {
+    let dirname = this.root === "none" ? "" : this.root;
+    let inProject = this.root !== "none";
+    let isSpatial = e.target.dataset.type === "spatial";
+    this.createModel(null, dirname, isSpatial, inProject);
   },
   refreshInitialJSTree: function () {
     let count = $('#files-jstree').jstree()._model.data['#'].children.length;
@@ -124,6 +243,7 @@ module.exports = View.extend({
       optionsButton.text("Actions for " + o.original.text);
       this.nodeForContextMenu = o;
     }
+
     $(document).ready(() => {
       $(document).on('shown.bs.modal', (e) => {
         $('[autofocus]', e.target).focus();
@@ -156,13 +276,13 @@ module.exports = View.extend({
       });
     });
   },
-  validateName: function (input, rename = false) {
+  validateName: function (input, {rename = false, saveAs = true}={}) {
     var error = ""
     if(input.endsWith('/')) {
       error = 'forward'
     }
     var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-    if(rename) {
+    if(rename || !saveAs) {
       invalidChars += "/"
     }
     for(var i = 0; i < input.length; i++) {
