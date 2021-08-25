@@ -69,7 +69,12 @@ let move = (view, par, node) => {
   });
 }
 
-types = {
+let setup = (view) => {
+  $(view.queryByHook("fb-new-project")).css("display", "none");
+  $(view.queryByHook("fb-empty-trash")).css("display", "none");
+}
+
+let types = {
   'root' : {"icon": "jstree-icon jstree-folder"},
   'folder' : {"icon": "jstree-icon jstree-folder"},
   'spatial' : {"icon": "jstree-icon jstree-file"},
@@ -82,7 +87,7 @@ types = {
   'other' : {"icon": "jstree-icon jstree-file"},
 }
 
-updateParent = (view, type) => {
+let updateParent = (view, type) => {
   let models = ["nonspatial", "spatial", "sbml", "model"];
   let workflows = ["workflow", "notebook"];
   if(models.includes(type)) {
@@ -96,7 +101,7 @@ updateParent = (view, type) => {
   }
 }
 
-validateMove = (view, node, more, pos) => {
+let validateMove = (view, node, more, pos) => {
   // Check if files are being move directly into the trash and remain static with respect to the trash
   let validDst = Boolean(more && more.ref && more.ref.type && more.ref.original);
   if(validDst && path.dirname(more.ref.original._path).includes("trash")) { return false };
@@ -162,6 +167,8 @@ module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
   move: move,
+  setup: setup,
   types: types,
+  updateParent: updateParent,
   validateMove: validateMove
 }

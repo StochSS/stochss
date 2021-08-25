@@ -76,7 +76,12 @@ let move = (view, par, node) => {
   });
 }
 
-types = {
+let setup = (view) => {
+  $(view.queryByHook("fb-proj-seperator")).css("display", "none");
+  $(view.queryByHook("fb-add-existing-model")).css("display", "none");
+}
+
+let types = {
   'root' : {"icon": "jstree-icon jstree-folder"},
   'folder' : {"icon": "jstree-icon jstree-folder"},
   'spatial' : {"icon": "jstree-icon jstree-file"},
@@ -89,7 +94,7 @@ types = {
   'other' : {"icon": "jstree-icon jstree-file"},
 }
 
-validateMove = (view, node, more, pos) => {
+let validateMove = (view, node, more, pos) => {
   // Check if workflow is running
   let validSrc = Boolean(node && node.type && node.original && node.original.text !== "trash");
   let isWorkflow = Boolean(validSrc && node.type === "workflow");
@@ -123,6 +128,7 @@ module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
   move: move,
+  setup: setup,
   types: types,
   validateMove: validateMove
 }
