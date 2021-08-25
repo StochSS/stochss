@@ -39,6 +39,9 @@ module.exports = View.extend({
     'click [data-hook=fb-new-domain]' : 'handleCreateDomain',
     'click [data-hook=fb-import-model]' : 'handleImportModelClick',
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
+    'click [data-hook=options-for-node]' : 'showContextMenuForNode',
+    'click [data-hook=refresh-jstree]' : 'handleRefreshJSTreeClick',
+    'click [data-hook=empty-trash]' : 'emptyTrash',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -233,6 +236,23 @@ module.exports = View.extend({
       });
     });
   },
+  emptyTrash: function (e) {
+    if(document.querySelector("#emptyTrashConfirmModal")) {
+      document.querySelector("#emptyTrashConfirmModal").remove();
+    }
+    let modal = $(modals.emptyTrashConfirmHtml()).modal();
+    let yesBtn = document.querySelector('#emptyTrashConfirmModal .yes-modal-btn');
+    yesBtn.addEventListener('click', (e) => {
+      modal.modal('hide');
+      let endpoint = path.join(app.getApiPath(), "file/empty-trash") + "?path=trash";
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          this.refreshJSTree(null);
+          $(this.queryByHook('empty-trash')).prop('disabled', true);
+        }
+      });
+    });
+  },
   handleCreateDirectoryClick: function (e) {
     let dirname = this.root === "none" ? "" : this.root;
     this.createDirectory(null, dirname);
@@ -254,6 +274,9 @@ module.exports = View.extend({
     let dirname = this.root === "none" ? "/" : this.root;
     let queryStr = "?domainPath=" + dirname + "&new";
     window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
+  },
+  handleRefreshJSTreeClick: function (e) {
+    this.refreshJSTree(null);
   },
   handleUploadFileClick: function (e) {
     let dirname = this.root === "none" ? "/" : this.root;
@@ -375,6 +398,9 @@ module.exports = View.extend({
         this.config.doubleClick(this, e);
       });
     });
+  },
+  showContextMenuForNode: function (e) {
+    $('#files-jstree').jstree().show_contextmenu(this.nodeForContextMenu);
   },
   validateName: function (input, {rename = false, saveAs = true}={}) {
     var error = ""
