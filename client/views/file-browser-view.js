@@ -34,14 +34,14 @@ let Model = require('../models/model');
   // template: template,
   events: {
     'click [data-hook=collapse-browse-files]' : 'changeCollapseButtonText',
-    'click [data-hook=refresh-jstree]' : 'refreshJSTree',
-    'click [data-hook=options-for-node]' : 'showContextMenuForNode',
-    'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
+    // 'click [data-hook=refresh-jstree]' : 'refreshJSTree',
+    // 'click [data-hook=options-for-node]' : 'showContextMenuForNode',
+    // 'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
     'click [data-hook=browser-new-workflow-group]' : 'handleCreateWorkflowGroupClick',
-    'click [data-hook=browser-new-model]' : 'handleCreateModelClick',
-    'click [data-hook=browser-new-domain]' : 'handelCreateDomainClick',
-    'click [data-hook=browser-existing-model]' : 'handleAddExistingModelClick',
-    'click [data-hook=upload-file-btn-bf]' : 'handleUploadFileClick',
+    // 'click [data-hook=browser-new-model]' : 'handleCreateModelClick',
+    // 'click [data-hook=browser-new-domain]' : 'handelCreateDomainClick',
+    // 'click [data-hook=browser-existing-model]' : 'handleAddExistingModelClick',
+    // 'click [data-hook=upload-file-btn-bf]' : 'handleUploadFileClick',
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
@@ -241,122 +241,122 @@ let Model = require('../models/model');
       }
     }
   },
-  handleUploadFileClick: function (e) {
-    let type = e.target.dataset.type
-    this.uploadFile(undefined, type)
-  },
-  uploadFile: function (o, type) {
-    var self = this
-    if(document.querySelector('#uploadFileModal')) {
-      document.querySelector('#uploadFileModal').remove()
-    }
-    if(this.browser == undefined) {
-      this.browser = app.getBrowser();
-    }
-    if(this.isSafariV14Plus == undefined){
-      this.isSafariV14Plus = (this.browser.name === "Safari" && this.browser.version >= 14)
-    }
-    let modal = $(modals.uploadFileHtml(type, this.isSafariV14Plus)).modal();
-    let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
-    let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
-    let input = document.querySelector('#uploadFileModal #fileNameInput');
-    let fileCharErrMsg = document.querySelector('#uploadFileModal #fileSpecCharError')
-    let nameEndErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
-    let nameCharErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
-    let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
-    fileInput.addEventListener('change', function (e) {
-      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
-      let nameErr = self.validateName(input.value)
-      if(!fileInput.files.length) {
-        uploadBtn.disabled = true
-        fileCharErrMsg.style.display = 'none'
-      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
-        uploadBtn.disabled = false
-        fileCharErrMsg.style.display = 'none'
-      }else{
-        uploadBtn.disabled = true
-        fileCharErrMsg.style.display = 'block'
-      }
-    })
-    input.addEventListener("input", function (e) {
-      let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
-      let nameErr = self.validateName(input.value)
-      if(!fileInput.files.length) {
-        uploadBtn.disabled = true
-        fileCharErrMsg.style.display = 'none'
-      }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
-        uploadBtn.disabled = false
-        fileCharErrMsg.style.display = 'none'
-      }else{
-        uploadBtn.disabled = true
-        fileCharErrMsg.style.display = 'block'
-      }
-      nameCharErrMsg.style.display = nameErr === "both" || nameErr === "special" ? "block" : "none"
-      nameEndErrMsg.style.display = nameErr === "both" || nameErr === "forward" ? "block" : "none"
-      nameUsageMsg.style.display = nameErr !== "" ? "block" : "none"
-    });
-    uploadBtn.addEventListener('click', function (e) {
-      let file = fileInput.files[0]
-      var fileinfo = {"type":type,"name":"","path":self.parent.model.directory}
-      if(o && o.original){
-        fileinfo.path = o.original._path
-      }
-      if(Boolean(input.value) && self.validateName(input.value) === ""){
-        let name = input.value.trim()
-        if(file.name.endsWith(".mdl") || (type === "model" && file.name.endsWith(".json"))){
-          fileinfo.name = name.split('/').pop()
-        }else if(file.name.endsWith(".sbml") || (type === "sbml" && file.name.endsWith(".xml"))){
-          fileinfo.name = name.split('/').pop()
-        }else{
-          fileinfo.name = name
-        }
-      }
-      let formData = new FormData()
-      formData.append("datafile", file)
-      formData.append("fileinfo", JSON.stringify(fileinfo))
-      let endpoint = path.join(app.getApiPath(), 'file/upload');
-      if(Boolean(input.value) && self.validateName(input.value) === "" && fileinfo.name !== input.value.trim()){
-        let message = "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>"
-        let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
-        let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
-        yesBtn.addEventListener('click', function (e) {
-          warningModal.modal('hide')
-          self.openUploadRequest(endpoint, formData, file, type, o)
-        })
-      }else{
-        self.openUploadRequest(endpoint, formData, file, type, o)
-      }
-      modal.modal('hide')
-    })
-  },
-  openUploadRequest: function (endpoint, formData, file, type, o) {
-    let self = this
-    app.postXHR(endpoint, formData, {
-      success: function (err, response, body) {
-        body = JSON.parse(body);
-        if(o){
-          var node = $('#models-jstree-view').jstree().get_node(o.parent);
-          if(node.type === "root" || node.type === "#"){
-            self.refreshJSTree();
-          }else{
-            $('#models-jstree-view').jstree().refresh_node(node);
-          }
-        }else{
-          self.refreshJSTree();
-        }
-        if(body.file.endsWith(".mdl") || body.file.endsWith(".smdl") ||body.file.endsWith(".sbml")) {
-          self.updateParent("model")
-        }
-        if(body.errors.length > 0){
-          let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, body.message, body.errors)).modal();
-        }
-      },
-      error: function (err, response, body) {
-        body = JSON.parse(body);
-        let zipErrorModal = $(modals.projectExportErrorHtml(body.Reason, body.Message)).modal()
-      }
-    }, false);
-  },
+  // handleUploadFileClick: function (e) {
+  //   let type = e.target.dataset.type
+  //   this.uploadFile(undefined, type)
+  // },
+  // uploadFile: function (o, type) {
+  //   var self = this
+  //   if(document.querySelector('#uploadFileModal')) {
+  //     document.querySelector('#uploadFileModal').remove()
+  //   }
+  //   if(this.browser == undefined) {
+  //     this.browser = app.getBrowser();
+  //   }
+  //   if(this.isSafariV14Plus == undefined){
+  //     this.isSafariV14Plus = (this.browser.name === "Safari" && this.browser.version >= 14)
+  //   }
+    // let modal = $(modals.uploadFileHtml(type, this.isSafariV14Plus)).modal();
+    // let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
+    // let fileInput = document.querySelector('#uploadFileModal #fileForUpload');
+    // let input = document.querySelector('#uploadFileModal #fileNameInput');
+    // let fileCharErrMsg = document.querySelector('#uploadFileModal #fileSpecCharError')
+    // let nameEndErrMsg = document.querySelector('#uploadFileModal #fileNameInputEndCharError')
+    // let nameCharErrMsg = document.querySelector('#uploadFileModal #fileNameInputSpecCharError')
+    // let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage')
+    // fileInput.addEventListener('change', function (e) {
+    //   let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+    //   let nameErr = self.validateName(input.value)
+    //   if(!fileInput.files.length) {
+    //     uploadBtn.disabled = true
+    //     fileCharErrMsg.style.display = 'none'
+    //   }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
+    //     uploadBtn.disabled = false
+    //     fileCharErrMsg.style.display = 'none'
+    //   }else{
+    //     uploadBtn.disabled = true
+    //     fileCharErrMsg.style.display = 'block'
+    //   }
+    // })
+    // input.addEventListener("input", function (e) {
+    //   let fileErr = !fileInput.files.length ? "" : self.validateName(fileInput.files[0].name)
+    //   let nameErr = self.validateName(input.value)
+    //   if(!fileInput.files.length) {
+    //     uploadBtn.disabled = true
+    //     fileCharErrMsg.style.display = 'none'
+    //   }else if(fileErr === "" || (Boolean(input.value) && nameErr === "")){
+    //     uploadBtn.disabled = false
+    //     fileCharErrMsg.style.display = 'none'
+    //   }else{
+    //     uploadBtn.disabled = true
+    //     fileCharErrMsg.style.display = 'block'
+    //   }
+    //   nameCharErrMsg.style.display = nameErr === "both" || nameErr === "special" ? "block" : "none"
+    //   nameEndErrMsg.style.display = nameErr === "both" || nameErr === "forward" ? "block" : "none"
+    //   nameUsageMsg.style.display = nameErr !== "" ? "block" : "none"
+    // });
+    // uploadBtn.addEventListener('click', function (e) {
+    //   let file = fileInput.files[0]
+      // var fileinfo = {"type":type,"name":"","path":self.parent.model.directory}
+      // if(o && o.original){
+      //   fileinfo.path = o.original._path
+      // }
+      // if(Boolean(input.value) && self.validateName(input.value) === ""){
+      //   let name = input.value.trim()
+      //   if(file.name.endsWith(".mdl") || (type === "model" && file.name.endsWith(".json"))){
+      //     fileinfo.name = name.split('/').pop()
+      //   }else if(file.name.endsWith(".sbml") || (type === "sbml" && file.name.endsWith(".xml"))){
+      //     fileinfo.name = name.split('/').pop()
+      //   }else{
+      //     fileinfo.name = name
+      //   }
+      // }
+      // let formData = new FormData()
+      // formData.append("datafile", file)
+      // formData.append("fileinfo", JSON.stringify(fileinfo))
+  //     let endpoint = path.join(app.getApiPath(), 'file/upload');
+  //     if(Boolean(input.value) && self.validateName(input.value) === "" && fileinfo.name !== input.value.trim()){
+  //       let message = "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Do you wish to save your model directly in your project?</p>"
+  //       let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
+  //       let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
+  //       yesBtn.addEventListener('click', function (e) {
+  //         warningModal.modal('hide')
+  //         self.openUploadRequest(endpoint, formData, file, type, o)
+  //       })
+  //     }else{
+  //       self.openUploadRequest(endpoint, formData, file, type, o)
+  //     }
+  //     modal.modal('hide')
+  //   })
+  // },
+  // openUploadRequest: function (endpoint, formData, file, type, o) {
+  //   let self = this
+  //   app.postXHR(endpoint, formData, {
+  //     success: function (err, response, body) {
+  //       body = JSON.parse(body);
+  //       if(o){
+  //         var node = $('#models-jstree-view').jstree().get_node(o.parent);
+  //         if(node.type === "root" || node.type === "#"){
+  //           self.refreshJSTree();
+  //         }else{
+  //           $('#models-jstree-view').jstree().refresh_node(node);
+  //         }
+  //       }else{
+  //         self.refreshJSTree();
+  //       }
+  //       if(body.file.endsWith(".mdl") || body.file.endsWith(".smdl") ||body.file.endsWith(".sbml")) {
+  //         self.updateParent("model")
+  //       }
+  //       if(body.errors.length > 0){
+  //         let errorModal = $(modals.uploadFileErrorsHtml(file.name, type, body.message, body.errors)).modal();
+  //       }
+  //     },
+  //     error: function (err, response, body) {
+  //       body = JSON.parse(body);
+  //       let zipErrorModal = $(modals.projectExportErrorHtml(body.Reason, body.Message)).modal()
+  //     }
+  //   }, false);
+  // },
   deleteFile: function (o) {
     var fileType = o.type
     if(fileType === "nonspatial")
@@ -703,58 +703,58 @@ let Model = require('../models/model');
       }
     })
   },
-  handleAddExistingModelClick: function () {
-    this.addExistingModel(undefined)
-  },
-  addExistingModel: function (o) {
-    var self = this
-    if(document.querySelector('#newProjectModelModal')){
-      document.querySelector('#newProjectModelModal').remove()
-    }
-    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+self.parent.model.directory
-    app.getXHR(mdlListEP, {
-      always: function (err, response, body) {
-        let modal = $(modals.newProjectModelHtml(body.files)).modal();
-        let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
-        let select = document.querySelector('#newProjectModelModal #modelFileInput');
-        let location = document.querySelector('#newProjectModelModal #modelPathInput');
-        select.addEventListener("change", function (e) {
-          okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
-          if(body.paths[e.target.value].length >= 2) {
-            var locations = body.paths[e.target.value].map(function (path) {
-              return `<option>${path}</option>`;
-            });
-            locations.unshift(`<option value="">Select a location</option>`);
-            locations = locations.join(" ");
-            $("#modelPathInput").find('option').remove().end().append(locations);
-            $("#location-container").css("display", "block");
-          }else{
-            $("#location-container").css("display", "none");
-            $("#modelPathInput").find('option').remove().end();
-          }
-        });
-        location.addEventListener("change", function (e) {
-          okBtn.disabled = !Boolean(e.target.value);
-        });
-        okBtn.addEventListener("click", function (e) {
-          modal.modal('hide');
-          let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
-          let queryString = "?path="+self.parent.model.directory+"&mdlPath="+mdlPath;
-          let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString;
-          app.postXHR(endpoint, null, {
-            success: function (err, response, body) {
-              let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
-              self.updateParent("model");
-              self.refreshJSTree();
-            },
-            error: function (err, response, body) {
-              let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
-            }
-          });
-        });
-      }
-    });
-  },
+  // handleAddExistingModelClick: function () {
+  //   this.addExistingModel(undefined)
+  // },
+  // addExistingModel: function (o) {
+  //   var self = this
+  //   if(document.querySelector('#newProjectModelModal')){
+  //     document.querySelector('#newProjectModelModal').remove()
+  //   }
+  //   let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+self.parent.model.directory
+  //   app.getXHR(mdlListEP, {
+  //     always: function (err, response, body) {
+  //       let modal = $(modals.newProjectModelHtml(body.files)).modal();
+  //       let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
+  //       let select = document.querySelector('#newProjectModelModal #modelFileInput');
+  //       let location = document.querySelector('#newProjectModelModal #modelPathInput');
+  //       select.addEventListener("change", function (e) {
+  //         okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
+  //         if(body.paths[e.target.value].length >= 2) {
+  //           var locations = body.paths[e.target.value].map(function (path) {
+  //             return `<option>${path}</option>`;
+  //           });
+  //           locations.unshift(`<option value="">Select a location</option>`);
+  //           locations = locations.join(" ");
+  //           $("#modelPathInput").find('option').remove().end().append(locations);
+  //           $("#location-container").css("display", "block");
+  //         }else{
+  //           $("#location-container").css("display", "none");
+  //           $("#modelPathInput").find('option').remove().end();
+  //         }
+  //       });
+  //       location.addEventListener("change", function (e) {
+  //         okBtn.disabled = !Boolean(e.target.value);
+  //       });
+  //       okBtn.addEventListener("click", function (e) {
+  //         modal.modal('hide');
+  //         let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
+  //         let queryString = "?path="+self.parent.model.directory+"&mdlPath="+mdlPath;
+  //         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString;
+  //         app.postXHR(endpoint, null, {
+  //           success: function (err, response, body) {
+  //             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
+  //             self.updateParent("model");
+  //             self.refreshJSTree();
+  //           },
+  //           error: function (err, response, body) {
+  //             let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+  //           }
+  //         });
+  //       });
+  //     }
+  //   });
+  // },
   newWorkflow: function (o, type) {
     let self = this;
     let model = new Model({
@@ -775,123 +775,123 @@ let Model = require('../models/model');
       }
     });
   },
-  addModel: function (parentPath, modelName, message) {
-    var endpoint = path.join(app.getBasePath(), "stochss/models/edit")
-    if(parentPath.endsWith(".proj")) {
-      let queryString = "?path=" + parentPath + "&mdlFile=" + modelName
-      let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryString
-      app.getXHR(newMdlEP, {
-        success: function (err, response, body) {
-          endpoint += "?path="+body.path;
-          window.location.href = endpoint;
-        },
-        error: function (err, response, body) {
-          let title = "Model Already Exists";
-          let message = "A model already exists with that name";
-          let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
-        }
-      });
-    }else{
-      let modelPath = path.join(parentPath, modelName)
-      let queryString = "?path="+modelPath+"&message="+message;
-      endpoint += queryString
-      let existEP = path.join(app.getApiPath(), "model/exists")+queryString
-      app.getXHR(existEP, {
-        always: function (err, response, body) {
-          if(body.exists) {
-            let title = "Model Already Exists";
-            let message = "A model already exists with that name";
-            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
-          }else{
-            window.location.href = endpoint;
-          }
-        }
-      });
-    }
-  },
-  newModelOrDirectory: function (o, isModel, isSpatial) {
-    var self = this
-    if(document.querySelector('#newModalModel')) {
-      document.querySelector('#newModalModel').remove()
-    }
-    let modal = $(modals.renderCreateModalHtml(isModel, isSpatial)).modal();
-    let okBtn = document.querySelector('#newModalModel .ok-model-btn');
-    let input = document.querySelector('#newModalModel #modelNameInput');
-    input.addEventListener("keyup", function (event) {
-      if(event.keyCode === 13){
-        event.preventDefault();
-        okBtn.click();
-      }
-    });
-    input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
-      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
-      let error = self.validateName(input.value)
-      okBtn.disabled = error !== "" || input.value.trim() === ""
-      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
-      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
-    });
-    okBtn.addEventListener('click', function (e) {
-      if (Boolean(input.value)) {
-        modal.modal('hide')
-        var parentPath = self.parent.model.directory
-        if(o && o.original && o.original._path !== "/"){
-          parentPath = o.original._path
-        }
-        if(isModel) {
-          let ext = isSpatial ? ".smdl" : ".mdl";
-          let modelName = !o || (o && o.type === "root") ? input.value.trim().split("/").pop() + ext : input.value.trim() + ext;
-          let message = modelName !== input.value.trim() + ext? 
-                "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
-          if(message){
-            let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
-            let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
-            yesBtn.addEventListener('click', function (e) {
-              warningModal.modal('hide');
-              self.addModel(parentPath, modelName, message);
-            });
-          }else{
-            self.addModel(parentPath, modelName, message);
-          }
-        }else{
-          let dirName = input.value.trim();
-          let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
-          app.getXHR(endpoint, {
-            success: function (err, response, body) {
-              if(o){//directory was created with context menu option
-                var node = $('#models-jstree-view').jstree().get_node(o);
-                if(node.type === "root"){
-                  self.refreshJSTree();
-                }else{          
-                  $('#models-jstree-view').jstree().refresh_node(node);
-                }
-              }else{//directory was created with create directory button
-                self.refreshJSTree();
-              }
-            },
-            error: function (err, response, body) {
-              body = JSON.parse(body);
-              let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal();
-            }
-          });
-        }
-      }
-    });
-  },
-  handleCreateDirectoryClick: function (e) {
-    this.newModelOrDirectory(undefined, false, false);
-  },
+  // addModel: function (parentPath, modelName, message) {
+  //   var endpoint = path.join(app.getBasePath(), "stochss/models/edit")
+  //   if(parentPath.endsWith(".proj")) {
+  //     let queryString = "?path=" + parentPath + "&mdlFile=" + modelName
+  //     let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryString
+  //     app.getXHR(newMdlEP, {
+  //       success: function (err, response, body) {
+  //         endpoint += "?path="+body.path;
+  //         window.location.href = endpoint;
+  //       },
+  //       error: function (err, response, body) {
+  //         let title = "Model Already Exists";
+  //         let message = "A model already exists with that name";
+  //         let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+  //       }
+  //     });
+  //   }else{
+  //     let modelPath = path.join(parentPath, modelName)
+  //     let queryString = "?path="+modelPath+"&message="+message;
+  //     endpoint += queryString
+  //     let existEP = path.join(app.getApiPath(), "model/exists")+queryString
+  //     app.getXHR(existEP, {
+  //       always: function (err, response, body) {
+  //         if(body.exists) {
+  //           let title = "Model Already Exists";
+  //           let message = "A model already exists with that name";
+  //           let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+  //         }else{
+  //           window.location.href = endpoint;
+  //         }
+  //       }
+  //     });
+  //   }
+  // },
+  // newModelOrDirectory: function (o, isModel, isSpatial) {
+  //   var self = this
+  //   if(document.querySelector('#newModalModel')) {
+  //     document.querySelector('#newModalModel').remove()
+  //   }
+  //   let modal = $(modals.renderCreateModalHtml(isModel, isSpatial)).modal();
+  //   let okBtn = document.querySelector('#newModalModel .ok-model-btn');
+  //   let input = document.querySelector('#newModalModel #modelNameInput');
+  //   input.addEventListener("keyup", function (event) {
+  //     if(event.keyCode === 13){
+  //       event.preventDefault();
+  //       okBtn.click();
+  //     }
+  //   });
+  //   input.addEventListener("input", function (e) {
+  //     var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
+  //     var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+  //     let error = self.validateName(input.value)
+  //     okBtn.disabled = error !== "" || input.value.trim() === ""
+  //     charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+  //     endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+  //   });
+  //   okBtn.addEventListener('click', function (e) {
+  //     if (Boolean(input.value)) {
+  //       modal.modal('hide')
+  //       var parentPath = self.parent.model.directory
+  //       if(o && o.original && o.original._path !== "/"){
+  //         parentPath = o.original._path
+  //       }
+  //       if(isModel) {
+          // let ext = isSpatial ? ".smdl" : ".mdl";
+          // let modelName = !o || (o && o.type === "root") ? input.value.trim().split("/").pop() + ext : input.value.trim() + ext;
+          // let message = modelName !== input.value.trim() + ext? 
+          //       "Warning: Models are saved directly in StochSS Projects and cannot be saved to the "+input.value.trim().split("/")[0]+" directory in the project.<br><p>Your model will be saved directly in your project.</p>" : ""
+          // if(message){
+          //   let warningModal = $(modals.newProjectModelWarningHtml(message)).modal()
+          //   let yesBtn = document.querySelector('#newProjectModelWarningModal .yes-modal-btn');
+          //   yesBtn.addEventListener('click', function (e) {
+          //     warningModal.modal('hide');
+          //     self.addModel(parentPath, modelName, message);
+          //   });
+          // }else{
+          //   self.addModel(parentPath, modelName, message);
+          // }
+        // }else{
+        //   let dirName = input.value.trim();
+        //   let endpoint = path.join(app.getApiPath(), "directory/create")+"?path="+path.join(parentPath, dirName);
+        //   app.getXHR(endpoint, {
+        //     success: function (err, response, body) {
+        //       if(o){//directory was created with context menu option
+        //         var node = $('#models-jstree-view').jstree().get_node(o);
+        //         if(node.type === "root"){
+        //           self.refreshJSTree();
+        //         }else{          
+        //           $('#models-jstree-view').jstree().refresh_node(node);
+        //         }
+        //       }else{//directory was created with create directory button
+        //         self.refreshJSTree();
+        //       }
+        //     },
+        //     error: function (err, response, body) {
+        //       body = JSON.parse(body);
+        //       let errorModal = $(modals.newDirectoryErrorHtml(body.Reason, body.Message)).modal();
+        //     }
+        //   });
+        // }
+  //     }
+  //   });
+  // },
+  // handleCreateDirectoryClick: function (e) {
+  //   this.newModelOrDirectory(undefined, false, false);
+  // },
   handleCreateWorkflowGroupClick: function (e) {
     this.newWorkflowGroup(undefined)
   },
-  handleCreateModelClick: function (e) {
-    let isSpatial = e.target.dataset.type === "spatial"
-    this.newModelOrDirectory(undefined, true, isSpatial);
-  },
-  handelCreateDomainClick: function (e) {
-    let queryStr = "?domainPath=" + this.parent.model.directory + "&new"
-    window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
-  },
+  // handleCreateModelClick: function (e) {
+  //   let isSpatial = e.target.dataset.type === "spatial"
+  //   this.newModelOrDirectory(undefined, true, isSpatial);
+  // },
+  // handelCreateDomainClick: function (e) {
+  //   let queryStr = "?domainPath=" + this.parent.model.directory + "&new"
+  //   window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+  // },
   handleExtractModelClick: function (o) {
     let self = this
     let projectParent = path.dirname(this.parent.model.directory) === '.' ? "" : path.dirname(this.parent.model.directory)
@@ -926,9 +926,9 @@ let Model = require('../models/model');
     let target = o.original._path
     this.parent.exportAsCombine()
   },
-  showContextMenuForNode: function (e) {
-    $('#models-jstree-view').jstree().show_contextmenu(this.nodeForContextMenu)
-  },
+  // showContextMenuForNode: function (e) {
+  //   $('#models-jstree-view').jstree().show_contextmenu(this.nodeForContextMenu)
+  // },
   editWorkflowModel: function (o) {
     let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
     app.getXHR(endpoint, {
@@ -1532,5 +1532,5 @@ let Model = require('../models/model');
   // },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
-  }
-});
+//   }
+// });
