@@ -485,9 +485,7 @@ module.exports = View.extend({
         success: (err, response, body) => {
           body = JSON.parse(body);
           this.refreshJSTree(node);
-          if(inProject && ['mdl', 'smdl', 'sbml'].includes(body.file.split('.').pop())) {
-            this.config.updateParent("model")
-          }
+          this.config.updateParent(this, "model")
           if(body.errors.length > 0){
             if(document.querySelector("#uploadFileErrorsModal")) {
               document.querySelector("#uploadFileErrorsModal").remove();

@@ -30,10 +30,11 @@ let Project = require('../models/project');
 let PageView = require('./base');
 let MetaDataView = require('../views/meta-data');
 let ModelListing = require('../views/model-listing');
-let FileBrowser = require('../views/file-browser-view');
+// let FileBrowser = require('../views/file-browser-view');
 let ArchiveListing = require('../views/archive-listing');
 let WorkflowListing = require('../views/workflow-listing');
 let WorkflowGroupListing = require('../views/workflow-group-listing');
+let JSTreeView = require('../views/jstree-view');
 //templates
 let template = require('../templates/pages/projectManager.pug');
 
@@ -47,12 +48,13 @@ let ProjectManager = PageView.extend({
     'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText',
     'click [data-hook=new-model]' : 'handleNewModelClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
-    'click [data-hook=upload-file-btn]' : 'handleUploadModelClick',
+    'click [data-hook=upload-model-btn]' : 'handleUploadModelClick',
     'click [data-hook=new-ensemble-simulation]' : 'handleNewWorkflowClick',
     'click [data-hook=new-parameter-sweep]' : 'handleNewWorkflowClick',
     'click [data-hook=new-jupyter-notebook]' : 'handleNewWorkflowClick',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
     'click [data-hook=archive-btn]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-browse-files]' : 'changeCollapseButtonText',
     'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick'
@@ -298,8 +300,7 @@ let ProjectManager = PageView.extend({
     }
   },
   handleUploadModelClick: function (e) {
-    let type = e.target.dataset.type
-    this.projectFileBrowser.uploadFile(undefined, type)
+    this.projectFileBrowser.uploadFile(undefined, "model")
   },
   renderArchiveCollection: function () {
     if(this.archiveCollectionView) {
@@ -335,8 +336,9 @@ let ProjectManager = PageView.extend({
       this.projectFileBrowser.remove();
     }
     let self = this;
-    this.projectFileBrowser = new FileBrowser({
-      root: self.model.directory
+    this.projectFileBrowser = new JSTreeView({
+      root: self.model.directory,
+      configKey: "project"
     });
     app.registerRenderSubview(this, this.projectFileBrowser, "file-browser");
   },
@@ -401,8 +403,10 @@ let ProjectManager = PageView.extend({
       this.queryByHook("model-listing")
     );
   },
-  update: function (target) {
-    this.projectFileBrowser.refreshJSTree();
+  update: function (target, from) {
+    if(from !== "file-browser") {
+      this.projectFileBrowser.refreshJSTree(null);
+    }
     let fetchTypes = ["Model", "Workflow", "WorkflowGroup", "Archive"];
     if(fetchTypes.includes(target)) {
       let self = this;

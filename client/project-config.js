@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery');
 let path = require('path');
 //support files
 let app = require('./app');
@@ -91,13 +92,13 @@ let updateParent = (view, type) => {
   let models = ["nonspatial", "spatial", "sbml", "model"];
   let workflows = ["workflow", "notebook"];
   if(models.includes(type)) {
-    view.parent.update("Model");
+    view.parent.update("Model", "file-browser");
   }else if(workflows.includes(type)) {
-    view.parent.update("Workflow");
+    view.parent.update("Workflow", "file-browser");
   }else if(type === "workflow-group") {
-    view.parent.update("WorkflowGroup");
+    view.parent.update("WorkflowGroup", "file-browser");
   }else if(type === "Archive") {
-    view.parent.update(type);
+    view.parent.update(type, "file-browser");
   }
 }
 

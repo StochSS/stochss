@@ -94,6 +94,8 @@ let types = {
   'other' : {"icon": "jstree-icon jstree-file"},
 }
 
+let updateParent = (view, type) => {}
+
 let validateMove = (view, node, more, pos) => {
   // Check if workflow is running
   let validSrc = Boolean(node && node.type && node.original && node.original.text !== "trash");
@@ -130,5 +132,6 @@ module.exports = {
   move: move,
   setup: setup,
   types: types,
+  updateParent: updateParent,
   validateMove: validateMove
 }
