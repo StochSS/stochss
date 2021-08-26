@@ -45,6 +45,10 @@ RUN python3 -m pip install --no-cache-dir \
 
 COPY static/*    /usr/local/share/jupyterhub/static/
 
+COPY custom/favicon.ico /usr/local/share/jupyterhub/static/favicon.ico
+
+COPY custom/custom.js    $JUPYTER_CONFIG_DIR/custom/custom.js
+
 COPY cull_idle_servers.py /srv/jupyterhub/cull_idle_servers.py
 
 CMD ["jupyterhub" "-f" "/srv/jupyterhub/jupyterhub_config.py"]
