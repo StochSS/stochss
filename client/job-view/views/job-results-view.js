@@ -340,7 +340,15 @@ module.exports = View.extend({
         $(modals.presentationLinks(title, linkHeaders, links)).modal();
         let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
         copyBtn.addEventListener('click', function (e) {
-          app.copyToClipboard(links.presentation)
+          let onFulfilled = (value) => {
+            $("#copy-link-success").css("display", "inline-block");
+          } 
+          let onReject = (reason) => {
+            let msg = $("#copy-link-failed");
+            msg.html(reason);
+            msg.css("display", "inline-block");
+          }
+          app.copyToClipboard(links.presentation, onFulfilled, onReject);
         });
       },
       error: function (err, response, body) {
