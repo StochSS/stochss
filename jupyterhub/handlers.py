@@ -86,3 +86,20 @@ class NotebookPresentationHandler(BaseHandler):
         '''
         html = self.render_template("stochss-notebook-presentation.html")
         self.finish(html)
+
+
+class MultiplePlotsHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Handler for rendering jupyterhub job presentations multiple plots page.
+    ################################################################################################
+    '''
+    async def get(self):
+        '''
+        Render the jupyterhub job presentations multiple plots page.
+
+        Attributes
+        ----------
+        '''
+        html = self.render_template("multiple-plots-page.html")
+        self.finish(html)

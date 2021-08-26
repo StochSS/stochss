@@ -376,31 +376,6 @@ class StochSSFolder(StochSSBase):
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
-    def publish_presentation(self, name=None):
-        '''
-        Publish a job, workflow, or project presentation.
-
-        Attributes
-        ----------
-        '''
-        present_dir = os.path.join(self.user_dir, ".presentations")
-        if not os.path.exists(present_dir):
-            os.mkdir(present_dir)
-        file = self.get_file() if name is None else name
-        dst = os.path.join(present_dir, file)
-        if os.path.exists(dst):
-            message = "A presentation with this name already exists"
-            raise StochSSFileExistsError(message)
-        src = self.get_path(full=True)
-        try:
-            shutil.copytree(src, dst)
-            # INSERT JUPYTER HUB CODE HERE
-            return {"message": f"Successfully published the {self.get_name()} presentation"}
-        except PermissionError as err:
-            message = f"You do not have permission to publish this directory: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc()) from err
-
-
     def upload(self, file_type, file, body, new_name=None):
         '''
         Upload a file from a remote location to the users file system

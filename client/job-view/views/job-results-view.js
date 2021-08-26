@@ -49,9 +49,10 @@ module.exports = View.extend({
     'click [data-hook=multiple-plots]' : 'plotMultiplePlots',
     'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
     'click [data-target=download-json]' : 'handleDownloadJSONClick',
+    'click [data-target=download-plot-csv]' : 'handlePlotCSVClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
-    'click [data-hook=download-results-csv]' : 'handleDownloadResultsCsvClick',
-    // 'click [data-hook=job-presentation]' : 'handlePresentationClick'
+    'click [data-hook=download-results-csv]' : 'handleFullCSVClick',
+    'click [data-hook=job-presentation]' : 'handlePresentationClick'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -79,8 +80,9 @@ module.exports = View.extend({
       }
     }else if(app.getBasePath() === "/") {
       $(this.queryByHook("job-presentation")).css("display", "none");
-    }else{
+    }else if(!this.parent.newFormat) {
       $(this.queryByHook("job-presentation")).prop("disabled", true);
+      $(this.queryByHook("update-format-message")).css("display", "block");
     }
     if(this.titleType === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";
@@ -128,12 +130,19 @@ module.exports = View.extend({
     Plotly.purge(el);
     $(this.queryByHook(type + "-plot")).empty();
     if(type === "ts-psweep" || type === "psweep"){
+      $(this.queryByHook(type + "-download")).prop("disabled", true);
       $(this.queryByHook(type + "-edit-plot")).prop("disabled", true);
-      $(this.queryByHook(type + "-download-png-custom")).prop("disabled", true);
-      $(this.queryByHook(type + "-download-json")).prop("disabled", true);
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
     }
     $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
+  },
+  downloadCSV: function (csvType, data) {
+    var queryStr = "?path=" + this.model.directory + "&type=" + csvType;
+    if(data) {
+      queryStr += "&data=" + JSON.stringify(data);
+    }
+    let endpoint = path.join(app.getApiPath(), "job/csv") + queryStr;
+    window.open(endpoint);
   },
   getPlot: function (type) {
     let self = this;
@@ -299,15 +308,22 @@ module.exports = View.extend({
     let pngButton = $('div[data-hook=' + type + '-plot] a[data-title*="Download plot as a png"]')[0];
     pngButton.click();
   },
-  handleDownloadResultsCsvClick: function (e) {
-    let self = this;
-    let queryStr = "?path=" + this.model.directory + "&action=resultscsv";
-    let endpoint = path.join(app.getApiPath(), "file/download-zip") + queryStr;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        window.open(path.join("files", body.Path));
+  handleFullCSVClick: function (e) {
+    this.downloadCSV("full", null);
+  },
+  handlePlotCSVClick: function (e) {
+    let type = e.target.dataset.type;
+    if(type !== "psweep") {
+      var data = {
+        data_keys: type === "ts-psweep" ? this.getDataKeys(true) : {},
+        proc_key: type === "ts-psweep" ? this.tsPlotData.type : type
       }
-    });
+      var csvType = "time series"
+    }else{
+      var data = this.getDataKeys(false)
+      var csvType = "psweep"
+    }
+    this.downloadCSV(csvType, data);
   },
   handlePresentationClick: function (e) {
     let self = this;
@@ -317,7 +333,23 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), "job/presentation") + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {
-        self.endAction();
+        self.endAction("publish");
+        let title = body.message;
+        let linkHeaders = "Shareable Presentation Link";
+        let links = body.links;
+        $(modals.presentationLinks(title, linkHeaders, links)).modal();
+        let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+        copyBtn.addEventListener('click', function (e) {
+          let onFulfilled = (value) => {
+            $("#copy-link-success").css("display", "inline-block");
+          } 
+          let onReject = (reason) => {
+            let msg = $("#copy-link-failed");
+            msg.html(reason);
+            msg.css("display", "inline-block");
+          }
+          app.copyToClipboard(links.presentation, onFulfilled, onReject);
+        });
       },
       error: function (err, response, body) {
         self.errorAction();
@@ -340,8 +372,7 @@ module.exports = View.extend({
     Plotly.newPlot(el, figure);
     $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
     $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
-    $(this.queryByHook(type + "-download-png-custom")).prop("disabled", false);
-    $(this.queryByHook(type + "-download-json")).prop("disabled", false);
+    $(this.queryByHook(type + "-download")).prop("disabled", false);
     if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
       $(this.queryByHook("multiple-plots")).prop("disabled", false);
     }
