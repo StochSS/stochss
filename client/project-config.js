@@ -48,6 +48,21 @@ let doubleClick = (view, e) => {
   }
 }
 
+let getRootContext = (view, node) => {
+  let upload = node.type === "root" ? 
+      view.getFullUploadContext(node, true) : 
+      view.getFileUploadContext(node, true);
+  return {
+    refresh: view.getRefreshContext(node),
+    addModel: view.getAddModelContext(node),
+    newDirectory: view.getNewDirectoryContext(node),
+    newDomain: view.getNewDomainContext(node),
+    upload: upload,
+    download: view.getDownloadWCombineContext(node),
+    rename: view.getRenameContext(node)
+  }
+}
+
 let move = (view, par, node) => {
   let newDir = par.original._path !== "/" ? par.original._path : "";
   let file = node.original._path.split('/').pop();
@@ -167,6 +182,7 @@ let validateMove = (view, node, more, pos) => {
 module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
+  getRootContext: getRootContext,
   move: move,
   setup: setup,
   types: types,

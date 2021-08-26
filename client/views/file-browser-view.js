@@ -33,7 +33,7 @@ let Model = require('../models/model');
 // module.exports = View.extend({
   // template: template,
   events: {
-    'click [data-hook=collapse-browse-files]' : 'changeCollapseButtonText',
+    // 'click [data-hook=collapse-browse-files]' : 'changeCollapseButtonText',
     // 'click [data-hook=refresh-jstree]' : 'refreshJSTree',
     // 'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     // 'click [data-hook=new-directory]' : 'handleCreateDirectoryClick',
@@ -524,116 +524,116 @@ let Model = require('../models/model');
       }
     });
   },
-  renameNode: function (o) {
-    var self = this
-    var text = o.text;
-    var parent = $('#models-jstree-view').jstree().get_node(o.parent)
-    var extensionWarning = $(this.queryByHook('extension-warning'));
-    var nameWarning = $(this.queryByHook('rename-warning'));
-    extensionWarning.collapse('show')
-    $('#models-jstree-view').jstree().edit(o, null, function(node, status) {
-      if(text != node.text){
-        let name = node.type === "root" ? node.text + ".proj" : node.text
-        var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+name
-        app.getXHR(endpoint, {
-          always: function (err, response, body) {
-            if(parent.type === "root"){
-              self.refreshJSTree();
-            }else{          
-              $('#models-jstree-view').jstree().refresh_node(parent);
-            }
-          },
-          success: function (err, response, body) {
-            if(body.changed) {
-              nameWarning.text(body.message);
-              nameWarning.collapse('show');
-              window.scrollTo(0,0);
-              setTimeout(_.bind(self.hideNameWarning, self), 10000);
-            }
-            node.original._path = body._path;
-          }
-        });
-      }
-      extensionWarning.collapse('hide');
-      nameWarning.collapse('hide');
-    });
-  },
-  hideNameWarning: function () {
-    $(this.queryByHook('rename-warning')).collapse('hide')
-  },
-  getExportData: function (o, asZip) {
-    var self = this;
-    let nodeType = o.original.type
-    let isJSON = nodeType === "sbml-model" ? false : true
-    if(nodeType === "sbml-model"){
-      var dataType = "plain-text"
-      var identifier = "file/download"
-    }else if(nodeType === "domain") {
-      var dataType = "json"
-      var identifier = "spatial-model/load-domain"
-    }else if(asZip) {
-      var dataType = "zip"
-      var identifier = "file/download-zip"
-    }else{
-      var dataType = "json"
-      var identifier = "file/json-data"
-    }
-    if(nodeType === "domain") {
-      var queryStr = "?domain_path=" + o.original._path
-    }else{
-      var queryStr = "?path="+o.original._path
-      if(dataType === "json"){
-        queryStr = queryStr.concat("&for=None")
-      }else if(dataType === "zip"){
-        queryStr = queryStr.concat("&action=generate")
-      }
-    }
-    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        if(dataType === "json") {
-          let data = nodeType === "domain" ? body.domain : body;
-          self.exportToJsonFile(data, o.original.text);
-        }else if(dataType === "zip") {
-          var node = $('#models-jstree-view').jstree().get_node(o.parent);
-          if(node.type === "root"){
-            self.refreshJSTree();
-          }else{
-            $('#models-jstree-view').jstree().refresh_node(node);
-          }
-          self.exportToZipFile(body.Path);
-        }else{
-          self.exportToFile(body, o.original.text);
-        }
-      }
-    });
-  },
-  exportToJsonFile: function (fileData, fileName) {
-    let dataStr = JSON.stringify(fileData);
-    let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    let exportFileDefaultName = fileName
+  // renameNode: function (o) {
+  //   var self = this
+  //   var text = o.text;
+  //   var parent = $('#models-jstree-view').jstree().get_node(o.parent)
+  //   var extensionWarning = $(this.queryByHook('extension-warning'));
+  //   var nameWarning = $(this.queryByHook('rename-warning'));
+  //   extensionWarning.collapse('show')
+  //   $('#models-jstree-view').jstree().edit(o, null, function(node, status) {
+  //     if(text != node.text){
+  //       let name = node.type === "root" ? node.text + ".proj" : node.text
+  //       var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+name
+  //       app.getXHR(endpoint, {
+  //         always: function (err, response, body) {
+  //           if(parent.type === "root"){
+  //             self.refreshJSTree();
+  //           }else{          
+  //             $('#models-jstree-view').jstree().refresh_node(parent);
+  //           }
+  //         },
+  //         success: function (err, response, body) {
+  //           if(body.changed) {
+  //             nameWarning.text(body.message);
+  //             nameWarning.collapse('show');
+  //             window.scrollTo(0,0);
+  //             setTimeout(_.bind(self.hideNameWarning, self), 10000);
+  //           }
+  //           node.original._path = body._path;
+  //         }
+  //       });
+  //     }
+  //     extensionWarning.collapse('hide');
+  //     nameWarning.collapse('hide');
+  //   });
+  // },
+  // hideNameWarning: function () {
+  //   $(this.queryByHook('rename-warning')).collapse('hide')
+  // },
+  // getExportData: function (o, asZip) {
+  //   var self = this;
+  //   let nodeType = o.original.type
+  //   let isJSON = nodeType === "sbml-model" ? false : true
+  //   if(nodeType === "sbml-model"){
+  //     var dataType = "plain-text"
+  //     var identifier = "file/download"
+  //   }else if(nodeType === "domain") {
+  //     var dataType = "json"
+  //     var identifier = "spatial-model/load-domain"
+  //   }else if(asZip) {
+  //     var dataType = "zip"
+  //     var identifier = "file/download-zip"
+  //   }else{
+  //     var dataType = "json"
+  //     var identifier = "file/json-data"
+  //   }
+  //   if(nodeType === "domain") {
+  //     var queryStr = "?domain_path=" + o.original._path
+  //   }else{
+  //     var queryStr = "?path="+o.original._path
+  //     if(dataType === "json"){
+  //       queryStr = queryStr.concat("&for=None")
+  //     }else if(dataType === "zip"){
+  //       queryStr = queryStr.concat("&action=generate")
+  //     }
+  //   }
+    // var endpoint = path.join(app.getApiPath(), identifier)+queryStr
+    // app.getXHR(endpoint, {
+    //   success: function (err, response, body) {
+      //   if(dataType === "json") {
+      //     let data = nodeType === "domain" ? body.domain : body;
+      //     self.exportToJsonFile(data, o.original.text);
+      //   }else if(dataType === "zip") {
+      //     var node = $('#models-jstree-view').jstree().get_node(o.parent);
+      //     if(node.type === "root"){
+      //       self.refreshJSTree();
+      //     }else{
+      //       $('#models-jstree-view').jstree().refresh_node(node);
+      //     }
+      //     self.exportToZipFile(body.Path);
+      //   }else{
+      //     self.exportToFile(body, o.original.text);
+      //   }
+      // }
+  //   });
+  // },
+  // exportToJsonFile: function (fileData, fileName) {
+  //   let dataStr = JSON.stringify(fileData);
+  //   let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+  //   let exportFileDefaultName = fileName
 
-    let linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataURI);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  },
-  exportToFile: function (fileData, fileName) {
-    let dataURI = 'data:text/plain;charset=utf-8,' + encodeURIComponent(fileData);
+  //   let linkElement = document.createElement('a');
+  //   linkElement.setAttribute('href', dataURI);
+  //   linkElement.setAttribute('download', exportFileDefaultName);
+  //   linkElement.click();
+  // },
+  // exportToFile: function (fileData, fileName) {
+  //   let dataURI = 'data:text/plain;charset=utf-8,' + encodeURIComponent(fileData);
 
-    let linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataURI);
-    linkElement.setAttribute('download', fileName);
-    linkElement.click();
-  },
-  exportToZipFile: function (o) {
-    var targetPath = o
-    if(o.original){
-      targetPath = o.original._path
-    }
-    var endpoint = path.join(app.getBasePath(), "/files", targetPath);
-    window.open(endpoint)
-  },
+  //   let linkElement = document.createElement('a');
+  //   linkElement.setAttribute('href', dataURI);
+  //   linkElement.setAttribute('download', fileName);
+  //   linkElement.click();
+  // },
+  // exportToZipFile: function (o) {
+  //   var targetPath = o
+  //   if(o.original){
+  //     targetPath = o.original._path
+  //   }
+  //   var endpoint = path.join(app.getBasePath(), "/files", targetPath);
+  //   window.open(endpoint)
+  // },
   // validateName(input, rename = false) {
   //   var error = ""
   //   if(input.endsWith('/')) {
@@ -995,22 +995,22 @@ let Model = require('../models/model');
       // let zipTypes = ["workflow", "folder", "other", "root", "workflow-group"]
       // let asZip = zipTypes.includes(nodeType)
       // refresh context menu option
-      let refresh = {
-        "Refresh" : {
-          "label" : "Refresh",
-          "_disabled" : false,
-          "_class" : "font-weight-bold",
-          "separator_before" : false,
-          "separator_after" : o.text !== "trash",
-          "action" : function (data) {
-            if(nodeType === "root"){
-              self.refreshJSTree();
-            }else{
-              $('#models-jstree-view').jstree().refresh_node(o);
-            }
-          }
-        }
-      }
+      // let refresh = {
+      //   "Refresh" : {
+      //     "label" : "Refresh",
+      //     "_disabled" : false,
+      //     "_class" : "font-weight-bold",
+      //     "separator_before" : false,
+      //     "separator_after" : o.text !== "trash",
+      //     "action" : function (data) {
+      //       if(nodeType === "root"){
+      //         self.refreshJSTree();
+      //       }else{
+      //         $('#models-jstree-view').jstree().refresh_node(o);
+      //       }
+      //     }
+      //   }
+      // }
       // For notebooks, workflows, sbml models, and other files
       let open = {
         "Open" : {
@@ -1041,51 +1041,51 @@ let Model = require('../models/model');
         }
       }
       // project contect menu option
-      let project = {
-        "Add_Model" : {
-          "label" : "Add Model",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "New_model" : {
-              "label" : "New Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "submenu" : {
-                "spatial" : {
-                  "label" : "Spatial (beta)",
-                  "_disabled" : false,
-                  "separator_before" : false,
-                  "separator_after" : false,
-                  "action" : function (data) {
-                    self.newModelOrDirectory(o, true, true);
-                  }
-                },
-                "nonspatial" : { 
-                  "label" : "Non-Spatial",
-                  "_disabled" : false,
-                  "separator_before" : false,
-                  "separator_after" : false,
-                  "action" : function (data) {
-                    self.newModelOrDirectory(o, true, false);
-                  }
-                } 
-              }
-            },
-            "Existing Model" : {
-              "label" : "Existing Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.addExistingModel(o)
-              }
-            }
-          }
-        }
-      }
+      // let project = {
+      //   "Add_Model" : {
+      //     "label" : "Add Model",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "New_model" : {
+      //         "label" : "New Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "submenu" : {
+      //           "spatial" : {
+      //             "label" : "Spatial (beta)",
+      //             "_disabled" : false,
+      //             "separator_before" : false,
+      //             "separator_after" : false,
+      //             "action" : function (data) {
+      //               self.newModelOrDirectory(o, true, true);
+      //             }
+      //           },
+      //           "nonspatial" : { 
+      //             "label" : "Non-Spatial",
+      //             "_disabled" : false,
+      //             "separator_before" : false,
+      //             "separator_after" : false,
+      //             "action" : function (data) {
+      //               self.newModelOrDirectory(o, true, false);
+      //             }
+      //           } 
+      //         }
+      //       },
+      //       "Existing Model" : {
+      //         "label" : "Existing Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.addExistingModel(o)
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // option for uploading files
       let uploadFile = {
         "Upload": {
@@ -1129,70 +1129,70 @@ let Model = require('../models/model');
         }
       }
       // common to folder and root
-      let commonFolder = {
-        "New_Directory" : {
-          "label" : "New Directory",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newModelOrDirectory(o, false, false);
-          }
-        },
-        "New Domain" : {
-          "label" : "New Domain (beta)",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            let queryStr = "?domainPath=" + o.original._path + "&new"
-            window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
-          }
-        },
-        "Upload": o.type === "root" ? uploadAll.Upload : uploadFile.Upload
-      }
-      if(o.type === "root" || o.type === "workflow-group" || o.type === "workflow")
-        var downloadLabel = "as .zip"
-      else if(asZip)
-        var downloadLabel = "Download as .zip"
-      else
-        var downloadLabel = "Download"
-      let download = {
-        "Download" : {
-          "label" : downloadLabel,
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : !(o.type === "root" || o.type === "workflow-group" || o.type === "workflow"),
-          "action" : function (data) {
-            if(o.original.text.endsWith('.zip')){
-              self.exportToZipFile(o);
-            }else{
-              self.getExportData(o, asZip)
-            }
-          }
-        }
-      }
+      // let commonFolder = {
+      //   "New_Directory" : {
+      //     "label" : "New Directory",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.newModelOrDirectory(o, false, false);
+      //     }
+      //   },
+      //   "New Domain" : {
+      //     "label" : "New Domain (beta)",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       let queryStr = "?domainPath=" + o.original._path + "&new"
+      //       window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+      //     }
+      //   },
+      //   "Upload": o.type === "root" ? uploadAll.Upload : uploadFile.Upload
+      // }
+      // if(o.type === "root" || o.type === "workflow-group" || o.type === "workflow")
+      //   var downloadLabel = "as .zip"
+      // else if(asZip)
+      //   var downloadLabel = "Download as .zip"
+      // else
+      //   var downloadLabel = "Download"
+      // let download = {
+      //   "Download" : {
+      //     "label" : downloadLabel,
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : !(o.type === "root" || o.type === "workflow-group" || o.type === "workflow"),
+      //     "action" : function (data) {
+      //       if(o.original.text.endsWith('.zip')){
+      //         self.exportToZipFile(o);
+      //       }else{
+      //         self.getExportData(o, asZip)
+      //       }
+      //     }
+      //   }
+      // }
       // download options for .zip and COMBINE
-      let downloadWCombine = {
-        "Download" : {
-          "label" : "Download",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : true,
-          "submenu" : {
-            "DownloadAsZip": download.Download,
-            "downloadAsCombine" : {
-              "label" : "as COMBINE",
-              "_disabled" : true,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.handleExportCombineClick(o, true)
-              }
-            }
-          }
-        }
-      }
+      // let downloadWCombine = {
+      //   "Download" : {
+      //     "label" : "Download",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : true,
+      //     "submenu" : {
+      //       "DownloadAsZip": download.Download,
+      //       "downloadAsCombine" : {
+      //         "label" : "as COMBINE",
+      //         "_disabled" : true,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.handleExportCombineClick(o, true)
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // menu option for creating new workflows
       let newWorkflow = {
         "ensembleSimulation" : {
@@ -1379,15 +1379,15 @@ let Model = require('../models/model');
       }
       // common to all type except root and trash
       let common = {
-        "Rename" : {
-          "label" : "Rename",
-          "_disabled" : (o.type === "workflow" && o.original._status === "running"),
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.renameNode(o);
-          }
-        },
+        // "Rename" : {
+        //   "label" : "Rename",
+        //   "_disabled" : (o.type === "workflow" && o.original._status === "running"),
+        //   "separator_before" : false,
+        //   "separator_after" : false,
+        //   "action" : function (data) {
+        //     self.renameNode(o);
+        //   }
+        // },
         "Duplicate" : {
           "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
           "_disabled" : (nodeType === "project" || nodeType === "workflow-group"),
@@ -1430,9 +1430,9 @@ let Model = require('../models/model');
           }
         }
       }
-      if (o.type === 'root'){
-        return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
-      }
+      // if (o.type === 'root'){
+      //   return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
+      // }
       if (o.text === "trash"){
         return refresh
       }

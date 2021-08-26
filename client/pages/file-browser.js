@@ -540,120 +540,120 @@ let FileBrowser = PageView.extend({
       }
     });
   },
-  renameNode: function (o) {
-    var self = this
-    var text = o.text;
-    var parent = $('#models-jstree').jstree().get_node(o.parent)
-    var extensionWarning = $(this.queryByHook('extension-warning'));
-    var nameWarning = $(this.queryByHook('rename-warning'));
-    extensionWarning.collapse('show')
-    $('#models-jstree').jstree().edit(o, null, function(node, status) {
-      if(text != node.text){
-        var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+node.text
-        app.getXHR(endpoint, {
-          always: function (err, response, body) {
-            if(parent.type === "root"){
-              self.refreshJSTree();
-            }else{          
-              $('#models-jstree').jstree().refresh_node(parent);
-            }
-          },
-          success: function (err, response, body) {
-            if(body.changed) {
-              nameWarning.text(body.message);
-              nameWarning.collapse('show');
-              window.scrollTo(0,0);
-              setTimeout(_.bind(self.hideNameWarning, self), 10000);
-            }
-            node.original._path = body._path;
-          }
-        });
-      }
-      extensionWarning.collapse('hide');
-      nameWarning.collapse('hide');
-    });
-  },
-  hideNameWarning: function () {
-    $(this.queryByHook('rename-warning')).collapse('hide')
-  },
-  getExportData: function (o, asZip) {
-    var self = this;
-    let nodeType = o.original.type
-    let isJSON = nodeType === "sbml-model" ? false : true
-    if(nodeType === "sbml-model"){
-      var dataType = "plain-text"
-      var identifier = "file/download"
-    }else if(nodeType === "domain") {
-      var dataType = "json"
-      var identifier = "spatial-model/load-domain"
-    }else if(asZip) {
-      var dataType = "zip"
-      var identifier = "file/download-zip"
-    }else{
-      var dataType = "json"
-      var identifier = "file/json-data"
-    }
-    if(nodeType === "domain") {
-      var queryStr = "?domain_path=" + o.original._path
-    }else{
-      var queryStr = "?path="+o.original._path
-      if(dataType === "json"){
-        queryStr = queryStr.concat("&for=None")
-      }else if(dataType === "zip"){
-        queryStr = queryStr.concat("&action=generate")
-      }
-    }
-    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        if(dataType === "json") {
-          let data = nodeType === "domain" ? body.domain : body;
-          self.exportToJsonFile(data, o.original.text);
-        }else if(dataType === "zip") {
-          var node = $('#models-jstree').jstree().get_node(o.parent);
-          if(node.type === "root"){
-            self.refreshJSTree();
-          }else{
-            $('#models-jstree').jstree().refresh_node(node);
-          }
-          self.exportToZipFile(body.Path);
-        }else{
-          self.exportToFile(body, o.original.text);
-        }
-      },
-      error: function (err, response, body) {
-        if(dataType === "plain-text") {
-          body = JSON.parse(body);
-        }
-      }
-    });
-  },
-  exportToJsonFile: function (fileData, fileName) {
-    let dataStr = JSON.stringify(fileData);
-    let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    let exportFileDefaultName = fileName
+  // renameNode: function (o) {
+  //   var self = this
+  //   var text = o.text;
+  //   var parent = $('#models-jstree').jstree().get_node(o.parent)
+  //   var extensionWarning = $(this.queryByHook('extension-warning'));
+  //   var nameWarning = $(this.queryByHook('rename-warning'));
+  //   extensionWarning.collapse('show')
+  //   $('#models-jstree').jstree().edit(o, null, function(node, status) {
+  //     if(text != node.text){
+  //       var endpoint = path.join(app.getApiPath(), "file/rename")+"?path="+ o.original._path+"&name="+node.text
+  //       app.getXHR(endpoint, {
+  //         always: function (err, response, body) {
+  //           if(parent.type === "root"){
+  //             self.refreshJSTree();
+  //           }else{          
+  //             $('#models-jstree').jstree().refresh_node(parent);
+  //           }
+  //         },
+  //         success: function (err, response, body) {
+  //           if(body.changed) {
+  //             nameWarning.text(body.message);
+  //             nameWarning.collapse('show');
+  //             window.scrollTo(0,0);
+  //             setTimeout(_.bind(self.hideNameWarning, self), 10000);
+  //           }
+  //           node.original._path = body._path;
+  //         }
+  //       });
+  //     }
+  //     extensionWarning.collapse('hide');
+  //     nameWarning.collapse('hide');
+  //   });
+  // },
+  // hideNameWarning: function () {
+  //   $(this.queryByHook('rename-warning')).collapse('hide')
+  // },
+  // getExportData: function (o, asZip) {
+  //   var self = this;
+  //   let nodeType = o.original.type
+  //   let isJSON = nodeType === "sbml-model" ? false : true
+  //   if(nodeType === "sbml-model"){
+  //     var dataType = "plain-text"
+  //     var identifier = "file/download"
+  //   }else if(nodeType === "domain") {
+  //     var dataType = "json"
+  //     var identifier = "spatial-model/load-domain"
+  //   }else if(asZip) {
+  //     var dataType = "zip"
+  //     var identifier = "file/download-zip"
+  //   }else{
+  //     var dataType = "json"
+  //     var identifier = "file/json-data"
+  //   }
+  //   if(nodeType === "domain") {
+  //     var queryStr = "?domain_path=" + o.original._path
+  //   }else{
+  //     var queryStr = "?path="+o.original._path
+  //     if(dataType === "json"){
+  //       queryStr = queryStr.concat("&for=None")
+  //     }else if(dataType === "zip"){
+  //       queryStr = queryStr.concat("&action=generate")
+  //     }
+  //   }
+    // var endpoint = path.join(app.getApiPath(), identifier)+queryStr
+    // app.getXHR(endpoint, {
+    //   success: function (err, response, body) {
+      //   if(dataType === "json") {
+      //     let data = nodeType === "domain" ? body.domain : body;
+      //     self.exportToJsonFile(data, o.original.text);
+      //   }else if(dataType === "zip") {
+      //     var node = $('#models-jstree').jstree().get_node(o.parent);
+      //     if(node.type === "root"){
+      //       self.refreshJSTree();
+      //     }else{
+      //       $('#models-jstree').jstree().refresh_node(node);
+      //     }
+      //     self.exportToZipFile(body.Path);
+      //   }else{
+      //     self.exportToFile(body, o.original.text);
+      //   }
+      // },
+  //     error: function (err, response, body) {
+  //       if(dataType === "plain-text") {
+  //         body = JSON.parse(body);
+  //       }
+  //     }
+  //   });
+  // },
+  // exportToJsonFile: function (fileData, fileName) {
+  //   let dataStr = JSON.stringify(fileData);
+  //   let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+  //   let exportFileDefaultName = fileName
 
-    let linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataURI);
-    linkElement.setAttribute('download', exportFileDefaultName);
-    linkElement.click();
-  },
-  exportToFile: function (fileData, fileName) {
-    let dataURI = 'data:text/plain;charset=utf-8,' + encodeURIComponent(fileData);
+  //   let linkElement = document.createElement('a');
+  //   linkElement.setAttribute('href', dataURI);
+  //   linkElement.setAttribute('download', exportFileDefaultName);
+  //   linkElement.click();
+  // },
+  // exportToFile: function (fileData, fileName) {
+  //   let dataURI = 'data:text/plain;charset=utf-8,' + encodeURIComponent(fileData);
 
-    let linkElement = document.createElement('a');
-    linkElement.setAttribute('href', dataURI);
-    linkElement.setAttribute('download', fileName);
-    linkElement.click();
-  },
-  exportToZipFile: function (o) {
-    var targetPath = o
-    if(o.original){
-      targetPath = o.original._path
-    }
-    var endpoint = path.join(app.getBasePath(), "/files", targetPath);
-    window.open(endpoint)
-  },
+  //   let linkElement = document.createElement('a');
+  //   linkElement.setAttribute('href', dataURI);
+  //   linkElement.setAttribute('download', fileName);
+  //   linkElement.click();
+  // },
+  // exportToZipFile: function (o) {
+  //   var targetPath = o
+  //   if(o.original){
+  //     targetPath = o.original._path
+  //   }
+  //   var endpoint = path.join(app.getBasePath(), "/files", targetPath);
+  //   window.open(endpoint)
+  // },
   // validateName: function (input, rename = false) {
   //   var error = ""
   //   if(input.endsWith('/')) {
@@ -735,53 +735,53 @@ let FileBrowser = PageView.extend({
       }
     });
   },
-  addExistingModel: function (o) {
-    var self = this
-    if(document.querySelector('#newProjectModelModal')){
-      document.querySelector('#newProjectModelModal').remove()
-    }
-    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+o.original._path
-    app.getXHR(mdlListEP, {
-      always: function (err, response, body) {
-        let modal = $(modals.newProjectModelHtml(body.files)).modal();
-        let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
-        let select = document.querySelector('#newProjectModelModal #modelFileInput');
-        let location = document.querySelector('#newProjectModelModal #modelPathInput');
-        select.addEventListener("change", function (e) {
-          okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
-          if(body.paths[e.target.value].length >= 2) {
-            var locations = body.paths[e.target.value].map(function (path) {
-              return `<option>${path}</option>`;
-            });
-            locations.unshift(`<option value="">Select a location</option>`);
-            locations = locations.join(" ");
-            $("#modelPathInput").find('option').remove().end().append(locations);
-            $("#location-container").css("display", "block");
-          }else{
-            $("#location-container").css("display", "none");
-            $("#modelPathInput").find('option').remove().end();
-          }
-        });
-        location.addEventListener("change", function (e) {
-          okBtn.disabled = !Boolean(e.target.value);
-        });
-        okBtn.addEventListener("click", function (e) {
-          let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
-          let queryString = "?path="+o.original._path+"&mdlPath="+mdlPath;
-          let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString;
-          app.postXHR(endpoint, null, {
-            success: function (err, response, body) {
-              let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
-            },
-            error: function (err, response, body) {
-              let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
-            }
-          });
-          modal.modal('hide');
-        });
-      }
-    });
-  },
+  // addExistingModel: function (o) {
+  //   var self = this
+  //   if(document.querySelector('#newProjectModelModal')){
+  //     document.querySelector('#newProjectModelModal').remove()
+  //   }
+  //   let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path="+o.original._path
+  //   app.getXHR(mdlListEP, {
+  //     always: function (err, response, body) {
+  //       let modal = $(modals.newProjectModelHtml(body.files)).modal();
+  //       let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
+  //       let select = document.querySelector('#newProjectModelModal #modelFileInput');
+  //       let location = document.querySelector('#newProjectModelModal #modelPathInput');
+  //       select.addEventListener("change", function (e) {
+  //         okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
+  //         if(body.paths[e.target.value].length >= 2) {
+  //           var locations = body.paths[e.target.value].map(function (path) {
+  //             return `<option>${path}</option>`;
+  //           });
+  //           locations.unshift(`<option value="">Select a location</option>`);
+  //           locations = locations.join(" ");
+  //           $("#modelPathInput").find('option').remove().end().append(locations);
+  //           $("#location-container").css("display", "block");
+  //         }else{
+  //           $("#location-container").css("display", "none");
+  //           $("#modelPathInput").find('option').remove().end();
+  //         }
+  //       });
+  //       location.addEventListener("change", function (e) {
+  //         okBtn.disabled = !Boolean(e.target.value);
+  //       });
+  //       okBtn.addEventListener("click", function (e) {
+  //         let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
+  //         let queryString = "?path="+o.original._path+"&mdlPath="+mdlPath;
+  //         let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString;
+  //         app.postXHR(endpoint, null, {
+  //           success: function (err, response, body) {
+  //             let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
+  //           },
+  //           error: function (err, response, body) {
+  //             let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+  //           }
+  //         });
+  //         modal.modal('hide');
+  //       });
+  //     }
+  //   });
+  // },
   // addModel: function (parentPath, modelName, message) {
   //   var endpoint = path.join(app.getBasePath(), "stochss/models/edit")
   //   if(parentPath.endsWith(".proj")) {
@@ -1012,28 +1012,28 @@ let FileBrowser = PageView.extend({
       // let asZip = zipTypes.includes(nodeType)
       // common to all type except root
       let common = {
-        "Download" : {
-          "label" : asZip ? "Download as .zip" : "Download",
-          "_disabled" : false,
-          "separator_before" : true,
-          "separator_after" : false,
-          "action" : function (data) {
-            if(o.original.text.endsWith('.zip')){
-              self.exportToZipFile(o);
-            }else{
-              self.getExportData(o, asZip)
-            }
-          }
-        },
-        "Rename" : {
-          "label" : "Rename",
-          "_disabled" : (o.type === "workflow" && o.original._status === "running"),
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.renameNode(o);
-          }
-        },
+        // "Download" : {
+        //   "label" : asZip ? "Download as .zip" : "Download",
+        //   "_disabled" : false,
+        //   "separator_before" : true,
+        //   "separator_after" : false,
+        //   "action" : function (data) {
+        //     if(o.original.text.endsWith('.zip')){
+        //       self.exportToZipFile(o);
+        //     }else{
+        //       self.getExportData(o, asZip)
+        //     }
+        //   }
+        // },
+        // "Rename" : {
+        //   "label" : "Rename",
+        //   "_disabled" : (o.type === "workflow" && o.original._status === "running"),
+        //   "separator_before" : false,
+        //   "separator_after" : false,
+        //   "action" : function (data) {
+        //     self.renameNode(o);
+        //   }
+        // },
         "Duplicate" : {
           "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
           "_disabled" : (nodeType === "project"),
@@ -1065,111 +1065,111 @@ let FileBrowser = PageView.extend({
         }
       }
       // common to root and folders
-      let folder = {
-        "Refresh" : {
-          "label" : "Refresh",
-          "_disabled" : false,
-          "_class" : "font-weight-bold",
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            if(nodeType === "root"){
-              self.refreshJSTree();
-            }else{
-              $('#models-jstree').jstree().refresh_node(o);
-            }
-          }
-        },
-        "New_Directory" : {
-          "label" : "New Directory",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newModelOrDirectory(o, false, false);
-          }
-        },
-        "New Project" : {
-          "label" : "New Project",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newProjectOrWorkflowGroup(o, true)
-          }
-        },
-        "New_model" : {
-          "label" : "New Model",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "spatial" : {
-              "label" : "Spatial (beta)",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.newModelOrDirectory(o, true, true);
-              }
-            },
-            "nonspatial" : { 
-              "label" : "Non-Spatial",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.newModelOrDirectory(o, true, false);
-              }
-            } 
-          }
-        },
-        "New Domain" : {
-          "label" : "New Domain (beta)",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            let queryStr = "?domainPath=" + o.original._path + "&new"
-            window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
-          }
-        },
-        "Upload" : {
-          "label" : "Upload File",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "Model" : {
-              "label" : "StochSS Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.uploadFile(o, "model")
-              }
-            },
-            "SBML" : {
-              "label" : "SBML Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.uploadFile(o, "sbml")
-              }
-            },
-            "File" : {
-              "label" : "File",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.uploadFile(o, "file")
-              }
-            }
-          }
-        }
-      }
+      // let folder = {
+      //   "Refresh" : {
+      //     "label" : "Refresh",
+      //     "_disabled" : false,
+      //     "_class" : "font-weight-bold",
+      //     "separator_before" : false,
+      //     "separator_after" : true,
+      //     "action" : function (data) {
+      //       if(nodeType === "root"){
+      //         self.refreshJSTree();
+      //       }else{
+      //         $('#models-jstree').jstree().refresh_node(o);
+      //       }
+      //     }
+      //   },
+      //   "New_Directory" : {
+      //     "label" : "New Directory",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.newModelOrDirectory(o, false, false);
+      //     }
+      //   },
+      //   "New Project" : {
+      //     "label" : "New Project",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.newProjectOrWorkflowGroup(o, true)
+      //     }
+      //   },
+      //   "New_model" : {
+      //     "label" : "New Model",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "spatial" : {
+      //         "label" : "Spatial (beta)",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.newModelOrDirectory(o, true, true);
+      //         }
+      //       },
+      //       "nonspatial" : { 
+      //         "label" : "Non-Spatial",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.newModelOrDirectory(o, true, false);
+      //         }
+      //       } 
+      //     }
+      //   },
+      //   "New Domain" : {
+      //     "label" : "New Domain (beta)",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       let queryStr = "?domainPath=" + o.original._path + "&new"
+      //       window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+      //     }
+      //   },
+      //   "Upload" : {
+      //     "label" : "Upload File",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "Model" : {
+      //         "label" : "StochSS Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.uploadFile(o, "model")
+      //         }
+      //       },
+      //       "SBML" : {
+      //         "label" : "SBML Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.uploadFile(o, "sbml")
+      //         }
+      //       },
+      //       "File" : {
+      //         "label" : "File",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.uploadFile(o, "file")
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // common to both spatial and non-spatial models
       let newWorkflow = {
         "ensembleSimulation" : {
@@ -1425,9 +1425,9 @@ let FileBrowser = PageView.extend({
           }
         }
       }
-      if (o.type === 'root'){
-        return folder
-      }
+      // if (o.type === 'root'){
+      //   return folder
+      // }
       if (o.text === "trash") {
         return {"Refresh": folder.Refresh}
       }

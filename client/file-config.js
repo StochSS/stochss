@@ -51,6 +51,26 @@ let doubleClick = (view, e) => {
   }
 }
 
+let getRootContext = (view, node) => {
+  let dirname = node.original._path === "/" ? "" : node.original._path;
+  return {
+    refresh: view.getRefreshContext(node),
+    newDirectory: view.getNewDirectoryContext(node),
+    newProject: {
+      label: "New Project",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        view.createProject(node, dirname);
+      }
+    },
+    newModel: view.getNewModelContext(node, false),
+    newDomain: view.getNewDomainContext(node),
+    upload: view.getFullUploadContext(node, false)
+  }
+}
+
 let move = (view, par, node) => {
   let newDir = par.original._path !== "/" ? par.original._path : "";
   let file = node.original._path.split('/').pop();
@@ -129,6 +149,7 @@ let validateMove = (view, node, more, pos) => {
 module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
+  getRootContext: getRootContext,
   move: move,
   setup: setup,
   types: types,

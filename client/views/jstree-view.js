@@ -95,7 +95,7 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     this.config.setup(this);
-    window.addEventListener('pageshow', function (e) {
+    window.addEventListener('pageshow', (e) => {
       let navType = window.performance.navigation.type;
       if(navType === 2){
         window.location.reload();
@@ -217,12 +217,13 @@ module.exports = View.extend({
     let input = document.querySelector('#newProjectModal #projectNameInput');
     this.addInputKeyupEvent(input, okBtn);
     this.addInputValidateEvent(input, okBtn, "#newProjectModal", "#projectNameInput");
-    okBtn.addEventListener("click", function (e) {
+    okBtn.addEventListener("click", (e) => {
       modal.modal('hide');
       let queryStr = "?path=" + path.join(dirname, `${input.value.trim()}.proj`);
       let endpoint = path.join(app.getApiPath(), "project/new-project") + queryStr;
       app.getXHR(endpoint, {
         success: (err, response, body) => {
+          this.config.updateParent(this, "project");
           let queryStr = "?path=" + body.path;
           let endpoint = path.join(app.getBasePath(), 'stochss/project/manager') + queryStr;
           window.location.href = endpoint;
@@ -253,12 +254,249 @@ module.exports = View.extend({
       });
     });
   },
+  exportToFile: function (fileData, fileName) {
+    let dataURI = 'data:text/plain;charset=utf-8,' + encodeURIComponent(fileData);
+
+    let linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataURI);
+    linkElement.setAttribute('download', fileName);
+    linkElement.click();
+  },
+  exportToJsonFile: function (fileData, fileName) {
+    let dataStr = JSON.stringify(fileData);
+    let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    let exportFileDefaultName = fileName;
+
+    let linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataURI);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+  },
+  exportToZipFile: function (targetPath) {
+    let endpoint = path.join(app.getBasePath(), "/files", targetPath);
+    window.open(endpoint, "_blank");
+  },
+  getAddModelContext: function (node) {
+    let newModel = this.getNewModelContext(node, true);
+    return {
+      label: "Add Model",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      submenu: {
+        newModel: newModel,
+        existingModel: {
+          label: "Existing Model",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.importModel(node, node.original._path);
+          }
+        }
+      }
+    }
+  },
+  getDownloadContext: function (node, options, {asZip=false, withCombine=false}={}) {
+    if(withCombine) {
+      var label = "as .zip";
+    }else if(asZip) {
+      var label = "Download as .zip";
+    }else {
+      var label = "Download";
+    }
+    return {
+      label: label,
+      _disabled: false,
+      separator_before: !withCombine,
+      separator_after: false,
+      action: (data) => {
+        this.getExportData(node, options);
+      }
+    }
+  },
+  getDownloadWCombineContext: function (node) {
+    let options = {dataType: "zip", identifier: "file/download-zip"};
+    let download = this.getDownloadContext(node, options, {withCombine: true});
+    return {
+      label: "Download",
+      _disabled: false,
+      separator_before: true,
+      separator_after: false,
+      submenu: {
+        downloadAsZip: download,
+        downloadAsCombine: {
+          label: "as COMBINE",
+          _disabled: true,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            // handleExportCombineClick(o, true)
+          }
+        }
+      }
+    }
+  },
+  getExportData: function (node, {dataType="", identifier=""}={}) {
+    if(node.original.text.endsWith('.zip')) {
+      return this.exportToZipFile(node.original._path);
+    }
+    let isJSON = node.original.type === "sbml-model" ? false : true;
+    if(node.original.type === "domain") {
+      var queryStr = "?domain_path=" + node.original._path;
+    }else{
+      var queryStr = "?path=" + node.original._path;
+      if(dataType === "json"){
+        queryStr += "&for=None";
+      }else if(dataType === "zip"){
+        queryStr += "&action=generate";
+      }
+    }
+    let endpoint = path.join(app.getApiPath(), identifier) + queryStr;
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        if(dataType === "json") {
+          let data = node.original.type === "domain" ? body.domain : body;
+          this.exportToJsonFile(data, node.original.text);
+        }else if(dataType === "zip") {
+          let par = $('#files-jstree').jstree().get_node(node.parent);
+          this.refreshJSTree(par);
+          this.exportToZipFile(body.Path);
+        }else{
+          this.exportToFile(body, node.original.text);
+        }
+      },
+      error: (err, response, body) => {
+        if(dataType === "plain-text") {
+          body = JSON.parse(body);
+        }
+        console.log(body)
+      }
+    });
+  },
+  getFileUploadContext: function (node, inProject) {
+    let dirname = node.original._path === "/" ? "" : node.original._path;
+    return {
+      label: "File",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        this.uploadFile(node, dirname, "file", inProject);
+      }
+    }
+  },
+  getFullUploadContext: function (node, inProject) {
+    let dirname = node.original._path === "/" ? "" : node.original._path;
+    let file = this.getFileUploadContext(node, inProject);
+    return {
+      label: "Upload File",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      submenu: {
+        model: {
+          label: "StochSS Model",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.uploadFile(node, dirname, "model", inProject);
+          }
+        },
+        sbml: {
+          label: "SBML Model",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.uploadFile(node, dirname, "sbml", inProject);
+          }
+        },
+        file: file
+      }
+    }
+  },
+  getNewDirectoryContext: function (node) {
+    let dirname = node.original._path === "/" ? "" : node.original._path;
+    return {
+      label: "New Directory",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        this.createDirectory(node, dirname);
+      }
+    }
+  },
+  getNewDomainContext: function (node) {
+    return {
+      label: "New Domain (beta)",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        let queryStr = "?domainPath=" + node.original._path + "&new";
+        window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
+      }
+    }
+  },
+  getNewModelContext: function (node, inProject) {
+    let dirname = node.original._path === "/" ? "" : node.original._path;
+    return {
+      label: "New Model",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      submenu: {
+        spatial: {
+          label: "Spatial (beta)",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.createModel(node, dirname, true, inProject);
+          }
+        },
+        nonspatial: { 
+          label: "Non-Spatial",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.createModel(node, dirname, false, inProject);
+          }
+        } 
+      }
+    }
+  },
+  getRefreshContext: function (node) {
+    return {
+      label: "Refresh",
+      _disabled: false,
+      _class: "font-weight-bold",
+      separator_before: false,
+      separator_after: true,
+      action: (data) => {
+        this.refreshJSTree(node);
+      }
+    }
+  },
+  getRenameContext: function (node) {
+    let disabled = node.type === "workflow" && node.original._status === "running";
+    return {
+      label: "Rename",
+      _disabled: disabled,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        this.renameNode(node);
+      }
+    }
+  },
   handleCreateDirectoryClick: function (e) {
     let dirname = this.root === "none" ? "" : this.root;
     this.createDirectory(null, dirname);
-  },
-  handleImportModelClick: function () {
-    this.importModel(null);
   },
   handleCreateModelClick: function (e) {
     let dirname = this.root === "none" ? "" : this.root;
@@ -275,6 +513,9 @@ module.exports = View.extend({
     let queryStr = "?domainPath=" + dirname + "&new";
     window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
   },
+  handleImportModelClick: function () {
+    this.importModel(null, this.root);
+  },
   handleRefreshJSTreeClick: function (e) {
     this.refreshJSTree(null);
   },
@@ -284,11 +525,14 @@ module.exports = View.extend({
     let type = e.target.dataset.type;
     this.uploadFile(null, dirname, type, inProject);
   },
-  importModel: function (node) {
+  hideNameWarning: function () {
+    $(this.queryByHook('rename-warning')).collapse('hide');
+  },
+  importModel: function (node, projectPath) {
     if(document.querySelector('#importModelModal')){
       document.querySelector('#importModelModal').remove();
     }
-    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path=" + this.root;
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path=" + projectPath;
     app.getXHR(mdlListEP, {
       always: (err, response, body) => {
         let modal = $(modals.importModelHtml(body.files)).modal();
@@ -316,7 +560,7 @@ module.exports = View.extend({
         okBtn.addEventListener("click", (e) => {
           modal.modal('hide');
           let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
-          let queryStr = "?path=" + this.root + "&mdlPath=" + mdlPath;
+          let queryStr = "?path=" + projectPath + "&mdlPath=" + mdlPath;
           let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryStr;
           app.postXHR(endpoint, null, {
             success: (err, response, body) => {
@@ -325,9 +569,11 @@ module.exports = View.extend({
               }
               let successModal = $(modals.successHtml(body.message)).modal();
               this.config.updateParent(this, "model");
-              this.refreshJSTree(null);
+              if(this.root !== "none") {
+                this.refreshJSTree(null);
+              }
             },
-            error: function (err, response, body) {
+            error: (err, response, body) => {
               if(document.querySelector("#errorModal")) {
                 document.querySelector("#errorModal").remove();
               }
@@ -356,17 +602,53 @@ module.exports = View.extend({
       $('#files-jstree').jstree().refresh_node(node);
     }
   },
+  renameNode: function (node) {
+    let currentName = node.text;
+    let par = $('#files-jstree').jstree().get_node(node.parent);
+    let extensionWarning = $(this.queryByHook('extension-warning'));
+    let nameWarning = $(this.queryByHook('rename-warning'));
+    extensionWarning.collapse('show');
+    $('#files-jstree').jstree().edit(node, null, (node, status) => {
+      if(currentName != node.text){
+        let name = node.type === "root" ? node.text + ".proj" : node.text;
+        let queryStr = "?path=" + node.original._path + "&name=" + name;
+        let endpoint = path.join(app.getApiPath(), "file/rename") + queryStr;
+        app.getXHR(endpoint, {
+          always: (err, response, body) => {
+            this.refreshJSTree(par);
+          },
+          success: (err, response, body) => {
+            if(this.root !== "none") {
+              let queryStr = "?path=" + body._path;
+              let endpoint = path.join(app.getBasePath(), 'stochss/project/manager') + queryStr;
+              window.location.href = endpoint;
+            }else if(body.changed) {
+              nameWarning.text(body.message);
+              nameWarning.collapse('show');
+              window.scrollTo(0,0);
+              setTimeout(_.bind(this.hideNameWarning, this), 10000);
+            }
+            node.original._path = body._path;
+          }
+        });
+      }
+      extensionWarning.collapse('hide');
+      nameWarning.collapse('hide');
+    });
+  },
   setupJstree: function (cb) {
-    $.jstree.defaults.contextmenu.items = (o, cb) => {
-      let nodeType = o.original.type;
+    $.jstree.defaults.contextmenu.items = (node, cb) => {
       let zipTypes = this.config.contextZipTypes;
-      let asZip = zipTypes.includes(nodeType);
+      let asZip = zipTypes.includes(node.original.type);
       let optionsButton = $(this.queryByHook("options-for-node"));
       if(!this.nodeForContextMenu) {
         optionsButton.prop('disabled', false);
       }
-      optionsButton.text("Actions for " + o.original.text);
-      this.nodeForContextMenu = o;
+      optionsButton.text("Actions for " + node.original.text);
+      this.nodeForContextMenu = node;
+      if (node.type === 'root'){
+        return this.config.getRootContext(this, node);
+      }
     }
     $(() => {
       $(document).on('shown.bs.modal', (e) => {
@@ -436,11 +718,14 @@ module.exports = View.extend({
     let nameUsageMsg = document.querySelector('#uploadFileModal #fileNameUsageMessage');
     let getOptions = (file) => {
       if(!inProject) { return {saveAs: true}; };
-      if(file.name.endsWith(".mdl") || (type === "model" && file.name.endsWith(".json"))) {
-        return {saveAs: false};
+      if(file) {
+        if(file.name.endsWith(".mdl")) { return {saveAs: false}; }
+        if(file.name.endsWith(".sbml")) { return {saveAs: false}; }
       }
-      if(file.name.endsWith(".sbml") || (type === "sbml" && file.name.endsWith(".xml"))) {
-        return {saveAs: false};
+      if(type === "model" || type === "sbml") {
+        if(!file) { return {saveAs: false}; }
+        if(type === "model" && file.name.endsWith(".json")) { return {saveAs: false}; }
+        if(type === "sbml" && file.name.endsWith(".xml")) { return {saveAs: false}; }
       }
       return {saveAs: true};
     }
