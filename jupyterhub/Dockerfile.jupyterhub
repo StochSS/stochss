@@ -48,7 +48,7 @@ COPY static/*    /usr/local/share/jupyterhub/static/
 
 COPY custom/favicon.ico /usr/local/share/jupyterhub/static/favicon.ico
 
-COPY custom/custom.js    $JUPYTER_CONFIG_DIR/custom/custom.js
+COPY custom/custom.js    /opt/stochss-config/.jupyter/custom/custom.js
 
 COPY cull_idle_servers.py /srv/jupyterhub/cull_idle_servers.py
 
