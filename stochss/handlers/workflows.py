@@ -28,8 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
-                  StochSSParamSweepNotebook, StochSSSciopeNotebook, StochSSAPIError, report_error, \
-                  StochSSFolder
+                  StochSSParamSweepNotebook, StochSSSciopeNotebook, StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -424,12 +423,53 @@ class JobPresentationAPIHandler(APIHandler):
         name = self.get_query_argument(name="name")
         log.debug(f"Name of the job presentation: {name}")
         try:
-            folder = StochSSFolder(path=path)
-            log.info(f"Publishing the {folder.get_name()} presentation")
-            resp = folder.publish_presentation(name=name)
+            job = StochSSJob(path=path)
+            log.info(f"Publishing the {job.get_name()} presentation")
+            links, exists = job.publish_presentation(name=name)
+            if exists:
+                message = f"A presentation for {job.get_name()} already exists."
+            else:
+                message = f"Successfully published the {job.get_name()} presentation"
+            resp = {"message": message, "links": links}
             log.info(resp['message'])
             log.debug(f"Response Message: {resp}")
             self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class DownloadCSVZipAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for downloading job csv results files.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Download a jobs results as CSV.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/zip')
+        path = self.get_query_argument(name="path")
+        csv_type = self.get_query_argument(name="type")
+        data = self.get_query_argument(name="data", default=None)
+        if data is not None:
+            data = json.loads(data)
+        try:
+            job = StochSSJob(path=path)
+            name = job.get_name()
+            self.set_header('Content-Disposition', f'attachment; filename="{name}.zip"')
+            if csv_type == "time series":
+                csv_data = job.get_csvzip_from_results(**data, name=name)
+            elif csv_type == "psweep":
+                csv_data = job.get_psweep_csvzip_from_results(fixed=data, name=name)
+            else:
+                csv_data = job.get_full_csvzip_from_results(name=name)
+            self.write(csv_data)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
