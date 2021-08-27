@@ -19,6 +19,8 @@ jupyterhub/templates/stochss-home.html
 jupyterhub/templates/stochss-job-presentation.html
 jupyterhub/templates/stochss-model-presentation.html
 jupyterhub/templates/stochss-notebook-presentation.html
+jupyterhub/templates/multiple-plots-page.html
+
 *.swp
 *.swo
 package-lock.json
