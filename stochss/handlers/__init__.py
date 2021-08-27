@@ -109,7 +109,8 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/save-plot\/?", SavePlotAPIHandler),
         (r"/stochss/api/workflow/save-annotation\/?", SaveAnnotationAPIHandler),
         (r"/stochss/api/workflow/update-format\/?", UpadteWorkflowAPIHandler),
-        (r"/stochss/api/job/presentation\/?", JobPresentationAPIHandler)
+        (r"/stochss/api/job/presentation\/?", JobPresentationAPIHandler),
+        (r"/stochss/api/job/csv\/?", DownloadCSVZipAPIHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers
