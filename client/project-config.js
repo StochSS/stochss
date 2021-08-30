@@ -64,6 +64,9 @@ let getRootContext = (view, node) => {
 }
 
 let getWorkflowGroupContext = (view, node) => {
+  if(node.original._path.includes(".proj/trash/")) { //item in trash
+    return {delete: view.getDeleteContext(node, "workflow group")};
+  }
   return {
     refresh: view.getRefreshContext(node),
     download: view.getDownloadWCombineContext(node)

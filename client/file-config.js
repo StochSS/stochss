@@ -65,7 +65,7 @@ let getOpenProjectContext = (view, node) => {
 
 let getProjectContext = (view, node) => {
   if(node.original._path.split("/")[0] === "trash") { // project in trash
-    return view.getDeleteContext(node, "project");
+    return {delete: view.getDeleteContext(node, "project")};
   }
   return {
     open: getOpenProjectContext(view, node),

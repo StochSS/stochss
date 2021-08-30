@@ -64,7 +64,7 @@ module.exports = View.extend({
       },
       "dataType" : "json",
       "data" : (node) => {
-        return { 'id' : node.id}
+        return { 'id' : node.id};
       }
     }
     this.treeSettings = {
@@ -132,12 +132,9 @@ module.exports = View.extend({
     app.getXHR(existEP, {
       always: (err, response, body) => {
         if(body.exists) {
-          if(document.querySelector("#errorModal")) {
-            document.querySelector("#errorModal").remove();
-          }
           let title = "Model Already Exists";
           let message = "A model already exists with that name";
-          let errorModel = $(modals.errorHtml(title, message)).modal();
+          this.reportError({Reason: title, Measage: message});
         }else{
           let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
           window.location.href = endpoint;
@@ -154,12 +151,9 @@ module.exports = View.extend({
         window.location.href = endpoint;
       },
       error: (err, response, body) => {
-        if(document.querySelector("#errorModal")) {
-          document.querySelector("#errorModal").remove();
-        }
         let title = "Model Already Exists";
         let message = "A model already exists with that name";
-        let errorModel = $(modals.errorHtml(title, message)).modal();
+        this.reportError({Reason: title, Measage: message});
       }
     });
   },
@@ -178,14 +172,10 @@ module.exports = View.extend({
       let endpoint = path.join(app.getApiPath(), "directory/create") + queryStr;
       app.getXHR(endpoint, {
         success: (err, response, body) => {
-          this.refreshJSTree(node)
+          this.refreshJSTree(node);
         },
         error: (err, response, body) => {
-          if(document.querySelector("#errorModal")) {
-            document.querySelector("#errorModal").remove();
-          }
-          body = JSON.parse(body);
-          let errorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+          this.reportError(JSON.parse(body));
         }
       });
     });
@@ -232,10 +222,7 @@ module.exports = View.extend({
           this.openProject(body.path);
         },
         error: (err, response, body) => {
-          if(document.querySelector("#errorModal")) {
-            document.querySelector("#errorModal").remove();
-          }
-          let errorModel = $(modals.errorHtml(body.Reason, body.Message)).modal();
+          this.reportError(body);
         }
       });
     });
@@ -254,6 +241,7 @@ module.exports = View.extend({
         success: (err, response, body) => {
           let par = $('#files-jstree').jstree().get_node(node.parent);
           this.refreshJSTree(par);
+          this.config.updateParent(node.type);
           if(par.type === "root"){
             let actionsBtn = $(this.queryByHook("options-for-node"));
             if(actionsBtn.text().endsWith(node.text)) {
@@ -264,11 +252,7 @@ module.exports = View.extend({
           }
         },
         error: (err, response, body) => {
-          if(document.querySelector("#errorModal")) {
-            document.querySelector("#errorModal").remove();
-          }
-          body = JSON.parse(body);
-          let errorModel = $(modals.errorHtml(body.Reason, body.Message)).modal();
+          this.reportError(JSON.parse(body));
         }
       });
     });
@@ -356,14 +340,12 @@ module.exports = View.extend({
   },
   getDeleteContext: function (node, type) {
     return {
-      Delete: {
-        label: "Delete",
-        _disabled: false,
-        separator_before: false,
-        separator_after: false,
-        action: (data) => {
-          this.delete(node, type);
-        }
+      label: "Delete",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        this.delete(node, type);
       }
     }
   },
@@ -411,14 +393,14 @@ module.exports = View.extend({
     if(!options) {
       options = {};
     }
-    let label = Boolean(options.cb) ? "Duplicate as new" : "Duplicate"
+    let label = Boolean(options.cb) ? "Duplicate as new" : "Duplicate";
     return {
       label: label,
       _disabled: false,
       separator_before: false,
       separator_after: false,
       action: (data) => {
-        this.duplicate(node, identifier, options)
+        this.duplicate(node, identifier, options);
       }
     }
   },
@@ -455,7 +437,7 @@ module.exports = View.extend({
         if(dataType === "plain-text") {
           body = JSON.parse(body);
         }
-        console.log(body)
+        this.reportError(body);
       }
     });
   },
@@ -668,10 +650,7 @@ module.exports = View.extend({
               }
             },
             error: (err, response, body) => {
-              if(document.querySelector("#errorModal")) {
-                document.querySelector("#errorModal").remove();
-              }
-              let errorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+              this.reportError(body);
             }
           });
         });
@@ -711,8 +690,8 @@ module.exports = View.extend({
   },
   refreshJSTree: function (node) {
     if(node === null || node.type === 'root'){
-      this.jstreeIsLoaded = false
-      $('#files-jstree').jstree().deselect_all(true)
+      this.jstreeIsLoaded = false;
+      $('#files-jstree').jstree().deselect_all(true);
       $('#files-jstree').jstree().refresh();
     }else{
       $('#files-jstree').jstree().refresh_node(node);
@@ -749,6 +728,12 @@ module.exports = View.extend({
       extensionWarning.collapse('hide');
       nameWarning.collapse('hide');
     });
+  },
+  reportError: function (body) {
+    if(document.querySelector("#errorModal")) {
+      document.querySelector("#errorModal").remove();
+    }
+    let errorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
   },
   selectNode: function (node, fileName) {
     if(!this.jstreeIsLoaded || !$('#files-jstree').jstree().is_loaded(node) && $('#files-jstree').jstree().is_loading(node)) {
@@ -823,28 +808,28 @@ module.exports = View.extend({
     $('#files-jstree').jstree().show_contextmenu(this.nodeForContextMenu);
   },
   validateName: function (input, {rename = false, saveAs = true}={}) {
-    var error = ""
+    var error = "";
     if(input.endsWith('/')) {
-      error = 'forward'
+      error = 'forward';
     }
-    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
+    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
     if(rename || !saveAs) {
-      invalidChars += "/"
+      invalidChars += "/";
     }
     for(var i = 0; i < input.length; i++) {
       if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both"
+        error = error === "" || error === "special" ? "special" : "both";
       }
     }
-    return error
+    return error;
   },
   uploadFile: function (node, dirname, type, inProject) {
     if(document.querySelector('#uploadFileModal')) {
-      document.querySelector('#uploadFileModal').remove()
+      document.querySelector('#uploadFileModal').remove();
     }
     if(this.isSafariV14Plus == undefined){
       let browser = app.getBrowser();
-      this.isSafariV14Plus = (browser.name === "Safari" && browser.version >= 14)
+      this.isSafariV14Plus = (browser.name === "Safari" && browser.version >= 14);
     }
     let modal = $(modals.uploadFileHtml(type, this.isSafariV14Plus)).modal();
     let uploadBtn = document.querySelector('#uploadFileModal .upload-modal-btn');
@@ -868,7 +853,7 @@ module.exports = View.extend({
       return {saveAs: true};
     }
     let validateFile = () => {
-      let options = getOptions(fileInput.files[0])
+      let options = getOptions(fileInput.files[0]);
       let fileErr = !fileInput.files.length ? "" : this.validateName(fileInput.files[0].name, options);
       let nameErr = this.validateName(input.value, options);
       if(!fileInput.files.length) {
@@ -895,7 +880,7 @@ module.exports = View.extend({
     uploadBtn.addEventListener('click', (e) => {
       modal.modal('hide');
       let file = fileInput.files[0];
-      let options = getOptions(file)
+      let options = getOptions(file);
       let fileinfo = {type: type, name: "", path: dirname};
       if(Boolean(input.value) && this.validateName(input.value.trim(), options) === ""){
         fileinfo.name = input.value.trim();
@@ -908,7 +893,7 @@ module.exports = View.extend({
         success: (err, response, body) => {
           body = JSON.parse(body);
           this.refreshJSTree(node);
-          this.config.updateParent(this, "model")
+          this.config.updateParent(this, "model");
           if(body.errors.length > 0){
             if(document.querySelector("#uploadFileErrorsModal")) {
               document.querySelector("#uploadFileErrorsModal").remove();
@@ -917,11 +902,8 @@ module.exports = View.extend({
           }
         },
         error: (err, response, body) => {
-          if(document.querySelector("#errorModal")) {
-            document.querySelector("#errorModal").remove();
-          }
           body = JSON.parse(body);
-          let zipErrorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+          this.reportError(body);
         }
       }, false);
     });

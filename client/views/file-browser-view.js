@@ -357,40 +357,40 @@ let Model = require('../models/model');
   //     }
   //   }, false);
   // },
-  deleteFile: function (o) {
-    var fileType = o.type
-    if(fileType === "nonspatial")
-      fileType = "model";
-    else if(fileType === "spatial")
-      fileType = "spatial model"
-    else if(fileType === "sbml-model")
-      fileType = "sbml model"
-    else if(fileType === "other")
-      fileType = "file"
-    var self = this
-    if(document.querySelector('#deleteFileModal')) {
-      document.querySelector('#deleteFileModal').remove()
-    }
-    let modal = $(modals.deleteFileHtml(fileType)).modal();
-    let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
-    yesBtn.addEventListener('click', function (e) {
-      var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
-      app.getXHR(endpoint, {
-        success: function (err, response, body) {
-          var node = $('#models-jstree-view').jstree().get_node(o.parent);
-          if(node.type === "root"){
-            self.refreshJSTree();
-          }else{
-            $('#models-jstree-view').jstree().refresh_node(node);
-          }
-        }
-      });
-      modal.modal('hide')
-      if(o.type !== "notebook" || o.original._path.includes(".wkgp")) {
-        self.updateParent(o.type)
-      }
-    });
-  },
+  // deleteFile: function (o) {
+  //   var fileType = o.type
+  //   if(fileType === "nonspatial")
+  //     fileType = "model";
+  //   else if(fileType === "spatial")
+  //     fileType = "spatial model"
+  //   else if(fileType === "sbml-model")
+  //     fileType = "sbml model"
+  //   else if(fileType === "other")
+  //     fileType = "file"
+  //   var self = this
+  //   if(document.querySelector('#deleteFileModal')) {
+  //     document.querySelector('#deleteFileModal').remove()
+  //   }
+  //   let modal = $(modals.deleteFileHtml(fileType)).modal();
+  //   let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
+  //   yesBtn.addEventListener('click', function (e) {
+  //     var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
+  //     app.getXHR(endpoint, {
+  //       success: function (err, response, body) {
+  //         var node = $('#models-jstree-view').jstree().get_node(o.parent);
+  //         if(node.type === "root"){
+  //           self.refreshJSTree();
+  //         }else{
+  //           $('#models-jstree-view').jstree().refresh_node(node);
+  //         }
+  //       }
+  //     });
+  //     modal.modal('hide')
+  //     if(o.type !== "notebook" || o.original._path.includes(".wkgp")) {
+  //       self.updateParent(o.type)
+  //     }
+  //   });
+  // },
   // duplicateFileOrDirectory: function(o, type) {
   //   var self = this;
   //   var parentID = o.parent;

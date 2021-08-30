@@ -352,46 +352,46 @@ let FileBrowser = PageView.extend({
   //     modal.modal('hide')
   //   });
   // },
-  deleteFile: function (o) {
-    var fileType = o.type
-    if(fileType === "nonspatial")
-      fileType = "model";
-    else if(fileType === "spatial")
-      fileType = "spatial model"
-    else if(fileType === "sbml-model")
-      fileType = "sbml model"
-    else if(fileType === "other")
-      fileType = "file"
-    var self = this
-    if(document.querySelector('#deleteFileModal')) {
-      document.querySelector('#deleteFileModal').remove()
-    }
-    let modal = $(modals.deleteFileHtml(fileType)).modal();
-    let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
-    yesBtn.addEventListener('click', function (e) {
-      var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
-      app.getXHR(endpoint, {
-        success: function (err, response, body) {
-          var node = $('#models-jstree').jstree().get_node(o.parent);
-          if(node.type === "root"){
-            self.refreshJSTree();
-            let actionsBtn = $(self.queryByHook("options-for-node"));
-            if(actionsBtn.text().endsWith(o.text)) {
-              actionsBtn.text("Actions");
-              actionsBtn.prop("disabled", true);
-              self.nodeForContextMenu = "";
-            }
-          }else{
-            $('#models-jstree').jstree().refresh_node(node);
-          }
-        },
-        error: function (err, response, body) {
-          body = JSON.parse(body);
-        }
-      });
-      modal.modal('hide')
-    });
-  },
+  // deleteFile: function (o) {
+  //   var fileType = o.type
+  //   if(fileType === "nonspatial")
+  //     fileType = "model";
+  //   else if(fileType === "spatial")
+  //     fileType = "spatial model"
+  //   else if(fileType === "sbml-model")
+  //     fileType = "sbml model"
+  //   else if(fileType === "other")
+  //     fileType = "file"
+  //   var self = this
+  //   if(document.querySelector('#deleteFileModal')) {
+  //     document.querySelector('#deleteFileModal').remove()
+  //   }
+  //   let modal = $(modals.deleteFileHtml(fileType)).modal();
+  //   let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
+  //   yesBtn.addEventListener('click', function (e) {
+  //     var endpoint = path.join(app.getApiPath(), "file/delete")+"?path="+o.original._path
+  //     app.getXHR(endpoint, {
+  //       success: function (err, response, body) {
+  //         var node = $('#models-jstree').jstree().get_node(o.parent);
+  //         if(node.type === "root"){
+  //           self.refreshJSTree();
+  //           let actionsBtn = $(self.queryByHook("options-for-node"));
+  //           if(actionsBtn.text().endsWith(o.text)) {
+  //             actionsBtn.text("Actions");
+  //             actionsBtn.prop("disabled", true);
+  //             self.nodeForContextMenu = "";
+  //           }
+  //         }else{
+  //           $('#models-jstree').jstree().refresh_node(node);
+  //         }
+  //       },
+  //       error: function (err, response, body) {
+  //         body = JSON.parse(body);
+  //       }
+  //     });
+  //     modal.modal('hide')
+  //   });
+  // },
   // duplicateFileOrDirectory: function(o, type) {
   //   var self = this;
   //   var parentID = o.parent;
