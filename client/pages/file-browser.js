@@ -238,28 +238,28 @@ let FileBrowser = PageView.extend({
   //     }, 3000);
   //   }
   // },
-  selectNode: function (node, fileName) {
-    let self = this
-    if(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
-      setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
-    }else{
-      node = $('#models-jstree').jstree().get_node(node)
-      var child = ""
-      for(var i = 0; i < node.children.length; i++) {
-        var child = $('#models-jstree').jstree().get_node(node.children[i])
-        if(child.original.text === fileName) {
-          $('#models-jstree').jstree().select_node(child)
-          let optionsButton = $(self.queryByHook("options-for-node"))
-          if(!self.nodeForContextMenu){
-            optionsButton.prop('disabled', false)
-          }
-          optionsButton.text("Actions for " + child.original.text)
-          self.nodeForContextMenu = child;
-          break
-        }
-      }
-    }
-  },
+  // selectNode: function (node, fileName) {
+  //   let self = this
+  //   if(!this.jstreeIsLoaded || !$('#models-jstree').jstree().is_loaded(node) && $('#models-jstree').jstree().is_loading(node)) {
+  //     setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
+  //   }else{
+  //     node = $('#models-jstree').jstree().get_node(node)
+  //     var child = ""
+  //     for(var i = 0; i < node.children.length; i++) {
+  //       var child = $('#models-jstree').jstree().get_node(node.children[i])
+  //       if(child.original.text === fileName) {
+  //         $('#models-jstree').jstree().select_node(child)
+  //         let optionsButton = $(self.queryByHook("options-for-node"))
+  //         if(!self.nodeForContextMenu){
+  //           optionsButton.prop('disabled', false)
+  //         }
+  //         optionsButton.text("Actions for " + child.original.text)
+  //         self.nodeForContextMenu = child;
+  //         break
+  //       }
+  //     }
+  //   }
+  // },
   // handleUploadFileClick: function (e) {
   //   let type = e.target.dataset.type
   //   this.uploadFile(undefined, type)
@@ -392,48 +392,48 @@ let FileBrowser = PageView.extend({
       modal.modal('hide')
     });
   },
-  duplicateFileOrDirectory: function(o, type) {
-    var self = this;
-    var parentID = o.parent;
-    var queryStr = "?path="+o.original._path
-    if(!type && o.original.type === 'folder'){
-      type = "directory"
-    }else if(!type && o.original.type === 'workflow'){
-      type = "workflow"
-    }else if(!type){
-      type = "file"
-    }
-    if(type === "directory"){
-      var identifier = "directory/duplicate"
-    }else if(type === "workflow" || type === "wkfl_model"){
-      var timeStamp = type === "workflow" ? this.getTimeStamp() : "None"
-      var identifier = "workflow/duplicate"
-      queryStr = queryStr.concat("&target="+type+"&stamp="+timeStamp)
-    }else{
-      var identifier = "file/duplicate"
-    }
-    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          self.refreshJSTree();
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-        if(type === "workflow"){
-          var message = ""
-          if(body.error){
-            message = body.error;
-          }else{
-            message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>";
-          }
-          let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal();
-        }
-        self.selectNode(node, body.File);
-      }
-    });
-  },
+  // duplicateFileOrDirectory: function(o, type) {
+  //   var self = this;
+  //   var parentID = o.parent;
+  //   var queryStr = "?path="+o.original._path
+  //   if(!type && o.original.type === 'folder'){
+  //     type = "directory"
+  //   }else if(!type && o.original.type === 'workflow'){
+  //     type = "workflow"
+  //   }else if(!type){
+  //     type = "file"
+  //   }
+  //   if(type === "directory"){
+  //     var identifier = "directory/duplicate"
+  //   }else if(type === "workflow" || type === "wkfl_model"){
+  //     var timeStamp = type === "workflow" ? this.getTimeStamp() : "None"
+  //     var identifier = "workflow/duplicate"
+  //     queryStr = queryStr.concat("&target="+type+"&stamp="+timeStamp)
+  //   }else{
+  //     var identifier = "file/duplicate"
+  //   }
+  //   var endpoint = path.join(app.getApiPath(), identifier)+queryStr
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       var node = $('#models-jstree').jstree().get_node(parentID);
+  //       if(node.type === "root"){
+  //         self.refreshJSTree();
+  //       }else{          
+  //         $('#models-jstree').jstree().refresh_node(node);
+  //       }
+  //       if(type === "workflow"){
+  //         var message = ""
+  //         if(body.error){
+  //           message = body.error;
+  //         }else{
+  //           message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>";
+  //         }
+  //         let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal();
+  //       }
+  //       self.selectNode(node, body.File);
+  //     }
+  //   });
+  // },
   getTimeStamp: function () {
     var date = new Date();
     var year = date.getFullYear();
@@ -934,25 +934,25 @@ let FileBrowser = PageView.extend({
       }
     });
   },
-  moveToTrash: function (o) {
-    if(document.querySelector('#moveToTrashConfirmModal')) {
-      document.querySelector('#moveToTrashConfirmModal').remove();
-    }
-    let self = this;
-    let modal = $(modals.moveToTrashConfirmHtml("model")).modal();
-    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
-    yesBtn.addEventListener('click', function (e) {
-      modal.modal('hide');
-      let queryStr = "?srcPath=" + o.original._path + "&dstPath=" + path.join("trash", o.text)
-      let endpoint = path.join(app.getApiPath(), "file/move") + queryStr
-      app.getXHR(endpoint, {
-        always: function (err, response, body) {
-          $(self.queryByHook('empty-trash')).prop('disabled', false);
-          $('#models-jstree').jstree().refresh();
-        }
-      });
-    });
-  },
+  // moveToTrash: function (o) {
+  //   if(document.querySelector('#moveToTrashConfirmModal')) {
+  //     document.querySelector('#moveToTrashConfirmModal').remove();
+  //   }
+  //   let self = this;
+  //   let modal = $(modals.moveToTrashConfirmHtml("model")).modal();
+  //   let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
+  //   yesBtn.addEventListener('click', function (e) {
+  //     modal.modal('hide');
+  //     let queryStr = "?srcPath=" + o.original._path + "&dstPath=" + path.join("trash", o.text)
+  //     let endpoint = path.join(app.getApiPath(), "file/move") + queryStr
+  //     app.getXHR(endpoint, {
+  //       always: function (err, response, body) {
+  //         $(self.queryByHook('empty-trash')).prop('disabled', false);
+  //         $('#models-jstree').jstree().refresh();
+  //       }
+  //     });
+  //   });
+  // },
   // emptyTrash: function (e) {
   //   if(document.querySelector("#emptyTrashConfirmModal")) {
   //     document.querySelector("#emptyTrashConfirmModal").remove()
@@ -1011,7 +1011,7 @@ let FileBrowser = PageView.extend({
       // let zipTypes = ["workflow", "folder", "other", "project", "workflow-group"]
       // let asZip = zipTypes.includes(nodeType)
       // common to all type except root
-      let common = {
+      // let common = {
         // "Download" : {
         //   "label" : asZip ? "Download as .zip" : "Download",
         //   "_disabled" : false,
@@ -1034,25 +1034,25 @@ let FileBrowser = PageView.extend({
         //     self.renameNode(o);
         //   }
         // },
-        "Duplicate" : {
-          "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
-          "_disabled" : (nodeType === "project"),
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.duplicateFileOrDirectory(o, null)
-          }
-        },
-        "MoveToTrash" : {
-          "label" : "Move To Trash",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.moveToTrash(o);
-          }
-        }
-      }
+        // "Duplicate" : {
+        //   "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
+        //   "_disabled" : (nodeType === "project"),
+        //   "separator_before" : false,
+        //   "separator_after" : false,
+        //   "action" : function (data) {
+        //     self.duplicateFileOrDirectory(o, null)
+        //   }
+        // },
+      //   "MoveToTrash" : {
+      //     "label" : "Move To Trash",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.moveToTrash(o);
+      //     }
+      //   }
+      // }
       let delete_node = {
         "Delete" : {
           "label" : "Delete",
@@ -1297,8 +1297,8 @@ let FileBrowser = PageView.extend({
           "action" : function (data) {
             if(nodeType === "workflow"){
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
-            }else if(nodeType === "project"){
-              window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
+            // }else if(nodeType === "project"){
+              // window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
             }else if(nodeType === "domain") {
               let queryStr = "?domainPath=" + o.original._path
               window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
@@ -1315,26 +1315,26 @@ let FileBrowser = PageView.extend({
           }
         }
       }
-      let project = {
-        "Add Model" : {
-          "label" : "Add Model",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "New Model" : folder.New_model,
-            "Existing Model" : {
-              "label" : "Existing Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.addExistingModel(o)
-              }
-            }
-          }
-        }
-      }
+      // let project = {
+      //   "Add Model" : {
+      //     "label" : "Add Model",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "New Model" : folder.New_model,
+      //       "Existing Model" : {
+      //         "label" : "Existing Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.addExistingModel(o)
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // specific to workflows
       let workflow = {
         "Start/Restart Workflow" : {
@@ -1443,9 +1443,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'nonspatial') {
          return $.extend(model, modelConvert, common)
       }
-      if (o.type === 'project'){
-        return $.extend(open, project, common)
-      }
+      // if (o.type === 'project'){
+      //   return $.extend(open, project, common)
+      // }
       if (o.type === 'workflow') {
         return $.extend(open, workflow, common)
       }

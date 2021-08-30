@@ -36,8 +36,7 @@ let doubleClick = (view, e) => {
     }else if(node.type === "sbml-model"){
       window.open(path.join(app.getBasePath(), "edit", node.original._path), '_blank');
     }else if(node.type === "project"){
-      let queryStr = "?path=" + node.original._path
-      window.location.href = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+      view.openProject(node.original._path);
     }else if(node.type === "workflow"){
       let queryStr = "?path=" + node.original._path + "&type=none";
       window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit") + queryStr;
@@ -48,6 +47,31 @@ let doubleClick = (view, e) => {
       var openPath = path.join(app.getBasePath(), "view", node.original._path);
       window.open(openPath, "_blank");
     }
+  }
+}
+
+let getOpenProjectContext = (view, node) => {
+  return {
+    label: "Open",
+    _disabled: false,
+    _class: "font-weight-bolder",
+    separator_before: false,
+    separator_after: true,
+    action: (data) => {
+      view.openProject(node.original._path);
+    }
+  }
+}
+
+let getProjectContext = (view, node) => {
+  let dirname = node.original._path === "/" ? "" : node.original._path;
+  return {
+    open: getOpenProjectContext(view, node),
+    addModel: view.getAddModelContext(node),
+    download: view.getDownloadWCombineContext(node),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "directory/duplicate"),
+    moveToTrash: view.getMoveToTrashContext(node)
   }
 }
 
@@ -98,7 +122,7 @@ let move = (view, par, node) => {
 
 let setup = (view) => {
   $(view.queryByHook("fb-proj-seperator")).css("display", "none");
-  $(view.queryByHook("fb-add-existing-model")).css("display", "none");
+  $(view.queryByHook("fb-import-model")).css("display", "none");
 }
 
 let types = {
@@ -149,6 +173,7 @@ let validateMove = (view, node, more, pos) => {
 module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
+  getProjectContext: getProjectContext,
   getRootContext: getRootContext,
   move: move,
   setup: setup,

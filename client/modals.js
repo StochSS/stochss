@@ -306,6 +306,16 @@ module.exports = {
 
     return templates.fileSelect(modalID, fileID, locationID, title, label, files);
   },
+  moveToTrashConfirmHtml : (fileType, {newFormat=false}={}) => {
+    let modalID = "moveToTrashConfirmModal";
+    let title = `Move this ${fileType} to trash?`;
+
+    if(newFormat) {
+      let message = "The workflows for this model will be archived";
+      return templates.confirmation_with_message(modalID, title, message);
+    }
+    return templates.confirmation(modalID, title);
+  },
   successHtml : (message) => {
     let modalID = "successModal";
     let title = "Success!";
@@ -349,16 +359,6 @@ module.exports = {
         let modalID = "deleteFileModal"
         let title = `Permanently delete this ${fileType}?`
 
-        return templates.confirmation(modalID, title)
-    },
-    moveToTrashConfirmHtml : (fileType, newProjectFormat=false) => {
-        let modalID = "moveToTrashConfirmModal"
-        let title = `Move this ${fileType} to trash?`
-
-        if(newProjectFormat) {
-          let message = "The workflows for this model will be archived"
-          return templates.confirmation_with_message(modalID, title, message);
-        }
         return templates.confirmation(modalID, title)
     },
     operationInfoModalHtml : (page) => {

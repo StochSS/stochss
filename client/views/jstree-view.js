@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 let path = require('path');
+let _ = require('underscore');
 let jstree = require('jstree');
 //support files
 let app = require('../app');
@@ -41,7 +42,7 @@ module.exports = View.extend({
     'click [data-hook=upload-file-btn]' : 'handleUploadFileClick',
     'click [data-hook=options-for-node]' : 'showContextMenuForNode',
     'click [data-hook=refresh-jstree]' : 'handleRefreshJSTreeClick',
-    'click [data-hook=empty-trash]' : 'emptyTrash',
+    'click [data-hook=fb-empty-trash]' : 'emptyTrash',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -52,13 +53,13 @@ module.exports = View.extend({
     this.ajaxData = {
       "url" : (node) => {
         if(node.parent === null){
-          var queryStr = "?path=" + this.root;
+          var queryStr = `?path=${this.root}`;
           if(this.root !== "none") {
             queryStr += "&isRoot=True";
           }
           return path.join(app.getApiPath(), "file/browser-list") + queryStr;
         }
-        var queryStr = "?path=" + node.original._path;
+        var queryStr = `?path=${node.original._path}`;
         return path.join(app.getApiPath(), "file/browser-list") + queryStr;
       },
       "dataType" : "json",
@@ -126,7 +127,7 @@ module.exports = View.extend({
     });
   },
   addModel: function (dirname, file) {
-    let queryStr = "?path=" + path.join(dirname, file);
+    let queryStr = `?path=${path.join(dirname, file)}`;
     let existEP = path.join(app.getApiPath(), "model/exists") + queryStr;
     app.getXHR(existEP, {
       always: (err, response, body) => {
@@ -145,11 +146,11 @@ module.exports = View.extend({
     });
   },
   addProjectModel: function (dirname, file) {
-    let queryStr = "?path=" + dirname + "&mdlFile=" + file;
+    let queryStr = `?path=${dirname}&mdlFile=${file}`;
     let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryStr;
     app.getXHR(newMdlEP, {
       success: (err, response, body) => {
-        let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + "?path=" + body.path;
+        let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + `?path=${body.path}`;
         window.location.href = endpoint;
       },
       error: (err, response, body) => {
@@ -173,7 +174,7 @@ module.exports = View.extend({
     this.addInputValidateEvent(input, okBtn, "#newDirectoryModal", "#directoryNameInput");
     okBtn.addEventListener('click', (e) => {
       modal.modal('hide');
-      let queryStr = "?path=" + path.join(dirname, input.value.trim());
+      let queryStr = `?path=${path.join(dirname, input.value.trim())}`;
       let endpoint = path.join(app.getApiPath(), "directory/create") + queryStr;
       app.getXHR(endpoint, {
         success: (err, response, body) => {
@@ -188,6 +189,10 @@ module.exports = View.extend({
         }
       });
     });
+  },
+  createDomain: function (dirname) {
+    let queryStr = `?domainPath=${dirname}&new`;
+    window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
   },
   createModel: function (node, dirname, isSpatial, inProject) {
     if(document.querySelector('#newModelModal')) {
@@ -219,14 +224,12 @@ module.exports = View.extend({
     this.addInputValidateEvent(input, okBtn, "#newProjectModal", "#projectNameInput");
     okBtn.addEventListener("click", (e) => {
       modal.modal('hide');
-      let queryStr = "?path=" + path.join(dirname, `${input.value.trim()}.proj`);
+      let queryStr = `?path=${path.join(dirname, `${input.value.trim()}.proj`)}`;
       let endpoint = path.join(app.getApiPath(), "project/new-project") + queryStr;
       app.getXHR(endpoint, {
         success: (err, response, body) => {
           this.config.updateParent(this, "project");
-          let queryStr = "?path=" + body.path;
-          let endpoint = path.join(app.getBasePath(), 'stochss/project/manager') + queryStr;
-          window.location.href = endpoint;
+          this.openProject(body.path);
         },
         error: (err, response, body) => {
           if(document.querySelector("#errorModal")) {
@@ -235,6 +238,27 @@ module.exports = View.extend({
           let errorModel = $(modals.errorHtml(body.Reason, body.Message)).modal();
         }
       });
+    });
+  },
+  duplicate: function (node, identifier, {cb=null, target=null, timeStamp=null}={}) {
+    var queryStr = `?path=${node.original._path}`;
+    if(target) {
+      queryStr += `&target=${target}`;
+    }
+    if(timeStamp) {
+      queryStr += `&stamp=${timeStamp}`;
+    }
+    let endpoint = path.join(app.getApiPath(), identifier) + queryStr;
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        let par = $('#files-jstree').jstree().get_node(node.parent);
+        this.refreshJSTree(par);
+        if(cb) {
+          cb(body.File, body.mdlPath);
+        }
+        this.selectNode(par, body.File);
+        this.config.updateParent(this, node.type);
+      }
     });
   },
   emptyTrash: function (e) {
@@ -255,7 +279,7 @@ module.exports = View.extend({
     });
   },
   exportToFile: function (fileData, fileName) {
-    let dataURI = 'data:text/plain;charset=utf-8,' + encodeURIComponent(fileData);
+    let dataURI = `data:text/plain;charset=utf-8,${encodeURIComponent(fileData)}`;
 
     let linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataURI);
@@ -264,7 +288,7 @@ module.exports = View.extend({
   },
   exportToJsonFile: function (fileData, fileName) {
     let dataStr = JSON.stringify(fileData);
-    let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
+    let dataURI = `data:application/json;charset=utf-8,${encodeURIComponent(dataStr)}`;
     let exportFileDefaultName = fileName;
 
     let linkElement = document.createElement('a');
@@ -337,15 +361,30 @@ module.exports = View.extend({
       }
     }
   },
+  getDuplicateContext: function (node, identifier, options) {
+    if(!options) {
+      options = {};
+    }
+    let label = Boolean(options.cb) ? "Duplicate as new" : "Duplicate"
+    return {
+      label: label,
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        this.duplicate(node, identifier, options)
+      }
+    }
+  },
   getExportData: function (node, {dataType="", identifier=""}={}) {
     if(node.original.text.endsWith('.zip')) {
       return this.exportToZipFile(node.original._path);
     }
     let isJSON = node.original.type === "sbml-model" ? false : true;
     if(node.original.type === "domain") {
-      var queryStr = "?domain_path=" + node.original._path;
+      var queryStr = `?domain_path=${node.original._path}`;
     }else{
-      var queryStr = "?path=" + node.original._path;
+      var queryStr = `?path=${node.original._path}`;
       if(dataType === "json"){
         queryStr += "&for=None";
       }else if(dataType === "zip"){
@@ -417,6 +456,17 @@ module.exports = View.extend({
       }
     }
   },
+  getMoveToTrashContext: function (node, type) {
+    return {
+      label: "Move To Trash",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        this.moveToTrash(node, type);
+      }
+    }
+  },
   getNewDirectoryContext: function (node) {
     let dirname = node.original._path === "/" ? "" : node.original._path;
     return {
@@ -436,8 +486,7 @@ module.exports = View.extend({
       separator_before: false,
       separator_after: false,
       action: (data) => {
-        let queryStr = "?domainPath=" + node.original._path + "&new";
-        window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
+        this.createDomain(node.original._path);
       }
     }
   },
@@ -510,8 +559,7 @@ module.exports = View.extend({
   },
   handleCreateDomain: function (e) {
     let dirname = this.root === "none" ? "/" : this.root;
-    let queryStr = "?domainPath=" + dirname + "&new";
-    window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
+    this.createDomain(dirname);
   },
   handleImportModelClick: function () {
     this.importModel(null, this.root);
@@ -532,7 +580,7 @@ module.exports = View.extend({
     if(document.querySelector('#importModelModal')){
       document.querySelector('#importModelModal').remove();
     }
-    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path=" + projectPath;
+    let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + `?path=${projectPath}`;
     app.getXHR(mdlListEP, {
       always: (err, response, body) => {
         let modal = $(modals.importModelHtml(body.files)).modal();
@@ -560,7 +608,7 @@ module.exports = View.extend({
         okBtn.addEventListener("click", (e) => {
           modal.modal('hide');
           let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
-          let queryStr = "?path=" + projectPath + "&mdlPath=" + mdlPath;
+          let queryStr = `?path=${projectPath}&mdlPath=${mdlPath}`;
           let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryStr;
           app.postXHR(endpoint, null, {
             success: (err, response, body) => {
@@ -583,6 +631,28 @@ module.exports = View.extend({
         });
       }
     });
+  },
+  moveToTrash: function (node, type) {
+    if(document.querySelector('#moveToTrashConfirmModal')) {
+      document.querySelector('#moveToTrashConfirmModal').remove();
+    }
+    let modal = $(modals.moveToTrashConfirmHtml(type)).modal();
+    let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
+    yesBtn.addEventListener('click', (e) => {
+      modal.modal('hide');
+      let queryStr = `?srcPath=${node.original._path}&dstPath=${path.join("trash", node.text)}`;
+      let endpoint = path.join(app.getApiPath(), "file/move") + queryStr;
+      app.getXHR(endpoint, {
+        always: (err, response, body) => {
+          $(this.queryByHook('empty-trash')).prop('disabled', false);
+          this.refreshJSTree(null);
+        }
+      });
+    });
+  },
+  openProject: function (projectPath) {
+    let queryStr = `?path=${projectPath}`;
+    window.location.href = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
   },
   refreshInitialJSTree: function () {
     let count = $('#files-jstree').jstree()._model.data['#'].children.length;
@@ -610,8 +680,8 @@ module.exports = View.extend({
     extensionWarning.collapse('show');
     $('#files-jstree').jstree().edit(node, null, (node, status) => {
       if(currentName != node.text){
-        let name = node.type === "root" ? node.text + ".proj" : node.text;
-        let queryStr = "?path=" + node.original._path + "&name=" + name;
+        let name = node.type === "root" ? `${node.text}.proj` : node.text;
+        let queryStr = `?path=${node.original._path}&name=${name}`;
         let endpoint = path.join(app.getApiPath(), "file/rename") + queryStr;
         app.getXHR(endpoint, {
           always: (err, response, body) => {
@@ -619,9 +689,7 @@ module.exports = View.extend({
           },
           success: (err, response, body) => {
             if(this.root !== "none") {
-              let queryStr = "?path=" + body._path;
-              let endpoint = path.join(app.getBasePath(), 'stochss/project/manager') + queryStr;
-              window.location.href = endpoint;
+              this.openProject(body._path);
             }else if(body.changed) {
               nameWarning.text(body.message);
               nameWarning.collapse('show');
@@ -636,6 +704,27 @@ module.exports = View.extend({
       nameWarning.collapse('hide');
     });
   },
+  selectNode: function (node, fileName) {
+    if(!this.jstreeIsLoaded || !$('#files-jstree').jstree().is_loaded(node) && $('#files-jstree').jstree().is_loading(node)) {
+      setTimeout(_.bind(this.selectNode, this, node, fileName), 1000);
+    }else{
+      node = $('#files-jstree').jstree().get_node(node);
+      var child = "";
+      for(var i = 0; i < node.children.length; i++) {
+        var child = $('#files-jstree').jstree().get_node(node.children[i]);
+        if(child.original.text === fileName) {
+          $('#files-jstree').jstree().select_node(child);
+          let optionsButton = $(this.queryByHook("options-for-node"));
+          if(!this.nodeForContextMenu){
+            optionsButton.prop('disabled', false);
+          }
+          optionsButton.text(`Actions for ${child.original.text}`);
+          this.nodeForContextMenu = child;
+          break;
+        }
+      }
+    }
+  },
   setupJstree: function (cb) {
     $.jstree.defaults.contextmenu.items = (node, cb) => {
       let zipTypes = this.config.contextZipTypes;
@@ -644,11 +733,15 @@ module.exports = View.extend({
       if(!this.nodeForContextMenu) {
         optionsButton.prop('disabled', false);
       }
-      optionsButton.text("Actions for " + node.original.text);
+      optionsButton.text(`Actions for ${node.original.text}`);
       this.nodeForContextMenu = node;
       if (node.type === 'root'){
         return this.config.getRootContext(this, node);
       }
+      if (node.type === 'project'){
+        return this.config.getProjectContext(this, node);
+      }
+      
     }
     $(() => {
       $(document).on('shown.bs.modal', (e) => {
@@ -673,7 +766,7 @@ module.exports = View.extend({
         if(this.nodeForContextMenu === null){
           optionsButton.prop('disabled', false);
         }
-        optionsButton.text("Actions for " + node.original.text);
+        optionsButton.text(`Actions for ${node.original.text}`);
         this.nodeForContextMenu = node;
       });
       $('#files-jstree').on('dblclick.jstree', (e) => {

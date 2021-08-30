@@ -219,28 +219,28 @@ let Model = require('../models/model');
   //     }, 3000);
   //   }
   // },
-  selectNode: function (node, fileName) {
-    let self = this
-    if(!this.jstreeIsLoaded || !$('#models-jstree-view').jstree().is_loaded(node) && $('#models-jstree-view').jstree().is_loading(node)) {
-      setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
-    }else{
-      node = $('#models-jstree-view').jstree().get_node(node)
-      var child = ""
-      for(var i = 0; i < node.children.length; i++) {
-        var child = $('#models-jstree-view').jstree().get_node(node.children[i])
-        if(child.original.text === fileName) {
-          $('#models-jstree-view').jstree().select_node(child)
-          let optionsButton = $(self.queryByHook("options-for-node"))
-          if(!self.nodeForContextMenu){
-            optionsButton.prop('disabled', false)
-          }
-          optionsButton.text("Actions for " + child.original.text)
-          self.nodeForContextMenu = child;
-          break
-        }
-      }
-    }
-  },
+  // selectNode: function (node, fileName) {
+  //   let self = this
+  //   if(!this.jstreeIsLoaded || !$('#models-jstree-view').jstree().is_loaded(node) && $('#models-jstree-view').jstree().is_loading(node)) {
+  //     setTimeout(_.bind(self.selectNode, self, node, fileName), 1000);
+  //   }else{
+  //     node = $('#models-jstree-view').jstree().get_node(node)
+  //     var child = ""
+  //     for(var i = 0; i < node.children.length; i++) {
+  //       var child = $('#models-jstree-view').jstree().get_node(node.children[i])
+  //       if(child.original.text === fileName) {
+  //         $('#models-jstree-view').jstree().select_node(child)
+  //         let optionsButton = $(self.queryByHook("options-for-node"))
+  //         if(!self.nodeForContextMenu){
+  //           optionsButton.prop('disabled', false)
+  //         }
+  //         optionsButton.text("Actions for " + child.original.text)
+  //         self.nodeForContextMenu = child;
+  //         break
+  //       }
+  //     }
+  //   }
+  // },
   // handleUploadFileClick: function (e) {
   //   let type = e.target.dataset.type
   //   this.uploadFile(undefined, type)
@@ -391,47 +391,47 @@ let Model = require('../models/model');
       }
     });
   },
-  duplicateFileOrDirectory: function(o, type) {
-    var self = this;
-    var parentID = o.parent;
-    var queryStr = "?path="+o.original._path
-    if(!type && o.original.type === 'folder'){
-      type = "directory"
-    }else if(!type && o.original.type === 'workflow'){
-      type = "workflow"
-    }else if(!type){
-      type = "file"
-    }
-    if(type === "directory"){
-      var identifier = "directory/duplicate"
-    }else if(type === "workflow" || type === "wkfl_model"){
-      var timeStamp = type === "workflow" ? this.getTimeStamp() : "None"
-      var identifier = "workflow/duplicate"
-      queryStr = queryStr.concat("&target="+type+"&stamp="+timeStamp)
-    }else{
-      var identifier = "file/duplicate"
-    }
-    var endpoint = path.join(app.getApiPath(), identifier)+queryStr
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        var node = $('#models-jstree-view').jstree().get_node(parentID);
-        self.refreshJSTree()
-        if(type === "workflow"){
-          var message = ""
-          if(body.error){
-            message = body.error
-          }else{
-            message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>"
-          }
-          let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal()
-        }
-        self.selectNode(node, body.File)
-        if(o.type !== "notebook" || o.original._path.includes(".wkgp")) {
-          self.updateParent(o.type)
-        }
-      }
-    });
-  },
+  // duplicateFileOrDirectory: function(o, type) {
+  //   var self = this;
+  //   var parentID = o.parent;
+  //   var queryStr = "?path="+o.original._path
+  //   if(!type && o.original.type === 'folder'){
+  //     type = "directory"
+  //   }else if(!type && o.original.type === 'workflow'){
+  //     type = "workflow"
+  //   }else if(!type){
+  //     type = "file"
+  //   }
+  //   if(type === "directory"){
+  //     var identifier = "directory/duplicate"
+  //   }else if(type === "workflow" || type === "wkfl_model"){
+  //     var timeStamp = type === "workflow" ? this.getTimeStamp() : "None"
+  //     var identifier = "workflow/duplicate"
+  //     queryStr = queryStr.concat("&target="+type+"&stamp="+timeStamp)
+  //   }else{
+  //     var identifier = "file/duplicate"
+  //   }
+  //   var endpoint = path.join(app.getApiPath(), identifier)+queryStr
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       var node = $('#models-jstree-view').jstree().get_node(parentID);
+  //       self.refreshJSTree()
+  //       if(type === "workflow"){
+  //         var message = ""
+  //         if(body.error){
+  //           message = body.error
+  //         }else{
+  //           message = "The model for <b>"+body.File+"</b> is located here: <b>"+body.mdlPath+"</b>"
+  //         }
+  //         let modal = $(modals.duplicateWorkflowHtml(body.File, message)).modal()
+  //       }
+  //       self.selectNode(node, body.File)
+  //       if(o.type !== "notebook" || o.original._path.includes(".wkgp")) {
+  //         self.updateParent(o.type)
+  //       }
+  //     }
+  //   });
+  // },
   getTimeStamp: function () {
     var date = new Date();
     var year = date.getFullYear();
@@ -1022,8 +1022,8 @@ let Model = require('../models/model');
           "action" : function (data) {
             if(nodeType === "workflow"){
               window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
-            }else if(nodeType === "project"){
-              window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
+            // }else if(nodeType === "project"){
+            //   window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
             }else if(nodeType === "domain") {
               let queryStr = "?domainPath=" + o.original._path
               window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
@@ -1388,15 +1388,15 @@ let Model = require('../models/model');
         //     self.renameNode(o);
         //   }
         // },
-        "Duplicate" : {
-          "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
-          "_disabled" : (nodeType === "project" || nodeType === "workflow-group"),
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.duplicateFileOrDirectory(o, null)
-          }
-        },
+        // "Duplicate" : {
+        //   "label" : (nodeType === "workflow") ? "Duplicate as new" : "Duplicate",
+        //   "_disabled" : (nodeType === "project" || nodeType === "workflow-group"),
+        //   "separator_before" : false,
+        //   "separator_after" : false,
+        //   "action" : function (data) {
+        //     self.duplicateFileOrDirectory(o, null)
+        //   }
+        // },
         "Delete" : {
           "label" : "Delete",
           "_disabled" : false,
