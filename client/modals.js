@@ -527,6 +527,11 @@ module.exports = {
 
       return templates.confirmation_with_message(modalID, title, message);
     },
+    uploadFileExistsHtml: (title, message) => {
+      let modalID = 'uploadFileExistsModal';
+
+      return templates.confirmation_with_message(modalID, title, message);
+    },
     renderDefaultModeModalHtml : () => {
         let concentrationDesciption = `Variables will only be represented using continuous (floating point) values.`;
         let populationDescription = `Population - Variables will only be represented using discrete (integer count) values.`;
