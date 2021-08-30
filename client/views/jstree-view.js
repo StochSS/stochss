@@ -240,6 +240,39 @@ module.exports = View.extend({
       });
     });
   },
+  delete: function (node, type) {
+    if(document.querySelector('#deleteFileModal')) {
+      document.querySelector('#deleteFileModal').remove();
+    }
+    let modal = $(modals.deleteFileHtml(type)).modal();
+    let yesBtn = document.querySelector('#deleteFileModal .yes-modal-btn');
+    yesBtn.addEventListener('click', (e) => {
+      modal.modal('hide');
+      let queryStr = `?path=${node.original._path}`;
+      let endpoint = path.join(app.getApiPath(), "file/delete") + queryStr;
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          let par = $('#files-jstree').jstree().get_node(node.parent);
+          this.refreshJSTree(par);
+          if(par.type === "root"){
+            let actionsBtn = $(this.queryByHook("options-for-node"));
+            if(actionsBtn.text().endsWith(node.text)) {
+              actionsBtn.text("Actions");
+              actionsBtn.prop("disabled", true);
+              this.nodeForContextMenu = "";
+            }
+          }
+        },
+        error: (err, response, body) => {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
+          body = JSON.parse(body);
+          let errorModel = $(modals.errorHtml(body.Reason, body.Message)).modal();
+        }
+      });
+    });
+  },
   duplicate: function (node, identifier, {cb=null, target=null, timeStamp=null}={}) {
     var queryStr = `?path=${node.original._path}`;
     if(target) {
@@ -317,6 +350,19 @@ module.exports = View.extend({
           action: (data) => {
             this.importModel(node, node.original._path);
           }
+        }
+      }
+    }
+  },
+  getDeleteContext: function (node, type) {
+    return {
+      Delete: {
+        label: "Delete",
+        _disabled: false,
+        separator_before: false,
+        separator_after: false,
+        action: (data) => {
+          this.delete(node, type);
         }
       }
     }
@@ -429,9 +475,9 @@ module.exports = View.extend({
     let dirname = node.original._path === "/" ? "" : node.original._path;
     let file = this.getFileUploadContext(node, inProject);
     return {
-      label: "Upload File",
+      label: "Upload",
       _disabled: false,
-      separator_before: false,
+      separator_before: true,
       separator_after: false,
       submenu: {
         model: {
@@ -735,13 +781,12 @@ module.exports = View.extend({
       }
       optionsButton.text(`Actions for ${node.original.text}`);
       this.nodeForContextMenu = node;
-      if (node.type === 'root'){
-        return this.config.getRootContext(this, node);
+      let contextMenus = {
+        root: this.config.getRootContext,
+        project: this.config.getProjectContext,
+        "workflow-group": this.config.getWorkflowGroupContext
       }
-      if (node.type === 'project'){
-        return this.config.getProjectContext(this, node);
-      }
-      
+      return contextMenus[node.type](this, node);
     }
     $(() => {
       $(document).on('shown.bs.modal', (e) => {

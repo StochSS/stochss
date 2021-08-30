@@ -1053,17 +1053,17 @@ let FileBrowser = PageView.extend({
       //     }
       //   }
       // }
-      let delete_node = {
-        "Delete" : {
-          "label" : "Delete",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.deleteFile(o);
-          }
-        }
-      }
+      // let delete_node = {
+      //   "Delete" : {
+      //     "label" : "Delete",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.deleteFile(o);
+      //     }
+      //   }
+      // }
       // common to root and folders
       // let folder = {
       //   "Refresh" : {
@@ -1428,43 +1428,43 @@ let FileBrowser = PageView.extend({
       // if (o.type === 'root'){
       //   return folder
       // }
-      if (o.text === "trash") {
+      if (o.text === "trash") {//Trash node
         return {"Refresh": folder.Refresh}
       }
-      if (o.original._path.split("/")[0] === "trash") {
+      if (o.original._path.split("/")[0] === "trash") { // item in trash
         return delete_node
       }
-      if (o.type ===  'folder') {
+      if (o.type ===  'folder') { // folder node
         return $.extend(folder, common)
       }
-      if (o.type === 'spatial') {
+      if (o.type === 'spatial') { // spatial model node
         return $.extend(model, spatialConvert, common)
       }
-      if (o.type === 'nonspatial') {
+      if (o.type === 'nonspatial') { // model node
          return $.extend(model, modelConvert, common)
       }
       // if (o.type === 'project'){
       //   return $.extend(open, project, common)
       // }
-      if (o.type === 'workflow') {
+      if (o.type === 'workflow') { // workflow node
         return $.extend(open, workflow, common)
       }
-      if (o.text.endsWith(".zip")) {
+      if (o.text.endsWith(".zip")) { // zip archive node
         return $.extend(open, extractAll, common)
       }
-      if (o.type === 'notebook') {
+      if (o.type === 'notebook') { // notebook node
         if(app.getBasePath() === "/") {
           return $.extend(open, common)
         }
         return $.extend(open, notebook, common)
       }
-      if (o.type === 'other') {
+      if (o.type === 'other') { // other nodes
         return $.extend(open, common)
       }
-      if (o.type === 'sbml-model') {
+      if (o.type === 'sbml-model') { // sbml model node
         return $.extend(open, sbml, common)
       }
-      if (o.type === "domain") {
+      if (o.type === "domain") { // domain node
         return $.extend(open, common)
       }
     }

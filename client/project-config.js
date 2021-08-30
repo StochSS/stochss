@@ -63,6 +63,13 @@ let getRootContext = (view, node) => {
   }
 }
 
+let getWorkflowGroupContext = (view, node) => {
+  return {
+    refresh: view.getRefreshContext(node),
+    download: view.getDownloadWCombineContext(node)
+  }
+}
+
 let move = (view, par, node) => {
   let newDir = par.original._path !== "/" ? par.original._path : "";
   let file = node.original._path.split('/').pop();
@@ -182,7 +189,9 @@ let validateMove = (view, node, more, pos) => {
 module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
+  // getProjectContext: getOtherContext,
   getRootContext: getRootContext,
+  getWorkflowGroupContext: getWorkflowGroupContext,
   move: move,
   setup: setup,
   types: types,

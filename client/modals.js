@@ -281,6 +281,12 @@ module.exports = {
 
     return templates.input(modalID, inputID, title, label, value);
   },
+  deleteFileHtml : (fileType) => {
+    let modalID = "deleteFileModal";
+    let title = `Permanently delete this ${fileType}?`;
+
+    return templates.confirmation(modalID, title);
+  },
   emptyTrashConfirmHtml : () => {
     let modalID = "emptyTrashConfirmModal";
     let title = "Are you sure you want to permanently erase the items in the Trash?";
@@ -355,12 +361,7 @@ module.exports = {
   },
       
     
-    deleteFileHtml : (fileType) => {
-        let modalID = "deleteFileModal"
-        let title = `Permanently delete this ${fileType}?`
-
-        return templates.confirmation(modalID, title)
-    },
+    
     operationInfoModalHtml : (page) => {
         let modalID = "operationInfoModal"
         let title = "Help"

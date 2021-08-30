@@ -1378,7 +1378,7 @@ let Model = require('../models/model');
         }
       }
       // common to all type except root and trash
-      let common = {
+      // let common = {
         // "Rename" : {
         //   "label" : "Rename",
         //   "_disabled" : (o.type === "workflow" && o.original._status === "running"),
@@ -1397,16 +1397,16 @@ let Model = require('../models/model');
         //     self.duplicateFileOrDirectory(o, null)
         //   }
         // },
-        "Delete" : {
-          "label" : "Delete",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.deleteFile(o);
-          }
-        }
-      }
+      //   "Delete" : {
+      //     "label" : "Delete",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.deleteFile(o);
+      //     }
+      //   }
+      // }
       //Specific to zip archives
       let extractAll = {
         "extractAll" : {
@@ -1433,43 +1433,43 @@ let Model = require('../models/model');
       // if (o.type === 'root'){
       //   return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
       // }
-      if (o.text === "trash"){
+      if (o.text === "trash"){ // Trash node
         return refresh
       }
-      if (o.original._path.includes(".proj/trash/")) {
+      if (o.original._path.includes(".proj/trash/")) { //item in trash
         return {"Delete": common.Delete}
       }
-      if (o.type ===  'folder') {
+      if (o.type ===  'folder') { // folder node
         return $.extend(refresh, commonFolder, download, common)
       }
-      if (o.type === 'spatial') {
+      if (o.type === 'spatial') { // spatial model node
         return $.extend(commonModel, spatialConvert, download, common)
       }
-      if (o.type === 'nonspatial') {
+      if (o.type === 'nonspatial') { // model node
          return $.extend(commonModel, modelConvert, download, common)
       }
-      if (o.type === 'workflow-group') {
-        return $.extend(refresh, downloadWCombine)
-      }
-      if (o.type === 'workflow') {
+      // if (o.type === 'workflow-group') {
+      //   return $.extend(refresh, downloadWCombine)
+      // }
+      if (o.type === 'workflow') { // workflow node
         return $.extend(open, workflow, downloadWCombine, common)
       }
-      if (o.text.endsWith(".zip")) {
+      if (o.text.endsWith(".zip")) { // zip archove node
         return $.extend(open, extractAll, download, common)
       }
-      if (o.type === 'notebook') {
+      if (o.type === 'notebook') { // notebook node
         if(app.getBasePath() === "/") {
           return $.extend(open, download, common)
         }
         return $.extend(open, notebook, download, common)
       }
-      if (o.type === 'other') {
+      if (o.type === 'other') { // other nodes
         return $.extend(open, download, common)
       }
-      if (o.type === 'sbml-model') {
+      if (o.type === 'sbml-model') { // sbml model node
         return $.extend(open, sbml, common)
       }
-      if (o.type === "domain") {
+      if (o.type === "domain") { // domain node
         return $.extend(open, common)
       }
     }

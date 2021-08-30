@@ -64,7 +64,9 @@ let getOpenProjectContext = (view, node) => {
 }
 
 let getProjectContext = (view, node) => {
-  let dirname = node.original._path === "/" ? "" : node.original._path;
+  if(node.original._path.split("/")[0] === "trash") { // project in trash
+    return view.getDeleteContext(node, "project");
+  }
   return {
     open: getOpenProjectContext(view, node),
     addModel: view.getAddModelContext(node),
@@ -175,6 +177,7 @@ module.exports = {
   doubleClick: doubleClick,
   getProjectContext: getProjectContext,
   getRootContext: getRootContext,
+  // getWorflowGroupContext: getOtherContext,
   move: move,
   setup: setup,
   types: types,
