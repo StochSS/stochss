@@ -23,6 +23,8 @@ let jstree = require('jstree');
 //support files
 let app = require('../app');
 let modals = require('../modals');
+//models
+let Model = require('../models/model');
 //config
 let FileConfig = require('../file-config')
 let ProjectConfig = require('../project-config');
@@ -136,8 +138,7 @@ module.exports = View.extend({
           let message = "A model already exists with that name";
           this.reportError({Reason: title, Measage: message});
         }else{
-          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
-          window.location.href = endpoint;
+          this.openModel(path.join(dirname, file));
         }
       }
     });
@@ -147,8 +148,7 @@ module.exports = View.extend({
     let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryStr;
     app.getXHR(newMdlEP, {
       success: (err, response, body) => {
-        let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + `?path=${body.path}`;
-        window.location.href = endpoint;
+        this.openModel(body.path);
       },
       error: (err, response, body) => {
         let title = "Model Already Exists";
@@ -404,6 +404,18 @@ module.exports = View.extend({
       }
     }
   },
+  getEditModelContext: function (node) {
+    return {
+      label: "Edit",
+      _disabled: false,
+      _class: "font-weight-bolder",
+      separator_before: false,
+      separator_after: true,
+      action: function (data) {
+        this.openModel(node.original._path);
+      }
+    }
+  },
   getExportData: function (node, {dataType="", identifier=""}={}) {
     if(node.original.text.endsWith('.zip')) {
       return this.exportToZipFile(node.original._path);
@@ -441,15 +453,44 @@ module.exports = View.extend({
       }
     });
   },
-  getFileUploadContext: function (node, inProject) {
+  getFileUploadContext: function (node, inProject, {label="File"}={}) {
     let dirname = node.original._path === "/" ? "" : node.original._path;
     return {
-      label: "File",
+      label: label,
       _disabled: false,
-      separator_before: false,
+      separator_before: label !== "File",
       separator_after: false,
       action: (data) => {
         this.uploadFile(node, dirname, "file", inProject);
+      }
+    }
+  },
+  getFullNewWorkflowContext: function (node) {
+    return {
+      label: "New Workflow",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      submenu: {
+        ensembleSimulation: {
+          label: "Ensemble Simulation",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.newWorkflow(node, "Ensemble Simulation");
+          }
+        },
+        parameterSweep: {
+          label: "Parameter Sweep",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.newWorkflow(node, "Parameter Sweep");
+          }
+        },
+        jupyterNotebook: this.getNotebookNewWorkflowContext(node)
       }
     }
   },
@@ -481,6 +522,34 @@ module.exports = View.extend({
           }
         },
         file: file
+      }
+    }
+  },
+  getMdlConvertContext: function (node) {
+    return {
+      label: "Convert",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      submenu: {
+        toSpatial: {
+          label: "To Spatial Model",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.config.toSpatial(this, node);
+          }
+        },
+        toSBML: {
+          label: "To SBML Model",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: (data) => {
+            this.config.toSBML(this, node);
+          }
+        }
       }
     }
   },
@@ -544,6 +613,18 @@ module.exports = View.extend({
             this.createModel(node, dirname, false, inProject);
           }
         } 
+      }
+    }
+  },
+  getNotebookNewWorkflowContext: function (node) {
+    return {
+      label: "Jupyter Notebook",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        let queryStr = `?path=${node.original._path}`;
+        window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection") + queryStr;
       }
     }
   },
@@ -675,6 +756,29 @@ module.exports = View.extend({
       });
     });
   },
+  newWorkflow: function (node, type) {
+    let model = new Model({
+      directory: node.original._path
+    });
+    app.getXHR(model.url(), {
+      success: (err, response, body) => {
+        model.set(body);
+        model.updateValid();
+        if(model.valid){
+          app.newWorkflow(self, node.original._path, node.type === "spatial", type);
+        }else{
+          let title = "Model Errors Detected";
+          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory + '&validate';
+          let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
+          $(modals.modelErrorHtml(title, message)).modal();
+        }
+      }
+    });
+  },
+  openModel: function (modelPath) {
+    let queryStr = `?path=${modelPath}`;
+    window.location.href = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+  },
   openProject: function (projectPath) {
     let queryStr = `?path=${projectPath}`;
     window.location.href = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
@@ -769,7 +873,9 @@ module.exports = View.extend({
       let contextMenus = {
         root: this.config.getRootContext,
         project: this.config.getProjectContext,
-        "workflow-group": this.config.getWorkflowGroupContext
+        "workflow-group": this.config.getWorkflowGroupContext,
+        folder: this.config.getFolderContext,
+        nonspatial: this.config.getModelContext
       }
       return contextMenus[node.type](this, node);
     }

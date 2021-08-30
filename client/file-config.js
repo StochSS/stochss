@@ -29,8 +29,7 @@ let doubleClick = (view, e) => {
     if(node.type === "folder" && $('#files-jstree').jstree().is_open(node) && $('#files-jstree').jstree().is_loaded(node)){
       view.refreshJSTree(node);
     }else if(node.type === "nonspatial" || node.type === "spatial"){
-      let queryStr = "?path=" + node.original._path;
-      window.location.href = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+      view.openModel(node.original._path);
     }else if(node.type === "notebook"){
       window.open(path.join(app.getBasePath(), "notebooks", node.original._path), '_blank');
     }else if(node.type === "sbml-model"){
@@ -47,6 +46,54 @@ let doubleClick = (view, e) => {
       var openPath = path.join(app.getBasePath(), "view", node.original._path);
       window.open(openPath, "_blank");
     }
+  }
+}
+
+let getFolderContext = (view, node) => {
+  if(node.text === "trash") {//Trash node
+    return {refresh: view.getRefreshContext(node)};
+  }
+  if(node.original._path.split("/")[0] === "trash") { // item in trash
+    return {delete: view.getDeleteContext(node, "directory")};
+  }
+  let dirname = node.original._path;
+  let downloadOptions = {dataType: "zip", identifier: "file/download-zip"};
+  let options = {asZip: true};
+  return {
+    refresh: view.getRefreshContext(node),
+    newDirectory: view.getNewDirectoryContext(node),
+    newProject: {
+      label: "New Project",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      action: (data) => {
+        view.createProject(node, dirname);
+      }
+    },
+    newModel: view.getNewModelContext(node, false),
+    newDomain: view.getNewDomainContext(node),
+    upload: view.getFullUploadContext(node, false),
+    download: view.getDownloadContext(node, downloadOptions, options),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "directory/duplicate"),
+    moveToTrash: view.getMoveToTrashContext(node)
+  }
+}
+
+let getModelContext = (view, node) => {
+  if(node.original._path.split("/")[0] === "trash") { // item in trash
+    return {delete: view.getDeleteContext(node, "model")};
+  }
+  let downloadOptions = {dataType: "json", identifier: "file/json-data"}
+  return {
+    edit: view.getEditModelContext(node),
+    newWorkflow: view.getFullNewWorkflowContext(node),
+    convert: view.getMdlConvertContext(node),
+    download: view.getDownloadContext(node, downloadOptions),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "file/duplicate"),
+    moveToTrash: view.getMoveToTrashContext(node)
   }
 }
 
@@ -127,6 +174,30 @@ let setup = (view) => {
   $(view.queryByHook("fb-import-model")).css("display", "none");
 }
 
+let toSBML = (view, node) => {
+  let queryStr = `?path=${node.original._path}`;
+  let endpoint = path.join(app.getApiPath(), "model/to-sbml") + queryStr;
+  app.getXHR(endpoint, {
+    success: (err, response, body) => {
+      let par = $('#files-jstree').jstree().get_node(node.parent);
+      view.refreshJSTree(par);
+      view.selectNode(node, body.File);
+    }
+  });
+}
+
+let toSpatial = (view, node) => {
+  let queryStr = `?path=${node.original._path}`;
+  let endpoint = path.join(app.getApiPath(), "model/to-spatial") + queryStr;
+  app.getXHR(endpoint, {
+    success: (err, response, body) => {
+      let par = $('#files-jstree').jstree().get_node(node.parent);
+      view.refreshJSTree(par);
+      view.selectNode(node, body.File);
+    }
+  });
+}
+
 let types = {
   'root' : {"icon": "jstree-icon jstree-folder"},
   'folder' : {"icon": "jstree-icon jstree-folder"},
@@ -175,11 +246,15 @@ let validateMove = (view, node, more, pos) => {
 module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
+  getFolderContext: getFolderContext,
+  getModelContext: getModelContext,
   getProjectContext: getProjectContext,
   getRootContext: getRootContext,
   // getWorflowGroupContext: getOtherContext,
   move: move,
   setup: setup,
+  toSBML: toSBML,
+  toSpatial: toSpatial,
   types: types,
   updateParent: updateParent,
   validateMove: validateMove

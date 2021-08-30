@@ -29,8 +29,7 @@ let doubleClick = (view, e) => {
     if((node.type === "folder" || node.type === "workflow-group") && $('#files-jstree').jstree().is_open(node) && $('#files-jstree').jstree().is_loaded(node)){
       view.refreshJSTree(node);
     }else if(node.type === "nonspatial" || node.type === "spatial"){
-      let queryStr = "?path=" + node.original._path;
-      window.location.href = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+      view.openModel(node.original._path);
     }else if(node.type === "notebook"){
       window.open(path.join(app.getBasePath(), "notebooks", node.original._path), '_blank');
     }else if(node.type === "sbml-model"){
@@ -48,16 +47,34 @@ let doubleClick = (view, e) => {
   }
 }
 
+let getFolderContext = (view, node) => {
+  if(node.text === "trash"){ // Trash node
+    return {refresh: view.getRefreshContext(node)};
+  }
+  if(node.original._path.includes(".proj/trash/")) { //item in trash
+    return {delete: view.getDeleteContext(node, "directory")};
+  }
+  let downloadOptions = {dataType: "zip", identifier: "file/download-zip"};
+  let options = {asZip: true};
+  return {
+    refresh: view.getRefreshContext(node),
+    newDirectory: view.getNewDirectoryContext(node),
+    newDomain: view.getNewDomainContext(node),
+    upload: view.getFileUploadContext(node, true, {label: "Uplaod File"}),
+    download: view.getDownloadContext(node, downloadOptions, options),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "directory/duplicate"),
+    delete: view.getDeleteContext(node, "directory")
+  }
+}
+
 let getRootContext = (view, node) => {
-  let upload = node.type === "root" ? 
-      view.getFullUploadContext(node, true) : 
-      view.getFileUploadContext(node, true);
   return {
     refresh: view.getRefreshContext(node),
     addModel: view.getAddModelContext(node),
     newDirectory: view.getNewDirectoryContext(node),
     newDomain: view.getNewDomainContext(node),
-    upload: upload,
+    upload: view.getFullUploadContext(node, true),
     download: view.getDownloadWCombineContext(node),
     rename: view.getRenameContext(node)
   }
@@ -192,6 +209,7 @@ let validateMove = (view, node, more, pos) => {
 module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
+  getFolderContext: getFolderContext,
   // getProjectContext: getOtherContext,
   getRootContext: getRootContext,
   getWorkflowGroupContext: getWorkflowGroupContext,

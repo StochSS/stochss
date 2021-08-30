@@ -459,22 +459,22 @@ let FileBrowser = PageView.extend({
     }
     return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
-  toSpatial: function (o) {
-    var self = this;
-    var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "model/to-spatial")+"?path="+o.original._path;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          self.refreshJSTree();
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-        self.selectNode(node, body.File);
-      }
-    });
-  },
+  // toSpatial: function (o) {
+  //   var self = this;
+  //   var parentID = o.parent;
+  //   var endpoint = path.join(app.getApiPath(), "model/to-spatial")+"?path="+o.original._path;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       var node = $('#models-jstree').jstree().get_node(parentID);
+  //       if(node.type === "root"){
+  //         self.refreshJSTree();
+  //       }else{          
+  //         $('#models-jstree').jstree().refresh_node(node);
+  //       }
+  //       self.selectNode(node, body.File);
+  //     }
+  //   });
+  // },
   toModel: function (o, from) {
     var self = this;
     var parentID = o.parent;
@@ -524,22 +524,22 @@ let FileBrowser = PageView.extend({
       }
     });
   },
-  toSBML: function (o) {
-    var self = this;
-    var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          self.refreshJSTree();
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-        self.selectNode(node, body.File);
-      }
-    });
-  },
+  // toSBML: function (o) {
+  //   var self = this;
+  //   var parentID = o.parent;
+  //   var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       var node = $('#models-jstree').jstree().get_node(parentID);
+  //       if(node.type === "root"){
+  //         self.refreshJSTree();
+  //       }else{          
+  //         $('#models-jstree').jstree().refresh_node(node);
+  //       }
+  //       self.selectNode(node, body.File);
+  //     }
+  //   });
+  // },
   // renameNode: function (o) {
   //   var self = this
   //   var text = o.text;
@@ -715,26 +715,26 @@ let FileBrowser = PageView.extend({
   //     }
   //   });
   // },
-  newWorkflow: function (o, type) {
-    let self = this;
-    let model = new Model({
-      directory: o.original._path
-    });
-    app.getXHR(model.url(), {
-      success: function (err, response, body) {
-        model.set(body);
-        model.updateValid();
-        if(model.valid){
-          app.newWorkflow(self, o.original._path, o.type === "spatial", type);
-        }else{
-          let title = "Model Errors Detected";
-          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory + '&validate';
-          let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
-          $(modals.modelErrorHtml(title, message)).modal();
-        }
-      }
-    });
-  },
+  // newWorkflow: function (o, type) {
+  //   let self = this;
+  //   let model = new Model({
+  //     directory: o.original._path
+  //   });
+  //   app.getXHR(model.url(), {
+  //     success: function (err, response, body) {
+  //       model.set(body);
+  //       model.updateValid();
+  //       if(model.valid){
+  //         app.newWorkflow(self, o.original._path, o.type === "spatial", type);
+  //       }else{
+  //         let title = "Model Errors Detected";
+  //         let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory + '&validate';
+  //         let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
+  //         $(modals.modelErrorHtml(title, message)).modal();
+  //       }
+  //     }
+  //   });
+  // },
   // addExistingModel: function (o) {
   //   var self = this
   //   if(document.querySelector('#newProjectModelModal')){
@@ -1171,54 +1171,54 @@ let FileBrowser = PageView.extend({
       //   }
       // }
       // common to both spatial and non-spatial models
-      let newWorkflow = {
-        "ensembleSimulation" : {
-          "label" : "Ensemble Simulation",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newWorkflow(o, "Ensemble Simulation")
-          }
-        },
-        "parameterSweep" : {
-          "label" : "Parameter Sweep",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.newWorkflow(o, "Parameter Sweep")
-          }
-        },
-        "jupyterNotebook" : {
-          "label" : "Jupyter Notebook",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
-          }
-        }
-      }
-      let model = {
-        "Edit" : {
-          "label" : "Edit",
-          "_disabled" : false,
-          "_class" : "font-weight-bolder",
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
-          }
-        },
-        "New Workflow" : {
-          "label" : "New Workflow",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : o.type === "nonspatial" ? newWorkflow : {"jupyterNotebook":newWorkflow.jupyterNotebook}
-        }
-      }
+      // let newWorkflow = {
+      //   "ensembleSimulation" : {
+      //     "label" : "Ensemble Simulation",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.newWorkflow(o, "Ensemble Simulation")
+      //     }
+      //   },
+      //   "parameterSweep" : {
+      //     "label" : "Parameter Sweep",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.newWorkflow(o, "Parameter Sweep")
+      //     }
+      //   },
+      //   "jupyterNotebook" : {
+      //     "label" : "Jupyter Notebook",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection")+"?path="+o.original._path;
+      //     }
+      //   }
+      // }
+      // let model = {
+      //   "Edit" : {
+      //     "label" : "Edit",
+      //     "_disabled" : false,
+      //     "_class" : "font-weight-bolder",
+      //     "separator_before" : false,
+      //     "separator_after" : true,
+      //     "action" : function (data) {
+      //       window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
+      //     }
+      //   },
+      //   "New Workflow" : {
+      //     "label" : "New Workflow",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : o.type === "nonspatial" ? newWorkflow : {"jupyterNotebook":newWorkflow.jupyterNotebook}
+      //   }
+      // }
       // convert options for spatial models
       let spatialConvert = {
         "Convert" : {
@@ -1249,43 +1249,43 @@ let FileBrowser = PageView.extend({
         }
       }
       // convert options for non-spatial models
-      let modelConvert = {
-        "Convert" : {
-          "label" : "Convert",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "Convert to Spatial" : {
-              "label" : "To Spatial Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toSpatial(o)
-              }
-            },
-            "Convert to Notebook" : {
-              "label" : "To Notebook",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toNotebook(o, "model")
-              }
-            },
-            "Convert to SBML" : {
-              "label" : "To SBML Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toSBML(o)
-              }
-            }
-          }
-        }
-      }
+      // let modelConvert = {
+      //   "Convert" : {
+      //     "label" : "Convert",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "Convert to Spatial" : {
+      //         "label" : "To Spatial Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.toSpatial(o)
+      //         }
+      //       },
+      //       "Convert to Notebook" : {
+      //         "label" : "To Notebook",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.toNotebook(o, "model")
+      //         }
+      //       },
+      //       "Convert to SBML" : {
+      //         "label" : "To SBML Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.toSBML(o)
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // For notebooks, workflows, sbml models, and other files
       let open = {
         "Open" : {
@@ -1428,15 +1428,15 @@ let FileBrowser = PageView.extend({
       // if (o.type === 'root'){
       //   return folder
       // }
-      if (o.text === "trash") {//Trash node
-        return {"Refresh": folder.Refresh}
-      }
+      // if (o.text === "trash") {//Trash node
+      //   return {"Refresh": folder.Refresh}
+      // }
       if (o.original._path.split("/")[0] === "trash") { // item in trash
         return delete_node
       }
-      if (o.type ===  'folder') { // folder node
-        return $.extend(folder, common)
-      }
+      // if (o.type ===  'folder') { // folder node
+      //   return $.extend(folder, common)
+      // }
       if (o.type === 'spatial') { // spatial model node
         return $.extend(model, spatialConvert, common)
       }
