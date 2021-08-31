@@ -37,11 +37,9 @@ let doubleClick = (view, e) => {
     }else if(node.type === "project"){
       view.openProject(node.original._path);
     }else if(node.type === "workflow"){
-      let queryStr = "?path=" + node.original._path + "&type=none";
-      window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit") + queryStr;
+      view.openWorkflow(node.original._path);
     }else if(node.type === "domain") {
-      let queryStr = "?domainPath=" + node.original._path;
-      window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+      view.openDomain(node.original._path);
     }else if(node.type === "other"){
       var openPath = path.join(app.getBasePath(), "view", node.original._path);
       window.open(openPath, "_blank");
@@ -156,6 +154,37 @@ let getSpatialModelContext = (view, node) => {
     download: view.getDownloadContext(node, downloadOptions),
     rename: view.getRenameContext(node),
     duplicate: view.getDuplicateContext(node, "file/duplicate"),
+    moveToTrash: view.getMoveToTrashContext(node)
+  }
+}
+
+let getWorkflowContext = (view, node) => {
+  if(node.original._path.split("/")[0] === "trash") { // project in trash
+    return {delete: view.getDeleteContext(node, "workflow")};
+  }
+  let duplicateOptions = {target: "workflow", cb: (body) => {
+    let title = `Model for ${body.File}`;
+    if(body.error){
+      view.reportError({Reason: title, Message: body.error});
+    }else{
+      if(document.querySelector("#successModal")) {
+        document.querySelector("#successModal").remove();
+      }
+      let message = `The model for <b>${body.File}</b> is located here: <b>${body.mdlPath}</b>`;
+      let modal = $(modals.successHtml(title, message)).modal();
+    }
+  }}
+  if(!node.original._newFormat) {
+    options['timeStamp'] = view.getTimeStamp();
+  }
+  let downloadOptions = {dataType: "zip", identifier: "file/download-zip"};
+  let options = {asZip: true};
+  return {
+    open: view.getOpenWorkflowContext(node),
+    model: view.getWorkflowMdlContext(node),
+    download: view.getDownloadContext(node, downloadOptions, options),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "workflow/duplicate", duplicateOptions),
     moveToTrash: view.getMoveToTrashContext(node)
   }
 }
@@ -285,6 +314,7 @@ module.exports = {
   getProjectContext: getProjectContext,
   getRootContext: getRootContext,
   getSpatialModelContext: getSpatialModelContext,
+  getWorkflowContext: getWorkflowContext,
   // getWorflowGroupContext: getOtherContext,
   move: move,
   setup: setup,

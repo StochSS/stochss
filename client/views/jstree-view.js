@@ -347,6 +347,25 @@ module.exports = View.extend({
       }
     }
   },
+  getDomainContext: function (view, node) {
+    let downloadOptions = {dataType: "json", identifier: "spatial-model/load-domain"};
+    return {
+      open: {
+        label: "Open",
+        _disabled: false,
+        _class: "font-weight-bolder",
+        separator_before: false,
+        separator_after: true,
+        action: (data) => {
+          view.openDomain(node.original._path);
+        }
+      },
+      download: view.getDownloadContext(node, downloadOptions),
+      rename: view.getRenameContext(node),
+      duplicate: view.getDuplicateContext(node, "file/duplicate"),
+      moveToTrash: view.getMoveToTrashContext(node)
+    }
+  },
   getDownloadContext: function (node, options, {asZip=false, withCombine=false}={}) {
     if(withCombine) {
       var label = "as .zip";
@@ -562,6 +581,18 @@ module.exports = View.extend({
       }
     }
   },
+  getOpenWorkflowContext: function (node) {
+    return {
+      label: "Open",
+      _disabled: false,
+      _class: "font-weight-bolder",
+      separator_before: false,
+      separator_after: true,
+      action : (data) => {
+        this.openWorkflow(node.original._path)
+      }
+    }
+  },
   getNewDirectoryContext: function (node) {
     let dirname = node.original._path === "/" ? "" : node.original._path;
     return {
@@ -664,6 +695,44 @@ module.exports = View.extend({
           separator_after: false,
           action: function (data) {
             this.config.toModel(this, node, identifier);
+          }
+        }
+      }
+    }
+  },
+  getTimeStamp: function () {
+    let date = new Date();
+    let year = date.getFullYear();
+    let month = (date.getMonth() + 1).toString().padStart(2, "0");
+    let day = date.getDate().toString().padStart(2, "0");
+    let hours = date.getHours().toString().padStart(2, "0");
+    let minutes = date.getMinutes().toString().padStart(2, "0");
+    let seconds = date.getSeconds().toString().padStart(2, "0");
+    return `_${month}${day}${year}_${hours}${minutes}${seconds}`;
+  },
+  getWorkflowMdlContext: function (node) {
+    return {
+      label: "Model",
+      _disabled: false,
+      separator_before: false,
+      separator_after: false,
+      submenu: {
+        edit: {
+          label: "Edit",
+          _disabled: (!node.original._newFormat && node.original._status !== "ready"),
+          separator_before: false,
+          separator_after: false,
+          action: function (data) {
+            this.openWorkflowModel(node);
+          }
+        },
+        extract: {
+          label: "Extract",
+          _disabled: (node.original._newFormat && !node.original._hasJobs),
+          separator_before: false,
+          separator_after: false,
+          action: function (data) {
+            this.duplicate(node, "workflow/duplicate", {target: "wkfl_model"});
           }
         }
       }
@@ -792,6 +861,10 @@ module.exports = View.extend({
       }
     });
   },
+  openDomain: function (domainPath) {
+    let queryStr = `?domainPath=${domainPath}`;
+    window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+  },
   openModel: function (modelPath) {
     let queryStr = `?path=${modelPath}`;
     window.location.href = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
@@ -799,6 +872,24 @@ module.exports = View.extend({
   openProject: function (projectPath) {
     let queryStr = `?path=${projectPath}`;
     window.location.href = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+  },
+  openWorkflow: function (workflowPath) {
+    let queryStr = `?path=${workflowPath}&type=none`;
+    window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit") + queryStr;
+  },
+  openWorkflowModel: function (node) {
+    let queryStr = `?path=${node.original._path}`;
+    let endpoint = path.join(app.getApiPath(), "workflow/edit-model") + queryStr;
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        if(body.error){
+          let title = `Model for ${node.text} Not Found`;
+          this.reportError({Reason: title, Message: body.error});
+        }else{
+          this.openModel(body.file);
+        }
+      }
+    });
   },
   refreshInitialJSTree: function () {
     let count = $('#files-jstree').jstree()._model.data['#'].children.length;
@@ -893,7 +984,9 @@ module.exports = View.extend({
         workflowGroup: this.config.getWorkflowGroupContext,
         folder: this.config.getFolderContext,
         nonspatial: this.config.getModelContext,
-        spatial: this.config.getSpatialModelContext
+        spatial: this.config.getSpatialModelContext,
+        domain: this.getDomainContext,
+        workflow: this.config.getWorkflowContext
       }
       return contextMenus[node.type](this, node);
     }

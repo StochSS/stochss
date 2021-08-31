@@ -434,31 +434,31 @@ let FileBrowser = PageView.extend({
   //     }
   //   });
   // },
-  getTimeStamp: function () {
-    var date = new Date();
-    var year = date.getFullYear();
-    var month = date.getMonth() + 1;
-    if(month < 10){
-      month = "0" + month
-    }
-    var day = date.getDate();
-    if(day < 10){
-      day = "0" + day
-    }
-    var hours = date.getHours();
-    if(hours < 10){
-      hours = "0" + hours
-    }
-    var minutes = date.getMinutes();
-    if(minutes < 10){
-      minutes = "0" + minutes
-    }
-    var seconds = date.getSeconds();
-    if(seconds < 10){
-      seconds = "0" + seconds
-    }
-    return "_" + month + day + year + "_" + hours + minutes + seconds;
-  },
+  // getTimeStamp: function () {
+  //   var date = new Date();
+  //   var year = date.getFullYear();
+  //   var month = date.getMonth() + 1;
+  //   if(month < 10){
+  //     month = "0" + month
+  //   }
+  //   var day = date.getDate();
+  //   if(day < 10){
+  //     day = "0" + day
+  //   }
+  //   var hours = date.getHours();
+  //   if(hours < 10){
+  //     hours = "0" + hours
+  //   }
+  //   var minutes = date.getMinutes();
+  //   if(minutes < 10){
+  //     minutes = "0" + minutes
+  //   }
+  //   var seconds = date.getSeconds();
+  //   if(seconds < 10){
+  //     seconds = "0" + seconds
+  //   }
+  //   return "_" + month + day + year + "_" + hours + minutes + seconds;
+  // },
   // toSpatial: function (o) {
   //   var self = this;
   //   var parentID = o.parent;
@@ -902,20 +902,20 @@ let FileBrowser = PageView.extend({
   // showContextMenuForNode: function (e) {
   //   $('#models-jstree').jstree().show_contextmenu(this.nodeForContextMenu)
   // },
-  editWorkflowModel: function (o) {
-    let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        if(body.error){
-          let title = o.text + " Not Found";
-          let message = body.error;
-          let modal = $(modals.duplicateWorkflowHtml(title, message)).modal();
-        }else{
-          window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file;
-        }
-      }
-    });
-  },
+  // editWorkflowModel: function (o) {
+  //   let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       if(body.error){
+  //         let title = o.text + " Not Found";
+  //         let message = body.error;
+  //         let modal = $(modals.duplicateWorkflowHtml(title, message)).modal();
+  //       }else{
+  //         window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file;
+  //       }
+  //     }
+  //   });
+  // },
   extractAll: function (o) {
     let self = this;
     let queryStr = "?path=" + o.original._path;
@@ -1296,7 +1296,7 @@ let FileBrowser = PageView.extend({
           "separator_after" : true,
           "action" : function (data) {
             if(nodeType === "workflow"){
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
+              // window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
             // }else if(nodeType === "project"){
               // window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
             }else if(nodeType === "domain") {
@@ -1336,52 +1336,52 @@ let FileBrowser = PageView.extend({
       //   }
       // }
       // specific to workflows
-      let workflow = {
-        "Start/Restart Workflow" : {
-          "label" : (o.original._status === "ready") ? "Start Workflow" : "Restart Workflow",
-          "_disabled" : true,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
+      // let workflow = {
+      //   "Start/Restart Workflow" : {
+      //     "label" : (o.original._status === "ready") ? "Start Workflow" : "Restart Workflow",
+      //     "_disabled" : true,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
 
-          }
-        },
-        "Stop Workflow" : {
-          "label" : "Stop Workflow",
-          "_disabled" : true,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
+      //     }
+      //   },
+      //   "Stop Workflow" : {
+      //     "label" : "Stop Workflow",
+      //     "_disabled" : true,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
 
-          }
-        },
-        "Model" : {
-          "label" : "Model",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "Edit" : {
-              "label" : " Edit",
-              "_disabled" : (!o.original._newFormat && o.original._status !== "ready"),
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.editWorkflowModel(o)
-              }
-            },
-            "Extract" : {
-              "label" : "Extract",
-              "_disabled" : (o.original._newFormat && !o.original._hasJobs),
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.duplicateFileOrDirectory(o, "wkfl_model")
-              }
-            }
-          }
-        }
-      }
+      //     }
+      //   },
+      //   "Model" : {
+      //     "label" : "Model",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "Edit" : {
+      //         "label" : " Edit",
+      //         "_disabled" : (!o.original._newFormat && o.original._status !== "ready"),
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.editWorkflowModel(o)
+      //         }
+      //       },
+      //       "Extract" : {
+      //         "label" : "Extract",
+      //         "_disabled" : (o.original._newFormat && !o.original._hasJobs),
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.duplicateFileOrDirectory(o, "wkfl_model")
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // Specific to sbml files
       let sbml = {
         "Convert" : {
@@ -1437,18 +1437,18 @@ let FileBrowser = PageView.extend({
       // if (o.type ===  'folder') { // folder node
       //   return $.extend(folder, common)
       // }
-      if (o.type === 'spatial') { // spatial model node
-        return $.extend(model, spatialConvert, common)
-      }
+      // if (o.type === 'spatial') { // spatial model node
+      //   return $.extend(model, spatialConvert, common)
+      // }
       // if (o.type === 'nonspatial') { // model node
       //    return $.extend(model, modelConvert, common)
       // }
       // if (o.type === 'project'){
       //   return $.extend(open, project, common)
       // }
-      if (o.type === 'workflow') { // workflow node
-        return $.extend(open, workflow, common)
-      }
+      // if (o.type === 'workflow') { // workflow node
+      //   return $.extend(open, workflow, common)
+      // }
       if (o.text.endsWith(".zip")) { // zip archive node
         return $.extend(open, extractAll, common)
       }
@@ -1464,9 +1464,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'sbml-model') { // sbml model node
         return $.extend(open, sbml, common)
       }
-      if (o.type === "domain") { // domain node
-        return $.extend(open, common)
-      }
+      // if (o.type === "domain") { // domain node
+      //   return $.extend(open, common)
+      // }
     }
     // $(document).on('shown.bs.modal', function (e) {
     //   $('[autofocus]', e.target).focus();

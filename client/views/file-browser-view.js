@@ -432,31 +432,31 @@ let Model = require('../models/model');
   //     }
   //   });
   // },
-  getTimeStamp: function () {
-    var date = new Date();
-    var year = date.getFullYear();
-    var month = date.getMonth() + 1;
-    if(month < 10){
-      month = "0" + month
-    }
-    var day = date.getDate();
-    if(day < 10){
-      day = "0" + day
-    }
-    var hours = date.getHours();
-    if(hours < 10){
-      hours = "0" + hours
-    }
-    var minutes = date.getMinutes();
-    if(minutes < 10){
-      minutes = "0" + minutes
-    }
-    var seconds = date.getSeconds();
-    if(seconds < 10){
-      seconds = "0" + seconds
-    }
-    return "_" + month + day + year + "_" + hours + minutes + seconds;
-  },
+  // getTimeStamp: function () {
+  //   var date = new Date();
+  //   var year = date.getFullYear();
+  //   var month = date.getMonth() + 1;
+  //   if(month < 10){
+  //     month = "0" + month
+  //   }
+  //   var day = date.getDate();
+  //   if(day < 10){
+  //     day = "0" + day
+  //   }
+  //   var hours = date.getHours();
+  //   if(hours < 10){
+  //     hours = "0" + hours
+  //   }
+  //   var minutes = date.getMinutes();
+  //   if(minutes < 10){
+  //     minutes = "0" + minutes
+  //   }
+  //   var seconds = date.getSeconds();
+  //   if(seconds < 10){
+  //     seconds = "0" + seconds
+  //   }
+  //   return "_" + month + day + year + "_" + hours + minutes + seconds;
+  // },
   // toSpatial: function (o) {
   //   var self = this;
   //   var parentID = o.parent;
@@ -907,21 +907,21 @@ let Model = require('../models/model');
   //     }
   //   });
   // },
-  handleExportWorkflowClick: function (o) {
-    let self = this
-    let projectParent = path.dirname(this.parent.model.directory) === '.' ? "" : path.dirname(this.parent.model.directory)
-    let queryString = "?srcPath="+o.original._path+"&dstPath="+path.join(projectParent, o.original._path.split('/').pop())
-    let endpoint = path.join(app.getApiPath(), "project/extract-workflow")+queryString
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        let successModel = $(modals.projectExportSuccessHtml("Workflow", body)).modal();
-      },
-      error: function (err, response, body) {
-        body = JSON.parse(body);
-        let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal();
-      }
-    });
-  },
+  // handleExportWorkflowClick: function (o) {
+  //   let self = this
+  //   let projectParent = path.dirname(this.parent.model.directory) === '.' ? "" : path.dirname(this.parent.model.directory)
+  //   let queryString = "?srcPath="+o.original._path+"&dstPath="+path.join(projectParent, o.original._path.split('/').pop())
+  //   let endpoint = path.join(app.getApiPath(), "project/extract-workflow")+queryString
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       let successModel = $(modals.projectExportSuccessHtml("Workflow", body)).modal();
+  //     },
+  //     error: function (err, response, body) {
+  //       body = JSON.parse(body);
+  //       let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal();
+  //     }
+  //   });
+  // },
   handleExportCombineClick: function (o, download) {
     let target = o.original._path
     this.parent.exportAsCombine()
@@ -929,20 +929,20 @@ let Model = require('../models/model');
   // showContextMenuForNode: function (e) {
   //   $('#models-jstree-view').jstree().show_contextmenu(this.nodeForContextMenu)
   // },
-  editWorkflowModel: function (o) {
-    let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        if(body.error){
-          let title = o.text + " Not Found";
-          let message = body.error;
-          let modal = $(modals.duplicateWorkflowHtml(title, message)).modal();
-        }else{
-          window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file;
-        }
-      }
-    });
-  },
+  // editWorkflowModel: function (o) {
+  //   let endpoint = path.join(app.getApiPath(), "workflow/edit-model")+"?path="+o.original._path
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       if(body.error){
+  //         let title = o.text + " Not Found";
+  //         let message = body.error;
+  //         let modal = $(modals.duplicateWorkflowHtml(title, message)).modal();
+  //       }else{
+  //         window.location.href = path.join(app.routePrefix, "models/edit")+"?path="+body.file;
+  //       }
+  //     }
+  //   });
+  // },
   extractAll: function (o) {
     let self = this;
     let queryStr = "?path=" + o.original._path;
@@ -1436,24 +1436,24 @@ let Model = require('../models/model');
       // if (o.text === "trash"){ // Trash node
       //   return refresh
       // }
-      if (o.original._path.includes(".proj/trash/")) { //item in trash
-        return {"Delete": common.Delete}
-      }
+      // if (o.original._path.includes(".proj/trash/")) { //item in trash
+      //   return {"Delete": common.Delete}
+      // }
       // if (o.type ===  'folder') { // folder node
       //   return $.extend(refresh, commonFolder, download, common)
       // }
-      if (o.type === 'spatial') { // spatial model node
-        return $.extend(commonModel, spatialConvert, download, common)
-      }
+      // if (o.type === 'spatial') { // spatial model node
+      //   return $.extend(commonModel, spatialConvert, download, common)
+      // }
       // if (o.type === 'nonspatial') { // model node
       //    return $.extend(commonModel, modelConvert, download, common)
       // }
       // if (o.type === 'workflow-group') {
       //   return $.extend(refresh, downloadWCombine)
       // }
-      if (o.type === 'workflow') { // workflow node
-        return $.extend(open, workflow, downloadWCombine, common)
-      }
+      // if (o.type === 'workflow') { // workflow node
+      //   return $.extend(open, workflow, downloadWCombine, common)
+      // }
       if (o.text.endsWith(".zip")) { // zip archove node
         return $.extend(open, extractAll, download, common)
       }
@@ -1469,9 +1469,9 @@ let Model = require('../models/model');
       if (o.type === 'sbml-model') { // sbml model node
         return $.extend(open, sbml, common)
       }
-      if (o.type === "domain") { // domain node
-        return $.extend(open, common)
-      }
+      // if (o.type === "domain") { // domain node
+      //   return $.extend(open, common)
+      // }
     }
     // $(document).ready(function () {
       // $(document).on('shown.bs.modal', function (e) {

@@ -36,11 +36,9 @@ let doubleClick = (view, e) => {
     }else if(node.type === "sbml-model"){
       window.open(path.join(app.getBasePath(), "edit", node.original._path), '_blank');
     }else if(node.type === "workflow"){
-      let queryStr = "?path=" + node.original._path + "&type=none";
-      window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit") + queryStr;
+      view.openWorkflow(node.original._path);
     }else if(node.type === "domain") {
-      let queryStr = "?domainPath=" + node.original._path;
-      window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+      view.openDomain(node.original._path);
     }else if(node.type === "other"){
       var openPath = path.join(app.getBasePath(), "view", node.original._path);
       window.open(openPath, "_blank");
@@ -48,14 +46,14 @@ let doubleClick = (view, e) => {
   }
 }
 
-let extractModel = (view, node) => {
+let extract = (view, node, type) => {
   let projectPar = path.dirname(view.root) === '.' ? "" : path.dirname(view.root);
   let dstPath = path.join(projectPar, node.original._path.split('/').pop());
   let queryStr = `?srcPath=${node.original._path}&dstPath=${dstPath}`;
-  let endpoint = path.join(app.getApiPath(), "project/extract-model") + queryStr;
+  let endpoint = path.join(app.getApiPath(), `project/extract-${type}`) + queryStr;
   app.getXHR(endpoint, {
     success: (err, response, body) => {
-      let title = "Successfully Exported the Model";
+      let title = `Successfully Exported the ${type.replace(type.charAt(0), type.charAt(0).toUpperCase())}`;
       let successModel = $(modals.successHtml(body, {title: title})).modal();
     },
     error: (err, response, body) => {
@@ -64,14 +62,14 @@ let extractModel = (view, node) => {
   });
 }
 
-let getExtractContext = (view, node) => {
+let getExtractContext = (view, node, type) => {
   return {
     label: "Extract",
     _disabled: false,
     separator_before: false,
     separator_after: false,
     action: (data) => {
-      extractModel(view, node);
+      extract(view, node, type);
     }
   }
 }
@@ -104,7 +102,7 @@ let getModelContext = (view, node) => {
   let downloadOptions = {dataType: "json", identifier: "file/json-data"};
   return {
     edit: view.getEditModelContext(node),
-    extract: getExtractContext(view, node),
+    extract: getExtractModelContext(view, node, "model"),
     newWorkflow: view.getFullNewWorkflowContext(node),
     convert: view.getMdlConvertContext(node),
     download: view.getDownloadContext(node, downloadOptions),
@@ -126,16 +124,6 @@ let getRootContext = (view, node) => {
   }
 }
 
-let getWorkflowGroupContext = (view, node) => {
-  if(node.original._path.includes(".proj/trash/")) { //item in trash
-    return {delete: view.getDeleteContext(node, "workflow group")};
-  }
-  return {
-    refresh: view.getRefreshContext(node),
-    download: view.getDownloadWCombineContext(node)
-  }
-}
-
 let getSpatialModelContext = (view, node) => {
   if(node.original._path.includes(".proj/trash/")) { //item in trash
     return {delete: view.getDeleteContext(node, "spatial model")};
@@ -150,6 +138,46 @@ let getSpatialModelContext = (view, node) => {
     rename: view.getRenameContext(node),
     duplicate: view.getDuplicateContext(node, "file/duplicate"),
     delete: view.getDeleteContext(node, "model")
+  }
+}
+
+let getWorkflowContext = (view, node) => {
+  if(node.original._path.includes(".proj/trash/")) { //item in trash
+    return {delete: view.getDeleteContext(node, "workflow")};
+  }
+  let options = {target: "workflow", cb: (body) => {
+    let title = `Model for ${body.File}`;
+    if(body.error){
+      view.reportError({Reason: title, Message: body.error});
+    }else{
+      if(document.querySelector("#successModal")) {
+        document.querySelector("#successModal").remove();
+      }
+      let message = `The model for <b>${body.File}</b> is located here: <b>${body.mdlPath}</b>`;
+      let modal = $(modals.successHtml(title, message)).modal();
+    }
+  }}
+  if(!node.original._newFormat) {
+    options['timeStamp'] = view.getTimeStamp();
+  }
+  return {
+    open: view.getOpenWorkflowContext(node),
+    model: view.getWorkflowMdlContext(node),
+    extract: getExtractContext(view, node, "workflow"),
+    download: view.getDownloadWCombineContext(node),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "workflow/duplicate", options),
+    delete: view.getDeleteContext(node, "workflow")
+  }
+}
+
+let getWorkflowGroupContext = (view, node) => {
+  if(node.original._path.includes(".proj/trash/")) { //item in trash
+    return {delete: view.getDeleteContext(node, "workflow group")};
+  }
+  return {
+    refresh: view.getRefreshContext(node),
+    download: view.getDownloadWCombineContext(node)
   }
 }
 
@@ -327,6 +355,7 @@ module.exports = {
   // getProjectContext: getOtherContext,
   getRootContext: getRootContext,
   getSpatialModelContext: getSpatialModelContext,
+  getWorkflowContext: getWorkflowContext,
   getWorkflowGroupContext: getWorkflowGroupContext,
   move: move,
   setup: setup,
