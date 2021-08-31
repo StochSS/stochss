@@ -322,6 +322,19 @@ module.exports = {
     }
     return templates.confirmation(modalID, title);
   },
+  sbmlToModelHtml : (title, errors) => {
+    let modalID = "sbmlToModelModal";
+    for(var i = 0; i < errors.length; i++) {
+      if(errors[i].startsWith("SBML Error") || errors[i].startsWith("Error")){
+        errors[i] = "<b>Error</b>: " + errors[i];
+      }else{
+        errors[i] = "<b>Warning</b>: " + errors[i];
+      }
+    }
+    let message = errors.join("<br>");
+
+    return templates.message(modalID, title, message);
+  },
   successHtml : (message, {title=null}={}) => {
     let modalID = "successModal";
     if(!title) {
@@ -443,19 +456,6 @@ module.exports = {
         let value = ""
         
         return templates.input(modalID, inputID, title, label, value)
-    },
-    sbmlToModelHtml : (title, errors) => {
-        let modalID = "sbmlToModelModal"
-        for(var i = 0; i < errors.length; i++) {
-            if(errors[i].startsWith("SBML Error") || errors[i].startsWith("Error")){
-                errors[i] = "<b>Error</b>: " + errors[i]
-            }else{
-                errors[i] = "<b>Warning</b>: " + errors[i]
-            }
-        }
-        let message = errors.join("<br>")
-
-        return templates.message(modalID, title, message)
     },
     duplicateWorkflowHtml : (wkflFile, body) => {
         let modalID = "duplicateWorkflowModal"

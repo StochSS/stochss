@@ -457,44 +457,44 @@ let Model = require('../models/model');
     }
     return "_" + month + day + year + "_" + hours + minutes + seconds;
   },
-  toSpatial: function (o) {
-    var self = this;
-    var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "model/to-spatial")+"?path="+o.original._path;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        var node = $('#models-jstree-view').jstree().get_node(parentID);
-        self.refreshJSTree()
-        self.updateParent("spatial")
-        self.selectNode(node, body.File)
-      }
-    });
-  },
-  toModel: function (o, from) {
-    var self = this;
-    var parentID = o.parent;
-    if(from === "Spatial"){
-      var identifier = "spatial/to-model"
-    }else{
-      var identifier = "sbml/to-model"
-    }
-    let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        var node = $('#models-jstree-view').jstree().get_node(parentID);
-        self.refreshJSTree()
-        self.selectNode(node, body.File)
-        if(from === "SBML" && body.errors.length > 0){
-          var title = ""
-          var msg = body.message
-          var errors = body.errors
-          let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
-        }else{
-          self.updateParent("nonspatial")
-        }
-      }
-    });
-  },
+  // toSpatial: function (o) {
+  //   var self = this;
+  //   var parentID = o.parent;
+  //   var endpoint = path.join(app.getApiPath(), "model/to-spatial")+"?path="+o.original._path;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       var node = $('#models-jstree-view').jstree().get_node(parentID);
+  //       self.refreshJSTree()
+  //       self.updateParent("spatial")
+  //       self.selectNode(node, body.File)
+  //     }
+  //   });
+  // },
+  // toModel: function (o, from) {
+  //   var self = this;
+  //   var parentID = o.parent;
+  //   if(from === "Spatial"){
+  //     var identifier = "spatial/to-model"
+  //   }else{
+  //     var identifier = "sbml/to-model"
+  //   }
+  //   let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       var node = $('#models-jstree-view').jstree().get_node(parentID);
+  //       self.refreshJSTree()
+  //       self.selectNode(node, body.File)
+  //       if(from === "SBML" && body.errors.length > 0){
+  //         var title = ""
+  //         var msg = body.message
+  //         var errors = body.errors
+  //         let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
+  //       }else{
+  //         self.updateParent("nonspatial")
+  //       }
+  //     }
+  //   });
+  // },
   toNotebook: function (o, type) {
     let self = this
     var endpoint = path.join(app.getApiPath(), "workflow/notebook")+"?type=none&path="+o.original._path
@@ -512,18 +512,18 @@ let Model = require('../models/model');
       }
     });
   },
-  toSBML: function (o) {
-    var self = this;
-    var parentID = o.parent;
-    var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        var node = $('#models-jstree-view').jstree().get_node(parentID);
-        self.refreshJSTree()
-        self.selectNode(node, body.File)
-      }
-    });
-  },
+  // toSBML: function (o) {
+  //   var self = this;
+  //   var parentID = o.parent;
+  //   var endpoint = path.join(app.getApiPath(), "model/to-sbml")+"?path="+o.original._path;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       var node = $('#models-jstree-view').jstree().get_node(parentID);
+  //       self.refreshJSTree()
+  //       self.selectNode(node, body.File)
+  //     }
+  //   });
+  // },
   // renameNode: function (o) {
   //   var self = this
   //   var text = o.text;
@@ -892,21 +892,21 @@ let Model = require('../models/model');
   //   let queryStr = "?domainPath=" + this.parent.model.directory + "&new"
   //   window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
   // },
-  handleExtractModelClick: function (o) {
-    let self = this
-    let projectParent = path.dirname(this.parent.model.directory) === '.' ? "" : path.dirname(this.parent.model.directory)
-    let queryString = "?srcPath="+o.original._path+"&dstPath="+path.join(projectParent, o.original._path.split('/').pop())
-    let endpoint = path.join(app.getApiPath(), "project/extract-model")+queryString
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        let successModel = $(modals.projectExportSuccessHtml("Model", body)).modal();
-      },
-      error: function (err, response, body) {
-        body = JSON.parse(body);
-        let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal();
-      }
-    });
-  },
+  // handleExtractModelClick: function (o) {
+  //   let self = this
+  //   let projectParent = path.dirname(this.parent.model.directory) === '.' ? "" : path.dirname(this.parent.model.directory)
+  //   let queryString = "?srcPath="+o.original._path+"&dstPath="+path.join(projectParent, o.original._path.split('/').pop())
+  //   let endpoint = path.join(app.getApiPath(), "project/extract-model")+queryString
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       let successModel = $(modals.projectExportSuccessHtml("Model", body)).modal();
+  //     },
+  //     error: function (err, response, body) {
+  //       body = JSON.parse(body);
+  //       let successModel = $(modals.projectExportErrorHtml(body.Reason, body.message)).modal();
+  //     }
+  //   });
+  // },
   handleExportWorkflowClick: function (o) {
     let self = this
     let projectParent = path.dirname(this.parent.model.directory) === '.' ? "" : path.dirname(this.parent.model.directory)
@@ -1282,25 +1282,25 @@ let Model = require('../models/model');
       //   }
       // }
       // convert options for spatial models
-      let spatialConvert = {
-        "Convert" : {
-          "label" : "Convert",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : true,
-          "submenu" : {
-            "Convert to Model" : {
-              "label" : "Convert to Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toModel(o, "Spatial");
-              }
-            }
-          }
-        }
-      }
+      // let spatialConvert = {
+      //   "Convert" : {
+      //     "label" : "Convert",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : true,
+      //     "submenu" : {
+      //       "Convert to Model" : {
+      //         "label" : "Convert to Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.toModel(o, "Spatial");
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // specific to workflows
       let workflow = {
         "Start/Restart Workflow" : {

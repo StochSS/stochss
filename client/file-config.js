@@ -144,6 +144,22 @@ let getRootContext = (view, node) => {
   }
 }
 
+let getSpatialModelContext = (view, node) => {
+  if(node.original._path.split("/")[0] === "trash") { // project in trash
+    return {delete: view.getDeleteContext(node, "spatial model")};
+  }
+  let downloadOptions = {dataType: "json", identifier: "file/json-data"};
+  return {
+    edit: view.getEditModelContext(node),
+    newWorkflow: view.getFullNewWorkflowContext(node),
+    convert: view.getSmdlConvertContext(node, "spatial/to-model"),
+    download: view.getDownloadContext(node, downloadOptions),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "file/duplicate"),
+    moveToTrash: view.getMoveToTrashContext(node)
+  }
+}
+
 let move = (view, par, node) => {
   let newDir = par.original._path !== "/" ? par.original._path : "";
   let file = node.original._path.split('/').pop();
@@ -172,6 +188,24 @@ let move = (view, par, node) => {
 let setup = (view) => {
   $(view.queryByHook("fb-proj-seperator")).css("display", "none");
   $(view.queryByHook("fb-import-model")).css("display", "none");
+}
+
+let toModel = (view, node, identifier) => {
+  let queryStr = `?path=${node.original._path}`;
+  let endpoint = path.join(app.getApiPath(), identifier) + queryStr;
+  app.getXHR(endpoint, {
+    success: function (err, response, body) {
+      let par = $('#models-jstree').jstree().get_node(node.parent);
+      view.refreshJSTree(par);
+      view.selectNode(par, body.File);
+      if(identifier.startsWith("sbml") && body.errors.length > 0){
+        if(document.querySelector('#sbmlToModelModal')) {
+          document.querySelector('#sbmlToModelModal').remove();
+        }
+        let modal = $(modals.sbmlToModelHtml(body.message, body.errors)).modal();
+      }
+    }
+  });
 }
 
 let toSBML = (view, node) => {
@@ -208,7 +242,7 @@ let types = {
   'notebook' : {"icon": "jstree-icon jstree-file"},
   'domain' : {"icon": "jstree-icon jstree-file"},
   'sbml-model' : {"icon": "jstree-icon jstree-file"},
-  'other' : {"icon": "jstree-icon jstree-file"},
+  'other' : {"icon": "jstree-icon jstree-file"}
 }
 
 let updateParent = (view, type) => {}
@@ -250,6 +284,7 @@ module.exports = {
   getModelContext: getModelContext,
   getProjectContext: getProjectContext,
   getRootContext: getRootContext,
+  getSpatialModelContext: getSpatialModelContext,
   // getWorflowGroupContext: getOtherContext,
   move: move,
   setup: setup,

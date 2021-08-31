@@ -242,13 +242,11 @@ module.exports = View.extend({
           let par = $('#files-jstree').jstree().get_node(node.parent);
           this.refreshJSTree(par);
           this.config.updateParent(node.type);
-          if(par.type === "root"){
-            let actionsBtn = $(this.queryByHook("options-for-node"));
-            if(actionsBtn.text().endsWith(node.text)) {
-              actionsBtn.text("Actions");
-              actionsBtn.prop("disabled", true);
-              this.nodeForContextMenu = "";
-            }
+          let actionsBtn = $(this.queryByHook("options-for-node"));
+          if(actionsBtn.text().endsWith(node.text)) {
+            actionsBtn.text("Actions");
+            actionsBtn.prop("disabled", true);
+            this.nodeForContextMenu = "";
           }
         },
         error: (err, response, body) => {
@@ -652,6 +650,25 @@ module.exports = View.extend({
       }
     }
   },
+  getSmdlConvertContext: function (node, identifier) {
+    return {
+      label: "Convert",
+      _disabled: false,
+      separator_before: false,
+      separator_after: true,
+      submenu: {
+        convertToModel: {
+          label: "To Model",
+          _disabled: false,
+          separator_before: false,
+          separator_after: false,
+          action: function (data) {
+            this.config.toModel(this, node, identifier);
+          }
+        }
+      }
+    }
+  },
   handleCreateDirectoryClick: function (e) {
     let dirname = this.root === "none" ? "" : this.root;
     this.createDirectory(null, dirname);
@@ -875,7 +892,8 @@ module.exports = View.extend({
         project: this.config.getProjectContext,
         workflowGroup: this.config.getWorkflowGroupContext,
         folder: this.config.getFolderContext,
-        nonspatial: this.config.getModelContext
+        nonspatial: this.config.getModelContext,
+        spatial: this.config.getSpatialModelContext
       }
       return contextMenus[node.type](this, node);
     }

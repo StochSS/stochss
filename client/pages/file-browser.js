@@ -475,33 +475,33 @@ let FileBrowser = PageView.extend({
   //     }
   //   });
   // },
-  toModel: function (o, from) {
-    var self = this;
-    var parentID = o.parent;
-    if(from === "Spatial"){
-      var identifier = "spatial/to-model"
-    }else{
-      var identifier = "sbml/to-model"
-    }
-    let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        var node = $('#models-jstree').jstree().get_node(parentID);
-        if(node.type === "root"){
-          self.refreshJSTree();
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-        self.selectNode(node, body.File);
-        if(from === "SBML" && body.errors.length > 0){
-          var title = "";
-          var msg = body.message;
-          var errors = body.errors;
-          let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
-        }
-      }
-    });
-  },
+  // toModel: function (o, from) {
+  //   var self = this;
+  //   var parentID = o.parent;
+  //   if(from === "Spatial"){
+  //     var identifier = "spatial/to-model"
+  //   }else{
+  //     var identifier = "sbml/to-model"
+  //   }
+  //   let endpoint = path.join(app.getApiPath(), identifier)+"?path="+o.original._path;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       var node = $('#models-jstree').jstree().get_node(parentID);
+  //       if(node.type === "root"){
+  //         self.refreshJSTree();
+  //       }else{          
+  //         $('#models-jstree').jstree().refresh_node(node);
+  //       }
+  //       self.selectNode(node, body.File);
+  //       if(from === "SBML" && body.errors.length > 0){
+  //         var title = "";
+  //         var msg = body.message;
+  //         var errors = body.errors;
+  //         let modal = $(modals.sbmlToModelHtml(msg, errors)).modal();
+  //       }
+  //     }
+  //   });
+  // },
   toNotebook: function (o, type) {
     let self = this
     var endpoint = ""
@@ -1220,34 +1220,34 @@ let FileBrowser = PageView.extend({
       //   }
       // }
       // convert options for spatial models
-      let spatialConvert = {
-        "Convert" : {
-          "label" : "Convert",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "Convert to Model" : {
-              "label" : "Convert to Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toModel(o, "Spatial");
-              }
-            },
-            "Convert to Notebook" : {
-              "label" : "Convert to Notebook",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toNotebook(o, "model")
-              }
-            }
-          }
-        }
-      }
+      // let spatialConvert = {
+      //   "Convert" : {
+      //     "label" : "Convert",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "Convert to Model" : {
+      //         "label" : "Convert to Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.toModel(o, "Spatial");
+      //         }
+      //       },
+      //       "Convert to Notebook" : {
+      //         "label" : "Convert to Notebook",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.toNotebook(o, "model")
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // convert options for non-spatial models
       // let modelConvert = {
       //   "Convert" : {
@@ -1431,9 +1431,9 @@ let FileBrowser = PageView.extend({
       // if (o.text === "trash") {//Trash node
       //   return {"Refresh": folder.Refresh}
       // }
-      if (o.original._path.split("/")[0] === "trash") { // item in trash
-        return delete_node
-      }
+      // if (o.original._path.split("/")[0] === "trash") { // item in trash
+      //   return delete_node
+      // }
       // if (o.type ===  'folder') { // folder node
       //   return $.extend(folder, common)
       // }

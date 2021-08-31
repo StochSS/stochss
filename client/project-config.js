@@ -110,7 +110,7 @@ let getModelContext = (view, node) => {
     download: view.getDownloadContext(node, downloadOptions),
     rename: view.getRenameContext(node),
     duplicate: view.getDuplicateContext(node, "file/duplicate"),
-    moveToTrash: view.getMoveToTrashContext(node)
+    delete: view.getDeleteContext(node, "model")
   }
 }
 
@@ -133,6 +133,23 @@ let getWorkflowGroupContext = (view, node) => {
   return {
     refresh: view.getRefreshContext(node),
     download: view.getDownloadWCombineContext(node)
+  }
+}
+
+let getSpatialModelContext = (view, node) => {
+  if(node.original._path.includes(".proj/trash/")) { //item in trash
+    return {delete: view.getDeleteContext(node, "spatial model")};
+  }
+  let downloadOptions = {dataType: "json", identifier: "file/json-data"};
+  return {
+    edit: view.getEditModelContext(node),
+    extract: getExtractContext(view, node),
+    newWorkflow: view.getFullNewWorkflowContext(node),
+    convert: view.getSmdlConvertContext(node, "spatial/to-model"),
+    download: view.getDownloadContext(node, downloadOptions),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "file/duplicate"),
+    delete: view.getDeleteContext(node, "model")
   }
 }
 
@@ -163,6 +180,56 @@ let setup = (view) => {
   $(view.queryByHook("fb-empty-trash")).css("display", "none");
 }
 
+let toModel = (view, node, identifier) => {
+  let queryStr = `?path=${node.original._path}`;
+  let endpoint = path.join(app.getApiPath(), identifier) + queryStr;
+  app.getXHR(endpoint, {
+    success: (err, response, body) => {
+      var root = $('#files-jstree').jstree().get_node(node.parent);
+      while(root.type !== "root") {
+        root = $('#files-jstree').jstree().get_node(root.parent);
+      }
+      view.refreshJSTree(root);
+      view.selectNode(root, body.File.replace(".mdl", ".wkgp"));
+      if(identifier.startsWith("sbml") && body.errors.length > 0){
+        if(document.querySelector('#sbmlToModelModal')) {
+          document.querySelector('#sbmlToModelModal').remove();
+        }
+        let modal = $(modals.sbmlToModelHtml(body.message, body.errors)).modal();
+      }else{
+        view.updateParent("model");
+      }
+    }
+  });
+}
+
+let toSBML = (view, node) => {
+  let queryStr = `?path=${node.original._path}`;
+  let endpoint = path.join(app.getApiPath(), "model/to-sbml") + queryStr;
+  app.getXHR(endpoint, {
+    success: (err, response, body) => {
+      let par = $('#files-jstree').jstree().get_node(node.parent);
+      let grandPar = $('#files-jstree').jstree().get_node(par.parent);
+      view.refreshJSTree(grandPar);
+      view.selectNode(grandPar, body.File);
+    }
+  });
+}
+
+let toSpatial = (view, node) => {
+  let queryStr = `?path=${node.original._path}`;
+  let endpoint = path.join(app.getApiPath(), "model/to-spatial") + queryStr;
+  app.getXHR(endpoint, {
+    success: (err, response, body) => {
+      let par = $('#files-jstree').jstree().get_node(node.parent);
+      let grandPar = $('#files-jstree').jstree().get_node(par.parent);
+      view.refreshJSTree(grandPar);
+      updateParent("spatial");
+      view.selectNode(grandPar, body.File.replace(".smdl", ".wkgp"));
+    }
+  });
+}
+
 let types = {
   'root' : {"icon": "jstree-icon jstree-folder"},
   'folder' : {"icon": "jstree-icon jstree-folder"},
@@ -173,7 +240,7 @@ let types = {
   'notebook' : {"icon": "jstree-icon jstree-file"},
   'domain' : {"icon": "jstree-icon jstree-file"},
   'sbml-model' : {"icon": "jstree-icon jstree-file"},
-  'other' : {"icon": "jstree-icon jstree-file"},
+  'other' : {"icon": "jstree-icon jstree-file"}
 }
 
 let updateParent = (view, type) => {
@@ -259,6 +326,7 @@ module.exports = {
   getModelContext: getModelContext,
   // getProjectContext: getOtherContext,
   getRootContext: getRootContext,
+  getSpatialModelContext: getSpatialModelContext,
   getWorkflowGroupContext: getWorkflowGroupContext,
   move: move,
   setup: setup,
