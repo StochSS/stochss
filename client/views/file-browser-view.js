@@ -1224,34 +1224,34 @@ let Model = require('../models/model');
       //   }
       // }
       // common to all models
-      let commonModel = {
-        "Edit" : {
-          "label" : "Edit",
-          "_disabled" : false,
-          "_class" : "font-weight-bolder",
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
-          }
-        },
-        "Extract" : {
-          "label" : "Extract",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.handleExtractModelClick(o);
-          }
-        },
-        "New Workflow" : {
-          "label" : "New Workflow",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : o.type === "nonspatial" ? newWorkflow : {"jupyterNotebook":newWorkflow.jupyterNotebook}
-        }
-      }
+      // let commonModel = {
+      //   "Edit" : {
+      //     "label" : "Edit",
+      //     "_disabled" : false,
+      //     "_class" : "font-weight-bolder",
+      //     "separator_before" : false,
+      //     "separator_after" : true,
+      //     "action" : function (data) {
+      //       window.location.href = path.join(app.getBasePath(), "stochss/models/edit")+"?path="+o.original._path;
+      //     }
+      //   },
+      //   "Extract" : {
+      //     "label" : "Extract",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.handleExtractModelClick(o);
+      //     }
+      //   },
+      //   "New Workflow" : {
+      //     "label" : "New Workflow",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : o.type === "nonspatial" ? newWorkflow : {"jupyterNotebook":newWorkflow.jupyterNotebook}
+      //   }
+      // }
       // convert options for non-spatial models
       // let modelConvert = {
       //   "Convert" : {
@@ -1445,9 +1445,9 @@ let Model = require('../models/model');
       if (o.type === 'spatial') { // spatial model node
         return $.extend(commonModel, spatialConvert, download, common)
       }
-      if (o.type === 'nonspatial') { // model node
-         return $.extend(commonModel, modelConvert, download, common)
-      }
+      // if (o.type === 'nonspatial') { // model node
+      //    return $.extend(commonModel, modelConvert, download, common)
+      // }
       // if (o.type === 'workflow-group') {
       //   return $.extend(refresh, downloadWCombine)
       // }

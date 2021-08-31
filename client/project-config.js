@@ -20,13 +20,14 @@ let $ = require('jquery');
 let path = require('path');
 //support files
 let app = require('./app');
+let modals = require('./modals');
 
-let contextZipTypes = ["workflow", "folder", "other", "root", "workflow-group"];
+let contextZipTypes = ["workflow", "folder", "other", "root", "workflowGroup"];
 
 let doubleClick = (view, e) => {
   let node = $('#files-jstree').jstree().get_node(e.target);
   if(!node.original._path.includes(".proj/trash/")){
-    if((node.type === "folder" || node.type === "workflow-group") && $('#files-jstree').jstree().is_open(node) && $('#files-jstree').jstree().is_loaded(node)){
+    if((node.type === "folder" || node.type === "workflowGroup") && $('#files-jstree').jstree().is_open(node) && $('#files-jstree').jstree().is_loaded(node)){
       view.refreshJSTree(node);
     }else if(node.type === "nonspatial" || node.type === "spatial"){
       view.openModel(node.original._path);
@@ -43,6 +44,34 @@ let doubleClick = (view, e) => {
     }else if(node.type === "other"){
       var openPath = path.join(app.getBasePath(), "view", node.original._path);
       window.open(openPath, "_blank");
+    }
+  }
+}
+
+let extractModel = (view, node) => {
+  let projectPar = path.dirname(view.root) === '.' ? "" : path.dirname(view.root);
+  let dstPath = path.join(projectPar, node.original._path.split('/').pop());
+  let queryStr = `?srcPath=${node.original._path}&dstPath=${dstPath}`;
+  let endpoint = path.join(app.getApiPath(), "project/extract-model") + queryStr;
+  app.getXHR(endpoint, {
+    success: (err, response, body) => {
+      let title = "Successfully Exported the Model";
+      let successModel = $(modals.successHtml(body, {title: title})).modal();
+    },
+    error: (err, response, body) => {
+      view.reportError(JSON.parse(body));
+    }
+  });
+}
+
+let getExtractContext = (view, node) => {
+  return {
+    label: "Extract",
+    _disabled: false,
+    separator_before: false,
+    separator_after: false,
+    action: (data) => {
+      extractModel(view, node);
     }
   }
 }
@@ -65,6 +94,23 @@ let getFolderContext = (view, node) => {
     rename: view.getRenameContext(node),
     duplicate: view.getDuplicateContext(node, "directory/duplicate"),
     delete: view.getDeleteContext(node, "directory")
+  }
+}
+
+let getModelContext = (view, node) => {
+  if(node.original._path.includes(".proj/trash/")) { //item in trash
+    return {delete: view.getDeleteContext(node, "model")};
+  }
+  let downloadOptions = {dataType: "json", identifier: "file/json-data"};
+  return {
+    edit: view.getEditModelContext(node),
+    extract: getExtractContext(view, node),
+    newWorkflow: view.getFullNewWorkflowContext(node),
+    convert: view.getMdlConvertContext(node),
+    download: view.getDownloadContext(node, downloadOptions),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "file/duplicate"),
+    moveToTrash: view.getMoveToTrashContext(node)
   }
 }
 
@@ -122,7 +168,7 @@ let types = {
   'folder' : {"icon": "jstree-icon jstree-folder"},
   'spatial' : {"icon": "jstree-icon jstree-file"},
   'nonspatial' : {"icon": "jstree-icon jstree-file"},
-  'workflow-group' : {"icon": "jstree-icon jstree-folder"},
+  'workflowGroup' : {"icon": "jstree-icon jstree-folder"},
   'workflow' : {"icon": "jstree-icon jstree-file"},
   'notebook' : {"icon": "jstree-icon jstree-file"},
   'domain' : {"icon": "jstree-icon jstree-file"},
@@ -137,8 +183,8 @@ let updateParent = (view, type) => {
     view.parent.update("Model", "file-browser");
   }else if(workflows.includes(type)) {
     view.parent.update("Workflow", "file-browser");
-  }else if(type === "workflow-group") {
-    view.parent.update("WorkflowGroup", "file-browser");
+  }else if(type === "workflowGroup") {
+    view.parent.update("Workflow-group", "file-browser");
   }else if(type === "Archive") {
     view.parent.update(type, "file-browser");
   }
@@ -156,7 +202,7 @@ let validateMove = (view, node, more, pos) => {
   if(isWorkflow && node.original._status && node.original._status === "running") { return false };
 
   // Check if model, workflow, or workflow group is moving to or from trash
-  let isWkgp = Boolean(validSrc && node.type === "workflow-group");
+  let isWkgp = Boolean(validSrc && node.type === "workflowGroup");
   let trashAction = Boolean((validSrc && node.original._path.includes("trash")) || (validDst && more.ref.original.text === "trash"));
   if(isWkgp && !(view.parent.model.newFormat && trashAction)) { return false };
   let isModel = Boolean(validSrc && (node.type === "nonspatial" || node.type === "spatial"));
@@ -165,12 +211,12 @@ let validateMove = (view, node, more, pos) => {
   // Check if model, workflow, or workflow group is moving from trash to the correct location
   if(validSrc && node.original._path.includes("trash")) {
     if(isWkgp && (!view.parent.model.newFormat || (validDst && more.ref.type !== "root"))) { return false };
-    if(isWorkflow && validDst && more.ref.type !== "workflow-group") { return false };
+    if(isWorkflow && validDst && more.ref.type !== "workflowGroup") { return false };
     if(isModel && validDst) {
       if(!view.parent.model.newFormat && more.ref.type !== "root") { return false };
       let length = node.original.text.split(".").length;
       let modelName = node.original.text.split(".").slice(0, length - 1).join(".");
-      if(view.parent.model.newFormat && (more.ref.type !== "workflow-group" || !more.ref.original.text.startsWith(modelName))) { return false };
+      if(view.parent.model.newFormat && (more.ref.type !== "workflowGroup" || !more.ref.original.text.startsWith(modelName))) { return false };
     }
   }
 
@@ -179,7 +225,7 @@ let validateMove = (view, node, more, pos) => {
   let isNotebook = Boolean(validSrc && node.type === "notebook");
   let isOther = Boolean(validSrc && !isModel && !isWorkflow && !isWkgp && !isNotebook);
   if(isOther && validDst && !validDsts.includes(more.ref.type)) { return false };
-  validDsts.push("workflow-group");
+  validDsts.push("workflowGroup");
   if(isNotebook && validDst && !validDsts.includes(more.ref.type)) { return false };
   
   // Check if file already exists with that name in folder
@@ -210,6 +256,7 @@ module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
   getFolderContext: getFolderContext,
+  getModelContext: getModelContext,
   // getProjectContext: getOtherContext,
   getRootContext: getRootContext,
   getWorkflowGroupContext: getWorkflowGroupContext,

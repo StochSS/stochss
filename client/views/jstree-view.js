@@ -873,7 +873,7 @@ module.exports = View.extend({
       let contextMenus = {
         root: this.config.getRootContext,
         project: this.config.getProjectContext,
-        "workflow-group": this.config.getWorkflowGroupContext,
+        workflowGroup: this.config.getWorkflowGroupContext,
         folder: this.config.getFolderContext,
         nonspatial: this.config.getModelContext
       }

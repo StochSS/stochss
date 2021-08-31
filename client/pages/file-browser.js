@@ -1440,9 +1440,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'spatial') { // spatial model node
         return $.extend(model, spatialConvert, common)
       }
-      if (o.type === 'nonspatial') { // model node
-         return $.extend(model, modelConvert, common)
-      }
+      // if (o.type === 'nonspatial') { // model node
+      //    return $.extend(model, modelConvert, common)
+      // }
       // if (o.type === 'project'){
       //   return $.extend(open, project, common)
       // }

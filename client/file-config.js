@@ -85,7 +85,7 @@ let getModelContext = (view, node) => {
   if(node.original._path.split("/")[0] === "trash") { // item in trash
     return {delete: view.getDeleteContext(node, "model")};
   }
-  let downloadOptions = {dataType: "json", identifier: "file/json-data"}
+  let downloadOptions = {dataType: "json", identifier: "file/json-data"};
   return {
     edit: view.getEditModelContext(node),
     newWorkflow: view.getFullNewWorkflowContext(node),
@@ -230,7 +230,7 @@ let validateMove = (view, node, more, pos) => {
     if(!more.ref.state.loaded) { return false };
     try{
       let BreakException = {};
-      more.ref.children.forEach(function (child) {
+      more.ref.children.forEach((child) => {
         let child_node = $('#files-jstree').jstree().get_node(child);
         let exists = child_node.text === node.text;
         if(exists) { throw BreakException; };

@@ -322,9 +322,11 @@ module.exports = {
     }
     return templates.confirmation(modalID, title);
   },
-  successHtml : (message) => {
+  successHtml : (message, {title=null}={}) => {
     let modalID = "successModal";
-    let title = "Success!";
+    if(!title) {
+      title = "Success!";
+    }
 
     return templates.message(modalID, title, message);
   },
