@@ -199,23 +199,21 @@ c.DockerSpawner.debug = True
 
 def get_user_cpu_count_or_fail():
     '''
-    Get the user cpu count or raise error
+    Get the user cpu count or raise error.
     '''
-    log = logging.getLogger()
     reserve_count = int(os.environ['RESERVED_CPUS'])
-    log.info(f"RESERVED_CPUS environment variable is set to {reserve_count}")
     # Round up to an even number of reserved cpus
+    total_cpus = os.cpu_count()
+    if total_cpus <= 2:
+        c.StochSS.reserved_cpu_count = 0
+        return 0
     if reserve_count % 2 > 0:
         message = "Increasing reserved cpu count by one so it's an even number."
         message += " This helps allocate logical cpus to users more easily."
-        log.warning(message)
         reserve_count += 1
-    total_cpus = os.cpu_count()
-    log.info(f"Total cpu count as reported by os.count: {total_cpus}")
     if reserve_count >= total_cpus:
         e_message = "RESERVED_CPUS environment cannot be greater than or equal to the number of"
         e_message += " cpus returned by os.cpu_count()"
-        log.error(e_message)
         raise ValueError(e_message)
     user_cpu_count = total_cpus - reserve_count
     # If (num logical cpus) - (num reserved cpus) is odd,
@@ -223,44 +221,36 @@ def get_user_cpu_count_or_fail():
     if user_cpu_count % 2 > 0 and user_cpu_count > 1:
         user_cpu_count -= 1
     c.StochSS.reserved_cpu_count = reserve_count
-    log.info(f'Using {user_cpu_count} logical cpus for user containers...')
-    log.info(f'Reserving {reserve_count} logical cpus for hub container and underlying OS')
     return user_cpu_count
 
 c.StochSS.user_cpu_count = get_user_cpu_count_or_fail()
 c.StochSS.user_cpu_alloc = [0] * c.StochSS.user_cpu_count
-
-def get_power_users():
-    '''
-    Get the list of power users
-    '''
-    power_users_file = os.environ.get('POWER_USERS_FILE')
-    log = logging.getLogger()
-    if not os.path.exists(power_users_file):
-        log.warning('No power users defined!')
-        return []
-    with open(power_users_file) as file:
-        power_users = [ x.rstrip() for x in file.readlines() ]
-    return power_users
-
-
-c.StochSS.power_users = get_power_users()
 
 def pre_spawn_hook(spawner):
     '''
     Function that runs before DockerSpawner spawns a user container.
     Limits the resources available to user containers, excluding a list of power users.
     '''
-    log = logging.getLogger()
+    log = spawner.log
     # Remove the memory limit for power users
-    if spawner.user.name in c.StochSS.power_users:
+    if c.StochSS.user_cpu_count == 0:
         spawner.mem_limit = None
+        log.info(f'Skipping resource limitations since the host machine has a limited number of cpus.')
+        return
+    user_type = None
+    if spawner.user.name in c.StochSS.power_users:
+        user_type = 'power'
+    if spawner.user.name in c.Authenticator.admin_users:
+        user_type = 'admin'
+    if user_type:
+        spawner.mem_limit = None
+        log.info(f'Skipping resource limitation for {user_type} user: {spawner.user.name}')
         return
     palloc = c.StochSS.user_cpu_alloc
     div = len(palloc) // 2
     reserved = c.StochSS.reserved_cpu_count
-    log.warning(f'Reserved CPUs: {reserved}')
-    log.warning(f'Number of user containers using each logical core: {palloc}')
+    log.debug(f'Reserved CPUs: {reserved}')
+    log.debug(f'Number of user containers using each logical core: {palloc}')
     # We want to allocate logical cores that are on the same physical core
     # whenever possible.
     #
@@ -307,8 +297,10 @@ def post_stop_hook(spawner):
     '''
     Post stop hook
     '''
-    log = logging.getLogger()
+    log = spawner.log
     reserved = c.StochSS.reserved_cpu_count
+    if reserved == 0:
+        return
     palloc = c.StochSS.user_cpu_alloc
     try:
         cpu1_index, cpu2_index = spawner.extra_host_config['cpuset_cpus'].split(',')
@@ -319,7 +311,6 @@ def post_stop_hook(spawner):
     except Exception as err:
         message = "Exception thrown due to cpuset_cpus not being set (power user)"
         log.error(f"{message}\n{err}")
-        # Exception thrown due to cpuset_cpus not being set (power user)
         pass
 
 c.Spawner.pre_spawn_hook = pre_spawn_hook
@@ -439,6 +430,7 @@ c.Spawner.mem_guarantee = '2G'
 #
 #  Defaults to an empty set, in which case no user has admin access.
 c.Authenticator.admin_users = admin = set([])
+c.StochSS.power_users = power_users = set([])
 
 pwd = os.path.dirname(__file__)
 with open(os.path.join(pwd, 'userlist')) as f:
@@ -450,5 +442,9 @@ with open(os.path.join(pwd, 'userlist')) as f:
         if len(parts) >= 1:
             name = parts[0]
             #whitelist.add(name)
-            if len(parts) > 1 and parts[1] == 'admin':
-                admin.add(name)
+            if len(parts) > 1:
+                if parts[1] == 'admin':
+                    admin.add(name)
+                    power_users.add(name)
+                if parts[1] == 'power':
+                    power_users.add(name)
