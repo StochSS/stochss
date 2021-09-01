@@ -74,7 +74,7 @@ class StochSSFolder(StochSSBase):
 
     def __build_jstree_node(self, path, file):
         types = {"mdl":"nonspatial", "smdl":"spatial", "sbml":"sbml-model", "ipynb":"notebook",
-                 "wkfl":"workflow", "proj":"project", "wkgp":"workflow-group", "domn":"domain"}
+                 "wkfl":"workflow", "proj":"project", "wkgp":"workflowGroup", "domn":"domain"}
         _path = file if self.path == "none" else os.path.join(self.path, file)
         ext = file.split('.').pop() if "." in file else None
         node = {"text":file, "type":"other", "_path":_path, "children":False}
@@ -88,7 +88,7 @@ class StochSSFolder(StochSSBase):
                                                        os.listdir(_path)))) > 0
                 else:
                     node['_status'] = self.get_status(path=_path)
-            elif file_type == "workflow-group":
+            elif file_type == "workflowGroup":
                 node['children'] = True
         elif os.path.isdir(os.path.join(path, file)):
             node['type'] = "folder"
