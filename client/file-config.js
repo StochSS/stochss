@@ -41,8 +41,7 @@ let doubleClick = (view, e) => {
     }else if(node.type === "domain") {
       view.openDomain(node.original._path);
     }else if(node.type === "other"){
-      let openPath = path.join(app.getBasePath(), "view", node.original._path);
-      window.open(openPath, "_blank");
+      view.openFile(node.original._path);
     }
   }
 }
@@ -131,6 +130,31 @@ let getNotebookContext = (view, node) => {
     open: open,
     publish: view.getPublishNotebookContext(node),
     download: download, rename: rename,
+    duplicate: duplicate, moveToTrash: moveToTrash
+  }
+}
+
+let getOtherContext = (view, node) => {
+  if(node.original._path.split("/")[0] === "trash") { // project in trash
+    return {delete: view.getDeleteContext(node, "file")};
+  }
+  let open = view.getOpenFileContext(node);
+  let downloadOptions = {dataType: "zip", identifier: "file/download-zip"};
+  let options = {asZip: true};
+  let download = view.getDownloadContext(node, downloadOptions, options);
+  let rename = view.getRenameContext(node);
+  let duplicate = view.getDuplicateContext(node, "file/duplicate");
+  let moveToTrash = view.getMoveToTrashContext(node, "file");
+  if(node.text.endsWith(".zip")) {
+    return {
+      open: open,
+      extractAll: view.getExtractAllContext(node),
+      download: download, rename: rename,
+      duplicate: duplicate, moveToTrash: moveToTrash
+    }
+  }
+  return {
+    open: open, download: download, rename: rename,
     duplicate: duplicate, moveToTrash: moveToTrash
   }
 }
@@ -366,12 +390,13 @@ module.exports = {
   getFolderContext: getFolderContext,
   getModelContext: getModelContext,
   getNotebookContext: getNotebookContext,
+  getOtherContext: getOtherContext,
   getProjectContext: getProjectContext,
   getRootContext: getRootContext,
   getSBMLContext: getSBMLContext,
   getSpatialModelContext: getSpatialModelContext,
   getWorkflowContext: getWorkflowContext,
-  // getWorflowGroupContext: getOtherContext,
+  getWorflowGroupContext: getOtherContext,
   move: move,
   setup: setup,
   toModel: toModel,

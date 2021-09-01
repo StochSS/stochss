@@ -343,6 +343,19 @@ module.exports = View.extend({
     let endpoint = path.join(app.getBasePath(), "/files", targetPath);
     window.open(endpoint, "_blank");
   },
+  extractAll: function (node) {
+    let queryStr = `?path=${o.original._path}`;
+    let endpoint = path.join(app.getApiPath(), "file/unzip") + queryStr;
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        let par = $('#files-jstree').jstree().get_node(node.parent);
+        this.refreshJSTree(par);
+      },
+      error: (err, response, body) => {
+        this.reportError(body);
+      }
+    });
+  },
   getAddModelContext: function (node) {
     let newModel = this.getNewModelContext(node, true);
     return this.buildContextWithSubmenus({
@@ -412,7 +425,7 @@ module.exports = View.extend({
   getEditModelContext: function (node) {
     return this.buildContextBaseWithClass({
       label: "Edit",
-      action: function (data) {
+      action: (data) => {
         this.openModel(node.original._path);
       }
     });
@@ -450,6 +463,14 @@ module.exports = View.extend({
           body = JSON.parse(body);
         }
         this.reportError(body);
+      }
+    });
+  },
+  getExtractAllContext: function (node) {
+    return this.buildContextBase({
+      label: "Extract All",
+      action: (data) => {
+        this.extractAll(node);
       }
     });
   },
@@ -530,6 +551,14 @@ module.exports = View.extend({
       label: "Move To Trash",
       action: (data) => {
         this.moveToTrash(node, type);
+      }
+    });
+  },
+  getOpenFileContext: function (node) {
+    return this.buildContextBaseWithClass({
+      label: "Open",
+      action: (data) => {
+        this.openFile(node);
       }
     });
   },
@@ -815,6 +844,9 @@ module.exports = View.extend({
     let queryStr = `?domainPath=${domainPath}`;
     window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
   },
+  openFile: function (filePath) {
+    window.open(path.join(app.getBasePath(), "view", filePath), "_blank");
+  },
   openModel: function (modelPath) {
     let queryStr = `?path=${modelPath}`;
     window.location.href = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
@@ -968,9 +1000,12 @@ module.exports = View.extend({
         domain: this.config.getDomainContext,
         workflow: this.config.getWorkflowContext,
         notebook: this.config.getNotebookContext,
-        sbmlModel: this.config.getSBMLContext
+        sbmlModel: this.config.getSBMLContext,
       }
-      return contextMenus[node.type](this, node);
+      if(Object.keys(contextMenus).includes(node.type)){
+        return contextMenus[node.type](this, node);
+      }
+      return this.config.getOtherContext(this, node);
     }
     $(() => {
       $(document).on('shown.bs.modal', (e) => {

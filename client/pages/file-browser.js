@@ -916,24 +916,24 @@ let FileBrowser = PageView.extend({
   //     }
   //   });
   // },
-  extractAll: function (o) {
-    let self = this;
-    let queryStr = "?path=" + o.original._path;
-    let endpoint = path.join(app.getApiPath(), "file/unzip") + queryStr;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        let node = $('#models-jstree').jstree().get_node(o.parent);
-        if(node.type === "root"){
-          self.refreshJSTree();
-        }else{          
-          $('#models-jstree').jstree().refresh_node(node);
-        }
-      },
-      error: function (err, response, body) {
-        let modal = $(modals.newProjectModelErrorHtml(body.Reason, body.message)).modal();
-      }
-    });
-  },
+  // extractAll: function (o) {
+  //   let self = this;
+  //   let queryStr = "?path=" + o.original._path;
+  //   let endpoint = path.join(app.getApiPath(), "file/unzip") + queryStr;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       let node = $('#models-jstree').jstree().get_node(o.parent);
+  //       if(node.type === "root"){
+  //         self.refreshJSTree();
+  //       }else{          
+  //         $('#models-jstree').jstree().refresh_node(node);
+  //       }
+  //     },
+  //     error: function (err, response, body) {
+  //       let modal = $(modals.newProjectModelErrorHtml(body.Reason, body.message)).modal();
+  //     }
+  //   });
+  // },
   // moveToTrash: function (o) {
   //   if(document.querySelector('#moveToTrashConfirmModal')) {
   //     document.querySelector('#moveToTrashConfirmModal').remove();
@@ -998,9 +998,9 @@ let FileBrowser = PageView.extend({
   //     }
   //   });
   // },
-  setupJstree: function () {
-    var self = this;
-    $.jstree.defaults.contextmenu.items = (o, cb) => {
+  // setupJstree: function () {
+  //   var self = this;
+  //   $.jstree.defaults.contextmenu.items = (o, cb) => {
       // let optionsButton = $(self.queryByHook("options-for-node"))
       // if(!self.nodeForContextMenu){
       //   optionsButton.prop('disabled', false)
@@ -1287,34 +1287,34 @@ let FileBrowser = PageView.extend({
       //   }
       // }
       // For notebooks, workflows, sbml models, and other files
-      let open = {
-        "Open" : {
-          "label" : "Open",
-          "_disabled" : false,
-          "_class" : "font-weight-bolder",
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            if(nodeType === "workflow"){
-              // window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
-            // }else if(nodeType === "project"){
-              // window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
-            }else if(nodeType === "domain") {
-              let queryStr = "?domainPath=" + o.original._path
-              window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
-            }else{
-              if(nodeType === "notebook") {
-                var identifier = "notebooks"
-              }else if(nodeType === "sbml-model") {
-                var identifier = "edit"
-              }else{
-                var identifier = "view"
-              }
-              window.open(path.join(app.getBasePath(), identifier, o.original._path));
-            }
-          }
-        }
-      }
+      // let open = {
+      //   "Open" : {
+      //     "label" : "Open",
+      //     "_disabled" : false,
+      //     "_class" : "font-weight-bolder",
+      //     "separator_before" : false,
+      //     "separator_after" : true,
+      //     "action" : function (data) {
+      //       if(nodeType === "workflow"){
+      //         // window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
+      //       // }else if(nodeType === "project"){
+      //         // window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
+      //       }else if(nodeType === "domain") {
+      //         let queryStr = "?domainPath=" + o.original._path
+      //         window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+      //       }else{
+      //         if(nodeType === "notebook") {
+      //           var identifier = "notebooks"
+      //         }else if(nodeType === "sbml-model") {
+      //           var identifier = "edit"
+      //         }else{
+      //           var identifier = "view"
+      //         }
+      //         window.open(path.join(app.getBasePath(), identifier, o.original._path));
+      //       }
+      //     }
+      //   }
+      // }
       // let project = {
       //   "Add Model" : {
       //     "label" : "Add Model",
@@ -1403,17 +1403,17 @@ let FileBrowser = PageView.extend({
       //   }
       // }
       //Specific to zip archives
-      let extractAll = {
-        "extractAll" : {
-          "label" : "Extract All",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.extractAll(o);
-          }
-        }
-      }
+      // let extractAll = {
+      //   "extractAll" : {
+      //     "label" : "Extract All",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.extractAll(o);
+      //     }
+      //   }
+      // }
       // let notebook = {
       //   "publish" : {
       //     "label" : "Publish",
@@ -1449,25 +1449,25 @@ let FileBrowser = PageView.extend({
       // if (o.type === 'workflow') { // workflow node
       //   return $.extend(open, workflow, common)
       // }
-      if (o.text.endsWith(".zip")) { // zip archive node
-        return $.extend(open, extractAll, common)
-      }
+      // if (o.text.endsWith(".zip")) { // zip archive node
+      //   return $.extend(open, extractAll, common)
+      // }
       // if (o.type === 'notebook') { // notebook node
       //   if(app.getBasePath() === "/") {
       //     return $.extend(open, common)
       //   }
       //   return $.extend(open, notebook, common)
       // }
-      if (o.type === 'other') { // other nodes
-        return $.extend(open, common)
-      }
+      // if (o.type === 'other') { // other nodes
+      //   return $.extend(open, common)
+      // }
       // if (o.type === 'sbml-model') { // sbml model node
       //   return $.extend(open, sbml, common)
       // }
       // if (o.type === "domain") { // domain node
       //   return $.extend(open, common)
       // }
-    }
+    // }
     // $(document).on('shown.bs.modal', function (e) {
     //   $('[autofocus]', e.target).focus();
     // });
@@ -1522,7 +1522,7 @@ let FileBrowser = PageView.extend({
     //     }
     //   }
     // });
-  }
+  // }
 });
 
 initPage(FileBrowser);

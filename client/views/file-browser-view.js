@@ -18,13 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 // let jstree = require('jstree');
 // let path = require('path');
-let $ = require('jquery');
-let _ = require('underscore');
+// let $ = require('jquery');
+// let _ = require('underscore');
 //support files
 // let app = require('../app');
-let modals = require('../modals');
+// let modals = require('../modals');
 //models
-let Model = require('../models/model');
+// let Model = require('../models/model');
 //views
 // let View = require('ampersand-view');
 //templates
@@ -181,7 +181,7 @@ let Model = require('../models/model');
   // },
   // render: function () {
     // View.prototype.render.apply(this, arguments)
-    var self = this;
+    // var self = this;
     // this.nodeForContextMenu = "";
     // this.jstreeIsLoaded = false
     // window.addEventListener('pageshow', function (e) {
@@ -943,24 +943,24 @@ let Model = require('../models/model');
   //     }
   //   });
   // },
-  extractAll: function (o) {
-    let self = this;
-    let queryStr = "?path=" + o.original._path;
-    let endpoint = path.join(app.getApiPath(), "file/unzip") + queryStr;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        let node = $('#models-jstree-view').jstree().get_node(o.parent);
-        if(node.type === "root"){
-          self.refreshJSTree();
-        }else{          
-          $('#models-jstree-view').jstree().refresh_node(node);
-        }
-      },
-      error: function (err, response, body) {
-        let modal = $(modals.newProjectModelErrorHtml(body.Reason, body.message)).modal();
-      }
-    });
-  },
+  // extractAll: function (o) {
+  //   let self = this;
+  //   let queryStr = "?path=" + o.original._path;
+  //   let endpoint = path.join(app.getApiPath(), "file/unzip") + queryStr;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       let node = $('#models-jstree-view').jstree().get_node(o.parent);
+  //       if(node.type === "root"){
+  //         self.refreshJSTree();
+  //       }else{          
+  //         $('#models-jstree-view').jstree().refresh_node(node);
+  //       }
+  //     },
+  //     error: function (err, response, body) {
+  //       let modal = $(modals.newProjectModelErrorHtml(body.Reason, body.message)).modal();
+  //     }
+  //   });
+  // },
   // publishNotebookPresentation: function (o) {
   //   let queryStr = "?path=" + o.original._path;
   //   let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
@@ -989,7 +989,7 @@ let Model = require('../models/model');
   //   });
   // },
   // setupJstree: function () {
-    var self = this;
+    // var self = this;
     // $.jstree.defaults.contextmenu.items = (o, cb) => {
       // let nodeType = o.original.type
       // let zipTypes = ["workflow", "folder", "other", "root", "workflow-group"]
@@ -1012,34 +1012,34 @@ let Model = require('../models/model');
       //   }
       // }
       // For notebooks, workflows, sbml models, and other files
-      let open = {
-        "Open" : {
-          "label" : "Open",
-          "_disabled" : false,
-          "_class" : "font-weight-bolder",
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            if(nodeType === "workflow"){
-              window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
-            // }else if(nodeType === "project"){
-            //   window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
-            }else if(nodeType === "domain") {
-              let queryStr = "?domainPath=" + o.original._path
-              window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
-            }else{
-              if(nodeType === "notebook") {
-                var identifier = "notebooks"
-              }else if(nodeType === "sbml-model") {
-                var identifier = "edit"
-              }else{
-                var identifier = "view"
-              }
-              window.open(path.join(app.getBasePath(), identifier, o.original._path));
-            }
-          }
-        }
-      }
+      // let open = {
+      //   "Open" : {
+      //     "label" : "Open",
+      //     "_disabled" : false,
+      //     "_class" : "font-weight-bolder",
+      //     "separator_before" : false,
+      //     "separator_after" : true,
+      //     "action" : function (data) {
+      //       if(nodeType === "workflow"){
+      //         window.location.href = path.join(app.getBasePath(), "stochss/workflow/edit")+"?path="+o.original._path+"&type=none";
+      //       // }else if(nodeType === "project"){
+      //       //   window.location.href = path.join(app.getBasePath(), "stochss/project/manager")+"?path="+o.original._path
+      //       }else if(nodeType === "domain") {
+      //         let queryStr = "?domainPath=" + o.original._path
+      //         window.location.href = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr
+      //       }else{
+      //         if(nodeType === "notebook") {
+      //           var identifier = "notebooks"
+      //         }else if(nodeType === "sbml-model") {
+      //           var identifier = "edit"
+      //         }else{
+      //           var identifier = "view"
+      //         }
+      //         window.open(path.join(app.getBasePath(), identifier, o.original._path));
+      //       }
+      //     }
+      //   }
+      // }
       // project contect menu option
       // let project = {
       //   "Add_Model" : {
@@ -1408,17 +1408,17 @@ let Model = require('../models/model');
       //   }
       // }
       //Specific to zip archives
-      let extractAll = {
-        "extractAll" : {
-          "label" : "Extract All",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.extractAll(o);
-          }
-        }
-      }
+      // let extractAll = {
+      //   "extractAll" : {
+      //     "label" : "Extract All",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.extractAll(o);
+      //     }
+      //   }
+      // }
       // let notebook = {
       //   "publish" : {
       //     "label" : "Publish",
@@ -1454,25 +1454,25 @@ let Model = require('../models/model');
       // if (o.type === 'workflow') { // workflow node
       //   return $.extend(open, workflow, downloadWCombine, common)
       // }
-      if (o.text.endsWith(".zip")) { // zip archove node
-        return $.extend(open, extractAll, download, common)
-      }
+      // if (o.text.endsWith(".zip")) { // zip archove node
+      //   return $.extend(open, extractAll, download, common)
+      // }
       // if (o.type === 'notebook') { // notebook node
       //   if(app.getBasePath() === "/") {
       //     return $.extend(open, download, common)
       //   }
       //   return $.extend(open, notebook, download, common)
       // }
-      if (o.type === 'other') { // other nodes
-        return $.extend(open, download, common)
-      }
+      // if (o.type === 'other') { // other nodes
+      //   return $.extend(open, download, common)
+      // }
       // if (o.type === 'sbml-model') { // sbml model node
       //   return $.extend(open, sbml, common)
       // }
       // if (o.type === "domain") { // domain node
       //   return $.extend(open, common)
       // }
-    }
+    // }
     // $(document).ready(function () {
       // $(document).on('shown.bs.modal', function (e) {
       //   $('[autofocus]', e.target).focus();
