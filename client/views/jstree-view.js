@@ -541,6 +541,14 @@ module.exports = View.extend({
       }
     });
   },
+  getOpenSBMLContext: function (node) {
+    return this.buildContextBaseWithClass({
+      label: "Open",
+      action: (data) => {
+        this.openSBML(node.original._path);
+      }
+    });
+  },
   getOpenWorkflowContext: function (node) {
     return this.buildContextBaseWithClass({
       label: "Open",
@@ -618,6 +626,19 @@ module.exports = View.extend({
       disabled: disabled,
       action: (data) => {
         this.renameNode(node);
+      }
+    });
+  },
+  getSBMLConvertContext: function (node, identifier) {
+    return this.buildContextWithSubmenus({
+      label: "Convert",
+      submenu: {
+        convertToModel: this.buildContextBase({
+          label: "To Model",
+          action: (data) => {
+            this.config.toModel(this, node, identifier);
+          }
+        })
       }
     });
   },
@@ -799,7 +820,10 @@ module.exports = View.extend({
     window.location.href = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
   },
   openNotebook: function (notebookPath) {
-    window.open(path.join(app.getBasePath(), "notebooks", node.original._path), '_blank');
+    window.open(path.join(app.getBasePath(), "notebooks", notebookPath), '_blank');
+  },
+  openSBML: function (sbmlPath) {
+    window.open(path.join(app.getBasePath(), "edit", sbmlPath), '_blank');
   },
   openProject: function (projectPath) {
     let queryStr = `?path=${projectPath}`;
@@ -943,8 +967,8 @@ module.exports = View.extend({
         spatial: this.config.getSpatialModelContext,
         domain: this.config.getDomainContext,
         workflow: this.config.getWorkflowContext,
-        notebook: this.config.getNotebookContext
-        sbmlModel:
+        notebook: this.config.getNotebookContext,
+        sbmlModel: this.config.getSBMLContext
       }
       return contextMenus[node.type](this, node);
     }

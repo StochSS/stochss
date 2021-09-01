@@ -1383,25 +1383,25 @@ let FileBrowser = PageView.extend({
       //   }
       // }
       // Specific to sbml files
-      let sbml = {
-        "Convert" : {
-          "label" : "Convert",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "Convert to Model" : {
-              "label" : "To Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toModel(o, "SBML");
-              }
-            }
-          }
-        }
-      }
+      // let sbml = {
+      //   "Convert" : {
+      //     "label" : "Convert",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "Convert to Model" : {
+      //         "label" : "To Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.toModel(o, "SBML");
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       //Specific to zip archives
       let extractAll = {
         "extractAll" : {
@@ -1461,9 +1461,9 @@ let FileBrowser = PageView.extend({
       if (o.type === 'other') { // other nodes
         return $.extend(open, common)
       }
-      if (o.type === 'sbml-model') { // sbml model node
-        return $.extend(open, sbml, common)
-      }
+      // if (o.type === 'sbml-model') { // sbml model node
+      //   return $.extend(open, sbml, common)
+      // }
       // if (o.type === "domain") { // domain node
       //   return $.extend(open, common)
       // }

@@ -33,7 +33,7 @@ let doubleClick = (view, e) => {
     }else if(node.type === "notebook"){
       view.openNotebook(node.original._path);
     }else if(node.type === "sbmlModel"){
-      window.open(path.join(app.getBasePath(), "edit", node.original._path), '_blank');
+      view.openSBML(node.original._path);
     }else if(node.type === "project"){
       view.openProject(node.original._path);
     }else if(node.type === "workflow"){
@@ -48,6 +48,9 @@ let doubleClick = (view, e) => {
 }
 
 let getDomainContext = (view, node) => {
+  if(node.original._path.split("/")[0] === "trash") { // item in trash
+    return {delete: view.getDeleteContext(node, "directory")};
+  }
   let downloadOptions = {dataType: "json", identifier: "spatial-model/load-domain"};
   return {
     open: view.buildContextBaseWithClass({
@@ -109,6 +112,9 @@ let getModelContext = (view, node) => {
 }
 
 let getNotebookContext = (view, node) => {
+  if(node.original._path.split("/")[0] === "trash") { // item in trash
+    return {delete: view.getDeleteContext(node, "directory")};
+  }
   let open = view.getOpenNotebookContext(node);
   let downloadOptions = {dataType: "json", identifier: "file/json-data"};
   let download = view.getDownloadContext(node, downloadOptions);
@@ -169,6 +175,21 @@ let getRootContext = (view, node) => {
   }
 }
 
+let getSBMLContext = (view, node) => {
+  if(node.original._path.split("/")[0] === "trash") { // item in trash
+    return {delete: view.getDeleteContext(node, "directory")};
+  }
+  let downloadOptions = {dataType: "plain-text", identifier: "file/download"};
+  return {
+    open: view.getOpenSBMLContext(node),
+    convert: view.getSBMLConvertContext(node, "sbml/to-model"),
+    download: view.getDownloadContext(node, downloadOptions),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "file/duplicate"),
+    moveToTrash: view.getMoveToTrashContext(node, "sbml model")
+  }
+}
+
 let getSpatialModelContext = (view, node) => {
   if(node.original._path.split("/")[0] === "trash") { // project in trash
     return {delete: view.getDeleteContext(node, "spatial model")};
@@ -176,7 +197,12 @@ let getSpatialModelContext = (view, node) => {
   let downloadOptions = {dataType: "json", identifier: "file/json-data"};
   return {
     edit: view.getEditModelContext(node),
-    newWorkflow: view.getFullNewWorkflowContext(node),
+    newWorkflow: view.buildContextWithSubmenus({
+      label: "New Workflow",
+      submenu: {
+        jupyterNotebook: view.getNotebookNewWorkflowContext(node)
+      }
+    }),
     convert: view.getSmdlConvertContext(node, "spatial/to-model"),
     download: view.getDownloadContext(node, downloadOptions),
     rename: view.getRenameContext(node),
@@ -342,11 +368,13 @@ module.exports = {
   getNotebookContext: getNotebookContext,
   getProjectContext: getProjectContext,
   getRootContext: getRootContext,
+  getSBMLContext: getSBMLContext,
   getSpatialModelContext: getSpatialModelContext,
   getWorkflowContext: getWorkflowContext,
   // getWorflowGroupContext: getOtherContext,
   move: move,
   setup: setup,
+  toModel: toModel,
   toSBML: toSBML,
   toSpatial: toSpatial,
   types: types,

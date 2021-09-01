@@ -1358,25 +1358,25 @@ let Model = require('../models/model');
       //   },
       // }
       // Specific to sbml files
-      let sbml = {
-        "Convert" : {
-          "label" : "Convert",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "Convert to Model" : {
-              "label" : "To Model",
-              "_disabled" : false,
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.toModel(o, "SBML");
-              }
-            }
-          }
-        }
-      }
+      // let sbml = {
+      //   "Convert" : {
+      //     "label" : "Convert",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "Convert to Model" : {
+      //         "label" : "To Model",
+      //         "_disabled" : false,
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.toModel(o, "SBML");
+      //         }
+      //       }
+      //     }
+      //   }
+      // }
       // common to all type except root and trash
       // let common = {
         // "Rename" : {
@@ -1466,9 +1466,9 @@ let Model = require('../models/model');
       if (o.type === 'other') { // other nodes
         return $.extend(open, download, common)
       }
-      if (o.type === 'sbml-model') { // sbml model node
-        return $.extend(open, sbml, common)
-      }
+      // if (o.type === 'sbml-model') { // sbml model node
+      //   return $.extend(open, sbml, common)
+      // }
       // if (o.type === "domain") { // domain node
       //   return $.extend(open, common)
       // }
