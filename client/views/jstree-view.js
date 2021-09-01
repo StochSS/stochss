@@ -421,7 +421,6 @@ module.exports = View.extend({
     if(node.original.text.endsWith('.zip')) {
       return this.exportToZipFile(node.original._path);
     }
-    let isJSON = node.original.type === "sbml-model" ? false : true;
     if(node.original.type === "domain") {
       var queryStr = `?domain_path=${node.original._path}`;
     }else{
@@ -945,6 +944,7 @@ module.exports = View.extend({
         domain: this.config.getDomainContext,
         workflow: this.config.getWorkflowContext,
         notebook: this.config.getNotebookContext
+        sbmlModel:
       }
       return contextMenus[node.type](this, node);
     }

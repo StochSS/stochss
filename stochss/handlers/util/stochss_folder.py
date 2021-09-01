@@ -73,7 +73,7 @@ class StochSSFolder(StochSSBase):
 
 
     def __build_jstree_node(self, path, file):
-        types = {"mdl":"nonspatial", "smdl":"spatial", "sbml":"sbml-model", "ipynb":"notebook",
+        types = {"mdl":"nonspatial", "smdl":"spatial", "sbml":"sbmlModel", "ipynb":"notebook",
                  "wkfl":"workflow", "proj":"project", "wkgp":"workflowGroup", "domn":"domain"}
         _path = file if self.path == "none" else os.path.join(self.path, file)
         ext = file.split('.').pop() if "." in file else None

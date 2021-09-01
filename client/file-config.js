@@ -32,7 +32,7 @@ let doubleClick = (view, e) => {
       view.openModel(node.original._path);
     }else if(node.type === "notebook"){
       view.openNotebook(node.original._path);
-    }else if(node.type === "sbml-model"){
+    }else if(node.type === "sbmlModel"){
       window.open(path.join(app.getBasePath(), "edit", node.original._path), '_blank');
     }else if(node.type === "project"){
       view.openProject(node.original._path);
@@ -297,7 +297,7 @@ let types = {
   'workflow' : {"icon": "jstree-icon jstree-file"},
   'notebook' : {"icon": "jstree-icon jstree-file"},
   'domain' : {"icon": "jstree-icon jstree-file"},
-  'sbml-model' : {"icon": "jstree-icon jstree-file"},
+  'sbmlModel' : {"icon": "jstree-icon jstree-file"},
   'other' : {"icon": "jstree-icon jstree-file"}
 }
 
