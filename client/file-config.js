@@ -41,7 +41,7 @@ let doubleClick = (view, e) => {
     }else if(node.type === "domain") {
       view.openDomain(node.original._path);
     }else if(node.type === "other"){
-      var openPath = path.join(app.getBasePath(), "view", node.original._path);
+      let openPath = path.join(app.getBasePath(), "view", node.original._path);
       window.open(openPath, "_blank");
     }
   }
@@ -60,15 +60,12 @@ let getFolderContext = (view, node) => {
   return {
     refresh: view.getRefreshContext(node),
     newDirectory: view.getNewDirectoryContext(node),
-    newProject: {
+    newProject: view.buildContextBase({
       label: "New Project",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       action: (data) => {
         view.createProject(node, dirname);
       }
-    },
+    }),
     newModel: view.getNewModelContext(node, false),
     newDomain: view.getNewDomainContext(node),
     upload: view.getFullUploadContext(node, false),
@@ -96,16 +93,12 @@ let getModelContext = (view, node) => {
 }
 
 let getOpenProjectContext = (view, node) => {
-  return {
+  return view.buildContextBaseWithClass({
     label: "Open",
-    _disabled: false,
-    _class: "font-weight-bolder",
-    separator_before: false,
-    separator_after: true,
     action: (data) => {
       view.openProject(node.original._path);
     }
-  }
+  });
 }
 
 let getProjectContext = (view, node) => {
@@ -127,15 +120,12 @@ let getRootContext = (view, node) => {
   return {
     refresh: view.getRefreshContext(node),
     newDirectory: view.getNewDirectoryContext(node),
-    newProject: {
+    newProject: view.buildContextBase({
       label: "New Project",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       action: (data) => {
         view.createProject(node, dirname);
       }
-    },
+    }),
     newModel: view.getNewModelContext(node, false),
     newDomain: view.getNewDomainContext(node),
     upload: view.getFullUploadContext(node, false)
@@ -193,7 +183,7 @@ let move = (view, par, node) => {
   let newDir = par.original._path !== "/" ? par.original._path : "";
   let file = node.original._path.split('/').pop();
   let oldPath = node.original._path;
-  let queryStr = "?srcPath=" + oldPath + "&dstPath=" + path.join(newDir, file);
+  let queryStr = `?srcPath=${oldPath}&dstPath=${path.join(newDir, file)}`;
   let endpoint = path.join(app.getApiPath(), "file/move") + queryStr;
   app.getXHR(endpoint, {
     success: (err, response, body) => {

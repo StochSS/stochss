@@ -157,6 +157,34 @@ module.exports = View.extend({
       }
     });
   },
+  buildContextBase: function ({label="", disabled=false, bSep=false, aSep=false, action=(data)=>{}}={}) {
+    return {
+      label: label,
+      _disabled: disabled,
+      separator_before: bSep,
+      separator_after: aSep,
+      action: action
+    }
+  },
+  buildContextBaseWithClass: function ({label="", disabled=false, bSep=false, aSep=true, action=(data)=>{}}={}) {
+    return {
+      label: label,
+      _disabled: disabled,
+      _class: "font-weight-bolder",
+      separator_before: bSep,
+      separator_after: aSep,
+      action: action
+    }
+  },
+  buildContextWithSubmenus: function ({label="", disabled=false, bSep=false, aSep=false, submenu={}}={}) {
+    return {
+      label: label,
+      _disabled: disabled,
+      separator_before: bSep,
+      separator_after: aSep,
+      submenu: submenu
+    }
+  },
   createDirectory: function (node, dirname) {
     if(document.querySelector('#newDirectoryModal')) {
       document.querySelector('#newDirectoryModal').remove();
@@ -317,49 +345,36 @@ module.exports = View.extend({
   },
   getAddModelContext: function (node) {
     let newModel = this.getNewModelContext(node, true);
-    return {
+    return this.buildContextWithSubmenus({
       label: "Add Model",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       submenu: {
         newModel: newModel,
-        existingModel: {
+        existingModel: this.buildContextBase({
           label: "Existing Model",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.importModel(node, node.original._path);
           }
-        }
+        })
       }
-    }
+    });
   },
   getDeleteContext: function (node, type) {
-    return {
+    return this.buildContextBase({
       label: "Delete",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       action: (data) => {
         this.delete(node, type);
       }
-    }
+    });
   },
   getDomainContext: function (view, node) {
     let downloadOptions = {dataType: "json", identifier: "spatial-model/load-domain"};
     return {
-      open: {
+      open: view.buildContextBaseWithClass({
         label: "Open",
-        _disabled: false,
-        _class: "font-weight-bolder",
-        separator_before: false,
-        separator_after: true,
         action: (data) => {
           view.openDomain(node.original._path);
         }
-      },
+      }),
       download: view.getDownloadContext(node, downloadOptions),
       rename: view.getRenameContext(node),
       duplicate: view.getDuplicateContext(node, "file/duplicate"),
@@ -374,64 +389,48 @@ module.exports = View.extend({
     }else {
       var label = "Download";
     }
-    return {
+    return this.buildContextBase({
       label: label,
-      _disabled: false,
-      separator_before: !withCombine,
-      separator_after: false,
+      bSep: !withCombine,
       action: (data) => {
         this.getExportData(node, options);
       }
-    }
+    });
   },
   getDownloadWCombineContext: function (node) {
     let options = {dataType: "zip", identifier: "file/download-zip"};
     let download = this.getDownloadContext(node, options, {withCombine: true});
-    return {
+    return this.buildContextWithSubmenus({
       label: "Download",
-      _disabled: false,
-      separator_before: true,
-      separator_after: false,
+      bSep: true,
       submenu: {
         downloadAsZip: download,
-        downloadAsCombine: {
+        downloadAsCombine: this.buildContextBase({
           label: "as COMBINE",
-          _disabled: true,
-          separator_before: false,
-          separator_after: false,
-          action: (data) => {
-            // handleExportCombineClick(o, true)
-          }
-        }
+          disabled: true,
+        })
       }
-    }
+    });
   },
   getDuplicateContext: function (node, identifier, options) {
     if(!options) {
       options = {};
     }
     let label = Boolean(options.cb) ? "Duplicate as new" : "Duplicate";
-    return {
+    return this.buildContextBase({
       label: label,
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       action: (data) => {
         this.duplicate(node, identifier, options);
       }
-    }
+    });
   },
   getEditModelContext: function (node) {
-    return {
+    return this.buildContextBaseWithClass({
       label: "Edit",
-      _disabled: false,
-      _class: "font-weight-bolder",
-      separator_before: false,
-      separator_after: true,
       action: function (data) {
         this.openModel(node.original._path);
       }
-    }
+    });
   },
   getExportData: function (node, {dataType="", identifier=""}={}) {
     if(node.original.text.endsWith('.zip')) {
@@ -472,233 +471,169 @@ module.exports = View.extend({
   },
   getFileUploadContext: function (node, inProject, {label="File"}={}) {
     let dirname = node.original._path === "/" ? "" : node.original._path;
-    return {
+    return this.buildContextBase({
       label: label,
-      _disabled: false,
-      separator_before: label !== "File",
-      separator_after: false,
+      bSep: label !== "File",
       action: (data) => {
         this.uploadFile(node, dirname, "file", inProject);
       }
-    }
+    });
   },
   getFullNewWorkflowContext: function (node) {
-    return {
+    return this.buildContextWithSubmenus({
       label: "New Workflow",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       submenu: {
-        ensembleSimulation: {
+        ensembleSimulation: this.buildContextBase({
           label: "Ensemble Simulation",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.newWorkflow(node, "Ensemble Simulation");
           }
-        },
-        parameterSweep: {
+        }),
+        parameterSweep: this.buildContextBase({
           label: "Parameter Sweep",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.newWorkflow(node, "Parameter Sweep");
           }
-        },
+        }),
         jupyterNotebook: this.getNotebookNewWorkflowContext(node)
       }
-    }
+    });
   },
   getFullUploadContext: function (node, inProject) {
     let dirname = node.original._path === "/" ? "" : node.original._path;
     let file = this.getFileUploadContext(node, inProject);
-    return {
+    return this.buildContextWithSubmenus({
       label: "Upload",
-      _disabled: false,
-      separator_before: true,
-      separator_after: false,
+      bSep: true,
       submenu: {
-        model: {
+        model: this.buildContextBase({
           label: "StochSS Model",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.uploadFile(node, dirname, "model", inProject);
           }
-        },
-        sbml: {
+        }),
+        sbml: this.buildContextBase({
           label: "SBML Model",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.uploadFile(node, dirname, "sbml", inProject);
           }
-        },
+        }),
         file: file
       }
-    }
+    });
   },
   getMdlConvertContext: function (node) {
-    return {
+    return this.buildContextWithSubmenus({
       label: "Convert",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       submenu: {
-        toSpatial: {
+        toSpatial: this.buildContextBase({
           label: "To Spatial Model",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.config.toSpatial(this, node);
           }
-        },
-        toSBML: {
+        }),
+        toSBML: this.buildContextBase({
           label: "To SBML Model",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.config.toSBML(this, node);
           }
-        }
+        })
       }
-    }
+    });
   },
   getMoveToTrashContext: function (node, type) {
-    return {
+    return this.buildContextBase({
       label: "Move To Trash",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       action: (data) => {
         this.moveToTrash(node, type);
       }
-    }
+    });
   },
   getOpenWorkflowContext: function (node) {
-    return {
+    return this.buildContextBaseWithClass({
       label: "Open",
-      _disabled: false,
-      _class: "font-weight-bolder",
-      separator_before: false,
-      separator_after: true,
       action : (data) => {
-        this.openWorkflow(node.original._path)
+        this.openWorkflow(node.original._path);
       }
-    }
+    });
   },
   getNewDirectoryContext: function (node) {
     let dirname = node.original._path === "/" ? "" : node.original._path;
-    return {
+    return this.buildContextBase({
       label: "New Directory",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       action: (data) => {
         this.createDirectory(node, dirname);
       }
-    }
+    });
   },
   getNewDomainContext: function (node) {
-    return {
+    return this.buildContextBase({
       label: "New Domain (beta)",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       action: (data) => {
         this.createDomain(node.original._path);
       }
-    }
+    });
   },
   getNewModelContext: function (node, inProject) {
     let dirname = node.original._path === "/" ? "" : node.original._path;
-    return {
+    return this.buildContextWithSubmenus({
       label: "New Model",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       submenu: {
-        spatial: {
+        spatial: this.buildContextBase({
           label: "Spatial (beta)",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.createModel(node, dirname, true, inProject);
           }
-        },
-        nonspatial: { 
+        }),
+        nonspatial: this.buildContextBase({
           label: "Non-Spatial",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: (data) => {
             this.createModel(node, dirname, false, inProject);
           }
-        } 
+        }) 
       }
-    }
+    });
   },
   getNotebookNewWorkflowContext: function (node) {
-    return {
+    return this.buildContextBase({
       label: "Jupyter Notebook",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       action: (data) => {
         let queryStr = `?path=${node.original._path}`;
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection") + queryStr;
       }
-    }
+    });
   },
   getRefreshContext: function (node) {
-    return {
+    return this.buildContextBaseWithClass({
       label: "Refresh",
-      _disabled: false,
-      _class: "font-weight-bold",
-      separator_before: false,
-      separator_after: true,
       action: (data) => {
         this.refreshJSTree(node);
       }
-    }
+    });
   },
   getRenameContext: function (node) {
     let disabled = node.type === "workflow" && node.original._status === "running";
-    return {
+    return this.buildContextBase({
       label: "Rename",
-      _disabled: disabled,
-      separator_before: false,
-      separator_after: false,
+      disabled: disabled,
       action: (data) => {
         this.renameNode(node);
       }
-    }
+    });
   },
   getSmdlConvertContext: function (node, identifier) {
-    return {
+    return this.buildContextWithSubmenus({
       label: "Convert",
-      _disabled: false,
-      separator_before: false,
-      separator_after: true,
+      aSep: true,
       submenu: {
-        convertToModel: {
+        convertToModel: this.buildContextBase({
           label: "To Model",
-          _disabled: false,
-          separator_before: false,
-          separator_after: false,
           action: function (data) {
             this.config.toModel(this, node, identifier);
           }
-        }
+        })
       }
-    }
+    });
   },
   getTimeStamp: function () {
     let date = new Date();
@@ -711,32 +646,25 @@ module.exports = View.extend({
     return `_${month}${day}${year}_${hours}${minutes}${seconds}`;
   },
   getWorkflowMdlContext: function (node) {
-    return {
+    return this.buildContextWithSubmenus({
       label: "Model",
-      _disabled: false,
-      separator_before: false,
-      separator_after: false,
       submenu: {
-        edit: {
+        edit: this.buildContextBase({
           label: "Edit",
-          _disabled: (!node.original._newFormat && node.original._status !== "ready"),
-          separator_before: false,
-          separator_after: false,
+          disabled: (!node.original._newFormat && node.original._status !== "ready"),
           action: function (data) {
             this.openWorkflowModel(node);
           }
-        },
-        extract: {
+        }),
+        extract: this.buildContextBase({
           label: "Extract",
-          _disabled: (node.original._newFormat && !node.original._hasJobs),
-          separator_before: false,
-          separator_after: false,
+          disabled: (node.original._newFormat && !node.original._hasJobs),
           action: function (data) {
             this.duplicate(node, "workflow/duplicate", {target: "wkfl_model"});
           }
-        }
+        })
       }
-    }
+    });
   },
   handleCreateDirectoryClick: function (e) {
     let dirname = this.root === "none" ? "" : this.root;

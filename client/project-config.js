@@ -40,7 +40,7 @@ let doubleClick = (view, e) => {
     }else if(node.type === "domain") {
       view.openDomain(node.original._path);
     }else if(node.type === "other"){
-      var openPath = path.join(app.getBasePath(), "view", node.original._path);
+      let openPath = path.join(app.getBasePath(), "view", node.original._path);
       window.open(openPath, "_blank");
     }
   }
@@ -63,15 +63,12 @@ let extract = (view, node, type) => {
 }
 
 let getExtractContext = (view, node, type) => {
-  return {
+  return view.buildContextBase({
     label: "Extract",
-    _disabled: false,
-    separator_before: false,
-    separator_after: false,
     action: (data) => {
       extract(view, node, type);
     }
-  }
+  });
 }
 
 let getFolderContext = (view, node) => {
@@ -102,7 +99,7 @@ let getModelContext = (view, node) => {
   let downloadOptions = {dataType: "json", identifier: "file/json-data"};
   return {
     edit: view.getEditModelContext(node),
-    extract: getExtractModelContext(view, node, "model"),
+    extract: getExtractContext(view, node, "model"),
     newWorkflow: view.getFullNewWorkflowContext(node),
     convert: view.getMdlConvertContext(node),
     download: view.getDownloadContext(node, downloadOptions),
@@ -185,7 +182,7 @@ let move = (view, par, node) => {
   let newDir = par.original._path !== "/" ? par.original._path : "";
   let file = node.original._path.split('/').pop();
   let oldPath = node.original._path;
-  let queryStr = "?srcPath=" + oldPath + "&dstPath=" + path.join(newDir, file);
+  let queryStr = `?srcPath=${oldPath}&dstPath=${path.join(newDir, file)}`;
   let endpoint = path.join(app.getApiPath(), "file/move") + queryStr;
   app.getXHR(endpoint, {
     success: (err, response, body) => {
