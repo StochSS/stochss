@@ -971,33 +971,33 @@ let FileBrowser = PageView.extend({
   //     });
   //   });
   // },
-  publishNotebookPresentation: function (o) {
-    let queryStr = "?path=" + o.original._path;
-    let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        let title = body.message;
-        let linkHeaders = "Shareable Presentation";
-        let links = body.links;
-        $(modals.presentationLinks(title, linkHeaders, links)).modal();
-        let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
-        copyBtn.addEventListener('click', function (e) {
-          let onFulfilled = (value) => {
-            $("#copy-link-success").css("display", "inline-block");
-          } 
-          let onReject = (reason) => {
-            let msg = $("#copy-link-failed");
-            msg.html(reason);
-            msg.css("display", "inline-block");
-          }
-          app.copyToClipboard(links.presentation, onFulfilled, onReject);
-        });
-      },
-      error: function (err, response, body) {
-        $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
-      }
-    });
-  },
+  // publishNotebookPresentation: function (o) {
+  //   let queryStr = "?path=" + o.original._path;
+  //   let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       let title = body.message;
+  //       let linkHeaders = "Shareable Presentation";
+  //       let links = body.links;
+  //       $(modals.presentationLinks(title, linkHeaders, links)).modal();
+  //       let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+  //       copyBtn.addEventListener('click', function (e) {
+  //         let onFulfilled = (value) => {
+  //           $("#copy-link-success").css("display", "inline-block");
+  //         } 
+  //         let onReject = (reason) => {
+  //           let msg = $("#copy-link-failed");
+  //           msg.html(reason);
+  //           msg.css("display", "inline-block");
+  //         }
+  //         app.copyToClipboard(links.presentation, onFulfilled, onReject);
+  //       });
+  //     },
+  //     error: function (err, response, body) {
+  //       $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+  //     }
+  //   });
+  // },
   setupJstree: function () {
     var self = this;
     $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -1414,17 +1414,17 @@ let FileBrowser = PageView.extend({
           }
         }
       }
-      let notebook = {
-        "publish" : {
-          "label" : "Publish",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.publishNotebookPresentation(o);
-          }
-        }
-      }
+      // let notebook = {
+      //   "publish" : {
+      //     "label" : "Publish",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.publishNotebookPresentation(o);
+      //     }
+      //   }
+      // }
       // if (o.type === 'root'){
       //   return folder
       // }
@@ -1452,12 +1452,12 @@ let FileBrowser = PageView.extend({
       if (o.text.endsWith(".zip")) { // zip archive node
         return $.extend(open, extractAll, common)
       }
-      if (o.type === 'notebook') { // notebook node
-        if(app.getBasePath() === "/") {
-          return $.extend(open, common)
-        }
-        return $.extend(open, notebook, common)
-      }
+      // if (o.type === 'notebook') { // notebook node
+      //   if(app.getBasePath() === "/") {
+      //     return $.extend(open, common)
+      //   }
+      //   return $.extend(open, notebook, common)
+      // }
       if (o.type === 'other') { // other nodes
         return $.extend(open, common)
       }

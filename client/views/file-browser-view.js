@@ -961,33 +961,33 @@ let Model = require('../models/model');
       }
     });
   },
-  publishNotebookPresentation: function (o) {
-    let queryStr = "?path=" + o.original._path;
-    let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        let title = body.message;
-        let linkHeaders = "Shareable Presentation";
-        let links = body.links;
-        $(modals.presentationLinks(title, linkHeaders, links)).modal();
-        let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
-        copyBtn.addEventListener('click', function (e) {
-          let onFulfilled = (value) => {
-            $("#copy-link-success").css("display", "inline-block");
-          } 
-          let onReject = (reason) => {
-            let msg = $("#copy-link-failed");
-            msg.html(reason);
-            msg.css("display", "inline-block");
-          }
-          app.copyToClipboard(links.presentation, onFulfilled, onReject);
-        });
-      },
-      error: function (err, response, body) {
-        $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
-      }
-    });
-  },
+  // publishNotebookPresentation: function (o) {
+  //   let queryStr = "?path=" + o.original._path;
+  //   let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
+  //   app.getXHR(endpoint, {
+  //     success: function (err, response, body) {
+  //       let title = body.message;
+  //       let linkHeaders = "Shareable Presentation";
+  //       let links = body.links;
+  //       $(modals.presentationLinks(title, linkHeaders, links)).modal();
+  //       let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+  //       copyBtn.addEventListener('click', function (e) {
+  //         let onFulfilled = (value) => {
+  //           $("#copy-link-success").css("display", "inline-block");
+  //         } 
+  //         let onReject = (reason) => {
+  //           let msg = $("#copy-link-failed");
+  //           msg.html(reason);
+  //           msg.css("display", "inline-block");
+  //         }
+  //         app.copyToClipboard(links.presentation, onFulfilled, onReject);
+  //       });
+  //     },
+  //     error: function (err, response, body) {
+  //       $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+  //     }
+  //   });
+  // },
   // setupJstree: function () {
     var self = this;
     // $.jstree.defaults.contextmenu.items = (o, cb) => {
@@ -1302,61 +1302,61 @@ let Model = require('../models/model');
       //   }
       // }
       // specific to workflows
-      let workflow = {
-        "Start/Restart Workflow" : {
-          "label" : (o.original._status === "ready") ? "Start Workflow" : "Restart Workflow",
-          "_disabled" : true,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
+      // let workflow = {
+      //   "Start/Restart Workflow" : {
+      //     "label" : (o.original._status === "ready") ? "Start Workflow" : "Restart Workflow",
+      //     "_disabled" : true,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
 
-          }
-        },
-        "Stop Workflow" : {
-          "label" : "Stop Workflow",
-          "_disabled" : true,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
+      //     }
+      //   },
+      //   "Stop Workflow" : {
+      //     "label" : "Stop Workflow",
+      //     "_disabled" : true,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
 
-          }
-        },
-        "Model" : {
-          "label" : "Model",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "submenu" : {
-            "Edit" : {
-              "label" : " Edit",
-              "_disabled" : (!o.original._newFormat && o.original._status !== "ready"),
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.editWorkflowModel(o)
-              }
-            },
-            "Extract" : {
-              "label" : "Extract",
-              "_disabled" : (o.original._newFormat && !o.original._hasJobs),
-              "separator_before" : false,
-              "separator_after" : false,
-              "action" : function (data) {
-                self.duplicateFileOrDirectory(o, "wkfl_model")
-              }
-            }
-          }
-        },
-        "Extract" : {
-          "label" : "Extract",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : true,
-          "action" : function (data) {
-            self.handleExportWorkflowClick(o)
-          }
-        },
-      }
+      //     }
+      //   },
+      //   "Model" : {
+      //     "label" : "Model",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "submenu" : {
+      //       "Edit" : {
+      //         "label" : " Edit",
+      //         "_disabled" : (!o.original._newFormat && o.original._status !== "ready"),
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.editWorkflowModel(o)
+      //         }
+      //       },
+      //       "Extract" : {
+      //         "label" : "Extract",
+      //         "_disabled" : (o.original._newFormat && !o.original._hasJobs),
+      //         "separator_before" : false,
+      //         "separator_after" : false,
+      //         "action" : function (data) {
+      //           self.duplicateFileOrDirectory(o, "wkfl_model")
+      //         }
+      //       }
+      //     }
+      //   },
+      //   "Extract" : {
+      //     "label" : "Extract",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : true,
+      //     "action" : function (data) {
+      //       self.handleExportWorkflowClick(o)
+      //     }
+      //   },
+      // }
       // Specific to sbml files
       let sbml = {
         "Convert" : {
@@ -1419,17 +1419,17 @@ let Model = require('../models/model');
           }
         }
       }
-      let notebook = {
-        "publish" : {
-          "label" : "Publish",
-          "_disabled" : false,
-          "separator_before" : false,
-          "separator_after" : false,
-          "action" : function (data) {
-            self.publishNotebookPresentation(o);
-          }
-        }
-      }
+      // let notebook = {
+      //   "publish" : {
+      //     "label" : "Publish",
+      //     "_disabled" : false,
+      //     "separator_before" : false,
+      //     "separator_after" : false,
+      //     "action" : function (data) {
+      //       self.publishNotebookPresentation(o);
+      //     }
+      //   }
+      // }
       // if (o.type === 'root'){
       //   return $.extend(refresh, project, commonFolder, downloadWCombine, {"Rename": common.Rename})
       // }
@@ -1457,12 +1457,12 @@ let Model = require('../models/model');
       if (o.text.endsWith(".zip")) { // zip archove node
         return $.extend(open, extractAll, download, common)
       }
-      if (o.type === 'notebook') { // notebook node
-        if(app.getBasePath() === "/") {
-          return $.extend(open, download, common)
-        }
-        return $.extend(open, notebook, download, common)
-      }
+      // if (o.type === 'notebook') { // notebook node
+      //   if(app.getBasePath() === "/") {
+      //     return $.extend(open, download, common)
+      //   }
+      //   return $.extend(open, notebook, download, common)
+      // }
       if (o.type === 'other') { // other nodes
         return $.extend(open, download, common)
       }

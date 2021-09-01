@@ -366,21 +366,6 @@ module.exports = View.extend({
       }
     });
   },
-  getDomainContext: function (view, node) {
-    let downloadOptions = {dataType: "json", identifier: "spatial-model/load-domain"};
-    return {
-      open: view.buildContextBaseWithClass({
-        label: "Open",
-        action: (data) => {
-          view.openDomain(node.original._path);
-        }
-      }),
-      download: view.getDownloadContext(node, downloadOptions),
-      rename: view.getRenameContext(node),
-      duplicate: view.getDuplicateContext(node, "file/duplicate"),
-      moveToTrash: view.getMoveToTrashContext(node)
-    }
-  },
   getDownloadContext: function (node, options, {asZip=false, withCombine=false}={}) {
     if(withCombine) {
       var label = "as .zip";
@@ -549,6 +534,14 @@ module.exports = View.extend({
       }
     });
   },
+  getOpenNotebookContext: function (node) {
+    return this.buildContextBaseWithClass({
+      label: "Open",
+      action: (data) => {
+        this.openNotebook(node.original._path);
+      }
+    });
+  },
   getOpenWorkflowContext: function (node) {
     return this.buildContextBaseWithClass({
       label: "Open",
@@ -600,6 +593,14 @@ module.exports = View.extend({
       action: (data) => {
         let queryStr = `?path=${node.original._path}`;
         window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection") + queryStr;
+      }
+    });
+  },
+  getPublishNotebookContext: function (node) {
+    return this.buildContextBase({
+      label: "Publish",
+      action: function (data) {
+        this.publishNotebookPresentation(node);
       }
     });
   },
@@ -760,7 +761,8 @@ module.exports = View.extend({
     let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
     yesBtn.addEventListener('click', (e) => {
       modal.modal('hide');
-      let queryStr = `?srcPath=${node.original._path}&dstPath=${path.join("trash", node.text)}`;
+      let dirname = this.root === "none" ? "" : this.root;
+      let queryStr = `?srcPath=${node.original._path}&dstPath=${path.join(dirname, "trash", node.text)}`;
       let endpoint = path.join(app.getApiPath(), "file/move") + queryStr;
       app.getXHR(endpoint, {
         always: (err, response, body) => {
@@ -797,6 +799,9 @@ module.exports = View.extend({
     let queryStr = `?path=${modelPath}`;
     window.location.href = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
   },
+  openNotebook: function (notebookPath) {
+    window.open(path.join(app.getBasePath(), "notebooks", node.original._path), '_blank');
+  },
   openProject: function (projectPath) {
     let queryStr = `?path=${projectPath}`;
     window.location.href = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
@@ -816,6 +821,30 @@ module.exports = View.extend({
         }else{
           this.openModel(body.file);
         }
+      }
+    });
+  },
+  publishNotebookPresentation: function (node) {
+    let queryStr = `?path=${o.original._path}`;
+    let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        $(modals.presentationLinks(body.message, "Shareable Presentation", body.links)).modal();
+        let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+        copyBtn.addEventListener('click', (e) => {
+          let onFulfilled = (value) => {
+            $("#copy-link-success").css("display", "inline-block");
+          } 
+          let onReject = (reason) => {
+            let msg = $("#copy-link-failed");
+            msg.html(reason);
+            msg.css("display", "inline-block");
+          }
+          app.copyToClipboard(links.presentation, onFulfilled, onReject);
+        });
+      },
+      error: (err, response, body) => {
+        this.reportError(body);
       }
     });
   },
@@ -913,8 +942,9 @@ module.exports = View.extend({
         folder: this.config.getFolderContext,
         nonspatial: this.config.getModelContext,
         spatial: this.config.getSpatialModelContext,
-        domain: this.getDomainContext,
-        workflow: this.config.getWorkflowContext
+        domain: this.config.getDomainContext,
+        workflow: this.config.getWorkflowContext,
+        notebook: this.config.getNotebookContext
       }
       return contextMenus[node.type](this, node);
     }

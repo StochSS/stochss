@@ -32,7 +32,7 @@ let doubleClick = (view, e) => {
     }else if(node.type === "nonspatial" || node.type === "spatial"){
       view.openModel(node.original._path);
     }else if(node.type === "notebook"){
-      window.open(path.join(app.getBasePath(), "notebooks", node.original._path), '_blank');
+      view.openNotebook(node.original._path);
     }else if(node.type === "sbml-model"){
       window.open(path.join(app.getBasePath(), "edit", node.original._path), '_blank');
     }else if(node.type === "workflow"){
@@ -62,6 +62,22 @@ let extract = (view, node, type) => {
   });
 }
 
+let getDomainContext = (view, node) => {
+  let downloadOptions = {dataType: "json", identifier: "spatial-model/load-domain"};
+  return {
+    open: view.buildContextBaseWithClass({
+      label: "Open",
+      action: (data) => {
+        view.openDomain(node.original._path);
+      }
+    }),
+    download: view.getDownloadContext(node, downloadOptions),
+    rename: view.getRenameContext(node),
+    duplicate: view.getDuplicateContext(node, "file/duplicate"),
+    moveToTrash: view.getMoveToTrashContext(node, "domain")
+  }
+}
+  
 let getExtractContext = (view, node, type) => {
   return view.buildContextBase({
     label: "Extract",
@@ -88,7 +104,7 @@ let getFolderContext = (view, node) => {
     download: view.getDownloadContext(node, downloadOptions, options),
     rename: view.getRenameContext(node),
     duplicate: view.getDuplicateContext(node, "directory/duplicate"),
-    delete: view.getDeleteContext(node, "directory")
+    moveToTrash: view.getMoveToTrashContext(node, "directory")
   }
 }
 
@@ -105,7 +121,28 @@ let getModelContext = (view, node) => {
     download: view.getDownloadContext(node, downloadOptions),
     rename: view.getRenameContext(node),
     duplicate: view.getDuplicateContext(node, "file/duplicate"),
-    delete: view.getDeleteContext(node, "model")
+    moveToTrash: view.getMoveToTrashContext(node, "model")
+  }
+}
+
+let getNotebookContext = (view, node) => {
+  let open = view.getOpenNotebookContext(node);
+  let downloadOptions = {dataType: "json", identifier: "file/json-data"};
+  let download = view.getDownloadContext(node, downloadOptions);
+  let rename = view.getRenameContext(node);
+  let duplicate = view.getDuplicateContext(node, "file/duplicate");
+  let moveToTrash = view.getMoveToTrashContext(node, "notebook");
+  if(app.getBasePath() === "/") {
+    return {
+      open: open, download: download, rename: rename,
+      duplicate: duplicate, moveToTrash: moveToTrash
+    }
+  }
+  return {
+    open: open,
+    publish: view.getPublishNotebookContext(node),
+    download: download, rename: rename,
+    duplicate: duplicate, delete: deleteFile
   }
 }
 
@@ -134,7 +171,7 @@ let getSpatialModelContext = (view, node) => {
     download: view.getDownloadContext(node, downloadOptions),
     rename: view.getRenameContext(node),
     duplicate: view.getDuplicateContext(node, "file/duplicate"),
-    delete: view.getDeleteContext(node, "model")
+    moveToTrash: view.getMoveToTrashContext(node, "model")
   }
 }
 
@@ -164,7 +201,7 @@ let getWorkflowContext = (view, node) => {
     download: view.getDownloadWCombineContext(node),
     rename: view.getRenameContext(node),
     duplicate: view.getDuplicateContext(node, "workflow/duplicate", options),
-    delete: view.getDeleteContext(node, "workflow")
+    moveToTrash: view.getMoveToTrashContext(node, "workflow")
   }
 }
 
@@ -347,8 +384,10 @@ let validateMove = (view, node, more, pos) => {
 module.exports = {
   contextZipTypes: contextZipTypes,
   doubleClick: doubleClick,
+  getDomainContext: getDomainContext,
   getFolderContext: getFolderContext,
   getModelContext: getModelContext,
+  getNotebookContext: getNotebookContext,
   // getProjectContext: getOtherContext,
   getRootContext: getRootContext,
   getSpatialModelContext: getSpatialModelContext,
