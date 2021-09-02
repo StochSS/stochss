@@ -182,7 +182,7 @@ let DomainEditor = PageView.extend({
       input.addEventListener("input", function (e) {
         var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
         var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
-        let error = self.validateName(input.value)
+        let error = app.validateName(input.value)
         okBtn.disabled = error !== "" || input.value.trim() === ""
         charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
         endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
@@ -892,22 +892,6 @@ let DomainEditor = PageView.extend({
     }
   },
   updateValid: function () {},
-  validateName(input, rename = false) {
-    var error = ""
-    if(input.endsWith('/')) {
-      error = 'forward'
-    }
-    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-    if(rename) {
-      invalidChars += "/"
-    }
-    for(var i = 0; i < input.length; i++) {
-      if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both"
-      }
-    }
-    return error
-  },
   toggleDomainError: function () {
     let errorMsg = $(this.queryByHook('domain-error'))
     if(!this.domain.valid) {

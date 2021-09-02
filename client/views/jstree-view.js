@@ -75,7 +75,7 @@ module.exports = View.extend({
         'multiple': false,
         'animation': 0,
         'check_callback': (op, node, par, pos, more) => {
-          if(op === "rename_node" && this.validateName(pos, {rename: true}) !== ""){
+          if(op === "rename_node" && app.validateName(pos, {rename: true}) !== ""){
             let err = $("#renameSpecialCharError");
             err.css("display", "block");
             setTimeout(() => {
@@ -122,7 +122,7 @@ module.exports = View.extend({
     input.addEventListener("input", (e) => {
       let endErrMsg = document.querySelector(`${modalID} ${inputID}EndCharError`);
       let charErrMsg = document.querySelector(`${modalID} ${inputID}SpecCharError`);
-      let error = this.validateName(input.value, {saveAs: !inProject});
+      let error = app.validateName(input.value, {saveAs: !inProject});
       okBtn.disabled = error !== "" || input.value.trim() === "";
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none";
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none";
@@ -1053,22 +1053,6 @@ module.exports = View.extend({
   showContextMenuForNode: function (e) {
     $('#files-jstree').jstree().show_contextmenu(this.nodeForContextMenu);
   },
-  validateName: function (input, {rename = false, saveAs = true}={}) {
-    var error = "";
-    if(input.endsWith('/')) {
-      error = 'forward';
-    }
-    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
-    if(rename || !saveAs) {
-      invalidChars += "/";
-    }
-    for(var i = 0; i < input.length; i++) {
-      if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both";
-      }
-    }
-    return error;
-  },
   uploadFile: function (node, dirname, type, inProject) {
     if(document.querySelector('#uploadFileModal')) {
       document.querySelector('#uploadFileModal').remove();
@@ -1100,8 +1084,8 @@ module.exports = View.extend({
     }
     let validateFile = () => {
       let options = getOptions(fileInput.files[0]);
-      let fileErr = !fileInput.files.length ? "" : this.validateName(fileInput.files[0].name, options);
-      let nameErr = this.validateName(input.value, options);
+      let fileErr = !fileInput.files.length ? "" : app.validateName(fileInput.files[0].name, options);
+      let nameErr = app.validateName(input.value, options);
       if(!fileInput.files.length) {
         uploadBtn.disabled = true;
         fileCharErrMsg.style.display = 'none';
@@ -1128,7 +1112,7 @@ module.exports = View.extend({
       let file = fileInput.files[0];
       let options = getOptions(file);
       let fileinfo = {type: type, name: "", path: dirname};
-      if(Boolean(input.value) && this.validateName(input.value.trim(), options) === ""){
+      if(Boolean(input.value) && app.validateName(input.value.trim(), options) === ""){
         fileinfo.name = input.value.trim();
       }
       let formData = new FormData();

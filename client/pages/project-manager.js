@@ -194,7 +194,7 @@ let ProjectManager = PageView.extend({
     input.addEventListener("input", function (e) {
       var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
       var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
-      let error = self.validateName(input.value)
+      let error = app.validateName(input.value, {saveAs=false})
       okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
@@ -442,19 +442,6 @@ let ProjectManager = PageView.extend({
       }
     });
   },
-  validateName(input) {
-    var error = "";
-    if(input.endsWith('/')) {
-      error = 'forward';
-    }
-    let invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
-    for(var i = 0; i < input.length; i++) {
-      if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both";
-      }
-    }
-    return error;
-  }
 });
 
 initPage(ProjectManager)

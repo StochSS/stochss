@@ -132,21 +132,21 @@ let getBrowser = () => {
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
 }
 
-let validateName = (input, rename = false) => {
-  var error = ""
+let validateName = (input, {rename=false, saveAs=true}={}) {
+  var error = "";
   if(input.endsWith('/')) {
-    error = 'forward'
+    error = 'forward';
   }
-  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-  if(rename) {
-    invalidChars += "/"
+  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
+  if(rename || !saveAs) {
+    invalidChars += "/";
   }
   for(var i = 0; i < input.length; i++) {
     if(invalidChars.includes(input.charAt(i))) {
-      error = error === "" || error === "special" ? "special" : "both"
+      error = error === "" || error === "special" ? "special" : "both";
     }
   }
-  return error
+  return error;
 }
 
 let newWorkflow = (parent, mdlPath, isSpatial, type) => {
