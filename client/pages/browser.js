@@ -32,7 +32,7 @@ let EditProjectView = require('../views/edit-project'); // from project browser
 let PresentationView = require('../views/presentation-view'); // form presentation browser
 let JSTreeView = require('../views/jstree-view');
 //templates
-let template = require('../templates/pages/fileBrowser.pug');
+let template = require('../templates/pages/browser.pug');
 
 import initPage from './page.js';
 
