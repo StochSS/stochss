@@ -20,6 +20,7 @@ import os
 import json
 import shutil
 import string
+import zipfile
 import traceback
 
 import requests
@@ -73,8 +74,8 @@ class StochSSFolder(StochSSBase):
 
 
     def __build_jstree_node(self, path, file):
-        types = {"mdl":"nonspatial", "smdl":"spatial", "sbml":"sbml-model", "ipynb":"notebook",
-                 "wkfl":"workflow", "proj":"project", "wkgp":"workflow-group", "domn":"domain"}
+        types = {"mdl":"nonspatial", "smdl":"spatial", "sbml":"sbmlModel", "ipynb":"notebook",
+                 "wkfl":"workflow", "proj":"project", "wkgp":"workflowGroup", "domn":"domain"}
         _path = file if self.path == "none" else os.path.join(self.path, file)
         ext = file.split('.').pop() if "." in file else None
         node = {"text":file, "type":"other", "_path":_path, "children":False}
@@ -88,13 +89,27 @@ class StochSSFolder(StochSSBase):
                                                        os.listdir(_path)))) > 0
                 else:
                     node['_status'] = self.get_status(path=_path)
-            elif file_type == "workflow-group":
+            elif file_type == "workflowGroup":
                 node['children'] = True
         elif os.path.isdir(os.path.join(path, file)):
             node['type'] = "folder"
             node['children'] = True
 
         return node
+
+
+    @classmethod
+    def __overwrite(cls, path, ext):
+        if ext == "zip":
+            with zipfile.ZipFile(path, "r") as zip_file:
+                members = zip_file.namelist()
+                for name in members:
+                    if os.path.isdir(name):
+                        shutil.rmtree(name)
+                    elif os.path.exists(name):
+                        os.remove(name)
+        elif os.path.exists(path):
+            os.remove(path)
 
 
     def __upload_file(self, file, body, new_name=None):
@@ -349,7 +364,8 @@ class StochSSFolder(StochSSBase):
         if not os.path.isdir(path):
             return presentations
         safe_chars = set(string.ascii_letters + string.digits)
-        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+        # hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+        hostname = "brumsey@unca.edu"
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
             query_str = f"?owner={hostname}&file={file}"
@@ -403,31 +419,6 @@ class StochSSFolder(StochSSBase):
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
-    def publish_presentation(self, name=None):
-        '''
-        Publish a job, workflow, or project presentation.
-
-        Attributes
-        ----------
-        '''
-        present_dir = os.path.join(self.user_dir, ".presentations")
-        if not os.path.exists(present_dir):
-            os.mkdir(present_dir)
-        file = self.get_file() if name is None else name
-        dst = os.path.join(present_dir, file)
-        if os.path.exists(dst):
-            message = "A presentation with this name already exists"
-            raise StochSSFileExistsError(message)
-        src = self.get_path(full=True)
-        try:
-            shutil.copytree(src, dst)
-            # INSERT JUPYTER HUB CODE HERE
-            return {"message": f"Successfully published the {self.get_name()} presentation"}
-        except PermissionError as err:
-            message = f"You do not have permission to publish this directory: {str(err)}"
-            raise StochSSPermissionsError(message, traceback.format_exc()) from err
-
-
     def upload(self, file_type, file, body, new_name=None):
         '''
         Upload a file from a remote location to the users file system
@@ -461,9 +452,47 @@ class StochSSFolder(StochSSBase):
         return resp
 
 
-    def upload_from_link(self, remote_path):
+    def upload_from_link(self, remote_path, overwrite=False):
         '''
         Uploads a file from a remote link to the users root directory
+
+        Attributes
+        ----------
+        remote_path : str
+            Path to the remote file
+        overwrite : bool
+            Overwrite the existing files.
+        '''
+        ext = remote_path.split('.').pop()
+        body = requests.get(remote_path, allow_redirects=True).content
+        if "download_presentation" in remote_path:
+            if ext in ("mdl", "smdl"):
+                file = f"{json.loads(body)['name']}.{ext}"
+            elif ext == "ipynb":
+                file = json.loads(body)['file']
+                body = json.dumps(json.loads(body)['notebook'])
+        else:
+            file = self.get_file(path=remote_path)
+        path = self.get_new_path(dst_path=file)
+        if os.path.exists(path):
+            if not overwrite:
+                message = f"Could not upload this file as {file} already exists"
+                return {"message":message, "reason":"File Already Exists"}
+            self.__overwrite(path=path, ext=ext)
+        try:
+            file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
+            file_type = file_types[ext] if ext in file_types.keys() else "file"
+            _ = self.upload(file_type=file_type, file=file, body=body)
+            new_path = self.__get_rmt_upld_path(file=file)
+            message = f"Successfully uploaded the file {file} to {new_path}"
+            return {"message":message, "file_path":new_path}
+        except StochSSFileExistsError as err:
+            return {"message":err.message, "reason":err.reason}
+
+
+    def validate_upload_link(self, remote_path):
+        '''
+        Check if the target of upload from link already exists.
 
         Attributes
         ----------
@@ -481,15 +510,10 @@ class StochSSFolder(StochSSBase):
         else:
             file = self.get_file(path=remote_path)
         path = self.get_new_path(dst_path=file)
-        if os.path.exists(path):
-            message = f"Could not upload this file as {file} already exists"
-            return {"message":message, "reason":"File Already Exists"}
-        try:
-            file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
-            file_type = file_types[ext] if ext in file_types.keys() else "file"
-            _ = self.upload(file_type=file_type, file=file, body=body)
-            new_path = self.__get_rmt_upld_path(file=file)
-            message = f"Successfully uploaded the file {file} to {new_path}"
-            return {"message":message, "file_path":new_path}
-        except StochSSFileExistsError as err:
-            return {"message":err.message, "reason":err.reason}
+        if ext == "zip":
+            with zipfile.ZipFile(path, "r") as zip_file:
+                members = zip_file.namelist()
+                for name in members:
+                    if os.path.exists(name):
+                        return True
+        return os.path.exists(path)

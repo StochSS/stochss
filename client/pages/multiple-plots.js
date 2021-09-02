@@ -24,11 +24,11 @@ let Plotly = require('../lib/plotly');
 var PageView = require('../pages/base');
 //templates
 let template = require("../templates/pages/multiplePlots.pug");
+let presTemplate = require("../templates/pages/multiplePlotsPresentation.pug");
 
 import initPage from './page.js';
 
 let ModelEditor = PageView.extend({
-  template: template,
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
@@ -36,6 +36,7 @@ let ModelEditor = PageView.extend({
     this.job = urlParams.get("job");
     this.path = urlParams.get("path");
     this.data = urlParams.get("data");
+    this.template = this.path.includes("presentation_cache") ? presTemplate : template;
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);

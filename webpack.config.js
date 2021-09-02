@@ -6,12 +6,11 @@ module.exports = {
   entry: {
     home: './client/pages/users-home.js',
     quickstart: './client/pages/quickstart.js',
-    browser: './client/pages/file-browser.js',
+    browser: './client/pages/browser.js',
     editor: './client/pages/model-editor.js',
     domainEditor: './client/pages/domain-editor.js',
     workflowSelection: './client/pages/workflow-selection.js',
     workflowEditor: './client/pages/workflow-manager.js',
-    projectBrowser: './client/pages/project-browser.js',
     projectManager: './client/pages/project-manager.js',
     loadingPage: './client/pages/loading-page.js',
     multiplePlots: './client/pages/multiple-plots.js'
@@ -69,13 +68,6 @@ module.exports = {
       filename: 'stochss-workflow-manager.html',
       template: 'page_template.pug',
       name: 'workflowEditor',
-      inject: false
-    }),
-    new HtmlWebpackPlugin({
-      title: 'StochSS | Project Browser',
-      filename: 'stochss-project-browser.html',
-      template: 'page_template.pug',
-      name: 'projectBrowser',
       inject: false
     }),
     new HtmlWebpackPlugin({

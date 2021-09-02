@@ -18,11 +18,21 @@ div#simulation-settings.card
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "collapse-settings", data-hook="collapse-settings-view") -
 
-  div.collapse(class="show" id=this.model.elementID + "collapse-settings")
+  div.card-body
 
-    div.card-body.tab-content
+    p.mb-0
+      | Consider the following when selecting an algorithm for your job.  If you would like StochSS to choose the algorithm, select <b>Choose for me</b>.
+
+    ul.mb-0
+      li Algorithms <b>ODE</b> and <b>Hybrid ODE/SSA</b> work best to simulate models with a mode of <b>Concentration</b>.
+      li Algorithns <b>SSA</b>, <b>Tau Leaping</b>, and <b>Hybrid ODE/SSA</b> work best to simulate models with a mode of <b>Population</b>.
+      li Algorithm <b>Hybrid ODE/SSA</b> is required if the model contains advanced components.
+
+    div.collapse.tab-content(class="show" id=this.model.elementID + "collapse-settings")
 
       div.tab-pane.active(id=this.model.elementID + "-edit-sim-settings" data-hook=this.model.elementID + "-edit-sim-settings")
+
+        hr
 
         div.mx-1.head.align-items-baseline
 
@@ -137,6 +147,8 @@ div#simulation-settings.card
               div.col-sm-4(data-hook="tau-tolerance")
 
       div.tab-pane(id=this.model.elementID + "-view-sim-settings" data-hook=this.model.elementID + "-view-sim-settings")
+
+        hr
 
         div
 

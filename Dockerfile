@@ -21,6 +21,10 @@ COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
 COPY --chown=jovyan:users . /stochss  
 
+COPY --chown=jovyan:users /stochss/dist/favicon.ico $JUPYTER_CONFIG_DIR/custom/favicon.ico
+
+COPY --chown=jovyan:users custom.js $JUPYTER_CONFIG_DIR/custom/custom.js
+
 COPY --chown=jovyan:users stochss-logo.png $JUPYTER_CONFIG_DIR/custom/logo.png
 
 COPY --chown=jovyan:users custom.css $JUPYTER_CONFIG_DIR/custom/custom.css

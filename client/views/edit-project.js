@@ -41,19 +41,23 @@ module.exports = View.extend({
     if(document.querySelector('#moveToTrashConfirmModal')) {
       document.querySelector('#moveToTrashConfirmModal').remove();
     }
-    let self = this;
     let modal = $(modals.moveToTrashConfirmHtml("model")).modal();
     let yesBtn = document.querySelector('#moveToTrashConfirmModal .yes-modal-btn');
-    yesBtn.addEventListener('click', function (e) {
+    yesBtn.addEventListener('click', (e) => {
       modal.modal('hide');
-      let queryStr = "?srcPath=" + self.model.directory + "&dstPath=" + path.join("trash", self.model.directory.split("/").pop());
-      let endpoint = path.join(app.getApiPath(), "file/move") + queryStr
+      let queryStr = `?srcPath=${this.model.directory}&dstPath=${path.join("trash", this.model.directory.split("/").pop())}`;
+      let endpoint = path.join(app.getApiPath(), "file/move") + queryStr;
       app.getXHR(endpoint, {
-        success: function (err, response, body) {
-          self.model.collection.remove(self.model);
+        success: (err, response, body) => {
+          this.parent.update("Files");
+          this.model.collection.remove(this.model);
         },
-        error: function (err, response, body) {
+        error: (err, response, body) => {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
           body = JSON.parse(body);
+          let errorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
         }
       });
     });
