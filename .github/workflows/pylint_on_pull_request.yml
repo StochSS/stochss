@@ -60,8 +60,8 @@ jobs:
     - name: Fail If Negative Delta
       run: |
         import os
-        base = os.environ['BASE_LINT']
-        head = os.environ['HEAD_LINT']
+        base = float(os.environ['BASE_LINT'])
+        head = float(os.environ['HEAD_LINT'])
         delta = head - base
         if head < 9 and delta < 0:
             raise Exception("Pylint score has decrease and was >9.")
