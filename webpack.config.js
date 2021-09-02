@@ -6,7 +6,7 @@ module.exports = {
   entry: {
     home: './client/pages/users-home.js',
     quickstart: './client/pages/quickstart.js',
-    browser: './client/pages/file-browser.js',
+    browser: './client/pages/browser.js',
     editor: './client/pages/model-editor.js',
     domainEditor: './client/pages/domain-editor.js',
     workflowSelection: './client/pages/workflow-selection.js',
