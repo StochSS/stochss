@@ -20,6 +20,7 @@ let $ = require('jquery');
 let path = require('path');
 //support files
 let app = require('./app');
+let modals = require('./modals');
 
 let contextZipTypes = ["workflow", "folder", "other", "project", "root"];
 
@@ -41,7 +42,11 @@ let doubleClick = (view, e) => {
     }else if(node.type === "domain") {
       view.openDomain(node.original._path);
     }else if(node.type === "other"){
-      view.openFile(node.original._path);
+      if(node.text.endsWith(".zip")) {
+        view.extractAll(node);
+      }else{
+        view.openFile(node.original._path);
+      }
     }
   }
 }
@@ -147,7 +152,6 @@ let getOtherContext = (view, node) => {
   let moveToTrash = view.getMoveToTrashContext(node, "file");
   if(node.text.endsWith(".zip")) {
     return {
-      open: open,
       extractAll: view.getExtractAllContext(node),
       download: download, rename: rename,
       duplicate: duplicate, moveToTrash: moveToTrash
@@ -248,11 +252,11 @@ let getWorkflowContext = (view, node) => {
         document.querySelector("#successModal").remove();
       }
       let message = `The model for <b>${body.File}</b> is located here: <b>${body.mdlPath}</b>`;
-      let modal = $(modals.successHtml(title, message)).modal();
+      let modal = $(modals.successHtml(message, {title: title})).modal();
     }
   }}
   if(!node.original._newFormat) {
-    options['timeStamp'] = view.getTimeStamp();
+    duplicateOptions['timeStamp'] = view.getTimeStamp();
   }
   let downloadOptions = {dataType: "zip", identifier: "file/download-zip"};
   let options = {asZip: true};
@@ -275,14 +279,10 @@ let move = (view, par, node) => {
   app.getXHR(endpoint, {
     success: (err, response, body) => {
       node.original._path = path.join(newDir, file);
-      if(node.type === "folder") {
-        view.refreshJSTree(node);
-      }else if(newDir.endsWith("trash")) {
+      if(newDir.endsWith("trash")) {
         $(view.queryByHook('empty-trash')).prop('disabled', false);
-        view.refreshJSTree(par);
-      }else if(oldPath.split("/").includes("trash")) {
-        view.refreshJSTree(par);
       }
+      view.refreshJSTree(par);
     },
     error: (err, response, body) => {
       body = JSON.parse(body);
@@ -300,8 +300,8 @@ let toModel = (view, node, identifier) => {
   let queryStr = `?path=${node.original._path}`;
   let endpoint = path.join(app.getApiPath(), identifier) + queryStr;
   app.getXHR(endpoint, {
-    success: function (err, response, body) {
-      let par = $('#models-jstree').jstree().get_node(node.parent);
+    success: (err, response, body) => {
+      let par = $('#files-jstree').jstree().get_node(node.parent);
       view.refreshJSTree(par);
       view.selectNode(par, body.File);
       if(identifier.startsWith("sbml") && body.errors.length > 0){
@@ -321,7 +321,7 @@ let toSBML = (view, node) => {
     success: (err, response, body) => {
       let par = $('#files-jstree').jstree().get_node(node.parent);
       view.refreshJSTree(par);
-      view.selectNode(node, body.File);
+      view.selectNode(par, body.File);
     }
   });
 }
@@ -333,7 +333,7 @@ let toSpatial = (view, node) => {
     success: (err, response, body) => {
       let par = $('#files-jstree').jstree().get_node(node.parent);
       view.refreshJSTree(par);
-      view.selectNode(node, body.File);
+      view.selectNode(par, body.File);
     }
   });
 }

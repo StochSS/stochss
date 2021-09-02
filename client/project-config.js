@@ -40,7 +40,11 @@ let doubleClick = (view, e) => {
     }else if(node.type === "domain") {
       view.openDomain(node.original._path);
     }else if(node.type === "other"){
-      view.openFile(node.original._path);
+      if(node.text.endsWith(".zip")) {
+        view.extractAll(node);
+      }else{
+        view.openFile(node.original._path);
+      }
     }
   }
 }
@@ -164,7 +168,6 @@ let getOtherContext = (view, node) => {
   let moveToTrash = view.getMoveToTrashContext(node, "file");
   if(node.text.endsWith(".zip")) {
     return {
-      open: open,
       extractAll: view.getExtractAllContext(node),
       download: download, rename: rename,
       duplicate: duplicate, moveToTrash: moveToTrash
@@ -210,7 +213,7 @@ let getSpatialModelContext = (view, node) => {
   let downloadOptions = {dataType: "json", identifier: "file/json-data"};
   return {
     edit: view.getEditModelContext(node),
-    extract: getExtractContext(view, node),
+    extract: getExtractContext(view, node, "model"),
     newWorkflow: view.buildContextWithSubmenus({
       label: "New Workflow",
       submenu: {
@@ -238,7 +241,7 @@ let getWorkflowContext = (view, node) => {
         document.querySelector("#successModal").remove();
       }
       let message = `The model for <b>${body.File}</b> is located here: <b>${body.mdlPath}</b>`;
-      let modal = $(modals.successHtml(title, message)).modal();
+      let modal = $(modals.successHtml(message, {title: title})).modal();
     }
   }}
   if(!node.original._newFormat) {
@@ -261,7 +264,8 @@ let getWorkflowGroupContext = (view, node) => {
   }
   return {
     refresh: view.getRefreshContext(node),
-    download: view.getDownloadWCombineContext(node)
+    download: view.getDownloadWCombineContext(node),
+    moveToTrash: view.getMoveToTrashContext(node, "workflow group")
   }
 }
 
@@ -279,6 +283,7 @@ let move = (view, par, node) => {
       }else if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.includes(".wkgp")) {
         updateParent(view, node.type);
       }
+      view.refreshJSTree(par);
     },
     error: (err, response, body) => {
       body = JSON.parse(body);
@@ -309,7 +314,7 @@ let toModel = (view, node, identifier) => {
         }
         let modal = $(modals.sbmlToModelHtml(body.message, body.errors)).modal();
       }else{
-        view.updateParent("model");
+        updateParent(view, "model");
       }
     }
   });
@@ -336,7 +341,7 @@ let toSpatial = (view, node) => {
       let par = $('#files-jstree').jstree().get_node(node.parent);
       let grandPar = $('#files-jstree').jstree().get_node(par.parent);
       view.refreshJSTree(grandPar);
-      updateParent("spatial");
+      updateParent(view, "spatial");
       view.selectNode(grandPar, body.File.replace(".smdl", ".wkgp"));
     }
   });
@@ -363,7 +368,7 @@ let updateParent = (view, type) => {
   }else if(workflows.includes(type)) {
     view.parent.update("Workflow", "file-browser");
   }else if(type === "workflowGroup") {
-    view.parent.update("Workflow-group", "file-browser");
+    view.parent.update("WorkflowGroup", "file-browser");
   }else if(type === "Archive") {
     view.parent.update(type, "file-browser");
   }
@@ -447,6 +452,9 @@ module.exports = {
   getWorkflowGroupContext: getWorkflowGroupContext,
   move: move,
   setup: setup,
+  toModel: toModel,
+  toSBML: toSBML,
+  toSpatial: toSpatial,
   types: types,
   updateParent: updateParent,
   validateMove: validateMove

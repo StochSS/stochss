@@ -294,12 +294,18 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), identifier) + queryStr;
     app.getXHR(endpoint, {
       success: (err, response, body) => {
-        let par = $('#files-jstree').jstree().get_node(node.parent);
+        var par = $('#files-jstree').jstree().get_node(node.parent);
+        if(this.root !== "none" && (["nonspatial", "spatial"].includes(node.type) || target === "wkfl_model")){
+          par = $('#files-jstree').jstree().get_node(par.parent);
+          var file = body.File.replace(node.type === "spatial" ? ".smdl" : ".mdl", ".wkgp");
+        }else{
+          var file = body.File;
+        }
         this.refreshJSTree(par);
         if(cb) {
-          cb(body.File, body.mdlPath);
+          cb(body);
         }
-        this.selectNode(par, body.File);
+        this.selectNode(par, file);
         this.config.updateParent(this, node.type);
       }
     });
@@ -344,7 +350,7 @@ module.exports = View.extend({
     window.open(endpoint, "_blank");
   },
   extractAll: function (node) {
-    let queryStr = `?path=${o.original._path}`;
+    let queryStr = `?path=${node.original._path}`;
     let endpoint = path.join(app.getApiPath(), "file/unzip") + queryStr;
     app.getXHR(endpoint, {
       success: (err, response, body) => {
@@ -467,7 +473,7 @@ module.exports = View.extend({
     });
   },
   getExtractAllContext: function (node) {
-    return this.buildContextBase({
+    return this.buildContextBaseWithClass({
       label: "Extract All",
       action: (data) => {
         this.extractAll(node);
@@ -558,7 +564,7 @@ module.exports = View.extend({
     return this.buildContextBaseWithClass({
       label: "Open",
       action: (data) => {
-        this.openFile(node);
+        this.openFile(node.original._path);
       }
     });
   },
@@ -635,7 +641,7 @@ module.exports = View.extend({
   getPublishNotebookContext: function (node) {
     return this.buildContextBase({
       label: "Publish",
-      action: function (data) {
+      action: (data) => {
         this.publishNotebookPresentation(node);
       }
     });
@@ -678,7 +684,7 @@ module.exports = View.extend({
       submenu: {
         convertToModel: this.buildContextBase({
           label: "To Model",
-          action: function (data) {
+          action: (data) => {
             this.config.toModel(this, node, identifier);
           }
         })
@@ -702,14 +708,14 @@ module.exports = View.extend({
         edit: this.buildContextBase({
           label: "Edit",
           disabled: (!node.original._newFormat && node.original._status !== "ready"),
-          action: function (data) {
+          action: (data) => {
             this.openWorkflowModel(node);
           }
         }),
         extract: this.buildContextBase({
           label: "Extract",
           disabled: (node.original._newFormat && !node.original._hasJobs),
-          action: function (data) {
+          action: (data) => {
             this.duplicate(node, "workflow/duplicate", {target: "wkfl_model"});
           }
         })
@@ -817,6 +823,7 @@ module.exports = View.extend({
         always: (err, response, body) => {
           $(this.queryByHook('empty-trash')).prop('disabled', false);
           this.refreshJSTree(null);
+          this.config.updateParent(this, node.type);
         }
       });
     });
@@ -934,10 +941,14 @@ module.exports = View.extend({
         let endpoint = path.join(app.getApiPath(), "file/rename") + queryStr;
         app.getXHR(endpoint, {
           always: (err, response, body) => {
-            this.refreshJSTree(par);
+            if(this.root !== "none" && ["nonspatial", "spatial"].includes(node.type)){
+              this.refreshJSTree(null);
+            }else{
+              this.refreshJSTree(par);
+            }
           },
           success: (err, response, body) => {
-            if(this.root !== "none") {
+            if(this.root !== "none" && node.type === "root") {
               this.openProject(body._path);
             }else if(body.changed) {
               nameWarning.text(body.message);
@@ -946,6 +957,7 @@ module.exports = View.extend({
               setTimeout(_.bind(this.hideNameWarning, this), 10000);
             }
             node.original._path = body._path;
+            this.config.updateParent(this, node.type);
           }
         });
       }
