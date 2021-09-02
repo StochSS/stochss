@@ -28,13 +28,12 @@ let Model = require('../models/model');
 let Project = require('../models/project');
 //views
 let PageView = require('./base');
+let JSTreeView = require('../views/jstree-view');
 let MetaDataView = require('../views/meta-data');
 let ModelListing = require('../views/model-listing');
-// let FileBrowser = require('../views/file-browser-view');
 let ArchiveListing = require('../views/archive-listing');
 let WorkflowListing = require('../views/workflow-listing');
 let WorkflowGroupListing = require('../views/workflow-group-listing');
-let JSTreeView = require('../views/jstree-view');
 //templates
 let template = require('../templates/pages/projectManager.pug');
 
