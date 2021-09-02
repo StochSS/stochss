@@ -167,12 +167,12 @@ let DomainEditor = PageView.extend({
       this.saveDomain()
     }else{
       var self = this
-      if(document.querySelector('#newModalModel')) {
-        document.querySelector('#newModalModel').remove()
+      if(document.querySelector('#newDomainModal')) {
+        document.querySelector('#newDomainModal').remove()
       }
-      let modal = $(modals.renderCreateModalHtml(true, true)).modal();
-      let okBtn = document.querySelector('#newModalModel .ok-model-btn');
-      let input = document.querySelector('#newModalModel #modelNameInput');
+      let modal = $(modals.createDomainHtml()).modal();
+      let okBtn = document.querySelector('#newDomainModal .ok-model-btn');
+      let input = document.querySelector('#newDomainModal #domainNameInput');
       input.addEventListener("keyup", function (event) {
         if(event.keyCode === 13){
           event.preventDefault();
@@ -180,8 +180,8 @@ let DomainEditor = PageView.extend({
         }
       });
       input.addEventListener("input", function (e) {
-        var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
-        var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
+        var endErrMsg = document.querySelector('#newDomainModal #domainNameInputEndCharError')
+        var charErrMsg = document.querySelector('#newDomainModal #domainNameInputSpecCharError')
         let error = app.validateName(input.value)
         okBtn.disabled = error !== "" || input.value.trim() === ""
         charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"

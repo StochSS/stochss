@@ -157,7 +157,7 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   let ext = isSpatial ? /.smdl/g : /.mdl/g
   let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
   let name = mdlPath.split('/').pop().replace(ext, typeCode)
-  let modal = $(modals.newWorkflowHtml(name, type)).modal();
+  let modal = $(modals.createWorkflowHtml(name, type)).modal();
   let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
   let input = document.querySelector('#newWorkflowModal #workflowNameInput');
   okBtn.disabled = false;

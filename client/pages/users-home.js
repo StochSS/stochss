@@ -58,7 +58,7 @@ let usersHomePage = PageView.extend({
     if(document.querySelector("#newProjectModal")) {
       document.querySelector("#newProjectModal").remove()
     }
-    let modal = $(modals.newProjectModalHtml()).modal()
+    let modal = $(modals.createProjectHtml()).modal()
     let okBtn = document.querySelector("#newProjectModal .ok-model-btn")
     let input = document.querySelector("#newProjectModal #projectNameInput")
     input.focus()
@@ -89,7 +89,10 @@ let usersHomePage = PageView.extend({
             self.navToPage(projectEP);
           },
           error: function (err, response, body) {
-            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(body.Reason, body.Message)).modal();
+            if(document.querySelector("#errorModal")) {
+              document.querySelector("#errorModal").remove();
+            }
+            let errorModel = $(modals.errorHtml(body.Reason, body.Message)).modal();
           }
         });
       }
