@@ -98,12 +98,6 @@ module.exports = View.extend({
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     this.config.setup(this);
-    window.addEventListener('pageshow', (e) => {
-      let navType = window.performance.navigation.type;
-      if(navType === 2){
-        window.location.reload();
-      }
-    });
     this.setupJstree(() => {
       setTimeout(() => {
         this.refreshInitialJSTree();
