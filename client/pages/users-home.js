@@ -109,7 +109,7 @@ let usersHomePage = PageView.extend({
     });
   },
   handleBrowseProjectsClick: function (e) {
-    let endpoint = path.join(app.getBasePath(), "stochss/project/browser")
+    let endpoint = path.join(app.getBasePath(), "stochss/files#project-browser-section")
     this.navToPage(endpoint)
   },
   handleQuickstartClick: function (e) {

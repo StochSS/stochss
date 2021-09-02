@@ -197,23 +197,6 @@ class WorkflowEditorHandler(PageHandler):
         self.render("stochss-workflow-manager.html", server_path=self.get_server_path())
 
 
-class ProjectBrowserHandler(PageHandler):
-    '''
-    ################################################################################################
-    StochSS Project Browser Page Handler
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Render the StochSS project browser page.
-
-        Attributes
-        ----------
-        '''
-        self.render("stochss-project-browser.html", server_path=self.get_server_path())
-
-
 class ProjectManagerHandler(PageHandler):
     '''
     ################################################################################################
