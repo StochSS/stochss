@@ -494,6 +494,11 @@ module.exports = {
 
     return templates.message(modalID, title, message);
   },
+  uploadFileExistsHtml: (title, message) => {
+    let modalID = 'uploadFileExistsModal';
+
+    return templates.confirmation_with_message(modalID, title, message);
+  },
   updateFormatHtml: (fileType) => {
     let modalID = `update${fileType}FormatModal`;
     let title = `Update ${fileType} Format`;
