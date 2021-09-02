@@ -44,60 +44,121 @@ let FileBrowser = PageView.extend({
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
     },
     'click [data-hook=collapse-projects]' : 'changeCollapseButtonText',
+    'click [data-hook=new-project-btn]' : 'handleNewProjectClick',
     'click [data-hook=collapse-presentations]' : 'changeCollapseButtonText',
     'click [data-hook=collapse-files]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments)
-    var self = this
-    // start block from project browser
-    var endpoint = path.join(app.getApiPath(), "project/load-browser");
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        self.renderProjectsView(body.projects);
-      }
-    });
-    // End block from project browser
+    this.getProjects();
     // Start block from presentation bowser
-    var endpoint = path.join(app.getApiPath(), "file/presentations")
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        self.renderPresentationView(body.presentations);
-      }
-    });
+    // var self = this
+    // var endpoint = path.join(app.getApiPath(), "file/presentations")
+    // app.getXHR(endpoint, {
+    //   success: function (err, response, body) {
+    //     self.renderPresentationView(body.presentations);
+    //   }
+    // });
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments)
-    let jstreeView = new JSTreeView({
-      configKey: "file"
+    window.addEventListener('pageshow', (e) => {
+      let navType = window.performance.navigation.type;
+      if(navType === 2){
+        window.location.reload();
+      }
     });
-    app.registerRenderSubview(this, jstreeView, "jstree-view-container");
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
+    this.renderJSTreeView();
+    app.documentSetup();
+  },
+  // // Function from presentation browser
+  // renderPresentationView: function (presentations) {
+  //   let options = {model: Presentation};
+  //   let presentCollection = new Collection(presentations, options);
+  //   this.renderCollection(
+  //     presentCollection,
+  //     PresentationView,
+  //     this.queryByHook("presentation-list")
+  //   );
+  // },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  getProjects: function () {
+    let endpoint = path.join(app.getApiPath(), "project/load-browser");
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        this.renderProjectsView(body.projects);
+      }
     });
   },
-  // Function from project browser
+  handleNewProjectClick: function (e) {
+    if(document.querySelector("#newProjectModal")) {
+      document.querySelector("#newProjectModal").remove();
+    }
+    let modal = $(modals.createProjectHtml()).modal();
+    let input = document.querySelector("#newProjectModal #projectNameInput");
+    let okBtn = document.querySelector("#newProjectModal .ok-model-btn");
+    input.focus();
+    input.addEventListener("keyup", (event) => {
+      if(event.keyCode === 13){
+        event.preventDefault();
+        okBtn.click();
+      }
+    });
+    input.addEventListener("input", (e) => {
+      let endErrMsg = document.querySelector('#newProjectModal #projectNameInputEndCharError');
+      let charErrMsg = document.querySelector('#newProjectModal #projectNameInputSpecCharError');
+      let error = app.validateName(input.value);
+      okBtn.disabled = error !== "";
+      charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none";
+      endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none";
+    });
+    okBtn.addEventListener("click", (e) => {
+      modal.modal('hide');
+      let queryStr = `?path=${input.value.trim()}.proj`;
+      let endpoint = path.join(app.getApiPath(), "project/new-project") + queryStr;
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          let queryStr = `?path=${body.path}`;
+          window.location.href = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+        },
+        error: (err, response, body) => {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
+          let errorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+        }
+      });
+    });
+  },
+  renderJSTreeView: function () {
+    if(this.jstreeView) {
+      this.jstreeView.remove();
+    }
+    this.jstreeView = new JSTreeView({
+      configKey: "file"
+    });
+    app.registerRenderSubview(this, this.jstreeView, "jstree-view-container");
+  },
   renderProjectsView: function (projects) {
+    if(this.projectsView) {
+      this.projectsView.remove();
+    }
     let options = {model: Project, comparator: 'parentDir'};
     let projectCollection = new Collection(projects, options);
-    this.renderCollection(
+    this.projectsView = this.renderCollection(
       projectCollection,
       EditProjectView,
       this.queryByHook("projects-view-container")
     );
   },
-  // Function from presentation browser
-  renderPresentationView: function (presentations) {
-    let options = {model: Presentation};
-    let presentCollection = new Collection(presentations, options);
-    this.renderCollection(
-      presentCollection,
-      PresentationView,
-      this.queryByHook("presentation-list")
-    );
-  },
-  changeCollapseButtonText: function (e) {
-    app.changeCollapseButtonText(this, e);
+  update: function (target) {
+    if(target === "Projects") {
+      this.getProjects();
+    }else if(target === "Files") {
+      this.jstreeView.refreshJSTree(null);
+    }
   }
 });
 

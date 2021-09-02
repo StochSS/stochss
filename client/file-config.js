@@ -351,7 +351,12 @@ let types = {
   'other' : {"icon": "jstree-icon jstree-file"}
 }
 
-let updateParent = (view, type) => {}
+let updateParent = (view, type) => {
+  console.log(type)
+  if(type === "project") {
+    view.parent.update("Projects");
+  } 
+}
 
 let validateMove = (view, node, more, pos) => {
   // Check if workflow is running
