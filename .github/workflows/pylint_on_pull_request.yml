@@ -58,5 +58,11 @@ jobs:
         echo ${{ env.ADDED_LINT }}
       if: always()
     - name: Fail If Negative Delta
-      run: exit 1
-      if: env.PASSING_SCORE == '-'
+      run: |
+        import os
+        base = os.environ['BASE_LINT']
+        head = os.environ['HEAD_LINT']
+        delta = head - base
+        if head < 9 and delta < 0:
+            raise Exception("Pylint score has decrease and was >9.")
+      shell: python3
