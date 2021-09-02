@@ -194,7 +194,7 @@ let ProjectManager = PageView.extend({
     input.addEventListener("input", function (e) {
       var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
       var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
-      let error = app.validateName(input.value, {saveAs=false})
+      let error = app.validateName(input.value, {saveAs: false})
       okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"

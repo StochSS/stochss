@@ -132,7 +132,7 @@ let getBrowser = () => {
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
 }
 
-let validateName = (input, {rename=false, saveAs=true}={}) {
+let validateName = (input, {rename=false, saveAs=true}={}) => {
   var error = "";
   if(input.endsWith('/')) {
     error = 'forward';
