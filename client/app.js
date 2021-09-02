@@ -234,7 +234,8 @@ module.exports = {
     postXHR: postXHR,
     tooltipSetup: tooltipSetup,
     documentSetup: documentSetup,
-    copyToClipboard: copyToClipboard
+    copyToClipboard: copyToClipboard,
+    validateName: validateName
 };
 
 
