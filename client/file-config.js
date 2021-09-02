@@ -352,9 +352,10 @@ let types = {
 }
 
 let updateParent = (view, type) => {
-  console.log(type)
   if(type === "project") {
     view.parent.update("Projects");
+  }else if(type === "Presentations") {
+    view.parent.update(type);
   } 
 }
 

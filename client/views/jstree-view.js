@@ -887,6 +887,7 @@ module.exports = View.extend({
       success: (err, response, body) => {
         $(modals.presentationLinks(body.message, "Shareable Presentation", body.links)).modal();
         let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+        this.config.updateParent(this, "Presentations");
         copyBtn.addEventListener('click', (e) => {
           let onFulfilled = (value) => {
             $("#copy-link-success").css("display", "inline-block");

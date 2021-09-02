@@ -165,6 +165,8 @@ let FileBrowser = PageView.extend({
       this.getProjects();
     }else if(target === "Files") {
       this.jstreeView.refreshJSTree(null);
+    }else if(target === "Presentations") {
+      this.getPresentations();
     }
   }
 });
