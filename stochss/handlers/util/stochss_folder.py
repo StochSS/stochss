@@ -381,8 +381,8 @@ class StochSSFolder(StochSSBase):
         self.log("debug", f"Full destination directory: {dst_path}")
         try:
             dst = shutil.move(src_path, dst_path)
-            self.path = dst.replace(self.user_dir + "/", "")
-            return f"Success! {self.get_file()} was moved to {self.get_dir_name()}."
+            path = dst.replace(self.user_dir + "/", "")
+            return f"Success! {self.get_file(path=path)} was moved to {os.path.dirname(path)}."
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
