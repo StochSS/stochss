@@ -47,24 +47,11 @@ let usersHomePage = PageView.extend({
       let queryString = "?path=" + urlParams.get("open") + "&action=open";
       let endpoint = path.join(app.getBasePath(), 'stochss/loading-page') + queryString;
       window.location.href = endpoint;
-    }else{
-      let self = this;
-      let endpoint = path.join(app.getApiPath(), "file/presentations")
-      app.getXHR(endpoint, {
-        success: function (err, response, body) {
-          self.renderPresentationView(body.presentations);
-        }
-      });
     }
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
-    });
-    if(app.getBasePath() === "/") {
-      $("#presentations").css("display", "none");
-    }
+    app.documentSetup();
   },
   handleNewProjectClick: function (e) {
     let self = this
@@ -118,15 +105,6 @@ let usersHomePage = PageView.extend({
   },
   navToPage: function (endpoint) {
     window.location.href = endpoint
-  },
-  renderPresentationView: function (presentations) {
-    let options = {model: Presentation};
-    let presentCollection = new Collection(presentations, options);
-    this.renderCollection(
-      presentCollection,
-      PresentationView,
-      this.queryByHook("presentation-list")
-    );
   }
 });
 

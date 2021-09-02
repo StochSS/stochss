@@ -51,14 +51,6 @@ let FileBrowser = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments)
     this.getProjects();
-    // Start block from presentation bowser
-    // var self = this
-    // var endpoint = path.join(app.getApiPath(), "file/presentations")
-    // app.getXHR(endpoint, {
-    //   success: function (err, response, body) {
-    //     self.renderPresentationView(body.presentations);
-    //   }
-    // });
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments)
@@ -68,21 +60,24 @@ let FileBrowser = PageView.extend({
         window.location.reload();
       }
     });
-    this.renderJSTreeView();
     app.documentSetup();
+    if(app.getBasePath() === "/") {
+      $("#presentations").css("display", "none");
+    }else{
+      this.getPresentations();
+    }
+    this.renderJSTreeView();
   },
-  // // Function from presentation browser
-  // renderPresentationView: function (presentations) {
-  //   let options = {model: Presentation};
-  //   let presentCollection = new Collection(presentations, options);
-  //   this.renderCollection(
-  //     presentCollection,
-  //     PresentationView,
-  //     this.queryByHook("presentation-list")
-  //   );
-  // },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  getPresentations: function () {
+    let endpoint = path.join(app.getApiPath(), "file/presentations");
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        this.renderPresentationView(body.presentations);
+      }
+    });
   },
   getProjects: function () {
     let endpoint = path.join(app.getApiPath(), "project/load-browser");
@@ -140,6 +135,18 @@ let FileBrowser = PageView.extend({
       configKey: "file"
     });
     app.registerRenderSubview(this, this.jstreeView, "jstree-view-container");
+  },
+  renderPresentationView: function (presentations) {
+    if(this.presentationsView) {
+      this.presentationsView.remove();
+    }
+    let options = {model: Presentation};
+    let presentCollection = new Collection(presentations, options);
+    this.presentationsView = this.renderCollection(
+      presentCollection,
+      PresentationView,
+      this.queryByHook("presentation-list")
+    );
   },
   renderProjectsView: function (projects) {
     if(this.projectsView) {
