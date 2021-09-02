@@ -42,21 +42,25 @@ jobs:
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
       if: always()
+    - name: Get Delta
+      run: |
+        import os
+        import os
+        os.environ['BASE_LINT'] = float(os.environ['BASE_LINT']) if os.environ['BASE_LINT'] != '' else 0
+        os.environ['HEAD_LINT'] = float(os.environ['HEAD_LINT']) if os.environ['HEAD_LINT'] != '' else 0
+        os.environ['DELTA'] = os.environ['HEAD_LINT'] - os.environ['BASE_LINT']
+      shell: python
     - name: Display Results
       run: |
         echo "Lint of modified files in base:"
         echo ${{ env.BASE_LINT }}
         echo "Lint of modified files in head:"
         echo ${{ env.HEAD_LINT }}
+        echo "Delta (+/-):"
+        echo ${{ env.DELTA }}
         echo "Lint of files added by head:"
         echo ${{ env.ADDED_LINT }}
       if: always()
     - name: Fail If Negative Delta
-      run: |
-        import os
-        base = float(os.environ['BASE_LINT']) if os.environ['BASE_LINT'] != '' else 0
-        head = float(os.environ['HEAD_LINT']) if os.environ['HEAD_LINT'] != '' else 0
-        delta = head - base
-        if head < 9 and delta < 0:
-            raise Exception("Pylint score has decrease and was >9.")
-      shell: python
+      run: exit 1
+      if: env.HEAD < 9 && env.DELTA < 0
