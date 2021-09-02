@@ -26,6 +26,9 @@ jobs:
       env:
         HEAD_REF: ${{ github.event.pull_request.head.ref }}
       if: always()
+    - name: Set Base Lint to 0
+      run: echo BASE_LINT=0 >> $GITHUB_ENV
+      if: env.BASE_LINT == ""
     - name: Checkout Head
       run: git checkout $HEAD_REF
       env:
@@ -36,6 +39,9 @@ jobs:
       env:
         BASE_REF: ${{ github.event.pull_request.base.ref }}
       if: always()
+    - name: Set Head Lint to 0
+      run: echo HEAD_LINT=0 >> $GITHUB_ENV
+      if: env.HEAD_LINT == ""
     - name: Get Added Files Lint Score
       run: |
         echo ADDED_LINT=$(git diff --name-only --diff-filter=A $BASE_REF | grep -E "\.py" | xargs pylint | grep -E -o "at [0-9.-]+" | grep -E -o [0-9.-]+) >> $GITHUB_ENV
@@ -45,10 +51,9 @@ jobs:
     - name: Get Delta
       run: |
         import os
-        import os
-        os.environ['BASE_LINT'] = float(os.environ['BASE_LINT']) if os.environ['BASE_LINT'] != '' else 0
-        os.environ['HEAD_LINT'] = float(os.environ['HEAD_LINT']) if os.environ['HEAD_LINT'] != '' else 0
-        os.environ['DELTA'] = os.environ['HEAD_LINT'] - os.environ['BASE_LINT']
+        base = float(os.environ['BASE_LINT'])
+        head = float(os.environ['HEAD_LINT'])
+        os.environ['DELTA'] = str(head - base)
       shell: python
     - name: Display Results
       run: |
@@ -62,5 +67,8 @@ jobs:
         echo ${{ env.ADDED_LINT }}
       if: always()
     - name: Fail If Negative Delta
-      run: exit 1
-      if: env.HEAD < 9 && env.DELTA < 0
+      run: |
+        import os
+        if float(os.environ['HEAD_LINT']) < 9 and float(os.environ['DELTA']) < 0:
+            raise Exception("Head lint score < 9 and negative delta.")
+      shell: python
