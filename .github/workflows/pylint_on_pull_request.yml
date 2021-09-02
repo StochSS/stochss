@@ -54,7 +54,6 @@ jobs:
         base = float(os.environ['BASE_LINT'])
         head = float(os.environ['HEAD_LINT'])
         delta = head - base
-        print(f"{delta} = {head} - {base}")
         os.environ['DELTA'] = str(delta)
       shell: python
     - name: Display Results
