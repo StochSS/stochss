@@ -65,4 +65,4 @@ jobs:
         delta = head - base
         if head < 9 and delta < 0:
             raise Exception("Pylint score has decrease and was >9.")
-      shell: python3
+      shell: python
