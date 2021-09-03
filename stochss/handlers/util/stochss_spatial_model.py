@@ -18,11 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import string
+import hashlib
 import tempfile
 import traceback
 
 import numpy
 import plotly
+from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Mesh, MeshError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
 
@@ -589,6 +592,40 @@ class StochSSSpatialModel(StochSSBase):
             if "types" not in reaction.keys():
                 reaction['types'] = list(range(1, len(self.model['domain']['types'])))
         return self.model
+
+
+    def publish_presentation(self):
+        '''
+        Publish a model or spatial model presentation
+
+        Attributes
+        ----------
+        '''
+        present_dir = os.path.join(self.user_dir, ".presentations")
+        if not os.path.exists(present_dir):
+            os.mkdir(present_dir)
+        try:
+            self.load()
+            safe_chars = set(string.ascii_letters + string.digits)
+            hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+            model = json.dumps(self.model, sort_keys=True)
+            # replace with gillespy2.Model.to_json
+            file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl"
+            dst = os.path.join(present_dir, file)
+            if os.path.exists(dst):
+                data = None
+            else:
+                data = {"path": dst, "new":True, "model":self.model}
+            query_str = f"?owner={hostname}&file={file}"
+            present_link = f"https://live.stochss.org/stochss/present-model{query_str}"
+            downloadlink = os.path.join("https://live.stochss.org/stochss/download_presentation",
+                                        hostname, file)
+            open_link = f"https://open.stochss.org?open={downloadlink}"
+            links = {"presentation": present_link, "download": downloadlink, "open": open_link}
+            return links, data
+        except PermissionError as err:
+            message = f"You do not have permission to publish this file: {str(err)}"
+            raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
 
     def save_domain(self, domain):
