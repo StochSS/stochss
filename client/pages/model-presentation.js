@@ -53,8 +53,9 @@ let ModelPresentationPage = PageView.extend({
     let endpoint = "api/file/json-data" + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {
-        self.model.set(body);
-        self.renderSubviews(false);
+        self.model.set(body.model);
+        let domainPlot = Boolean(body.domainPlot) ? body.domainPlot : null;
+        self.renderSubviews(false, domainPlot);
       },
       error: function (err, response, body) {
         self.notFound = true;
@@ -73,17 +74,18 @@ let ModelPresentationPage = PageView.extend({
     let message = `This ${this.fileType} can be downloaded or opened in your own StochSS Live! account using the buttons at the bottom of the page.`;
     $(this.queryByHook("loading-message")).html(message);
   },
-  renderSubviews: function (notFound) {
+  renderSubviews: function (notFound, domainPlot) {
     this.template = notFound ? errorTemplate : template
     PageView.prototype.render.apply(this, arguments);
     if(!notFound) {
-      this.renderModelView();
+      this.renderModelView(domainPlot);
     }
   },
-  renderModelView: function () {
+  renderModelView: function (domainPlot) {
     let modelView = new ModelView({
       model: this.model,
-      readOnly: true
+      readOnly: true,
+      domainPlot: domainPlot
     });
     app.registerRenderSubview(this, modelView, "model-view");
   }

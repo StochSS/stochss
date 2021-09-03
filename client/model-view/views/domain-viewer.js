@@ -116,7 +116,7 @@ module.exports = View.extend({
   },
   reloadDomain: function (domainPath) {
     if(this.domainPath !== domainPath || domainPath === "viewing") {
-      var el = this.parent.parent.queryByHook("domain-plot-container");
+      let el = this.elements === null ? this.queryByHook("view-domain-plot") : this.elements.plot;
       el.removeListener('plotly_click', this.selectParticle);
       Plotly.purge(el);
       this.plot = null;

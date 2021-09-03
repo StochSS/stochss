@@ -51,7 +51,8 @@ module.exports = View.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("stochss-es")).addClass("disabled");
       $(this.queryByHook("stochss-ps")).addClass("disabled");
-    }else if(app.getBasePath() === "/") {
+    }
+    if(app.getBasePath() === "/") {
       $(this.queryByHook("presentation")).css("display", "none");
     }
     if(this.validate && !this.model.valid) {
