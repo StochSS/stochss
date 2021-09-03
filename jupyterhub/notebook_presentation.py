@@ -49,9 +49,12 @@ class NotebookAPIHandler(BaseHandler):
         log.debug(f"Container id of the owner: {owner}")
         file = self.get_query_argument(name="file")
         log.debug(f"Name to the file: {file}")
-        html = get_presentation_from_user(owner=owner, file=file,
-                                          process_func=process_notebook_presentation)
-        self.write(html)
+        try:
+            html = get_presentation_from_user(owner=owner, file=file,
+                                              process_func=process_notebook_presentation)
+            self.write(html)
+        except StochSSAPIError as load_err:
+            report_error(self, log, load_err)
         self.finish()
 
 
@@ -71,12 +74,15 @@ class DownNotebookPresentationAPIHandler(BaseHandler):
         log.debug(f"Container id of the owner: {owner}")
         log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/json')
-        nb_presentation = get_presentation_from_user(owner=owner, file=file,
-                                                     kwargs={"as_dict": True},
-                                                     process_func=process_notebook_presentation)
-        self.set_header('Content-Disposition', f'attachment; filename="{nb_presentation["file"]}"')
-        log.debug(f"Contents of the json file: {nb_presentation['notebook']}")
-        self.write(nb_presentation['notebook'])
+        try:
+            nb_presentation = get_presentation_from_user(owner=owner, file=file,
+                                                         kwargs={"as_dict": True},
+                                                         process_func=process_notebook_presentation)
+            self.set_header('Content-Disposition', f'attachment; filename="{nb_presentation["file"]}"')
+            log.debug(f"Contents of the json file: {nb_presentation['notebook']}")
+            self.write(nb_presentation['notebook'])
+        except StochSSAPIError as load_err:
+            report_error(self, log, load_err)
         self.finish()
 
 
