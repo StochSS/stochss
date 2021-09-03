@@ -135,12 +135,12 @@ build_clean:
 create_working_dir:
 	$(DOCKER_SETUP_COMMAND)
 
-build:	
+build:
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
-			-t $(DOCKER_STOCHSS_IMAGE):latest .
+		-t $(DOCKER_STOCHSS_IMAGE):latest .
 
-test:	 create_working_dir
+test: create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
@@ -148,11 +148,11 @@ test:	 create_working_dir
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-								/stochss/stochss/tests/run_tests.py
+		/stochss/stochss/tests/run_tests.py
 
 build_and_test: build test
 
-run:		create_working_dir
+run: create_working_dir
 	$(PYTHON_EXE) launch_webbrowser.py &
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
@@ -160,7 +160,7 @@ run:		create_working_dir
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-		bash -c "cd /home/jovyan;	start-notebook.sh "
+		bash -c "cd /home/jovyan; start-notebook.sh "
 
 
 build_and_run: build run
