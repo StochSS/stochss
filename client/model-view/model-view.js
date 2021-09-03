@@ -55,6 +55,7 @@ module.exports = View.extend({
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     let modeMap = {continuous: "Concentration", discrete: "Population", dynamic: "Hybrid Concentration/Population"};
     this.modelMode = modeMap[this.model.defaultMode];
+    this.domainElements = attrs.domainElements;
   },
   render: function(attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -148,7 +149,8 @@ module.exports = View.extend({
             parent: self,
             model: domain,
             domainPath: domainPath,
-            readOnly: self.readOnly
+            readOnly: self.readOnly,
+            domainElements: self.domainElements
           });
           app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
         }
@@ -158,7 +160,8 @@ module.exports = View.extend({
         parent: this,
         model: this.model.domain,
         domainPath: domainPath,
-        readOnly: this.readOnly
+        readOnly: this.readOnly,
+        domainElements: this.domainElements
       });
       app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
     }

@@ -26,10 +26,8 @@ let Tooltips = require("../tooltips");
 //views
 var PageView = require('../pages/base');
 let ModelView = require('../model-view/model-view');
-var ParticleViewer = require('../views/view-particle');
 var TimespanSettingsView = require('../settings-view/views/timespan-settings-view');
 var ModelStateButtonsView = require('../views/model-state-buttons');
-var QuickviewDomainTypes = require('../views/quickview-domain-types');
 //models
 var Model = require('../models/model');
 var Domain = require('../models/domain');
@@ -108,31 +106,16 @@ let ModelEditor = PageView.extend({
       window.location.href = endpoint
     }, this))
   },
-  renderParticleViewer: function (particle=null) {
-    if(this.particleViewer) {
-      this.particleViewer.remove();
-    }
-    if(this.typeQuickViewer) {
-      this.typeQuickViewer.remove();
-    }
-    if(particle){
-      $(this.queryByHook("me-select-particle")).css("display", "none")
-      this.particleViewer = new ParticleViewer({
-        model: particle
-      });
-      app.registerRenderSubview(this, this.particleViewer, "me-particle-viewer")
-    }else{
-      $(this.queryByHook("me-select-particle")).css("display", "block")
-      this.typeQuickViewer = this.renderCollection(
-        this.modelView.domainViewer.model.types,
-        QuickviewDomainTypes,
-        this.queryByHook("me-types-quick-view")
-      );
-    }
-  },
   renderModelView: function () {
+    let domainElements = {
+      select: $(this.queryByHook("me-select-particle")),
+      particle: {view: this, hook: "me-particle-viewer"},
+      plot: this.queryByHook("domain-plot-container"),
+      type: this.queryByHook("me-types-quick-view")
+    }
     this.modelView = new ModelView({
-      model: this.model
+      model: this.model,
+      domainElements: domainElements
     });
     app.registerRenderSubview(this, this.modelView, "model-view-container")
   },

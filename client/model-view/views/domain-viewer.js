@@ -57,6 +57,7 @@ module.exports = View.extend({
       self.model.types.get(particle.type, "typeID").numParticles += 1;
     });
     this.gravity = this.getGravityString();
+    console.log(this.elements)
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -227,7 +228,22 @@ module.exports = View.extend({
       );
     }
   },
-  renderMEParticlesViewer: function () {},
+  renderMEParticlesViewer: function ({particle=null}) {
+    if(particle){
+      this.elements.select.css("display", "none")
+      this.particleViewer = new ParticleViewer({
+        model: particle
+      });
+      app.registerRenderSubview(this.elements.particle.view, this.particleViewer, this.elements.particle.hook)
+    }else{
+      this.elements.select.css("display", "block")
+      this.typeQuickViewer = this.renderCollection(
+        this.model.types,
+        QuickviewDomainTypes,
+        this.elements.type
+      );
+    }
+  },
   renderPlot: function (plotElement) {
     if(this.plot === null) {
       let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
@@ -255,7 +271,10 @@ module.exports = View.extend({
         this.renderPlot(this.queryByHook("view-domain-plot"));
       }
     }else{
-      this.renderMEParticlesViewer(particle);
+      this.renderMEParticlesViewer({particle: particle});
+      if(particle === null) {
+        this.renderPlot(this.elements.plot);
+      }
     }
   },
   toggleDomainError: function () {
