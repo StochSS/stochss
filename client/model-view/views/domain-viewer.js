@@ -28,6 +28,7 @@ var View = require('ampersand-view');
 var TypesViewer = require('../../views/edit-domain-type');
 var SelectView = require('ampersand-select-view');
 var ParticleViewer = require('../../views/view-particle');
+var QuickviewDomainTypes = require('../../views/quickview-domain-types');
 //templates
 var template = require('../templates/domainViewer.pug');
 
@@ -49,16 +50,18 @@ module.exports = View.extend({
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.domainEditor;
     this.domainPath = attrs.domainPath;
+    this.plot = Boolean(attrs.domainPlot) ? attrs.domainPlot : null;
+    this.elements = Boolean(attrs.domainElements) ? attrs.domainElements : null;
     let self = this;
     this.model.particles.forEach(function (particle) {
       self.model.types.get(particle.type, "typeID").numParticles += 1;
     });
-    this.gravity = this.getGravityString()
+    this.gravity = this.getGravityString();
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
     let self = this;
-    var queryStr = "?path=" + this.parent.model.directory
+    this.queryStr = "?path=" + this.parent.model.directory
     if(this.readOnly) {
       $(this.queryByHook('domain-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
@@ -78,20 +81,13 @@ module.exports = View.extend({
           $(this.queryByHook("save-to-model")).prop("disabled", false)
           $(this.queryByHook("external-domain-select")).css("display", "block")
           $(this.queryByHook("select-external-domain")).text("View Model's Domain")
-          queryStr += "&domain_path=" + this.domainPath
+          this.queryStr += "&domain_path=" + this.domainPath
         }
       }
       this.toggleDomainError();
     }
     this.renderTypesViewer();
-    this.parent.parent.renderParticleViewer(null);
-    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + queryStr;
-    app.getXHR(endpoint, {
-      always: function (err, response, body) {
-        self.plot = body.fig;
-        self.displayDomain();
-      }
-    });
+    this.renderPlotParticleViewer();
   },
   handleLoadExternalDomain: function (e) {
     let text = e.target.textContent
@@ -191,16 +187,14 @@ module.exports = View.extend({
       }, viewOptions: {viewMode: true}}
     );
   },
-  displayDomain: function () {
-    let self = this;
-    var domainPreview = this.parent.parent.queryByHook("domain-plot-container");
+  displayDomain: function (domainPreview) {
     Plotly.newPlot(domainPreview, this.plot);
     domainPreview.on('plotly_click', _.bind(this.selectParticle, this));
   },
   selectParticle: function (data) {
     let point = data.points[0];
     let particle = this.model.particles.get(point.id, "particle_id");
-    this.parent.parent.renderParticleViewer(particle);
+    this.renderPlotParticleViewer({particle: particle});
   },
   editDomain: function (e) {
     var queryStr = "?path=" + this.parent.model.directory;
@@ -216,6 +210,53 @@ module.exports = View.extend({
     this.parent.model.domain = this.model;
     this.parent.modelStateButtons.clickSaveHandler(e);
     this.reloadDomain()
+  },
+  renderLocalParticlesViewer: function ({particle=null}) {
+    if(particle){
+      $(this.queryByHook("domain-select-particle")).css("display", "none")
+      this.particleViewer = new ParticleViewer({
+        model: particle
+      });
+      app.registerRenderSubview(this, this.particleViewer, "domain-particle-viewer")
+    }else{
+      $(this.queryByHook("domain-select-particle")).css("display", "block")
+      this.typeQuickViewer = this.renderCollection(
+        this.model.types,
+        QuickviewDomainTypes,
+        this.queryByHook("domain-types-quick-view")
+      );
+    }
+  },
+  renderMEParticlesViewer: function () {},
+  renderPlot: function (plotElement) {
+    if(this.plot === null) {
+      let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
+      app.getXHR(endpoint, {
+        always: (err, response, body) => {
+          this.plot = body.fig;
+          this.displayDomain(plotElement);
+        }
+      });
+    }else{
+      this.displayDomain(plotElement);
+    }
+  },
+  renderPlotParticleViewer: function ({particle=null}={}) {
+    if(this.particleViewer) {
+      this.particleViewer.remove();
+    }
+    if(this.typeQuickViewer) {
+      this.typeQuickViewer.remove();
+    }
+    if(this.elements === null) {
+      $(this.queryByHook("view-domain-plot-container")).css('display', 'block');
+      this.renderLocalParticlesViewer({particle: particle});
+      if(particle === null) {
+        this.renderPlot(this.queryByHook("view-domain-plot"));
+      }
+    }else{
+      this.renderMEParticlesViewer(particle);
+    }
   },
   toggleDomainError: function () {
     let errorMsg = $(this.queryByHook('domain-error'))
