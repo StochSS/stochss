@@ -24,6 +24,7 @@ from nbviewer.render import render_notebook
 from nbconvert.exporters import HTMLExporter
 
 from presentation_base import get_presentation_from_user
+from presentation_error import StochSSAPIError, report_error
 
 from jupyterhub.handlers.base import BaseHandler
 
@@ -78,7 +79,8 @@ class DownNotebookPresentationAPIHandler(BaseHandler):
             nb_presentation = get_presentation_from_user(owner=owner, file=file,
                                                          kwargs={"as_dict": True},
                                                          process_func=process_notebook_presentation)
-            self.set_header('Content-Disposition', f'attachment; filename="{nb_presentation["file"]}"')
+            self.set_header('Content-Disposition',
+                            f'attachment; filename="{nb_presentation["file"]}"')
             log.debug(f"Contents of the json file: {nb_presentation['notebook']}")
             self.write(nb_presentation['notebook'])
         except StochSSAPIError as load_err:
