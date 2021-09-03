@@ -610,7 +610,7 @@ class StochSSSpatialModel(StochSSBase):
             hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
             model = json.dumps(self.model, sort_keys=True)
             # replace with gillespy2.Model.to_json
-            file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.mdl"
+            file = f"{hashlib.md5(model.encode('utf-8')).hexdigest()}.smdl"
             dst = os.path.join(present_dir, file)
             if os.path.exists(dst):
                 data = None

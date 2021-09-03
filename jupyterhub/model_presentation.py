@@ -20,6 +20,8 @@ import ast
 import json
 import logging
 
+import plotly
+
 from presentation_base import StochSSBase, get_presentation_from_user
 from presentation_error import StochSSAPIError, report_error
 
@@ -50,7 +52,7 @@ class JsonFileAPIHandler(BaseHandler):
         try:
             model = get_presentation_from_user(owner=owner, file=file, kwargs={"file": file},
                                                process_func=process_model_presentation)
-            log.debug(f"Contents of the json file: {model}")
+            log.debug(f"Contents of the json file: {model['model']}")
             self.write(model)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
@@ -212,7 +214,7 @@ class StochSSModel(StochSSBase):
         self.__update_reactions()
         self.__update_events(param_ids=param_ids)
         self.__update_rules(param_ids=param_ids)
-        return self.model
+        return {"model": self.model}
 
 
 class StochSSSpatialModel(StochSSBase):
@@ -235,6 +237,41 @@ class StochSSSpatialModel(StochSSBase):
         self.model = model
 
 
+    @classmethod
+    def __get_trace_data(cls, particles, name=""):
+        ids = []
+        x_data = []
+        y_data = []
+        z_data = []
+        for particle in particles:
+            ids.append(str(particle['particle_id']))
+            x_data.append(particle['point'][0])
+            y_data.append(particle['point'][1])
+            z_data.append(particle['point'][2])
+        return plotly.graph_objs.Scatter3d(ids=ids, x=x_data, y=y_data, z=z_data,
+                                           name=name, mode="markers", marker={"size":5})
+
+
+    def __load_domain_plot(self):
+        domain = self.model['domain']
+        trace_list = []
+        for i, d_type in enumerate(domain['types']):
+            if len(domain['types']) > 1:
+                particles = list(filter(lambda particle, key=i: particle['type'] == key,
+                                        domain['particles']))
+            else:
+                particles = domain['particles']
+            trace = self.__get_trace_data(particles=particles, name=d_type['name'])
+            trace_list.append(trace)
+        layout = {"scene":{"aspectmode":'data'}, "autosize":True}
+        if len(domain['x_lim']) == 2:
+            layout["xaxis"] = {"range":domain['x_lim']}
+        if len(domain['y_lim']) == 2:
+            layout["yaxis"] = {"range":domain['y_lim']}
+        return json.dumps({"data":trace_list, "layout":layout, "config":{"responsive":True}},
+                          cls=plotly.utils.PlotlyJSONEncoder)
+
+
     def load(self):
         '''
         Reads the spatial model file, updates it to the current format, and stores it in self.model
@@ -255,4 +292,5 @@ class StochSSSpatialModel(StochSSBase):
         for reaction in self.model['reactions']:
             if "types" not in reaction.keys():
                 reaction['types'] = list(range(1, len(self.model['domain']['types'])))
-        return self.model
+        plot = json.loads(self.__load_domain_plot())
+        return {"model": self.model, "domainPlot": plot}

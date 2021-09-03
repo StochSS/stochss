@@ -164,7 +164,7 @@ module.exports = View.extend({
         domainPath: domainPath,
         readOnly: this.readOnly,
         domainElements: this.domainElements,
-        domainPlot: domainPlot
+        domainPlot: this.domainPlot
       });
       app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
     }
