@@ -302,6 +302,10 @@ input[type="file"]::-ms-browse {
   max-width: none;
 }
 
+.presentation {
+  max-width: 70%;
+}
+
 .information-btn {
   color: #007bff;
   border-color: #ffffff;
