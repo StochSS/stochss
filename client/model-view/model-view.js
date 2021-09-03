@@ -74,7 +74,7 @@ module.exports = View.extend({
     this.renderSystemVolumeView();
     if(this.readOnly) {
       this.setReadOnlyMode("model-mode");
-      this.setReadOnlyMode("system-volume")
+      this.setReadOnlyMode("system-volume");
     }else {
       if(this.model.defaultMode === "" && !this.model.is_spatial){
         this.getInitialDefaultMode();
@@ -86,25 +86,24 @@ module.exports = View.extend({
           $(this.queryByHook("system-volume-container")).css("display", "none");
         }
       }
-      this.model.reactions.on("change", function (reactions) {
+      this.model.reactions.on("change", (reactions) => {
         this.updateSpeciesInUse();
         this.updateParametersInUse();
-      }, this);
-      this.model.eventsCollection.on("add change remove", function (){
+      });
+      this.model.eventsCollection.on("add change remove", () => {
         this.updateSpeciesInUse();
         this.updateParametersInUse();
-      }, this);
-      this.model.rules.on("add change remove", function() {
+      });
+      this.model.rules.on("add change remove", () => {
         this.updateSpeciesInUse();
         this.updateParametersInUse();
-      }, this);
+      });
     }
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
   getInitialDefaultMode: function () {
-    let self = this;
     if(document.querySelector('#defaultModeModal')) {
       document.querySelector('#defaultModeModal').remove();
     }
@@ -112,18 +111,18 @@ module.exports = View.extend({
     let continuous = document.querySelector('#defaultModeModal .concentration-btn');
     let discrete = document.querySelector('#defaultModeModal .population-btn');
     let dynamic = document.querySelector('#defaultModeModal .hybrid-btn');
-    continuous.addEventListener('click', function (e) {
-      self.setInitialDefaultMode(modal, "continuous");
+    continuous.addEventListener('click', (e) => {
+      this.setInitialDefaultMode(modal, "continuous");
     });
-    discrete.addEventListener('click', function (e) {
-      self.setInitialDefaultMode(modal, "discrete");
+    discrete.addEventListener('click', (e) => {
+      this.setInitialDefaultMode(modal, "discrete");
     });
-    dynamic.addEventListener('click', function (e) {
-      self.setInitialDefaultMode(modal, "dynamic");
+    dynamic.addEventListener('click', (e) => {
+      this.setInitialDefaultMode(modal, "dynamic");
     });
   },
   renderBoundaryConditionsView: function () {
-    if(!this.model.is_spatial) { return }
+    if(!this.model.is_spatial) { return };
     if(this.boundaryConditionsView) {
       this.boundaryConditionsView.remove();
     }
@@ -134,27 +133,26 @@ module.exports = View.extend({
     let hook = "boundary-conditions-view-container";
     app.registerRenderSubview(this, this.boundaryConditionsView, hook);
   },
-  renderDomainViewer: function(domainPath=null) {
-    if(!this.model.is_spatial) { return }
+  renderDomainViewer: function (domainPath=null) {
+    if(!this.model.is_spatial) { return };
     if(this.domainViewer) {
       this.domainViewer.remove();
     }
     if(domainPath && domainPath !== "viewing") {
-      let self = this;
-      let queryStr = "?path=" + this.model.directory + "&domain_path=" + domainPath;
+      let queryStr = `?path=${this.model.directory}&domain_path=${domainPath}`;
       let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr;
       app.getXHR(endpoint, {
-        always: function (err, response, body) {
+        always: (err, response, body) => {
           let domain = new Domain(body.domain);
-          self.domainViewer = new DomainViewer({
-            parent: self,
+          this.domainViewer = new DomainViewer({
+            parent: this,
             model: domain,
             domainPath: domainPath,
-            readOnly: self.readOnly,
-            domainElements: self.domainElements,
-            domainPlot: domainPlot
+            readOnly: this.readOnly,
+            domainElements: this.domainElements,
+            domainPlot: this.domainPlot
           });
-          app.registerRenderSubview(self, self.domainViewer, 'domain-viewer-container');
+          app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
         }
       });
     }else{
@@ -170,7 +168,7 @@ module.exports = View.extend({
     }
   },
   renderEventsView: function () {
-    if(this.model.is_spatial) { return }
+    if(this.model.is_spatial) { return };
     if(this.eventsView) {
       this.eventsView.remove();
     }
@@ -182,7 +180,7 @@ module.exports = View.extend({
     app.registerRenderSubview(this, this.eventsView, hook);
   },
   renderInitialConditionsView: function () {
-    if(!this.model.is_spatial) { return }
+    if(!this.model.is_spatial) { return };
     if(this.initialConditionsView) {
       this.initialConditionsView.remove();
     }
@@ -216,7 +214,7 @@ module.exports = View.extend({
     app.registerRenderSubview(this, this.reactionsView, hook);
   },
   renderRulesView: function () {
-    if(this.model.is_spatial) { return }
+    if(this.model.is_spatial) { return };
     if(this.rulesView) {
       this.rulesView.remove();
     }
@@ -228,7 +226,7 @@ module.exports = View.extend({
     app.registerRenderSubview(this, this.rulesView, hook);
   },
   renderSbmlComponentView: function () {
-    if(this.model.is_spatial || !this.model.functionDefinitions.length) { return }
+    if(this.model.is_spatial || !this.model.functionDefinitions.length) { return };
     if(this.sbmlComponentView) {
       this.sbmlComponentView.remove();
     }
@@ -274,9 +272,9 @@ module.exports = View.extend({
   },
   setAllSpeciesModes: function (prevMode) {
     let self = this;
-    this.model.species.forEach(function (specie) { 
-      specie.mode = self.model.defaultMode;
-      self.model.species.trigger('update-species', specie.compID, specie, false, true);
+    this.model.species.forEach((specie) => {
+      specie.mode = this.model.defaultMode;
+      this.model.species.trigger('update-species', specie.compID, specie, false, true);
     });
     let switchToDynamic = (!Boolean(prevMode) || prevMode !== "dynamic") && this.model.defaultMode === "dynamic";
     let switchFromDynamic = Boolean(prevMode) && prevMode === "dynamic" && this.model.defaultMode !== "dynamic";
@@ -303,7 +301,7 @@ module.exports = View.extend({
   },
   setReadOnlyMode: function (component) {
     $(this.queryByHook(component + '-edit-tab')).addClass("disabled");
-    $(".nav .disabled>a").on("click", function(e) {
+    $(".nav .disabled>a").on("click", (e) => {
       e.preventDefault();
       return false;
     });
@@ -322,59 +320,59 @@ module.exports = View.extend({
   },
   update: function () {},
   updateParametersInUse: function () {
-    var parameters = this.model.parameters;
-    var reactions = this.model.reactions;
-    var events = this.model.eventsCollection;
-    var rules = this.model.rules;
-    parameters.forEach(function (param) { param.inUse = false; });
-    var updateInUse = function (param) {
+    let parameters = this.model.parameters;
+    let reactions = this.model.reactions;
+    let events = this.model.eventsCollection;
+    let rules = this.model.rules;
+    parameters.forEach((param) => { param.inUse = false; });
+    let updateInUse = (param) => {
       _.where(parameters.models, { compID: param.compID })
-       .forEach(function (param) {
+       .forEach((param) => {
          param.inUse = true;
        });
     }
-    reactions.forEach(function (reaction) {
+    reactions.forEach((reaction) => {
       if(reaction.reactionType !== "custom-propensity"){
         updateInUse(reaction.rate);
       }
     });
-    events.forEach(function (event) {
-      event.eventAssignments.forEach(function (assignment) {
-        updateInUse(assignment.variable)
+    events.forEach((event) => {
+      event.eventAssignments.forEach((assignment) => {
+        updateInUse(assignment.variable);
       });
     });
-    rules.forEach(function (rule) {
+    rules.forEach((rule) => {
       updateInUse(rule.variable);
     });
   },
   updateSpeciesInUse: function () {
-    var species = this.model.species;
-    var reactions = this.model.reactions;
-    var events = this.model.eventsCollection;
-    var rules = this.model.rules;
-    species.forEach(function (specie) { specie.inUse = false; });
-    var updateInUseForReaction = function (stoichSpecie) {
+    let species = this.model.species;
+    let reactions = this.model.reactions;
+    let events = this.model.eventsCollection;
+    let rules = this.model.rules;
+    species.forEach((specie) => { specie.inUse = false; });
+    let updateInUseForReaction = (stoichSpecie) => {
       _.where(species.models, { compID: stoichSpecie.specie.compID })
-       .forEach(function (specie) {
+       .forEach((specie) => {
           specie.inUse = true;
         });
     }
-    var updateInUseForOther = function (specie) {
+    let updateInUseForOther = (specie) => {
       _.where(species.models, { compID: specie.compID })
-       .forEach(function (specie) {
+       .forEach((specie) => {
          specie.inUse = true;
        });
     }
-    reactions.forEach(function (reaction) {
+    reactions.forEach((reaction) => {
       reaction.products.forEach(updateInUseForReaction);
       reaction.reactants.forEach(updateInUseForReaction);
     });
-    events.forEach(function (event) {
-      event.eventAssignments.forEach(function (assignment) {
-        updateInUseForOther(assignment.variable)
+    events.forEach((event) => {
+      event.eventAssignments.forEach((assignment) => {
+        updateInUseForOther(assignment.variable);
       });
     });
-    rules.forEach(function (rule) {
+    rules.forEach((rule) => {
       updateInUseForOther(rule.variable);
     });
   },

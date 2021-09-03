@@ -48,22 +48,20 @@ let ModelPresentationPage = PageView.extend({
       directory: file,
       for: "presentation"
     });
-    let self = this;
-    let queryStr = "?file=" + this.model.directory + "&owner=" + owner;
-    let endpoint = "api/file/json-data" + queryStr;
+    let endpoint = `api/file/json-data?file=${this.model.directory}&owner=${owner}`;
     app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        self.model.set(body.model);
+      success: (err, response, body) => {
+        this.model.set(body.model);
         let domainPlot = Boolean(body.domainPlot) ? body.domainPlot : null;
-        self.renderSubviews(false, domainPlot);
+        this.renderSubviews(false, domainPlot);
       },
-      error: function (err, response, body) {
-        self.notFound = true;
-        self.renderSubviews(true);
+      error: (err, response, body) => {
+        this.notFound = true;
+        this.renderSubviews(true);
       }
     });
     let downloadStart = "https://live.stochss.org/stochss/download_presentation";
-    this.downloadLink = downloadStart + "/" + owner + "/" + file;
+    this.downloadLink = path.join(downloadStart, owner, file);
     this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
   },
   render: function (attrs, options) {
@@ -75,7 +73,7 @@ let ModelPresentationPage = PageView.extend({
     $(this.queryByHook("loading-message")).html(message);
   },
   renderSubviews: function (notFound, domainPlot) {
-    this.template = notFound ? errorTemplate : template
+    this.template = notFound ? errorTemplate : template;
     PageView.prototype.render.apply(this, arguments);
     if(!notFound) {
       this.renderModelView(domainPlot);
