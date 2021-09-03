@@ -21,7 +21,6 @@
 import os
 import os.path
 import sys
-import logging
 
 sys.path.append('/srv/jupyterhub/') # pylint: disable=wrong-import-position
 
@@ -235,13 +234,14 @@ def pre_spawn_hook(spawner):
     # Remove the memory limit for power users
     if c.StochSS.user_cpu_count == 0:
         spawner.mem_limit = None
-        log.info(f'Skipping resource limitations since the host machine has a limited number of cpus.')
+        msg = 'Skipping resource limitations since the host machine has a limited number of cpus.'
+        log.info(msg)
         return
     user_type = None
-    if spawner.user.name in c.StochSS.power_users:
-        user_type = 'power'
     if spawner.user.name in c.Authenticator.admin_users:
         user_type = 'admin'
+    elif spawner.user.name in c.StochSS.power_users:
+        user_type = 'power'
     if user_type:
         spawner.mem_limit = None
         log.info(f'Skipping resource limitation for {user_type} user: {spawner.user.name}')
@@ -446,5 +446,5 @@ with open(os.path.join(pwd, 'userlist')) as f:
                 if parts[1] == 'admin':
                     admin.add(name)
                     power_users.add(name)
-                if parts[1] == 'power':
+                elif parts[1] == 'power':
                     power_users.add(name)
