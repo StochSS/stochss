@@ -25,7 +25,6 @@ let Plotly = require('../lib/plotly');
 //views
 let PageView = require('../pages/base');
 let ModelView = require('../model-view/model-view');
-let ModelStateButtonsView = require('../views/model-state-buttons');
 let TimespanSettingsView = require('../settings-view/views/timespan-settings-view');
 //models
 let Model = require('../models/model');
@@ -352,11 +351,6 @@ let ModelEditor = PageView.extend({
       model: this.model.modelSettings
     });
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
-    // this.modelStateButtons = new ModelStateButtonsView({
-    //   model: this.model,
-    //   validate: validate
-    // });
-    // app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
     if(validate && !this.model.valid) {
       let errorMsg = $(this.queryByHook("error-detected-msg"));
       this.displayError(errorMsg);
