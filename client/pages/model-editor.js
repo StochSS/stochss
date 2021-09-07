@@ -210,7 +210,7 @@ let ModelEditor = PageView.extend({
     }, 2000);
   },
   handlePresentationClick: function (e) {
-    let errorMsg = $(this.parent.queryByHook("error-detected-msg"));
+    let errorMsg = $(this.queryByHook("error-detected-msg"));
     if(!this.model.valid) {
       this.displayError(errorMsg, e);
     }else{
