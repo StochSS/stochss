@@ -54,7 +54,7 @@ jobs:
         base = float(os.environ['BASE_LINT'])
         head = float(os.environ['HEAD_LINT'])
         delta = head - base
-        os.environ['DELTA'] = str(delta)
+        os.popen(f"echo DELTA={delta} >> $GITHUB_ENV")
       shell: python
     - name: Display Results
       run: |
