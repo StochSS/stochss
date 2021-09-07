@@ -16,13 +16,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// var _ = require('underscore');
 let $ = require('jquery');
 let path = require('path');
 //support files
 let app = require('../app');
 let modals = require('../modals');
-// let Tooltips = require("../tooltips");
+let Plotly = require('../lib/plotly');
 //views
 let PageView = require('../pages/base');
 let ModelView = require('../model-view/model-view');
@@ -30,7 +29,6 @@ let ModelStateButtonsView = require('../views/model-state-buttons');
 let TimespanSettingsView = require('../settings-view/views/timespan-settings-view');
 //models
 let Model = require('../models/model');
-// var Domain = require('../models/domain');
 //templates
 let template = require('../templates/pages/modelEditor.pug');
 
@@ -42,7 +40,14 @@ let ModelEditor = PageView.extend({
     'click [data-hook=edit-model-help]': () => {
       let modal = $(modals.operationInfoModalHtml('model-editor')).modal();
     },
-    'click [data-hook=project-breadcrumb-link]' : 'handleProjectBreadcrumbClick',
+    'click [data-hook=project-breadcrumb-link]' : 'clickReturnToProjectHandler',
+    'click [data-hook=save]' : 'clickSaveHandler',
+    'click [data-hook=run]'  : 'handleSimulateClick',
+    "click [data-hook=stochss-es]" : "handleSimulateClick",
+    "click [data-hook=stochss-ps]" : "handleSimulateClick",
+    'click [data-hook=new-workflow]' : 'handleSimulateClick',
+    'click [data-hook=return-to-project-btn]' : 'clickReturnToProjectHandler',
+    'click [data-hook=presentation]' : 'handlePresentationClick',
     'click [data-hook=toggle-preview-plot]' : 'togglePreviewPlot',
     'click [data-hook=toggle-preview-domain]' : 'toggleDomainPlot',
     'click [data-hook=download-png]' : 'clickDownloadPNGButton'
@@ -69,12 +74,9 @@ let ModelEditor = PageView.extend({
     app.getXHR(this.model.url(), {
       success: (err, response, body) => {
         this.model.set(body);
-        if(directory.includes('.proj')) {
-          $(this.queryByHook("project-breadcrumb-links")).css("display", "block");
-          $(this.queryByHook("model-name-header")).css("display", "none");
-        }
-        this.renderSubviews(urlParams.has('validate'));
         this.model.updateValid();
+        this.model.autoSave();
+        this.renderSubviews(urlParams.has('validate'));
       }
     });
     window.addEventListener("pageshow", (event) => {
@@ -87,6 +89,16 @@ let ModelEditor = PageView.extend({
   clickDownloadPNGButton: function (e) {
     $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0].click();
   },
+  clickReturnToProjectHandler: function () {
+    this.saveModel((e) => {
+      let queryStr = `?path=${this.projectPath}`;
+      let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+      window.location.href = endpoint;
+    });
+  },
+  clickSaveHandler: function (e) {
+    this.saveModel(() => { this.endAction("save"); });
+  },
   closeDomainPlot: function () {
     $(this.queryByHook("domain-plot-viewer-container")).css("display", "none");
     $(this.queryByHook("toggle-preview-domain")).html("Show Domain");
@@ -94,6 +106,56 @@ let ModelEditor = PageView.extend({
   closePlot: function () {
     $(this.queryByHook("model-run-container")).css("display", "none");
     $(this.queryByHook("toggle-preview-plot")).html("Show Preview");
+  },
+  displayError: function (errorMsg, e) {
+    $(this.queryByHook('toggle-preview-plot')).click();
+    errorMsg.css('display', 'block');
+    this.focusOnError(e);
+  },
+  endAction: function (action) {
+    if(action === "save") {
+      $(this.queryByHook("saving")).css("display", "none");
+      var msg = $(this.queryByHook("saved"));
+    }else{
+      $(this.queryByHook("publishing")).css("display", "none");
+      var msg = $(this.queryByHook("published"));
+    }
+    msg.css("display", "inline-block");
+    $(this.queryByHook('mdl-action-start')).css("display", "none");
+    let saved = $(this.queryByHook('mdl-action-end'));
+    saved.css("display", "inline-block");
+    setTimeout(() => {
+      saved.css("display", "none");
+      msg.css("display", "none");
+    }, 5000);
+  },
+  errorAction: function () {
+    $(this.queryByHook("publishing")).css("display", "none");
+    $(this.queryByHook('mdl-action-start')).css("display", "none");
+    let error = $(this.queryByHook('mdl-action-err'));
+    error.css("display", "inline-block");
+    setTimeout(() => {
+      error.css("display", "none");
+    }, 5000);
+  },
+  focusOnError: function (e) {
+    let mdlSections = ["species", "parameter", "reaction", "process", "event", "rule", "volume", "domain"];
+    if(this.model.error) {
+      if(this.model.error.type === "timespan") {
+        this.openTimespanSection();
+      }else if(mdlSections.includes(this.model.error.type)) {
+        this.modelView.openSection();
+      }
+      setTimeout(() => {
+        let inputErrors = this.queryAll(".input-invalid");
+        let componentErrors = this.queryAll(".component-invalid");
+        if(componentErrors.length > 0) {
+          componentErrors[0].scrollIntoView({'block':"center"});
+        }else if(inputErrors.length > 0) {
+          inputErrors[0].focus();
+        }
+      }, 300);
+    }
   },
   getFileName: function (file) {
     if(file.endsWith('/')) {
@@ -107,11 +169,108 @@ let ModelEditor = PageView.extend({
     }
     return file.split('.').slice(0, -1).join('.');
   },
-  handleProjectBreadcrumbClick: function () {
-    this.modelStateButtons.saveModel((e) => {
-      let queryStr = `?path=${this.projectPath}`;
-      let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
-      window.location.href = endpoint;
+  getPreviewTarget: function () {
+    this.endAction("save");
+    let species = this.model.species.map((species) => { return species.name; });
+    let modal = $(modals.selectPreviewTargetHTML(species)).modal();
+    let okBtn = document.querySelector("#previewTargetSelectModal .ok-model-btn");
+    let select = document.querySelector("#previewTargetSelectModal #previewTargetSelectList");
+    okBtn.addEventListener('click', (e) => {
+      modal.modal('hide');
+      this.runModel({target: select.value});
+    });
+  },
+  getResults: function () {
+    setTimeout(() => {
+      let queryStr = `?cmd=read&outfile=${this.outfile}&path=${this.model.directory}`;
+      let endpoint = path.join(app.getApiPath(), 'model/run') + queryStr;
+      let errorCB = (err, response, body) => {
+        this.ran(false);
+        $(this.queryByHook('model-run-error-message')).text(body.Results.errors);
+      }
+      app.getXHR(endpoint, {
+        always: (err, response, body) => {
+          if(typeof body === "string") {
+            body = body.replace(/NaN/g, null);
+            body = JSON.parse(body);
+          }
+          if(response.statusCode >= 400 || body.Results.errors){
+            errorCB(err, response, body);
+          }
+          else if(!body.Running){
+            if(body.Results.timeout){
+              $(this.queryByHook('model-timeout-message')).collapse('show');
+            }
+            this.plotResults(body.Results.results);
+          }else{
+            this.getResults();
+          }
+        },
+        error: errorCB
+      });
+    }, 2000);
+  },
+  handlePresentationClick: function (e) {
+    let errorMsg = $(this.parent.queryByHook("error-detected-msg"));
+    if(!this.model.valid) {
+      this.displayError(errorMsg, e);
+    }else{
+      this.startAction("publish");
+      let queryStr = `?path=${this.model.directory}`;
+      let endpoint = path.join(app.getApiPath(), "model/presentation") + queryStr;
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          this.endAction("publish");
+          $(modals.presentationLinks(body.message, "Shareable Presentation", body.links)).modal();
+          let copyBtn = document.querySelector('#presentationLinksModal #copy-to-clipboard');
+          copyBtn.addEventListener('click', (e) => {
+            let onFulfilled = (value) => {
+              $("#copy-link-success").css("display", "inline-block");
+            } 
+            let onReject = (reason) => {
+              let msg = $("#copy-link-failed");
+              msg.html(reason);
+              msg.css("display", "inline-block");
+            }
+            app.copyToClipboard(body.links.presentation, onFulfilled, onReject);
+          });
+        },
+        error: (err, response, body) => {
+          this.errorAction();
+          $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+        }
+      });
+    }
+  },
+  handleSimulateClick: function (e) {
+    let errorMsg = $(this.queryByHook("error-detected-msg"));
+    if(!this.model.valid) {
+      this.displayError(errorMsg, e);
+    }else{
+      errorMsg.css('display', 'none');
+      if(e.target.dataset.type === "preview") {
+        this.runPreview();
+      }else if(e.target.dataset.type === "notebook"){
+        this.notebookWorkflow(e);
+      }else if(!this.model.is_spatial) {
+        if(e.target.dataset.type === "ensemble") {
+          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Ensemble Simulation");
+        }else if(e.target.dataset.type === "psweep") {
+          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep");
+        }
+      }
+    }
+  },
+  notebookWorkflow: function () {
+    this.saveModel(() => {
+      this.endAction("save");
+      var queryString = `?path=${this.model.directory}`;
+      if(this.model.directory.includes('.proj')) {
+        let wkgp = this.model.directory.includes('.wkgp') ? `${this.model.name}.wkgp` : "WorkflowGroup1.wkgp";
+        let parentPath = path.join(path.dirname(self.model.directory), wkgp);
+        queryString += `&parentPath=${parentPath}`;
+      }
+      window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection") + queryString;
     });
   },
   openDomainPlot: function () {
@@ -128,6 +287,36 @@ let ModelEditor = PageView.extend({
     $(this.queryByHook("model-run-container")).css("display", "block");
     $(this.queryByHook("toggle-preview-plot")).html("Hide Preview");
   },
+  openTimespanSection: function () {
+    if(!$(this.modelSettings.queryByHook("timespan-container")).hasClass("show")) {
+      let tspnCollapseBtn = $(this.modelSettings.queryByHook("collapse"));
+      tspnCollapseBtn.click();
+      tspnCollapseBtn.html('-');
+    }
+    this.switchToEditTab(this.modelSettings, "timespan");
+  },
+  plotResults: function (data) {
+    this.ran(true);
+    Plotly.newPlot(this.queryByHook('preview-plot-container'), data);
+    window.scrollTo(0, document.body.scrollHeight);
+  },
+  ran: function (noErrors) {
+    let runContainer = $(this.queryByHook("model-run-container"));
+    if(runContainer.css("display") === "none") {
+      runContainer.css("display", 'block');
+    }
+    $(this.queryByHook('preview-plot-buttons')).css('display', 'inline-block');
+    let plotBtn = $(this.queryByHook('toggle-preview-plot'));
+    if(plotBtn.text() === "Show Preview") {
+      plotBtn.text("Hide Preview");
+    }
+    if(noErrors){
+      $(this.queryByHook('preview-plot-container')).css("display", "block");
+    }else{
+      $(this.queryByHook('model-run-error-container')).css("display", "block");
+    }
+    $(this.queryByHook('plot-loader')).css("display", "none");
+  },
   renderModelView: function () {
     let domainElements = {
       select: $(this.queryByHook("me-select-particle")),
@@ -142,24 +331,90 @@ let ModelEditor = PageView.extend({
     app.registerRenderSubview(this, this.modelView, "model-view-container");
   },
   renderSubviews: function (validate) {
+    if(this.model.directory.includes('.proj')) {
+      $(this.queryByHook("project-breadcrumb-links")).css("display", "block");
+      $(this.queryByHook("model-name-header")).css("display", "none");
+      $(this.queryByHook("return-to-project-btn")).css("display", "inline-block");
+    }
+    if(this.model.is_spatial) {
+      $(this.queryByHook("spatial-beta-message")).css("display", "block");
+      $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
+      this.openDomainPlot();
+      $(this.queryByHook("stochss-es")).addClass("disabled");
+      $(this.queryByHook("stochss-ps")).addClass("disabled");
+    }
+    if(app.getBasePath() === "/") {
+      $(this.queryByHook("presentation")).css("display", "none");
+    }
     this.renderModelView();
     this.modelSettings = new TimespanSettingsView({
       parent: this,
       model: this.model.modelSettings
     });
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
-    this.modelStateButtons = new ModelStateButtonsView({
-      model: this.model,
-      validate: validate
-    });
-    app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
-    if(this.model.is_spatial) {
-      $(this.queryByHook("spatial-beta-message")).css("display", "block");
-      $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
-      this.openDomainPlot();
+    // this.modelStateButtons = new ModelStateButtonsView({
+    //   model: this.model,
+    //   validate: validate
+    // });
+    // app.registerRenderSubview(this, this.modelStateButtons, 'model-state-buttons-container');
+    if(validate && !this.model.valid) {
+      let errorMsg = $(this.queryByHook("error-detected-msg"));
+      this.displayError(errorMsg);
     }
-    this.model.autoSave();
     app.documentSetup();
+  },
+  runModel: function ({target=null}={}) {
+    this.running();
+    let queryStr = `?cmd=start&outfile=none&path=${this.model.directory}`;
+    if(target !== null) {
+      queryStr += `&target=${target}`;
+    }else {
+      this.endAction("save");
+    }
+    $(this.queryByHook('model-run-container')).css("display", "block");
+    let endpoint = path.join(app.getApiPath(), 'model/run') + queryStr;
+    app.getXHR(endpoint, {
+      always: (err, response, body) => {
+        this.outfile = body.Outfile;
+        this.getResults();
+      }
+    });
+  },
+  running: function () {
+    $(this.queryByHook('preview-plot-container')).css("display", "none");
+    $(this.queryByHook('plot-loader')).css("display", "block");
+    $(this.queryByHook('model-run-error-container')).css("display", "none");
+  },
+  runPreview: function () {
+    if(this.model.is_spatial && $(this.queryByHook("domain-plot-viewer-container")).css("display") !== "none") {
+      this.closeDomainPlot();
+    }
+    $(this.queryByHook('model-run-error-container')).collapse('hide');
+    $(this.queryByHook('model-timeout-message')).collapse('hide');
+    Plotly.purge(this.queryByHook('preview-plot-container'));
+    $(this.queryByHook('preview-plot-buttons')).css("display", "none");
+    if(this.model.is_spatial) {
+      this.saveModel(() => { this.getPreviewTarget(); });
+    }else{
+      this.saveModel(() => { this.runModel(); });
+    }
+  },
+  saveModel: function (cb) {
+    this.startAction("save");
+    if(cb) {
+      this.model.saveModel(cb);
+    }else {
+      this.model.saveModel();
+    }
+  },
+  startAction: function (action) {
+    if(action === "save") {
+      $(this.queryByHook("saving")).css("display", "inline-block");
+    }else{
+      $(this.queryByHook("publishing")).css("display", "inline-block");
+    }
+    $(this.queryByHook('mdl-action-start')).css("display", "inline-block");
+    $(this.queryByHook('mdl-action-end')).css("display", "none");
   },
   toggleDomainPlot: function (e) {
     if(e.target.innerText === "Hide Domain") {

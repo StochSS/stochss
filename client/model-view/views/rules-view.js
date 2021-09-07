@@ -67,6 +67,14 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
+  openSection: function () {
+    if(!$(this.queryByHook("rules-list-container")).hasClass("show")) {
+      let ruleCollapseBtn = $(this.queryByHook("collapse"));
+      ruleCollapseBtn.click();
+      ruleCollapseBtn.html('-');
+    }
+    app.switchToEditTab(this, "rules");
+  },
   renderDocs: function () {
     let options = {
       displayMode: true,

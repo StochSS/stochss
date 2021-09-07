@@ -144,6 +144,14 @@ module.exports = View.extend({
   handleSelectDomainLocation: function (e) {
     this.reloadDomain(e.srcElement.value);
   },
+  openSection: function () {
+    if(!$(this.queryByHook("domain-container")).hasClass("show")) {
+      let domainCollapseBtn = $(this.queryByHook("collapse"));
+      domainCollapseBtn.click();
+      domainCollapseBtn.html('-');
+    }
+    app.switchToEditTab(this, "domain");
+  },
   reloadDomain: function (domainPath) {
     if(this.domainPath !== domainPath || domainPath === "viewing") {
       let el = this.elements === null ? this.queryByHook("view-domain-plot") : this.elements.plot;

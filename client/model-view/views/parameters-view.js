@@ -85,6 +85,14 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
+  openSection: function () {
+    if(!$(this.queryByHook("parameters-list-container")).hasClass("show")) {
+      let paramCollapseBtn = $(this.queryByHook("collapse"));
+      paramCollapseBtn.click();
+      paramCollapseBtn.html('-');
+    }
+    app.switchToEditTab(this, "parameters");
+  },
   renderEditParameter: function () {
     if(this.editParameterView){
       this.editParameterView.remove();

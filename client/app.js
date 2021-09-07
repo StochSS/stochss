@@ -222,6 +222,15 @@ copyToClipboard = (text, success, error) => {
   }
 }
 
+let switchToEditTab = (view, section) => {
+  let elementID = Boolean(view.model && view.model.elementID) ? view.model.elementID + "-" : "";
+  if($(view.queryByHook(elementID + 'view-' + section)).hasClass('active')) {
+    $(view.queryByHook(elementID + section + '-edit-tab')).tab('show');
+    $(view.queryByHook(elementID + 'edit-' + section)).addClass('active');
+    $(view.queryByHook(elementID + 'view-' + section)).removeClass('active');
+  }
+}
+
 module.exports = {
     routePrefix: routePrefix,
     getApiPath: getApiPath,
@@ -234,7 +243,8 @@ module.exports = {
     postXHR: postXHR,
     tooltipSetup: tooltipSetup,
     documentSetup: documentSetup,
-    copyToClipboard: copyToClipboard
+    copyToClipboard: copyToClipboard,
+    switchToEditTab: switchToEditTab
 };
 
 

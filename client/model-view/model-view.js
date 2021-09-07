@@ -121,6 +121,38 @@ module.exports = View.extend({
       this.setInitialDefaultMode(modal, "dynamic");
     });
   },
+  openAdvancedSection: function () {
+    if(!$(this.queryByHook("me-advanced-section")).hasClass("show")) {
+      console.log("opening advanced section")
+      let advCollapseBtn = $(this.queryByHook("collapse-mv-advanced-section"));
+      advCollapseBtn.click();
+      advCollapseBtn.html('-');
+    }
+  },
+  openSection: function () {
+    let error = this.model.error;
+    if(["event", "rule", "volume"].includes(error.type)) {
+      this.openAdvancedSection();
+    }
+    if(error.type === "volume") {
+      this.openVolumeSection();
+    }else{
+      let views = {
+        species: this.speciesView,
+        parameter: this.parametersView,
+        reaction: this.reactionsView,
+        process: this.reactionsView,
+        event: this.eventsView,
+        rule: this.rulesView,
+        domain: this.domainViewer
+      }
+      if(["reaction", "process", "event"].includes(error.type)) {
+        views[error.type].openSection(error); 
+      }else{
+        views[error.type].openSection();
+      }
+    }
+  },
   renderBoundaryConditionsView: function () {
     if(!this.model.is_spatial) { return };
     if(this.boundaryConditionsView) {
