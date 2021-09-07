@@ -73,13 +73,16 @@ class DownModelPresentationAPIHandler(BaseHandler):
         log.debug(f"Container id of the owner: {owner}")
         log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/json')
-        model = get_presentation_from_user(owner=owner, file=file,
-                                           kwargs={"for_download": True},
-                                           process_func=process_model_presentation)
-        ext = file.split(".").pop()
-        self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
-        log.debug(f"Contents of the json file: {model}")
-        self.write(model)
+        try:
+            model = get_presentation_from_user(owner=owner, file=file,
+                                               kwargs={"for_download": True},
+                                               process_func=process_model_presentation)
+            ext = file.split(".").pop()
+            self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
+            log.debug(f"Contents of the json file: {model}")
+            self.write(model)
+        except StochSSAPIError as load_err:
+            report_error(self, log, load_err)
         self.finish()
 
 

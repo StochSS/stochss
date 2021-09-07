@@ -88,11 +88,14 @@ class DownJobPresentationAPIHandler(BaseHandler):
         log.debug(f"Container id of the owner: {owner}")
         log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/zip')
-        job, name = get_presentation_from_user(owner=owner, file=file,
-                                               kwargs={"for_download": True},
-                                               process_func=process_job_presentation)
-        self.set_header('Content-Disposition', f'attachment; filename="{name}.zip"')
-        self.write(job)
+        try:
+            job, name = get_presentation_from_user(owner=owner, file=file,
+                                                   kwargs={"for_download": True},
+                                                   process_func=process_job_presentation)
+            self.set_header('Content-Disposition', f'attachment; filename="{name}.zip"')
+            self.write(job)
+        except StochSSAPIError as load_err:
+            report_error(self, log, load_err)
         self.finish()
 
 
