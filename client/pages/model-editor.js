@@ -235,8 +235,11 @@ let ModelEditor = PageView.extend({
           });
         },
         error: (err, response, body) => {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
           this.errorAction();
-          $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+          $(modals.errorHtml(body.Reason, body.Message)).modal();
         }
       });
     }

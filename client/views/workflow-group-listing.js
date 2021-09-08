@@ -93,10 +93,13 @@ module.exports = View.extend({
         if(model.valid){
           app.newWorkflow(self, self.model.model.directory, self.model.model.is_spatial, type);
         }else{
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
           let title = "Model Errors Detected";
           let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory + '&validate';
           let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
-          $(modals.modelErrorHtml(title, message)).modal();
+          $(modals.errorHtml(title, message)).modal();
         }
       }
     });

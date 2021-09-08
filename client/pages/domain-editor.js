@@ -167,12 +167,12 @@ let DomainEditor = PageView.extend({
       this.saveDomain()
     }else{
       var self = this
-      if(document.querySelector('#newModalModel')) {
-        document.querySelector('#newModalModel').remove()
+      if(document.querySelector('#newDomainModal')) {
+        document.querySelector('#newDomainModal').remove()
       }
-      let modal = $(modals.renderCreateModalHtml(true, true)).modal();
-      let okBtn = document.querySelector('#newModalModel .ok-model-btn');
-      let input = document.querySelector('#newModalModel #modelNameInput');
+      let modal = $(modals.createDomainHtml()).modal();
+      let okBtn = document.querySelector('#newDomainModal .ok-model-btn');
+      let input = document.querySelector('#newDomainModal #domainNameInput');
       input.addEventListener("keyup", function (event) {
         if(event.keyCode === 13){
           event.preventDefault();
@@ -180,9 +180,9 @@ let DomainEditor = PageView.extend({
         }
       });
       input.addEventListener("input", function (e) {
-        var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
-        var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
-        let error = self.validateName(input.value)
+        var endErrMsg = document.querySelector('#newDomainModal #domainNameInputEndCharError')
+        var charErrMsg = document.querySelector('#newDomainModal #domainNameInputSpecCharError')
+        let error = app.validateName(input.value)
         okBtn.disabled = error !== "" || input.value.trim() === ""
         charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
         endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
@@ -892,22 +892,6 @@ let DomainEditor = PageView.extend({
     }
   },
   updateValid: function () {},
-  validateName(input, rename = false) {
-    var error = ""
-    if(input.endsWith('/')) {
-      error = 'forward'
-    }
-    var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-    if(rename) {
-      invalidChars += "/"
-    }
-    for(var i = 0; i < input.length; i++) {
-      if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both"
-      }
-    }
-    return error
-  },
   toggleDomainError: function () {
     let errorMsg = $(this.queryByHook('domain-error'))
     if(!this.domain.valid) {

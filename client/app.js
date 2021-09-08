@@ -132,21 +132,21 @@ let getBrowser = () => {
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
 }
 
-let validateName = (input, rename = false) => {
-  var error = ""
+let validateName = (input, {rename=false, saveAs=true}={}) => {
+  var error = "";
   if(input.endsWith('/')) {
-    error = 'forward'
+    error = 'forward';
   }
-  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-  if(rename) {
-    invalidChars += "/"
+  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
+  if(rename || !saveAs) {
+    invalidChars += "/";
   }
   for(var i = 0; i < input.length; i++) {
     if(invalidChars.includes(input.charAt(i))) {
-      error = error === "" || error === "special" ? "special" : "both"
+      error = error === "" || error === "special" ? "special" : "both";
     }
   }
-  return error
+  return error;
 }
 
 let newWorkflow = (parent, mdlPath, isSpatial, type) => {
@@ -157,7 +157,7 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   let ext = isSpatial ? /.smdl/g : /.mdl/g
   let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
   let name = mdlPath.split('/').pop().replace(ext, typeCode)
-  let modal = $(modals.newWorkflowHtml(name, type)).modal();
+  let modal = $(modals.createWorkflowHtml(name, type)).modal();
   let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
   let input = document.querySelector('#newWorkflowModal #workflowNameInput');
   okBtn.disabled = false;
@@ -244,7 +244,8 @@ module.exports = {
     tooltipSetup: tooltipSetup,
     documentSetup: documentSetup,
     copyToClipboard: copyToClipboard,
-    switchToEditTab: switchToEditTab
+    switchToEditTab: switchToEditTab,
+    validateName: validateName
 };
 
 
