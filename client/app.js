@@ -213,12 +213,22 @@ documentSetup = () => {
 }
 
 copyToClipboard = (text, success, error) => {
+  fullURL = window.location.protocol + '//' + window.location.hostname + text;
   if (window.clipboardData && window.clipboardData.setData) {
     // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
-    return window.clipboardData.setData("Text", text);
+    return window.clipboardData.setData("Text", fullURL);
   }
   else {
-    navigator.clipboard.writeText(text).then(success, error)
+    navigator.clipboard.writeText(fullURL).then(success, error)
+  }
+}
+
+let switchToEditTab = (view, section) => {
+  let elementID = Boolean(view.model && view.model.elementID) ? view.model.elementID + "-" : "";
+  if($(view.queryByHook(elementID + 'view-' + section)).hasClass('active')) {
+    $(view.queryByHook(elementID + section + '-edit-tab')).tab('show');
+    $(view.queryByHook(elementID + 'edit-' + section)).addClass('active');
+    $(view.queryByHook(elementID + 'view-' + section)).removeClass('active');
   }
 }
 
@@ -235,6 +245,7 @@ module.exports = {
     tooltipSetup: tooltipSetup,
     documentSetup: documentSetup,
     copyToClipboard: copyToClipboard,
+    switchToEditTab: switchToEditTab,
     validateName: validateName
 };
 

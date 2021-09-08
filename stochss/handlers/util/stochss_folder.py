@@ -364,12 +364,18 @@ class StochSSFolder(StochSSBase):
         if not os.path.isdir(path):
             return presentations
         safe_chars = set(string.ascii_letters + string.digits)
-        # hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
-        hostname = "brumsey@unca.edu"
+        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
             query_str = f"?owner={hostname}&file={file}"
-            link = f"https://staging.stochss.org/stochss/present-model{query_str}"
+            routes = {
+                "smdl": "present-model",
+                "mdl": "present-model",
+                "job": "present-job",
+                "ipynb": "present-notebook"
+            }
+            route = routes[file.split('.').pop()]
+            link = f"/stochss/{route}{query_str}"
             presentation = {
                 "file": file, "link": link, "size": os.path.getsize(file_path)
             }

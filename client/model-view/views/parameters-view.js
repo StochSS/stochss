@@ -57,7 +57,9 @@ module.exports = View.extend({
           rule.variable = parameter;
         }
       });
-      self.parent.rulesView.renderEditRules();
+      if(self.parent.rulesView) {
+        self.parent.rulesView.renderEditRules();
+      }
     });
   },
   render: function () {
@@ -82,6 +84,14 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  openSection: function () {
+    if(!$(this.queryByHook("parameters-list-container")).hasClass("show")) {
+      let paramCollapseBtn = $(this.queryByHook("collapse"));
+      paramCollapseBtn.click();
+      paramCollapseBtn.html('-');
+    }
+    app.switchToEditTab(this, "parameters");
   },
   renderEditParameter: function () {
     if(this.editParameterView){

@@ -123,6 +123,14 @@ module.exports = View.extend({
       this.addSpecies();
     }
   },
+  openSection: function ({editMode=true}={}) {
+    if(!$(this.queryByHook("species-list-container")).hasClass("show")) {
+      let specCollapseBtn = $(this.queryByHook("collapse"));
+      specCollapseBtn.click();
+      specCollapseBtn.html('-');
+    }
+    app.switchToEditTab(this, "species");
+  },
   renderEditSpeciesView: function () {
     if(this.editSpeciesView){
       this.editSpeciesView.remove();

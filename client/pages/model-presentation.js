@@ -48,21 +48,20 @@ let ModelPresentationPage = PageView.extend({
       directory: file,
       for: "presentation"
     });
-    let self = this;
-    let queryStr = "?file=" + this.model.directory + "&owner=" + owner;
-    let endpoint = "api/file/json-data" + queryStr;
+    let endpoint = `api/file/json-data?file=${this.model.directory}&owner=${owner}`;
     app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        self.model.set(body);
-        self.renderSubviews(false);
+      success: (err, response, body) => {
+        this.model.set(body.model);
+        let domainPlot = Boolean(body.domainPlot) ? body.domainPlot : null;
+        this.renderSubviews(false, domainPlot);
       },
-      error: function (err, response, body) {
-        self.notFound = true;
-        self.renderSubviews(true);
+      error: (err, response, body) => {
+        this.notFound = true;
+        this.renderSubviews(true);
       }
     });
     let downloadStart = "https://live.stochss.org/stochss/download_presentation";
-    this.downloadLink = downloadStart + "/" + owner + "/" + file;
+    this.downloadLink = path.join(downloadStart, owner, file);
     this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
   },
   render: function (attrs, options) {
@@ -73,17 +72,18 @@ let ModelPresentationPage = PageView.extend({
     let message = `This ${this.fileType} can be downloaded or opened in your own StochSS Live! account using the buttons at the bottom of the page.`;
     $(this.queryByHook("loading-message")).html(message);
   },
-  renderSubviews: function (notFound) {
-    this.template = notFound ? errorTemplate : template
+  renderSubviews: function (notFound, domainPlot) {
+    this.template = notFound ? errorTemplate : template;
     PageView.prototype.render.apply(this, arguments);
     if(!notFound) {
-      this.renderModelView();
+      this.renderModelView(domainPlot);
     }
   },
-  renderModelView: function () {
+  renderModelView: function (domainPlot) {
     let modelView = new ModelView({
       model: this.model,
-      readOnly: true
+      readOnly: true,
+      domainPlot: domainPlot
     });
     app.registerRenderSubview(this, modelView, "model-view");
   }

@@ -487,8 +487,8 @@ class StochSSModel(StochSSBase):
             else:
                 data = {"path": dst, "new":True, "model":self.model}
             query_str = f"?owner={hostname}&file={file}"
-            present_link = f"https://live.stochss.org/stochss/present-model{query_str}"
-            downloadlink = os.path.join("https://live.stochss.org/stochss/download_presentation",
+            present_link = f"/stochss/present-model{query_str}"
+            downloadlink = os.path.join("/stochss/download_presentation",
                                         hostname, file)
             open_link = f"https://open.stochss.org?open={downloadlink}"
             links = {"presentation": present_link, "download": downloadlink, "open": open_link}

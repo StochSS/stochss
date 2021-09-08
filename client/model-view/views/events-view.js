@@ -98,6 +98,19 @@ module.exports = View.extend({
     detailsView.parent = this;
     return detailsView;
   },
+  openSection: function (error) {
+    if(!$(this.queryByHook("events")).hasClass("show")) {
+      let evtCollapseBtn = $(this.queryByHook("collapse"));
+      evtCollapseBtn.click();
+      evtCollapseBtn.html('-');
+    }
+    app.switchToEditTab(this, "events");
+    var event = this.collection.filter((e) => {
+      return e.compID === error.id;
+    })[0];
+    this.collection.trigger("select", event);
+    event.detailsView.openAdvancedSection();
+  },
   renderEditEventListingsView: function () {
     if(this.editEventListingsView){
       this.editEventListingsView.remove();
