@@ -884,7 +884,7 @@ module.exports = View.extend({
     });
   },
   publishNotebookPresentation: function (node) {
-    let queryStr = `?path=${o.original._path}`;
+    let queryStr = `?path=${node.original._path}`;
     let endpoint = path.join(app.getApiPath(), "notebook/presentation") + queryStr;
     app.getXHR(endpoint, {
       success: (err, response, body) => {
