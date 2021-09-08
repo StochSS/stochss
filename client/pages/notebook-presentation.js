@@ -53,9 +53,9 @@ let NotebookPresentationPage = PageView.extend({
         self.renderSubviews(true, null);
       }
     });
-    let downloadStart = "https://live.stochss.org/stochss/notebook/download_presentation";
-    this.downloadLink = downloadStart + "/" + owner + "/" + file;
-    this.openLink = "https://open.stochss.org?open=" + this.downloadLink;
+    let downloadStart = "/stochss/notebook/download_presentation";
+    this.downloadLink = path.join(downloadStart, owner, file);
+    this.openLink = `https://open.stochss.org?open=${window.location.protocol}//${window.location.hostname}${this.downloadLink}`;
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
