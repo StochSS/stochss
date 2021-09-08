@@ -28,9 +28,9 @@ let Model = require('../models/model');
 let Project = require('../models/project');
 //views
 let PageView = require('./base');
+let JSTreeView = require('../views/jstree-view');
 let MetaDataView = require('../views/meta-data');
 let ModelListing = require('../views/model-listing');
-let FileBrowser = require('../views/file-browser-view');
 let ArchiveListing = require('../views/archive-listing');
 let WorkflowListing = require('../views/workflow-listing');
 let WorkflowGroupListing = require('../views/workflow-group-listing');
@@ -47,12 +47,13 @@ let ProjectManager = PageView.extend({
     'click [data-hook=collapse-annotation-text]' : 'changeCollapseButtonText',
     'click [data-hook=new-model]' : 'handleNewModelClick',
     'click [data-hook=existing-model]' : 'handleExistingModelClick',
-    'click [data-hook=upload-file-btn]' : 'handleUploadModelClick',
+    'click [data-hook=upload-model-btn]' : 'handleUploadModelClick',
     'click [data-hook=new-ensemble-simulation]' : 'handleNewWorkflowClick',
     'click [data-hook=new-parameter-sweep]' : 'handleNewWorkflowClick',
     'click [data-hook=new-jupyter-notebook]' : 'handleNewWorkflowClick',
     'click [data-hook=project-manager-advanced-btn]' : 'changeCollapseButtonText',
     'click [data-hook=archive-btn]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-browse-files]' : 'changeCollapseButtonText',
     'click [data-hook=export-project-as-zip]' : 'handleExportZipClick',
     'click [data-hook=export-project-as-combine]' : 'handleExportCombineClick',
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick'
@@ -82,17 +83,17 @@ let ProjectManager = PageView.extend({
     });
   },
   addExistingModel: function () {
-    if(document.querySelector('#newProjectModelModal')){
-      document.querySelector('#newProjectModelModal').remove();
+    if(document.querySelector('#importModelModal')){
+      document.querySelector('#importModelModal').remove();
     }
     let self = this
     let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path=" + self.model.directory;
     app.getXHR(mdlListEP, {
       always: function (err, response, body) {
-        let modal = $(modals.newProjectModelHtml(body.files)).modal();
-        let okBtn = document.querySelector('#newProjectModelModal .ok-model-btn');
-        let select = document.querySelector('#newProjectModelModal #modelFileInput');
-        let location = document.querySelector('#newProjectModelModal #modelPathInput');
+        let modal = $(modals.importModelHtml(body.files)).modal();
+        let okBtn = document.querySelector('#importModelModal .ok-model-btn');
+        let select = document.querySelector('#importModelModal #modelFileInput');
+        let location = document.querySelector('#importModelModal #modelPathInput');
         select.addEventListener("change", function (e) {
           okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
           if(body.paths[e.target.value].length >= 2) {
@@ -118,10 +119,16 @@ let ProjectManager = PageView.extend({
           let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
           app.postXHR(endpoint, null, {
             success: function (err, response, body) {
-              let successModal = $(modals.newProjectModelSuccessHtml(body.message)).modal();
+              if(document.querySelector("#successModal")) {
+                document.querySelector("#successModal").remove();
+              }
+              let successModal = $(modals.successHtml(body.message)).modal();
             },
             error: function (err, response, body) {
-              let errorModal = $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+              if(document.querySelector("#errorModal")) {
+                document.querySelector("#errorModal").remove();
+              }
+              let errorModal = $(modals.errorHtml(body.Reason, body.Message)).modal();
             }
           });
           self.update("Model");
@@ -140,9 +147,12 @@ let ProjectManager = PageView.extend({
           window.location.href = endpoint;
         },
         error: function (err, response, body) {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
           let title = "Model Already Exists";
           let message = "A model already exists with that name";
-          let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+          let errorModel = $(modals.errorHtml(title, message)).modal();
         }
       });
     }else{
@@ -153,9 +163,12 @@ let ProjectManager = PageView.extend({
       app.getXHR(existEP, {
         always: function (err, response, body) {
           if(body.exists) {
+            if(document.querySelector("#errorModal")) {
+              document.querySelector("#errorModal").remove();
+            }
             let title = "Model Already Exists";
             let message = "A model already exists with that name";
-            let errorModel = $(modals.newProjectOrWorkflowGroupErrorHtml(title, message)).modal();
+            let errorModel = $(modals.errorHtml(title, message)).modal();
           }else{
             window.location.href = endpoint;
           }
@@ -164,13 +177,13 @@ let ProjectManager = PageView.extend({
     }
   },
   addNewModel: function (isSpatial) {
-    if(document.querySelector('#newModalModel')) {
-      document.querySelector('#newModalModel').remove();
+    if(document.querySelector('#newModelModal')) {
+      document.querySelector('#newModelModal').remove();
     }
     let self = this;
-    let modal = $(modals.renderCreateModalHtml(true, isSpatial)).modal();
-    let okBtn = document.querySelector('#newModalModel .ok-model-btn');
-    let input = document.querySelector('#newModalModel #modelNameInput');
+    let modal = $(modals.createModelHtml(isSpatial)).modal();
+    let okBtn = document.querySelector('#newModelModal .ok-model-btn');
+    let input = document.querySelector('#newModelModal #modelNameInput');
     okBtn.addEventListener('click', function (e) {
       modal.modal('hide');
       if (Boolean(input.value)) {
@@ -191,9 +204,9 @@ let ProjectManager = PageView.extend({
       }
     });
     input.addEventListener("input", function (e) {
-      var endErrMsg = document.querySelector('#newModalModel #modelNameInputEndCharError')
-      var charErrMsg = document.querySelector('#newModalModel #modelNameInputSpecCharError')
-      let error = self.validateName(input.value)
+      var endErrMsg = document.querySelector('#newModelModal #modelNameInputEndCharError')
+      var charErrMsg = document.querySelector('#newModelModal #modelNameInputSpecCharError')
+      let error = app.validateName(input.value, {saveAs: false})
       okBtn.disabled = error !== "" || input.value.trim() === ""
       charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
       endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
@@ -288,18 +301,20 @@ let ProjectManager = PageView.extend({
         }
       });
     }else{
+      if(document.querySelector("#errorModal")) {
+        document.querySelector("#errorModal").error();
+      }
       let title = "No Models Found for " + type + " Workflows";
       if(this.models.length > 0) {
         var message = "Jupyter Notebook workflows are the only workflows available for spatial models.";
       }else{
         var message = "You need to add a model before you can create a new workflow.";
       }
-      let modal = $(modals.noModelsMessageHtml(title, message)).modal();
+      let modal = $(modals.errorHtml(title, message)).modal();
     }
   },
   handleUploadModelClick: function (e) {
-    let type = e.target.dataset.type
-    this.projectFileBrowser.uploadFile(undefined, type)
+    this.projectFileBrowser.uploadFile(undefined, "model")
   },
   renderArchiveCollection: function () {
     if(this.archiveCollectionView) {
@@ -335,8 +350,9 @@ let ProjectManager = PageView.extend({
       this.projectFileBrowser.remove();
     }
     let self = this;
-    this.projectFileBrowser = new FileBrowser({
-      root: self.model.directory
+    this.projectFileBrowser = new JSTreeView({
+      root: self.model.directory,
+      configKey: "project"
     });
     app.registerRenderSubview(this, this.projectFileBrowser, "file-browser");
   },
@@ -401,8 +417,10 @@ let ProjectManager = PageView.extend({
       this.queryByHook("model-listing")
     );
   },
-  update: function (target) {
-    this.projectFileBrowser.refreshJSTree();
+  update: function (target, from) {
+    if(from !== "file-browser") {
+      this.projectFileBrowser.refreshJSTree(null);
+    }
     let fetchTypes = ["Model", "Workflow", "WorkflowGroup", "Archive"];
     if(fetchTypes.includes(target)) {
       let self = this;
@@ -439,19 +457,6 @@ let ProjectManager = PageView.extend({
       }
     });
   },
-  validateName(input) {
-    var error = "";
-    if(input.endsWith('/')) {
-      error = 'forward';
-    }
-    let invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
-    for(var i = 0; i < input.length; i++) {
-      if(invalidChars.includes(input.charAt(i))) {
-        error = error === "" || error === "special" ? "special" : "both";
-      }
-    }
-    return error;
-  }
 });
 
 initPage(ProjectManager)

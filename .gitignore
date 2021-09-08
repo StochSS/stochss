@@ -11,7 +11,6 @@ stochss/dist/stochss-project-manager.html
 stochss/dist/multiple-plots-page.html
 stochss/dist/stochss-domain-editor.html
 stochss/dist/stochss-loading-page.html
-stochss/dist/stochss-project-browser.html
 stochss/dist/stochss-quick-start.html
 stochss/dist/stochss-user-home.html
 jupyterhub/templates/page.html

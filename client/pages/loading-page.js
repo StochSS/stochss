@@ -85,8 +85,11 @@ let LoadingPage = PageView.extend({
       let queryStr = "?path=" + self.responsePath + "&cmd=read";
       let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
       let errorCB = function (err, response, body) {
+        if(document.querySelector("#errorModal")) {
+          document.querySelector("#errorModal").remove();
+        }
         $(self.queryByHook("loading-spinner")).css("display", "none");
-        let modal = $(modals.projectExportErrorHtml(body.reason, body.message)).modal();
+        let modal = $(modals.errorHtml(body.reason, body.message)).modal();
         modal.on('hidden.bs.modal', function (e) {
           window.location.href = this.homeLink;
         });
