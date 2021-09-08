@@ -79,17 +79,60 @@ def get_parsed_args():
     return parser.parse_args()
 
 
-def run_preview(job):
+def run_spatialpy_preview(args):
     '''
-    Run the preview simulation
+    Run a spatialpy preview simulation.
 
-    wkfl : StochSSJob instance
-        The wkfl used for the preview simulation
+    Attributes
+    ----------
+    args : argparse object
+        Command line args passed to the script
     '''
+    model = StochSSSpatialModel(path=args.path)
+    job = SpatialSimulation(path="", preview=True, target=args.target)
+    job.s_py_model = model.convert_to_spatialpy()
+    job.s_model = model.model
+    return job.run(preview=True)
+
+
+def run_gillespy2_preview(args):
+    '''
+    Run a gillespy2 preview simulation
+
+    Attributes
+    ----------
+    args : argparse object
+        Command line args passed to the script
+    '''
+    log_stm, f_handler = setup_logger()
+    model = StochSSModel(path=args.path)
+    job = EnsembleSimulation(path="", preview=True)
+    job.g_model = model.convert_to_gillespy2()
+    plot = job.run(preview=True)
+    timeout = 'GillesPy2 simulation exceeded timeout.' in log_stm.getvalue()
+    log_stm.close()
+    f_handler.close()
+    return plot, timeout
+
+
+def run_preview(args):
+    '''
+    Run a preview simulation
+
+    Attributes
+    ----------
+    args : argparse object
+        Command line args passed to the script
+    '''
+    is_spatial = args.path.endswith(".smdl")
     response = {"timeout": False}
     try:
-        plot = job.run(preview=True)
-        response["results"] = plot
+        if is_spatial:
+            response['results'] = run_spatialpy_preview(args)
+        else:
+            fig, timeout = run_gillespy2_preview(args)
+            response['results'] = fig
+            response['timeout'] = timeout
     except ModelError as error:
         response['errors'] = f"{error}"
     except SimulationError as error:
@@ -102,27 +145,11 @@ def run_preview(job):
 
 
 if __name__ == "__main__":
+    user_dir = StochSSModel.user_dir
     log.info("Initializing the preview simulation")
-    args = get_parsed_args()
-    is_spatial = args.path.endswith(".smdl")
-    if is_spatial:
-        model = StochSSSpatialModel(path=args.path)
-        wkfl = SpatialSimulation(path="", preview=True, target=args.target)
-        wkfl.s_py_model = model.convert_to_spatialpy()
-        wkfl.s_model = model.model
-    else:
-        log_stm, f_handler = setup_logger()
-        model = StochSSModel(path=args.path)
-        wkfl = EnsembleSimulation(path="", preview=True)
-        wkfl.g_model = model.convert_to_gillespy2()
-    resp = run_preview(wkfl)
-    if not is_spatial:
-        if 'GillesPy2 simulation exceeded timeout.' in log_stm.getvalue():
-            resp['timeout'] = True
-        log_stm.close()
-        f_handler.close()
-
-    outfile = os.path.join(model.user_dir, f".{args.outfile}.tmp")
+    cargs = get_parsed_args()
+    resp = run_preview(cargs)
+    outfile = os.path.join(user_dir, f".{cargs.outfile}.tmp")
     with open(outfile, "w") as file:
         json.dump(resp, file, cls=plotly.utils.PlotlyJSONEncoder,
                   indent=4, sort_keys=True)

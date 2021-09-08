@@ -144,6 +144,20 @@ module.exports = View.extend({
     let collapseBtn = $(this.queryByHook('collapse'));
     collapseBtn.trigger('click');
   },
+  openSection: function (error, {isCollection=false}={}) {
+    if(!$(this.queryByHook("reactions-list-container")).hasClass("show")) {
+      let reacCollapseBtn = $(this.queryByHook("collapse"));
+      reacCollapseBtn.click();
+      reacCollapseBtn.html('-');
+    }
+    app.switchToEditTab(this, "reactions");
+    if(error.type !== "process") {
+      let reaction = this.collection.filter((react) => {
+        return react.compID === error.id;
+      })[0];
+      this.collection.trigger("select", reaction);
+    }
+  },
   renderEditReactionListingView: function () {
     if(this.editReactionListingView){
       this.editReactionListingView.remove();

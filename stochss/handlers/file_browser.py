@@ -684,10 +684,18 @@ class UploadFileFromLinkAPIHandler(APIHandler):
         cmd = self.get_query_argument(name="cmd", default=None)
         log.debug(f"The command for the upload script: {cmd}")
         script = '/stochss/stochss/handlers/util/scripts/upload_remote_file.py'
-        if cmd is None:
+        if cmd == "validate":
+            folder = StochSSFolder(path="")
+            resp = {'exists': folder.validate_upload_link(remote_path=path)}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+        elif cmd is None:
+            overwrite = self.get_query_argument(name='overwrite', default=False)
             outfile = f"{str(uuid.uuid4()).replace('-', '_')}.tmp"
             log.debug(f"Response file name: {outfile}")
             exec_cmd = [script, f'{path}', f'{outfile}'] # Script commands for read run_cmd
+            if overwrite:
+                exec_cmd.append('-o')
             log.debug(f"Exec command: {exec_cmd}")
             pipe = subprocess.Popen(exec_cmd)
             resp = {"responsePath": outfile}
@@ -761,6 +769,32 @@ class NotebookPresentationAPIHandler(APIHandler):
             log.info(resp['message'])
             log.debug(f"Response Message: {resp}")
             self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+
+class PresentationListAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting the users full list of presentations.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get the list of presentations.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        try:
+            log.info("Loading presentations...")
+            presentations = StochSSFolder.get_presentations()
+            log.debug(f"List of presentations: {presentations}")
+            log.info("Loading complete.")
+            self.write({"presentations": presentations})
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()

@@ -50,36 +50,54 @@ div#workflow-results.card
 
             button.btn.btn-primary.box-shadow(data-hook="trajectories-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="trajectories-download-png-custom"
-              data-target="download-png-custom"
-              data-type="trajectories"
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="trajectories-download"
+              data-hook="trajectories-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
               disabled
-            ) Download PNG
+            ) Download <span class="caret"></span>
 
-            button.btn.btn-primary.box-shadow(
-              data-hook="trajectories-download-json"
-              data-target="download-json"
-              data-type="trajectories"
-              disabled
-            ) Download JSON
+            ul.dropdown-menu(aria-labelledby="#trajectories-download")
+              li.dropdown-item(
+                data-hook="trajectories-download-png-custom"
+                data-target="download-png-custom"
+                data-type="trajectories"
+              ) Plot as .png
+              li.dropdown-item(
+                data-hook="trajectories-download-json"
+                data-target="download-json"
+                data-type="trajectories"
+              ) Plot as .json
+              li.dropdown-item(
+                data-hook="trajectories-plot-csv"
+                data-target="download-plot-csv"
+                data-type="trajectories"
+              ) Plot Results as .csv
 
-      button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
+      div
 
-      button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Results as .csv
+        button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
 
-      button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
+        button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Full Results as .csv
 
-      div.saving-status(data-hook="job-action-start")
+        button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
 
-        div.spinner-grow
+        div.saving-status(data-hook="job-action-start")
 
-        span Publishing ...
+          div.spinner-grow
 
-      div.saved-status(data-hook="job-action-end")
+          span Publishing ...
 
-        span Published
+        div.saved-status(data-hook="job-action-end")
 
-      div.save-error-status(data-hook="job-action-err")
+          span Published
 
-        span Error
+        div.save-error-status(data-hook="job-action-err")
+
+          span Error
+
+      div.text-info(data-hook="update-format-message" style="display: none;")
+        | To publish you job the workflows format must be updated.

@@ -37,6 +37,7 @@ def get_parsed_args():
     parser = argparse.ArgumentParser(description="Upload a file from an external link")
     parser.add_argument("file_path", help="The path to the external file.")
     parser.add_argument("outfile", help="The path to the response file")
+    parser.add_argument("-o", "--overwrite", action="store_true", help="Overwrite existing files.")
     return parser.parse_args()
 
 
@@ -44,7 +45,7 @@ if __name__ == "__main__":
     args = get_parsed_args()
     if args.file_path != 'None':
         folder = StochSSFolder(path="/")
-        resp = folder.upload_from_link(remote_path=args.file_path)
+        resp = folder.upload_from_link(remote_path=args.file_path, overwrite=args.overwrite)
         with open(args.outfile, "w") as fd:
             json.dump(resp, fd)
         open(args.outfile + ".done", "w").close()

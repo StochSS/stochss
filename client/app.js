@@ -132,21 +132,21 @@ let getBrowser = () => {
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
 }
 
-let validateName = (input, rename = false) => {
-  var error = ""
+let validateName = (input, {rename=false, saveAs=true}={}) => {
+  var error = "";
   if(input.endsWith('/')) {
-    error = 'forward'
+    error = 'forward';
   }
-  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\"
-  if(rename) {
-    invalidChars += "/"
+  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
+  if(rename || !saveAs) {
+    invalidChars += "/";
   }
   for(var i = 0; i < input.length; i++) {
     if(invalidChars.includes(input.charAt(i))) {
-      error = error === "" || error === "special" ? "special" : "both"
+      error = error === "" || error === "special" ? "special" : "both";
     }
   }
-  return error
+  return error;
 }
 
 let newWorkflow = (parent, mdlPath, isSpatial, type) => {
@@ -157,7 +157,7 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   let ext = isSpatial ? /.smdl/g : /.mdl/g
   let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
   let name = mdlPath.split('/').pop().replace(ext, typeCode)
-  let modal = $(modals.newWorkflowHtml(name, type)).modal();
+  let modal = $(modals.createWorkflowHtml(name, type)).modal();
   let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
   let input = document.querySelector('#newWorkflowModal #workflowNameInput');
   okBtn.disabled = false;
@@ -213,12 +213,22 @@ documentSetup = () => {
 }
 
 copyToClipboard = (text, success, error) => {
+  fullURL = window.location.protocol + '//' + window.location.hostname + text;
   if (window.clipboardData && window.clipboardData.setData) {
     // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
-    return window.clipboardData.setData("Text", text);
+    return window.clipboardData.setData("Text", fullURL);
   }
   else {
-    navigator.clipboard.writeText(text).then(success, error)
+    navigator.clipboard.writeText(fullURL).then(success, error)
+  }
+}
+
+let switchToEditTab = (view, section) => {
+  let elementID = Boolean(view.model && view.model.elementID) ? view.model.elementID + "-" : "";
+  if($(view.queryByHook(elementID + 'view-' + section)).hasClass('active')) {
+    $(view.queryByHook(elementID + section + '-edit-tab')).tab('show');
+    $(view.queryByHook(elementID + 'edit-' + section)).addClass('active');
+    $(view.queryByHook(elementID + 'view-' + section)).removeClass('active');
   }
 }
 
@@ -234,7 +244,9 @@ module.exports = {
     postXHR: postXHR,
     tooltipSetup: tooltipSetup,
     documentSetup: documentSetup,
-    copyToClipboard: copyToClipboard
+    copyToClipboard: copyToClipboard,
+    switchToEditTab: switchToEditTab,
+    validateName: validateName
 };
 
 

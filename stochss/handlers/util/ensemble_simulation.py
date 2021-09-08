@@ -69,13 +69,6 @@ class EnsembleSimulation(StochSSJob):
         return run_settings
 
 
-    def __store_csv_results(self, results):
-        try:
-            results.to_csv(path="results", nametag="results_csv", stamp=self.get_time_stamp())
-        except Exception as err:
-            log.error(f"Error storing csv results: {err}\n{traceback.format_exc()}")
-
-
     @classmethod
     def __store_pickled_results(cls, results):
         try:
@@ -131,10 +124,9 @@ class EnsembleSimulation(StochSSJob):
             results = self.g_model.run(**kwargs)
         if verbose:
             log.info("The ensemble simulation has completed")
-            log.info("Storing the results as pickle and csv")
+            log.info("Storing the results as pickle")
         if not 'results' in os.listdir():
             os.mkdir('results')
-        self.__store_csv_results(results=results)
         pkl_err = self.__store_pickled_results(results=results)
         if verbose:
             log.info("Storing the polts of the results")

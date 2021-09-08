@@ -21,16 +21,19 @@
 import os
 import os.path
 import sys
-import logging
 
 sys.path.append('/srv/jupyterhub/') # pylint: disable=wrong-import-position
 
 # API Handlers
 from model_presentation import JsonFileAPIHandler, DownModelPresentationAPIHandler
 from notebook_presentation import NotebookAPIHandler, DownNotebookPresentationAPIHandler
+from job_presentation import (
+    JobAPIHandler, DownJobPresentationAPIHandler, PlotJobResultsAPIHandler, DownloadCSVAPIHandler
+)
 # Page handlers
 from handlers import (
-    HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler
+    HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler,
+    MultiplePlotsHandler
 )
 
 ## Class for authenticating users.
@@ -88,11 +91,16 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/present-job\/?", JobPresentationHandler),
         (r"/stochss/present-model\/?", ModelPresentationHandler),
         (r"/stochss/present-notebook\/?", NotebookPresentationHandler),
+        (r"/stochss/multiple-plots\/?", MultiplePlotsHandler),
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
         (r"/stochss/download_presentation/(\w+)/(.+)\/?", DownModelPresentationAPIHandler),
         (r"/stochss/api/notebook/load\/?", NotebookAPIHandler),
         (r"/stochss/notebook/download_presentation/(\w+)/(.+)\/?",
-         DownNotebookPresentationAPIHandler)
+         DownNotebookPresentationAPIHandler),
+        (r"/stochss/api/job/load\/?", JobAPIHandler),
+        (r"/stochss/job/download_presentation/(\w+)/(.+)\/?", DownJobPresentationAPIHandler),
+        (r"/stochss/api/workflow/plot-results\/?", PlotJobResultsAPIHandler),
+        (r"/stochss/api/job/csv\/?", DownloadCSVAPIHandler)
 ]
 
 ## Paths to search for jinja templates, before using the default templates.
@@ -190,23 +198,21 @@ c.DockerSpawner.debug = True
 
 def get_user_cpu_count_or_fail():
     '''
-    Get the user cpu count or raise error
+    Get the user cpu count or raise error.
     '''
-    log = logging.getLogger()
     reserve_count = int(os.environ['RESERVED_CPUS'])
-    log.info("RESERVED_CPUS environment variable is set to %s", reserve_count)
     # Round up to an even number of reserved cpus
+    total_cpus = os.cpu_count()
+    if total_cpus <= 2:
+        c.StochSS.reserved_cpu_count = 0
+        return 0
     if reserve_count % 2 > 0:
         message = "Increasing reserved cpu count by one so it's an even number."
         message += " This helps allocate logical cpus to users more easily."
-        log.warning(message)
         reserve_count += 1
-    total_cpus = os.cpu_count()
-    log.info("Total cpu count as reported by os.count: %s", total_cpus)
     if reserve_count >= total_cpus:
         e_message = "RESERVED_CPUS environment cannot be greater than or equal to the number of"
         e_message += " cpus returned by os.cpu_count()"
-        log.error(e_message)
         raise ValueError(e_message)
     user_cpu_count = total_cpus - reserve_count
     # If (num logical cpus) - (num reserved cpus) is odd,
@@ -214,44 +220,37 @@ def get_user_cpu_count_or_fail():
     if user_cpu_count % 2 > 0 and user_cpu_count > 1:
         user_cpu_count -= 1
     c.StochSS.reserved_cpu_count = reserve_count
-    log.info('Using %s logical cpus for user containers...', user_cpu_count)
-    log.info('Reserving %s logical cpus for hub container and underlying OS', reserve_count)
     return user_cpu_count
 
 c.StochSS.user_cpu_count = get_user_cpu_count_or_fail()
 c.StochSS.user_cpu_alloc = [0] * c.StochSS.user_cpu_count
-
-def get_power_users():
-    '''
-    Get the list of power users
-    '''
-    power_users_file = os.environ.get('POWER_USERS_FILE')
-    log = logging.getLogger()
-    if not os.path.exists(power_users_file):
-        log.warning('No power users defined!')
-        return []
-    with open(power_users_file) as file:
-        power_users = [ x.rstrip() for x in file.readlines() ]
-    return power_users
-
-
-c.StochSS.power_users = get_power_users()
 
 def pre_spawn_hook(spawner):
     '''
     Function that runs before DockerSpawner spawns a user container.
     Limits the resources available to user containers, excluding a list of power users.
     '''
-    log = logging.getLogger()
+    log = spawner.log
     # Remove the memory limit for power users
-    if spawner.user.name in c.StochSS.power_users:
+    if c.StochSS.user_cpu_count == 0:
         spawner.mem_limit = None
+        msg = 'Skipping resource limitations since the host machine has a limited number of cpus.'
+        log.info(msg)
+        return
+    user_type = None
+    if spawner.user.name in c.Authenticator.admin_users:
+        user_type = 'admin'
+    elif spawner.user.name in c.StochSS.power_users:
+        user_type = 'power'
+    if user_type:
+        spawner.mem_limit = None
+        log.info(f'Skipping resource limitation for {user_type} user: {spawner.user.name}')
         return
     palloc = c.StochSS.user_cpu_alloc
     div = len(palloc) // 2
     reserved = c.StochSS.reserved_cpu_count
-    log.warning('Reserved CPUs: %s', reserved)
-    log.warning('Number of user containers using each logical core: %s', palloc)
+    log.debug(f'Reserved CPUs: {reserved}')
+    log.debug(f'Number of user containers using each logical core: {palloc}')
     # We want to allocate logical cores that are on the same physical core
     # whenever possible.
     #
@@ -281,37 +280,37 @@ def pre_spawn_hook(spawner):
         avail_cpus = palloc
         least_used_cpu = min(avail_cpus)
         cpu1_index = avail_cpus.index(least_used_cpu)
-        log.info("User %s to use logical cpu %s", spawner.user.name, str(cpu1_index))
+        log.info(f"User {spawner.user.name} to use logical cpu {cpu1_index}")
         palloc[cpu1_index] += 1
-        spawner.extra_host_config['cpuset_cpus'] = '{}'.format(cpu1_index)
+        spawner.extra_host_config['cpuset_cpus'] = f'{cpu1_index}'
     else:
         least_used_cpu = min(avail_cpus)
         cpu1_index = avail_cpus.index(least_used_cpu)
         palloc[cpu1_index] += 1
         cpu2_index = cpu1_index+div
         palloc[cpu2_index] += 1
-        log.info("User %s to use logical cpus %s and %s",
-                 spawner.user.name, str(cpu1_index), str(cpu2_index))
-        spawner.extra_host_config['cpuset_cpus'] = '{},{}'.format(cpu1_index, cpu2_index)
+        log.info(f"User {spawner.user.name} to use logical cpus {cpu1_index} and {cpu2_index}")
+        spawner.extra_host_config['cpuset_cpus'] = f'{cpu1_index},{cpu2_index}'
 
 
 def post_stop_hook(spawner):
     '''
     Post stop hook
     '''
-    log = logging.getLogger()
+    log = spawner.log
     reserved = c.StochSS.reserved_cpu_count
+    if reserved == 0:
+        return
     palloc = c.StochSS.user_cpu_alloc
     try:
         cpu1_index, cpu2_index = spawner.extra_host_config['cpuset_cpus'].split(',')
         palloc[int(cpu1_index)] -= 1
         palloc[int(cpu2_index)] -= 1
-        log.warning('Reserved CPUs: %s', reserved)
-        log.warning('Number of user containers using each logical core: %s', palloc)
+        log.warning(f'Reserved CPUs: {reserved}')
+        log.warning(f'Number of user containers using each logical core: {palloc}')
     except Exception as err:
         message = "Exception thrown due to cpuset_cpus not being set (power user)"
-        log.error("%s\n%s", message, err)
-        # Exception thrown due to cpuset_cpus not being set (power user)
+        log.error(f"{message}\n{err}")
         pass
 
 c.Spawner.pre_spawn_hook = pre_spawn_hook
@@ -431,6 +430,7 @@ c.Spawner.mem_guarantee = '2G'
 #
 #  Defaults to an empty set, in which case no user has admin access.
 c.Authenticator.admin_users = admin = set([])
+c.StochSS.power_users = power_users = set([])
 
 pwd = os.path.dirname(__file__)
 with open(os.path.join(pwd, 'userlist')) as f:
@@ -442,5 +442,9 @@ with open(os.path.join(pwd, 'userlist')) as f:
         if len(parts) >= 1:
             name = parts[0]
             #whitelist.add(name)
-            if len(parts) > 1 and parts[1] == 'admin':
-                admin.add(name)
+            if len(parts) > 1:
+                if parts[1] == 'admin':
+                    admin.add(name)
+                    power_users.add(name)
+                elif parts[1] == 'power':
+                    power_users.add(name)

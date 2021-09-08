@@ -96,6 +96,47 @@ section.page
 
         ul.dropdown-menu(aria-labelledby="preview-options")
           li.dropdown-item(data-hook="download-png") Download as PNG
-        
-      div.model-state-buttons(data-hook="model-state-buttons-container")
 
+      div.model-state-buttons(data-hook="model-state-buttons-container")
+      
+        div.mdl-edit-btn
+    
+          div.mdl-edit-btn.saving-status(data-hook="mdl-action-start")
+
+            div.spinner-grow
+
+            span(data-hook="saving" style="display: none") Saving ...
+
+            span(data-hook="publishing" style="display: none") Publishing ...
+
+          div.mdl-edit-btn.saved-status(data-hook="mdl-action-end")
+
+            span(data-hook="saved" style="display: none") Saved
+
+            span(data-hook="published" style="display: none") Published
+
+          div.mdl-edit-btn.save-error-status(data-hook="mdl-action-err")
+
+            span Error
+          
+          button.btn.btn-primary.box-shadow(data-hook="save") Save
+
+          button.btn.btn-primary.box-shadow(data-hook="return-to-project-btn" style="display: none;") Return to Project
+
+          button.btn.btn-primary.box-shadow.dropdown-toggle(
+            id="simulate-model",
+            data-hook="simulate-model",
+            data-toggle="dropdown",
+            aria-haspopup="true",
+            aria-expanded="false",
+            type="button"
+          ) Simulate <span class="caret"></span>
+
+          ul.dropdown-menu(aria-labelledby="preview-options")
+            li.dropdown-item(data-hook="run" data-type="preview") Preview
+            li.dropdown-divider
+            li.dropdown-item(id="stochss-es" data-hook="stochss-es" data-type="ensemble") Ensemble Simulation
+            li.dropdown-item(id="stochss-ps" data-hook="stochss-ps" data-type="psweep") Parameter Sweep
+            li.dropdown-item(data-hook="new-workflow" data-type="notebook") Jupyter Notebook
+
+          button.btn.btn-primary.box-shadow(data-hook="presentation") Publish

@@ -44,15 +44,40 @@ let LoadingPage = PageView.extend({
     $(document.querySelector("main[data-hook=page-main]")).removeClass().addClass("col-md-12 body");
     $(this.queryByHook("loading-spinner")).css("display", "block");
     if(this.action === "open") {
-      this.uploadFileFromLink(this.filePath);
-      setTimeout(function () {
-        $(self.queryByHook("loading-problem").css("display", "block"));
-      }, 30000);
+      this.checkForDuplicateFile(this.filePath);
     }else if(this.action === "update-workflow") {
       this.updateWorkflowFormat(this.filePath);
     }else if(this.action === "update-project") {
       this.updateProjectFormat(this.filePath);
     }
+  },
+  checkForDuplicateFile: function (filePath) {
+    $(this.queryByHook("loading-header")).html("Uploading file");
+    $(this.queryByHook("loading-target")).css("display", "none")
+    let message = `If the file is a Project, Workflow, Model, Domain, or Notebook it will be opened when the upload has completed.`;
+    $(this.queryByHook("loading-message")).html(message);
+    let self = this;
+    let queryStr = "?path=" + filePath + "&cmd=validate";
+    let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
+    app.getXHR(endpoint, {
+      success: function (err, response, body) {
+        if(!body.exists) {
+          self.uploadFileFromLink(filePath, false);
+        }else{
+          let title = "File Already Exists";
+          let message = "A file with that name already exists, do you wish to overwrite this file?";
+          let modal = $(modals.uploadFileExistsHtml(title, message)).modal();
+          let yesBtn = document.querySelector("#uploadFileExistsModal .yes-modal-btn");
+          let noBtn = document.querySelector("#uploadFileExistsModal .btn-secondary")
+          yesBtn.addEventListener('click', function (e) {
+            self.uploadFileFromLink(filePath, true);
+          });
+          noBtn.addEventListener('click', function (e) {
+            window.location.href = self.homeLink;
+          });
+        }
+      }
+    });
   },
   getUploadResponse: function () {
     let self = this;
@@ -60,8 +85,11 @@ let LoadingPage = PageView.extend({
       let queryStr = "?path=" + self.responsePath + "&cmd=read";
       let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
       let errorCB = function (err, response, body) {
+        if(document.querySelector("#errorModal")) {
+          document.querySelector("#errorModal").remove();
+        }
         $(self.queryByHook("loading-spinner")).css("display", "none");
-        let modal = $(modals.projectExportErrorHtml(body.reason, body.message)).modal();
+        let modal = $(modals.errorHtml(body.reason, body.message)).modal();
         modal.on('hidden.bs.modal', function (e) {
           window.location.href = this.homeLink;
         });
@@ -128,13 +156,15 @@ let LoadingPage = PageView.extend({
     let identifier = "stochss/workflow/edit"
     this.updateFormat(filePath, message, "workflow", identifier);
   },
-  uploadFileFromLink: function (filePath) {
-    $(this.queryByHook("loading-header")).html("Uploading file");
-    $(this.queryByHook("loading-target")).css("display", "none")
-    let message = `If the file is a Project, Workflow, Model, Domain, or Notebook it will be opened when the upload has completed.`;
-    $(this.queryByHook("loading-message")).html(message);
+  uploadFileFromLink: function (filePath, overwrite) {
+    setTimeout(function () {
+      $(self.queryByHook("loading-problem").css("display", "block"));
+    }, 30000);
     let self = this;
-    let queryStr = "?path=" + filePath;
+    var queryStr = "?path=" + filePath;
+    if(overwrite) {
+      queryStr += "&overwrite=" + overwrite;
+    }
     let endpoint = path.join(app.getApiPath(), 'file/upload-from-link') + queryStr;
     app.getXHR(endpoint, {
       success: function (err, response, body) {

@@ -7,7 +7,8 @@ module.exports = {
     home: './client/pages/home.js',
     jobPresentation: './client/pages/job-presentation.js',
     modelPresentation: './client/pages/model-presentation.js',
-    notebookPresentation: './client/pages/notebook-presentation.js'
+    notebookPresentation: './client/pages/notebook-presentation.js',
+    multiplePlots: './client/pages/multiple-plots.js'
   },
   output: {
     filename: 'stochss-[name].bundle.js',
@@ -42,8 +43,26 @@ module.exports = {
       template: 'jupyterhub/home_template.pug',
       name: 'notebookPresentation',
       inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: "StochSS | Multiple Plots Presentation Page",
+      filename: '../templates/multiple-plots-page.html',
+      template: 'jupyterhub/home_template.pug',
+      name: 'multiplePlots',
+      inject: false
     })
   ],
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        commons: {
+          name: 'common',
+          chunks: 'initial',
+          minChunks: 2
+        }
+      }
+    }
+  },
   module: {
     rules: [
       {

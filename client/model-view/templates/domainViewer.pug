@@ -144,3 +144,29 @@ div#domain-viewer.card
           button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Import into Model
 
       div.tab-pane(id="view-domain" data-hook="view-domain")
+
+        div(data-hook="view-domain-plot-container" style="display: none")
+
+          div: h4 Domain and Particle Preview
+
+          div.row
+
+            div.col-sm-8
+
+              div(data-hook="view-domain-plot")
+
+            div.col-sm-4
+
+              div.mt-2.particle-view(data-hook="domain-particle-viewer")
+
+              div.mt-2.particle-view(data-hook="domain-select-particle")
+
+                div.text-info
+                  | Click on a particle to view its properties.
+
+                div.mt-2
+
+                  h4 Particles per Type
+
+                  table.table
+                    tbody(data-hook="domain-types-quick-view")

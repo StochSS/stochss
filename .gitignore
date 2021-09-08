@@ -11,7 +11,6 @@ stochss/dist/stochss-project-manager.html
 stochss/dist/multiple-plots-page.html
 stochss/dist/stochss-domain-editor.html
 stochss/dist/stochss-loading-page.html
-stochss/dist/stochss-project-browser.html
 stochss/dist/stochss-quick-start.html
 stochss/dist/stochss-user-home.html
 jupyterhub/templates/page.html
@@ -19,6 +18,8 @@ jupyterhub/templates/stochss-home.html
 jupyterhub/templates/stochss-job-presentation.html
 jupyterhub/templates/stochss-model-presentation.html
 jupyterhub/templates/stochss-notebook-presentation.html
+jupyterhub/templates/multiple-plots-page.html
+
 *.swp
 *.swo
 package-lock.json
