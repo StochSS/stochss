@@ -65,15 +65,19 @@ jupyterhub/secrets/postgres.env:
 jupyterhub/userlist:
 	@echo "You're missing a userlist file. We'll make a blank one for you."
 	@echo "If you'd like to set admins to jupyterhub, add entries to the userlist file"
-	@echo "in the jupyterhub/ directory like this (one user per line):"
-	@echo "myuser@uni.edu admin"
+	@echo "	in the jupyterhub/ directory like this (one user per line):"
+	@echo "	myuser@uni.edu admin"
+	@echo "If you'd like to set power users who are exempt from resource constraints"
+	@echo "	use entries like this:"
+	@echo "	myuser@uni.edu power"
+	@echo ""
 	@touch $@
 
 check-files: jupyterhub/userlist jupyterhub/secrets/.oauth.dummy.env jupyterhub/secrets/postgres.env
 
 check_files_staging: check-files jupyterhub/secrets/.oauth.staging.env
 
-check_files_prod: check-files jupyterhub/secrets/.oauth.prod.env
+check_files_prod: check-files jupyterhub/secrets/.oauth.prod.env jupyterhub/.power_users
 
 cert:
 	@echo "Generating certificate..."
@@ -126,17 +130,17 @@ hub: build_hub build run_hub_dev
 build_clean:
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
-	 	--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
+		--no-cache -t $(DOCKER_STOCHSS_IMAGE):latest .
 
 create_working_dir:
 	$(DOCKER_SETUP_COMMAND)
 
-build:  
+build:
 	docker build \
 		--build-arg JUPYTER_CONFIG_DIR=$(JUPYTER_CONFIG_DIR) \
-	  	-t $(DOCKER_STOCHSS_IMAGE):latest .
+		-t $(DOCKER_STOCHSS_IMAGE):latest .
 
-test:   create_working_dir
+test: create_working_dir
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
 		--env-file .env \
@@ -144,11 +148,11 @@ test:   create_working_dir
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-                /stochss/stochss/tests/run_tests.py
+		/stochss/stochss/tests/run_tests.py
 
 build_and_test: build test
 
-run:    create_working_dir
+run: create_working_dir
 	$(PYTHON_EXE) launch_webbrowser.py &
 	docker run --rm \
 		--name $(DOCKER_STOCHSS_IMAGE) \
@@ -156,7 +160,7 @@ run:    create_working_dir
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-		bash -c "cd /home/jovyan;  start-notebook.sh "
+		bash -c "cd /home/jovyan; start-notebook.sh "
 
 
 build_and_run: build run

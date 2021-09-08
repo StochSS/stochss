@@ -59,7 +59,7 @@ StochSS uses [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#) as the 
 
 - [Optional] To set admins for JupyterHub, make a file called `userlist` in the `jupyterhub/` directory. On each line of this file place a username followed by the word 'admin'. For example: `myuser admin`. If using Google OAuth, the uesername will be a Gmail address. Navigate to `/hub/admin` to use the JupyterHub admin interface.
 
-- [Optional] By default multi-user StochSS is set up to allocate 2 logical cpus per user, reserving 2 logical cpus for the hub container and underlying OS. You can define a list of "power users" that are excluded from resource limitations by adding a text file called `.power_users` (note the leading period) to the `jupyterhub/` directory with one username/email address on each line of the file.
+- [Optional] By default multi-user StochSS is set up to allocate 2 logical cpus per user, reserving 2 logical cpus for the hub container and underlying OS. You can define "power users" that are excluded from resource limitations using the same method as above for adding an admin, but instead of following the username with 'admin', use the keyword 'power' instead.
 
 ### Run Locally
 
