@@ -213,12 +213,13 @@ documentSetup = () => {
 }
 
 copyToClipboard = (text, success, error) => {
+  fullURL = window.location.protocol + '//' + window.location.hostname + text;
   if (window.clipboardData && window.clipboardData.setData) {
     // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
-    return window.clipboardData.setData("Text", text);
+    return window.clipboardData.setData("Text", fullURL);
   }
   else {
-    navigator.clipboard.writeText(text).then(success, error)
+    navigator.clipboard.writeText(fullURL).then(success, error)
   }
 }
 
