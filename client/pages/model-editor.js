@@ -210,7 +210,7 @@ let ModelEditor = PageView.extend({
     }, 2000);
   },
   handlePresentationClick: function (e) {
-    let errorMsg = $(this.parent.queryByHook("error-detected-msg"));
+    let errorMsg = $(this.queryByHook("error-detected-msg"));
     if(!this.model.valid) {
       this.displayError(errorMsg, e);
     }else{
@@ -235,8 +235,11 @@ let ModelEditor = PageView.extend({
           });
         },
         error: (err, response, body) => {
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
           this.errorAction();
-          $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+          $(modals.errorHtml(body.Reason, body.Message)).modal();
         }
       });
     }
@@ -266,7 +269,7 @@ let ModelEditor = PageView.extend({
       var queryString = `?path=${this.model.directory}`;
       if(this.model.directory.includes('.proj')) {
         let wkgp = this.model.directory.includes('.wkgp') ? `${this.model.name}.wkgp` : "WorkflowGroup1.wkgp";
-        let parentPath = path.join(path.dirname(self.model.directory), wkgp);
+        let parentPath = path.join(path.dirname(this.model.directory), wkgp);
         queryString += `&parentPath=${parentPath}`;
       }
       window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection") + queryString;

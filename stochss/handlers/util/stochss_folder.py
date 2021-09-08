@@ -19,10 +19,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
+import string
 import zipfile
 import traceback
 
 import requests
+from escapism import escape
 
 from .stochss_base import StochSSBase
 from .stochss_file import StochSSFile
@@ -72,8 +74,8 @@ class StochSSFolder(StochSSBase):
 
 
     def __build_jstree_node(self, path, file):
-        types = {"mdl":"nonspatial", "smdl":"spatial", "sbml":"sbml-model", "ipynb":"notebook",
-                 "wkfl":"workflow", "proj":"project", "wkgp":"workflow-group", "domn":"domain"}
+        types = {"mdl":"nonspatial", "smdl":"spatial", "sbml":"sbmlModel", "ipynb":"notebook",
+                 "wkfl":"workflow", "proj":"project", "wkgp":"workflowGroup", "domn":"domain"}
         _path = file if self.path == "none" else os.path.join(self.path, file)
         ext = file.split('.').pop() if "." in file else None
         node = {"text":file, "type":"other", "_path":_path, "children":False}
@@ -87,7 +89,7 @@ class StochSSFolder(StochSSBase):
                                                        os.listdir(_path)))) > 0
                 else:
                     node['_status'] = self.get_status(path=_path)
-            elif file_type == "workflow-group":
+            elif file_type == "workflowGroup":
                 node['children'] = True
         elif os.path.isdir(os.path.join(path, file)):
             node['type'] = "folder"
@@ -347,6 +349,38 @@ class StochSSFolder(StochSSBase):
         except FileNotFoundError as err:
             message = f"Could not find the directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+
+
+    @classmethod
+    def get_presentations(cls):
+        '''
+        Get the list of presentations from the users presentation directory.
+
+        Attributes
+        ----------
+        '''
+        path = os.path.join(cls.user_dir, ".presentations")
+        presentations = []
+        if not os.path.isdir(path):
+            return presentations
+        safe_chars = set(string.ascii_letters + string.digits)
+        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+        for file in os.listdir(path):
+            file_path = os.path.join(path, file)
+            query_str = f"?owner={hostname}&file={file}"
+            routes = {
+                "smdl": "present-model",
+                "mdl": "present-model",
+                "job": "present-job",
+                "ipynb": "present-notebook"
+            }
+            route = routes[file.split('.').pop()]
+            link = f"/stochss/{route}{query_str}"
+            presentation = {
+                "file": file, "link": link, "size": os.path.getsize(file_path)
+            }
+            presentations.append(presentation)
+        return presentations
 
 
     def get_project_list(self):

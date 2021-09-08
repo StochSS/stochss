@@ -107,7 +107,7 @@ module.exports = View.extend({
     if(document.querySelector('#defaultModeModal')) {
       document.querySelector('#defaultModeModal').remove();
     }
-    let modal = $(modals.renderDefaultModeModalHtml()).modal();
+    let modal = $(modals.defaultModeHtml()).modal();
     let continuous = document.querySelector('#defaultModeModal .concentration-btn');
     let discrete = document.querySelector('#defaultModeModal .population-btn');
     let dynamic = document.querySelector('#defaultModeModal .hybrid-btn');

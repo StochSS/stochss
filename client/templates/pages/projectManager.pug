@@ -55,7 +55,7 @@ section.page
           li.dropdown-divider
           li.dropdown-item(id="existing-model" data-hook="existing-model") Existing Model
           li.dropdown-divider
-          li.dropdown-item(id="upload-file-btn" data-hook="upload-file-btn", data-type="model") Upload StochSS Model (.mdl or .smdl)
+          li.dropdown-item(id="upload-model-btn" data-hook="upload-model-btn") Upload StochSS Model (.mdl or .smdl)
 
     div.verticle-space-3(id=this.model.elementID + "-workflows-section" style="display: none;")
 
@@ -109,7 +109,17 @@ section.page
 
         div(id="project-meta-data-container" data-hook="project-meta-data-container")
 
-        div(id="project-manager-file-browser" data-hook="file-browser")
+        div#browse-files.card.card-body
+
+          div
+
+            h3.inline Browse Files
+            div.inline
+              button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-browse-files", id="collapse-browse-files-btn" data-hook="collapse-browse-files") +
+
+          div.collapse(id="collapse-browse-files")
+
+            div(id="project-manager-file-browser" data-hook="file-browser")
 
         div
 

@@ -352,8 +352,11 @@ module.exports = View.extend({
         });
       },
       error: function (err, response, body) {
+        if(document.querySelector("#errorModal")) {
+          document.querySelector("#errorModal").remove();
+        }
         self.errorAction();
-        $(modals.newProjectModelErrorHtml(body.Reason, body.Message)).modal();
+        $(modals.errorHtml(body.Reason, body.Message)).modal();
       }
     });
   },

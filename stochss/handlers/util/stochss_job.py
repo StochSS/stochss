@@ -211,8 +211,8 @@ class StochSSJob(StochSSBase):
         safe_chars = set(string.ascii_letters + string.digits)
         hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
         query_str = f"?owner={hostname}&file={file}"
-        present_link = f"https://staging.stochss.org/stochss/present-job{query_str}"
-        dl_base = "https://staging.stochss.org/stochss/job/download_presentation"
+        present_link = f"/stochss/present-job{query_str}"
+        dl_base = "/stochss/job/download_presentation"
         downloadlink = os.path.join(dl_base, hostname, file)
         open_link = f"https://open.stochss.org?open={downloadlink}"
         links = {"presentation": present_link, "download": downloadlink, "open": open_link}

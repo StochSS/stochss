@@ -163,6 +163,13 @@ a.disabled {
   cursor: default;
 }
 
+a.anchor {
+  display: block;
+  position: relative;
+  top: -80px;
+  visibility: hidden;
+}
+
 .nav-item {
   width: fit-content;
 }
@@ -308,7 +315,6 @@ input[type="file"]::-ms-browse {
 
 .information-btn {
   color: #007bff;
-  border-color: #ffffff;
   padding: 0.5rem 1rem;
   text-align: left;
 }
