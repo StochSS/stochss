@@ -21,6 +21,7 @@ import json
 import shutil
 import string
 import zipfile
+import datetime
 import traceback
 
 import requests
@@ -96,6 +97,21 @@ class StochSSFolder(StochSSBase):
             node['children'] = True
 
         return node
+
+
+    @classmethod
+    def __get_presentation_model_name(cls, file_path):
+        with open(file_path, "r") as model_file:
+            name = json.load(model_file)['name']
+        return name
+
+
+    @classmethod
+    def __get_presentation_notebook_name(cls, file_path):
+        with open(file_path, "r") as nb_file:
+            file = json.load(nb_file)['file']
+            name = cls.get_name(cls, path=file)
+        return name
 
 
     @classmethod
@@ -363,10 +379,17 @@ class StochSSFolder(StochSSBase):
         presentations = []
         if not os.path.isdir(path):
             return presentations
+        if os.path.exists(os.path.join(path, ".presentation_names.json")):
+            with open(os.path.join(path, ".presentation_names.json"), "r") as names_file:
+                names = json.load(names_file)
+        else:
+            names = {}
+        need_names = not bool(names)
         safe_chars = set(string.ascii_letters + string.digits)
         hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
+            ctime = os.path.getctime(file_path)
             query_str = f"?owner={hostname}&file={file}"
             routes = {
                 "smdl": "present-model",
@@ -374,10 +397,26 @@ class StochSSFolder(StochSSBase):
                 "job": "present-job",
                 "ipynb": "present-notebook"
             }
-            route = routes[file.split('.').pop()]
+            ext = file.split('.').pop()
+            if file in names.keys():
+                name = names[file]
+            else:
+                if ext in ("mdl", "smdl"):
+                    name = cls.__get_presentation_model_name(file_path)
+                elif ext == "job":
+                    name = cls.__get_presentation_job_name(file_path)
+                elif ext == "ipynb":
+                    name = cls.__get_presentation_notebook_name(file_path)
+                names[file] = name
+            if need_names:
+                with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
+                    json.dump(names, names_file)
+            route = routes[ext]
             link = f"/stochss/{route}{query_str}"
             presentation = {
-                "file": file, "link": link, "size": os.path.getsize(file_path)
+                "file": file, "link": link, "name": name,
+                "size": os.path.getsize(file_path),
+                "ctime": datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y")
             }
             presentations.append(presentation)
         return presentations
