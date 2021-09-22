@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import pickle
 import shutil
 import string
 import zipfile
@@ -97,6 +98,14 @@ class StochSSFolder(StochSSBase):
             node['children'] = True
 
         return node
+
+
+    @classmethod
+    def __get_presentation_job_name(cls, file_path):
+        with open(file_path, "rb") as job_file:
+            job = pickle.load(job_file)
+            name = job['name']
+        return name
 
 
     @classmethod
@@ -390,7 +399,6 @@ class StochSSFolder(StochSSBase):
         for file in os.listdir(path):
             file_path = os.path.join(path, file)
             ctime = os.path.getctime(file_path)
-            query_str = f"?owner={hostname}&file={file}"
             routes = {
                 "smdl": "present-model",
                 "mdl": "present-model",
@@ -411,10 +419,9 @@ class StochSSFolder(StochSSBase):
             if need_names:
                 with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
                     json.dump(names, names_file)
-            route = routes[ext]
-            link = f"/stochss/{route}{query_str}"
             presentation = {
-                "file": file, "link": link, "name": name,
+                "file": f"{name}.{ext}",
+                "link": f"/stochss/{routes[ext]}?owner={hostname}&file={file}",
                 "size": os.path.getsize(file_path),
                 "ctime": datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y")
             }
