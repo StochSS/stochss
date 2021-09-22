@@ -396,7 +396,7 @@ class StochSSFolder(StochSSBase):
         need_names = not bool(names)
         safe_chars = set(string.ascii_letters + string.digits)
         hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
-        for file in os.listdir(path):
+        for file in [file for file in os.listdir(path) if not file.startswith('.')]:
             file_path = os.path.join(path, file)
             ctime = os.path.getctime(file_path)
             routes = {
@@ -416,16 +416,16 @@ class StochSSFolder(StochSSBase):
                 elif ext == "ipynb":
                     name = cls.__get_presentation_notebook_name(file_path)
                 names[file] = name
-            if need_names:
-                with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
-                    json.dump(names, names_file)
             presentation = {
-                "file": f"{name}.{ext}",
+                "file": file, "name": f"{name}.{ext}",
                 "link": f"/stochss/{routes[ext]}?owner={hostname}&file={file}",
                 "size": os.path.getsize(file_path),
                 "ctime": datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y")
             }
             presentations.append(presentation)
+        if need_names:
+            with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
+                json.dump(names, names_file)
         return presentations
 
 
