@@ -116,6 +116,33 @@ class StochSSFolder(StochSSBase):
 
 
     @classmethod
+    def __get_presentation_name(cls, names, file, file_path):
+        ext = file.split('.').pop()
+        if file in names.keys():
+            name = names[file]
+        else:
+            if ext in ("mdl", "smdl"):
+                name = cls.__get_presentation_model_name(file_path)
+            elif ext == "job":
+                name = cls.__get_presentation_job_name(file_path)
+            elif ext == "ipynb":
+                name = cls.__get_presentation_notebook_name(file_path)
+            names[file] = name
+        return name, ext
+
+
+    @classmethod
+    def __get_names_from_file(cls, path, files):
+        if not os.path.exists(os.path.join(path, ".presentation_names.json")):
+            return {}
+        with open(os.path.join(path, ".presentation_names.json"), "r") as names_file:
+            names = json.load(names_file)
+        if len(names.keys()) != len(files):
+            return {}
+        return names
+
+
+    @classmethod
     def __get_presentation_notebook_name(cls, file_path):
         with open(file_path, "r") as nb_file:
             file = json.load(nb_file)['file']
@@ -385,18 +412,15 @@ class StochSSFolder(StochSSBase):
         ----------
         '''
         path = os.path.join(cls.user_dir, ".presentations")
+        files = [file for file in os.listdir(path) if not file.startswith('.')]
         presentations = []
-        if not os.path.isdir(path):
+        if not files:
             return presentations
-        if os.path.exists(os.path.join(path, ".presentation_names.json")):
-            with open(os.path.join(path, ".presentation_names.json"), "r") as names_file:
-                names = json.load(names_file)
-        else:
-            names = {}
+        names = cls.__get_names_from_file(path, files)
         need_names = not bool(names)
         safe_chars = set(string.ascii_letters + string.digits)
         hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
-        for file in [file for file in os.listdir(path) if not file.startswith('.')]:
+        for file in files:
             file_path = os.path.join(path, file)
             ctime = os.path.getctime(file_path)
             routes = {
@@ -405,17 +429,7 @@ class StochSSFolder(StochSSBase):
                 "job": "present-job",
                 "ipynb": "present-notebook"
             }
-            ext = file.split('.').pop()
-            if file in names.keys():
-                name = names[file]
-            else:
-                if ext in ("mdl", "smdl"):
-                    name = cls.__get_presentation_model_name(file_path)
-                elif ext == "job":
-                    name = cls.__get_presentation_job_name(file_path)
-                elif ext == "ipynb":
-                    name = cls.__get_presentation_notebook_name(file_path)
-                names[file] = name
+            name, ext = cls.__get_presentation_name(names, file, file_path)
             presentation = {
                 "file": file, "name": f"{name}.{ext}",
                 "link": f"/stochss/{routes[ext]}?owner={hostname}&file={file}",
@@ -423,7 +437,7 @@ class StochSSFolder(StochSSBase):
                 "ctime": datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y")
             }
             presentations.append(presentation)
-        if need_names:
+        if need_names or len(names.keys()) != len(files):
             with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
                 json.dump(names, names_file)
         return presentations
