@@ -416,13 +416,16 @@ class StochSSModel(StochSSBase):
         file_name = f".{self.get_name()}-preview.json"
         if not os.path.exists(file_name):
             return ""
-        with open(file_name, "r") as live_fig:
-            fig = json.load(live_fig)
-            fig["config"] = {
-                "displayModeBar": True,
-                "responsive": True
-            }
-        return {"results": fig, "timeout":False}
+        try:
+            with open(file_name, "r") as live_fig:
+                fig = json.load(live_fig)
+                fig["config"] = {
+                    "displayModeBar": True,
+                    "responsive": True
+                }
+            return {"results": fig, "timeout":False}
+        except json.decoder.JSONDecodeError:
+            return ""
 
 
     def get_notebook_data(self):
