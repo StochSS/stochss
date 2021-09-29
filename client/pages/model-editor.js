@@ -212,7 +212,7 @@ let ModelEditor = PageView.extend({
         },
         error: errorCB
       });
-    }, 2000);
+    }, 1000);
   },
   handlePresentationClick: function (e) {
     let errorMsg = $(this.queryByHook("error-detected-msg"));
