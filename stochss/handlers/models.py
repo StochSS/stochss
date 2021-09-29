@@ -229,6 +229,7 @@ class RunModelAPIHandler(APIHandler):
             log.debug(f"Results for the model preview: {results}")
             if results is None:
                 resp['Running'] = True
+                resp['Results'] = model.get_live_results()
                 log.info("The preview is still running")
             else:
                 resp['Results'] = results
