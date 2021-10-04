@@ -414,8 +414,6 @@ class StochSSModel(StochSSBase):
         ----------
         '''
         file_name = f".{self.get_name()}-preview.json"
-        if not os.path.exists(file_name):
-            return ""
         try:
             with open(file_name, "r") as live_fig:
                 fig = json.load(live_fig)
@@ -424,6 +422,8 @@ class StochSSModel(StochSSBase):
                     "responsive": True
                 }
             return {"results": fig, "timeout":False}
+        except FileNotFoundError:
+            return ""
         except json.decoder.JSONDecodeError:
             return ""
 
