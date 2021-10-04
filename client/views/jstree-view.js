@@ -900,7 +900,7 @@ module.exports = View.extend({
             msg.html(reason);
             msg.css("display", "inline-block");
           }
-          app.copyToClipboard(links.presentation, onFulfilled, onReject);
+          app.copyToClipboard(body.links.presentation, onFulfilled, onReject);
         });
       },
       error: (err, response, body) => {
