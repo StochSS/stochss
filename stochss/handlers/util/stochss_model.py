@@ -485,6 +485,7 @@ class StochSSModel(StochSSBase):
             if os.path.exists(dst):
                 data = None
             else:
+                self.add_presentation_name(file, self.model['name'])
                 data = {"path": dst, "new":True, "model":self.model}
             query_str = f"?owner={hostname}&file={file}"
             present_link = f"/stochss/present-model{query_str}"

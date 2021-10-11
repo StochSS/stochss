@@ -60,6 +60,30 @@ class TestStochSSBaseObject(unittest.TestCase):
             StochSSBase.user_dir = os.path.expanduser("~")
 
     ################################################################################################
+    # Unit tests for the StochSS base class add_presentation_name function.
+    ################################################################################################
+
+    def test_add_presentation_name__file_exists(self):
+        ''' Check if the presentation name is add to the presentation names file. '''
+        StochSSBase.user_dir = self.tempdir.name
+        test_base = StochSSBase(path="")
+        with mock.patch("os.path.exists", return_value=True):
+            with mock.patch("builtins.open", mock.mock_open(read_data="{}")):
+                with mock.patch("json.dump") as mock_json_dump:
+                    test_base.add_presentation_name("foo", "bar")
+                    mock_json_dump.assert_called_once_with({'foo': 'bar'}, mock.ANY)
+
+
+    def test_add_presentation_name__file_does_not_exists(self):
+        ''' Check if the presentation names file was created with the given entry. '''
+        StochSSBase.user_dir = self.tempdir.name
+        test_base = StochSSBase(path="")
+        with mock.patch("builtins.open", mock.mock_open()):
+            with mock.patch("json.dump") as mock_json_dump:
+                test_base.add_presentation_name("foo", "bar")
+                mock_json_dump.assert_called_once_with({'foo': 'bar'}, mock.ANY)
+
+    ################################################################################################
     # Unit tests for the StochSS base class check_project_format function.
     ################################################################################################
 
@@ -129,6 +153,19 @@ class TestStochSSBaseObject(unittest.TestCase):
     def test_check_workflow_format__new(self):
         ''' Check if the workflow is identified as old. '''
         self.assertTrue(StochSSBase.check_workflow_format(path=self.test_folderpath))
+
+    ################################################################################################
+    # Unit tests for the StochSS base class delete_presentation_name function.
+    ################################################################################################
+
+    def test_delete_presentation_name(self):
+        ''' Check if the target presentation was removed from the presentation names file. '''
+        StochSSBase.user_dir = self.tempdir.name
+        test_base = StochSSBase(path="")
+        with mock.patch("builtins.open", mock.mock_open(read_data='{"foo": "bar"}')):
+            with mock.patch("json.dump") as mock_json_dump:
+                test_base.delete_presentation_name("foo")
+                mock_json_dump.assert_called_once_with({}, mock.ANY)
 
     ################################################################################################
     # Unit tests for the StochSS base class get_new_path function.

@@ -604,6 +604,7 @@ class StochSSNotebook(StochSSBase):
             if os.path.exists(dst):
                 exists = True
             else:
+                self.add_presentation_name(file, self.get_name())
                 exists = False
                 with open(dst, "w") as presentation_file:
                     json.dump(notebook_pres, presentation_file)

@@ -20,8 +20,10 @@ let State = require('ampersand-state');
 
 module.exports = State.extend({
   session: {
+    ctime: 'string',
     file: 'string',
     link: 'string',
+    name: 'string',
     size: 'number',
     tag: 'string'
   },
