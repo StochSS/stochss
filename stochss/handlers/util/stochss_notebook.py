@@ -564,7 +564,7 @@ class StochSSNotebook(StochSSBase):
             return f"M{name}"
         if l_char in string.ascii_lowercase:
             return name.replace(l_char, l_char.upper(), 1)
-        return name
+        return name.replace(" ", "")
 
 
     def get_gillespy2_solver_name(self):
