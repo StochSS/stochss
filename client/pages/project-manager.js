@@ -314,7 +314,7 @@ let ProjectManager = PageView.extend({
     }
   },
   handleUploadModelClick: function (e) {
-    this.projectFileBrowser.uploadFile(undefined, "model")
+    this.projectFileBrowser.uploadFile(null, this.model.directory, "model", true)
   },
   renderArchiveCollection: function () {
     if(this.archiveCollectionView) {
