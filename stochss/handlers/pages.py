@@ -274,3 +274,21 @@ class UserLogsAPIHandler(APIHandler):
             logs = []
         self.write({"logs":logs})
         self.finish()
+
+
+class ClearUserLogsAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for clearing the user logs
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Clear contents of the user log file.
+
+        Attributes
+        ----------
+        '''
+        open(os.path.join(os.path.expanduser("~"), ".user-logs.txt"), "w").close()
+        self.finish()
