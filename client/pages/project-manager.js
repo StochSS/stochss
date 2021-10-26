@@ -92,8 +92,8 @@ let ProjectManager = PageView.extend({
       always: function (err, response, body) {
         let modal = $(modals.importModelHtml(body.files)).modal();
         let okBtn = document.querySelector('#importModelModal .ok-model-btn');
-        let select = document.querySelector('#importModelModal #modelFileInput');
-        let location = document.querySelector('#importModelModal #modelPathInput');
+        let select = document.querySelector('#importModelModal #modelFileSelect');
+        let location = document.querySelector('#importModelModal #modelPathSelect');
         select.addEventListener("change", function (e) {
           okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
           if(body.paths[e.target.value].length >= 2) {
