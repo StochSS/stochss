@@ -71,18 +71,7 @@ module.exports = View.extend({
     if(app.getBasePath() === "/") {
       $("#presentation-nav-link").css("display", "none");
     }
-    let self = this;
-    let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
-    $("#user-logs").html(message)
-    this.logBlock = [];
-    this.logs = [];
-    this.getUserLogs();
-    this.scrolled = false;
-    this.scrollCount = 0;
-    $("#user-logs").on("mousewheel", function(e) {
-      self.scrolled = true;
-      self.scrollCount = 0;
-    });
+    this.setupUserLogs();
     return this;
   },
   addNewLogBlock: function () {
@@ -112,7 +101,12 @@ module.exports = View.extend({
     this.addNewLogBlock();
   },
   clearUserLogs: function (e) {
-    console.log("Clearing the user logs");
+    let endpoint = path.join(app.getApiPath(), "clear-user-logs");
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        this.setupUserLogs({getLogs: false});
+      }
+    });
   },
   collapseExpandLogs: function (e) {
     let logs = $("#user-logs");
@@ -190,6 +184,21 @@ module.exports = View.extend({
 
   navigate: function (page) {
     window.location = url;
+  },
+  setupUserLogs: function ({getLogs = true}={}) {
+    let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
+    $("#user-logs").html(message)
+    this.logBlock = [];
+    this.logs = [];
+    this.scrolled = false;
+    this.scrollCount = 0;
+    if(getLogs) {
+      this.getUserLogs();
+      $("#user-logs").on("mousewheel", (e) => {
+        this.scrolled = true;
+        this.scrollCount = 0;
+      });
+    }
   },
   updateUserLogs: function () {
     setTimeout(_.bind(this.getUserLogs, this), 1000);
