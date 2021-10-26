@@ -539,6 +539,13 @@ class StochSSFolder(StochSSBase):
                 body = json.dumps(json.loads(body)['notebook'])
         else:
             file = self.get_file(path=remote_path)
+        if "404: Not Found" in body.decode():
+            message = f"Could not upload this file as {file} was not found."
+            if "?token=" in file:
+                message += "  The token for this file may be out of date."
+            return {"message": message, "reason":"File Not Found"}
+        if "?token=" in file:
+            file = file.split("?token=")[0]
         path = self.get_new_path(dst_path=file)
         if os.path.exists(path):
             if not overwrite:
@@ -575,6 +582,8 @@ class StochSSFolder(StochSSBase):
                 body = json.dumps(json.loads(body)['notebook'])
         else:
             file = self.get_file(path=remote_path)
+        if "?token=" in file:
+            file = file.split("?token=")[0]
         path = self.get_new_path(dst_path=file)
         if ext == "zip":
             with zipfile.ZipFile(path, "r") as zip_file:
