@@ -171,7 +171,8 @@ class AddExistingModelAPIHandler(APIHandler):
             folder = StochSSFolder(path="")
             # file will be excluded if test passes
             test = lambda ext, root, file: bool(".wkfl" in root or f"{path}" in root or \
-                                                "trash" in root.split("/"))
+                                                "trash" in root.split("/") or \
+                                                ".presentations" in root)
             data = folder.get_file_list(ext=[".mdl", ".smdl"], test=test)
             log.debug(f"List of models: {data}")
             self.write(data)
