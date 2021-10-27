@@ -16,6 +16,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import os
+import sys
 import logging
 from tornado.log import LogFormatter
 
@@ -42,16 +44,16 @@ def relocate_old_logs():
     src = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
     if not os.path.exists(src):
         return
-    
+
     src_size = os.path.getsize(src)
     if src_size < 500000:
         os.rename(src, "/var/log/user-logs.txt")
         return
-    
+
     with open(src, "r") as log_file:
         logs = log_file.read().rstrip().split('\n')
     os.remove(src)
-    
+
     mlog_size = src_size % 500000
     mlogs = [logs.pop()]
     while sys.getsizeof("\n".join(mlogs)) < mlog_size:
@@ -118,8 +120,8 @@ def setup_file_handler():
         os.rename(src, dst)
         os.remove(src)
 
-    handler = logging.RotatingFileHandler("/var/log/.user-logs.txt",
-                                          maxBytes=500000, backupCount=1)
+    handler = logging.handlers.RotatingFileHandler("/var/log/.user-logs.txt",
+                                                   maxBytes=500000, backupCount=1)
     handler.namer = namer
     handler.rotator = rotator
     fmt = '%(asctime)s$ %(message)s'
