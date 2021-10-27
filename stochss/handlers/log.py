@@ -57,7 +57,8 @@ def setup_file_handler():
     Attributes
     ----------
     '''
-    handler = logging.FileHandler(".user-logs.txt")
+    handler = logging.RotatingFileHandler("/var/log/.user-logs.txt",
+                                          maxBytes=500000, backupCount=1)
     fmt = '%(asctime)s$ %(message)s'
     formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
     handler.setFormatter(formatter)
