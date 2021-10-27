@@ -91,8 +91,37 @@ def setup_file_handler():
     Attributes
     ----------
     '''
+    def namer(name):
+        '''
+        Namer function for the RotatingFileHandler
+
+        Attributes
+        ----------
+        name : str
+            Default name of the log file.
+        '''
+        return f"{name}.bak"
+
+    def rotator(src, dst):
+        '''
+        Rotator function for the RotatingFileHandler
+
+        Attributes
+        ----------
+        src : str
+            Path to the main log file.
+        dst : str
+            Path to the backup log file.
+        '''
+        if os.path.exists(dst):
+            os.remove(dst)
+        os.rename(src, dst)
+        os.remove(src)
+
     handler = logging.RotatingFileHandler("/var/log/.user-logs.txt",
                                           maxBytes=500000, backupCount=1)
+    handler.namer = namer
+    handler.rotator = rotator
     fmt = '%(asctime)s$ %(message)s'
     formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
     handler.setFormatter(formatter)
