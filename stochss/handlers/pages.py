@@ -264,13 +264,39 @@ class UserLogsAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         log_num = self.get_query_arguments(name="logNum")[0]
-        user_dir = os.path.expanduser("~")
-        path = os.path.join(user_dir, ".user-logs.txt")
+        path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
         try:
+            if os.path.exists(f"{path}.bak"):
+                with open(path, "r") as log_file:
+                    logs = log_file.read().strip().split("\n")
+            else:
+                logs = []
             with open(path, "r") as log_file:
-                logs = log_file.read().strip().split("\n")[int(log_num):]
+                logs.extend(log_file.read().strip().split("\n"))
+                logs = logs[int(log_num):]
         except FileNotFoundError:
             open(path, "w").close()
             logs = []
         self.write({"logs":logs})
+        self.finish()
+
+
+class ClearUserLogsAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for clearing the user logs
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Clear contents of the user log file.
+
+        Attributes
+        ----------
+        '''
+        path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
+        if os.path.exists(f'{path}.bak'):
+            os.remove(f'{path}.bak')
+        open(path, "w").close()
         self.finish()
