@@ -264,7 +264,7 @@ class UserLogsAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         log_num = self.get_query_arguments(name="logNum")[0]
-        path = os.path.join("/var/logs/.user-logs.txt")
+        path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
         try:
             if os.path.exists(f"{path}.bak"):
                 with open(path, "r") as log_file:
@@ -272,7 +272,8 @@ class UserLogsAPIHandler(APIHandler):
             else:
                 logs = []
             with open(path, "r") as log_file:
-                logs = logs.extend(log_file.read().strip().split("\n"))[int(log_num):]
+                logs.extend(log_file.read().strip().split("\n"))
+                logs = logs[int(log_num):]
         except FileNotFoundError:
             open(path, "w").close()
             logs = []
@@ -294,7 +295,8 @@ class ClearUserLogsAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        if os.path.exists("/var/log/.user-logs.txt.bak"):
-            os.remove("/var/log/.user-logs.txt.bak")
-        open("/var/log/.user-logs.txt", "w").close()
+        path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
+        if os.path.exists(f'{path}.bak'):
+            os.remove(f'{path}.bak')
+        open(path, "w").close()
         self.finish()

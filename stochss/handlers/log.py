@@ -41,24 +41,23 @@ def relocate_old_logs():
     '''
     Move the user log file to its new location (/var/log).
     '''
-    src = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
+    user_dir = os.path.expanduser("~")
+    src = os.path.join(user_dir, ".user-logs.txt")
     if not os.path.exists(src):
         return
 
     src_size = os.path.getsize(src)
     if src_size < 500000:
-        os.rename(src, "/var/log/user-logs.txt")
         return
 
     with open(src, "r") as log_file:
         logs = log_file.read().rstrip().split('\n')
-    os.remove(src)
-
+    
     mlog_size = src_size % 500000
     mlogs = [logs.pop()]
     while sys.getsizeof("\n".join(mlogs)) < mlog_size:
         mlogs.insert(0, logs.pop())
-    with open("/var/log/.user-logs.txt", "w") as main_log_file:
+    with open(os.path.join(user_dir, ".user-logs.txt"), "w") as main_log_file:
         main_log_file.write("\n".join(mlogs))
 
     blogs = [logs.pop()]
@@ -66,7 +65,7 @@ def relocate_old_logs():
     while logs and sys.getsizeof("\n".join(blogs)) + nlog_size < 500000:
         blogs.insert(0, logs.pop())
         nlog_size = sys.getsizeof(f"\n{logs[-1]}")
-    with open("/var/log/.user-logs.txt.bak", "w") as backup_log_file:
+    with open(os.path.join(user_dir, ".user-logs.txt.bak"), "w") as backup_log_file:
         backup_log_file.write("\n".join(blogs))
 
 
@@ -120,8 +119,8 @@ def setup_file_handler():
         os.rename(src, dst)
         os.remove(src)
 
-    handler = logging.handlers.RotatingFileHandler("/var/log/.user-logs.txt",
-                                                   maxBytes=500000, backupCount=1)
+    path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
+    handler = logging.handlers.RotatingFileHandler(path, maxBytes=500000, backupCount=1)
     handler.namer = namer
     handler.rotator = rotator
     fmt = '%(asctime)s$ %(message)s'
