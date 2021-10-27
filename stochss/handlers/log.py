@@ -28,10 +28,44 @@ def init_log():
     Attributes
     ----------
     '''
+    relocate_old_logs()
     setup_stream_handler()
     setup_file_handler()
     log.setLevel(logging.DEBUG)
     log.propagate = False
+
+
+def relocate_old_logs():
+    '''
+    Move the user log file to its new location (/var/log).
+    '''
+    src = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
+    if not os.path.exists(src):
+        return
+    
+    src_size = os.path.getsize(src)
+    if src_size < 500000:
+        os.rename(src, "/var/log/user-logs.txt")
+        return
+    
+    with open(src, "r") as log_file:
+        logs = log_file.read().rstrip().split('\n')
+    os.remove(src)
+    
+    mlog_size = src_size % 500000
+    mlogs = [logs.pop()]
+    while sys.getsizeof("\n".join(mlogs)) < mlog_size:
+        mlogs.insert(0, logs.pop())
+    with open("/var/log/.user-logs.txt", "w") as main_log_file:
+        main_log_file.write("\n".join(mlogs))
+
+    blogs = [logs.pop()]
+    nlog_size = sys.getsizeof(f"\n{logs[-1]}")
+    while logs and sys.getsizeof("\n".join(blogs)) + nlog_size < 500000:
+        blogs.insert(0, logs.pop())
+        nlog_size = sys.getsizeof(f"\n{logs[-1]}")
+    with open("/var/log/.user-logs.txt.bak", "w") as backup_log_file:
+        backup_log_file.write("\n".join(blogs))
 
 
 def setup_stream_handler():
