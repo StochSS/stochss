@@ -294,5 +294,7 @@ class ClearUserLogsAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        open(os.path.join(os.path.expanduser("~"), ".user-logs.txt"), "w").close()
+        if os.path.exists("/var/log/.user-logs.txt.bak"):
+            os.remove("/var/log/.user-logs.txt.bak")
+        open("/var/log/.user-logs.txt", "w").close()
         self.finish()
