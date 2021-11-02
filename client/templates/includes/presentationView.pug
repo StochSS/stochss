@@ -5,13 +5,17 @@ div.mx-1
 
   div.row
 
-    div.col-sm-6
+    div.col-sm-4
 
-      a.pl-2(href=this.model.link)=this.model.file
+      a.pl-2(href=this.model.link)=this.model.name
 
     div.col-sm-2
 
       button.btn.btn-outline-secondary.box-shadow(data-hook="copy-link") Copy Link
+
+    div.col-sm-2
+
+      div=this.model.ctime
 
     div.col-sm-2
 

@@ -91,7 +91,7 @@ let LoadingPage = PageView.extend({
         $(self.queryByHook("loading-spinner")).css("display", "none");
         let modal = $(modals.errorHtml(body.reason, body.message)).modal();
         modal.on('hidden.bs.modal', function (e) {
-          window.location.href = this.homeLink;
+          window.location.href = self.homeLink;
         });
       }
       app.getXHR(endpoint, {

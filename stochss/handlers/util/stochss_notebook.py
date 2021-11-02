@@ -564,7 +564,7 @@ class StochSSNotebook(StochSSBase):
             return f"M{name}"
         if l_char in string.ascii_lowercase:
             return name.replace(l_char, l_char.upper(), 1)
-        return name
+        return name.replace(" ", "")
 
 
     def get_gillespy2_solver_name(self):
@@ -604,6 +604,7 @@ class StochSSNotebook(StochSSBase):
             if os.path.exists(dst):
                 exists = True
             else:
+                self.add_presentation_name(file, self.get_name())
                 exists = False
                 with open(dst, "w") as presentation_file:
                     json.dump(notebook_pres, presentation_file)

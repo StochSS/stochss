@@ -60,6 +60,8 @@ class StochSSFile(StochSSBase):
         '''
         path = self.get_path(full=True)
         try:
+            if ".presentations" in path:
+                self.delete_presentation_name(self.get_file())
             os.remove(path)
             return "The file {0} was successfully deleted.".format(self.get_file())
         except FileNotFoundError as err:

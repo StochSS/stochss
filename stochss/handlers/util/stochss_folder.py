@@ -18,9 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import pickle
 import shutil
 import string
 import zipfile
+import datetime
 import traceback
 
 import requests
@@ -96,6 +98,56 @@ class StochSSFolder(StochSSBase):
             node['children'] = True
 
         return node
+
+
+    @classmethod
+    def __get_presentation_job_name(cls, file_path):
+        with open(file_path, "rb") as job_file:
+            job = pickle.load(job_file)
+            name = job['name']
+        return name
+
+
+    @classmethod
+    def __get_presentation_model_name(cls, file_path):
+        with open(file_path, "r") as model_file:
+            name = json.load(model_file)['name']
+        return name
+
+
+    @classmethod
+    def __get_presentation_name(cls, names, file, file_path):
+        ext = file.split('.').pop()
+        if file in names.keys():
+            name = names[file]
+        else:
+            if ext in ("mdl", "smdl"):
+                name = cls.__get_presentation_model_name(file_path)
+            elif ext == "job":
+                name = cls.__get_presentation_job_name(file_path)
+            elif ext == "ipynb":
+                name = cls.__get_presentation_notebook_name(file_path)
+            names[file] = name
+        return name, ext
+
+
+    @classmethod
+    def __get_names_from_file(cls, path, files):
+        if not os.path.exists(os.path.join(path, ".presentation_names.json")):
+            return {}
+        with open(os.path.join(path, ".presentation_names.json"), "r") as names_file:
+            names = json.load(names_file)
+        if len(names.keys()) != len(files):
+            return {}
+        return names
+
+
+    @classmethod
+    def __get_presentation_notebook_name(cls, file_path):
+        with open(file_path, "r") as nb_file:
+            file = json.load(nb_file)['file']
+            name = cls.get_name(cls, path=file)
+        return name
 
 
     @classmethod
@@ -360,26 +412,34 @@ class StochSSFolder(StochSSBase):
         ----------
         '''
         path = os.path.join(cls.user_dir, ".presentations")
+        files = [file for file in os.listdir(path) if not file.startswith('.')]
         presentations = []
-        if not os.path.isdir(path):
+        if not files:
             return presentations
+        names = cls.__get_names_from_file(path, files)
+        need_names = not bool(names)
         safe_chars = set(string.ascii_letters + string.digits)
         hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
-        for file in os.listdir(path):
+        for file in files:
             file_path = os.path.join(path, file)
-            query_str = f"?owner={hostname}&file={file}"
+            ctime = os.path.getctime(file_path)
             routes = {
                 "smdl": "present-model",
                 "mdl": "present-model",
                 "job": "present-job",
                 "ipynb": "present-notebook"
             }
-            route = routes[file.split('.').pop()]
-            link = f"/stochss/{route}{query_str}"
+            name, ext = cls.__get_presentation_name(names, file, file_path)
             presentation = {
-                "file": file, "link": link, "size": os.path.getsize(file_path)
+                "file": file, "name": f"{name}.{ext}",
+                "link": f"/stochss/{routes[ext]}?owner={hostname}&file={file}",
+                "size": os.path.getsize(file_path),
+                "ctime": datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y")
             }
             presentations.append(presentation)
+        if need_names or len(names.keys()) != len(files):
+            with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
+                json.dump(names, names_file)
         return presentations
 
 
@@ -479,6 +539,13 @@ class StochSSFolder(StochSSBase):
                 body = json.dumps(json.loads(body)['notebook'])
         else:
             file = self.get_file(path=remote_path)
+        if "404: Not Found" in body.decode():
+            message = f"Could not upload this file as {file} was not found."
+            if "?token=" in file:
+                message += "  The token for this file may be out of date."
+            return {"message": message, "reason":"File Not Found"}
+        if "?token=" in file:
+            file = file.split("?token=")[0]
         path = self.get_new_path(dst_path=file)
         if os.path.exists(path):
             if not overwrite:
@@ -515,6 +582,8 @@ class StochSSFolder(StochSSBase):
                 body = json.dumps(json.loads(body)['notebook'])
         else:
             file = self.get_file(path=remote_path)
+        if "?token=" in file:
+            file = file.split("?token=")[0]
         path = self.get_new_path(dst_path=file)
         if ext == "zip":
             with zipfile.ZipFile(path, "r") as zip_file:
