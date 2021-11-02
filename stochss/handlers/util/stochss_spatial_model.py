@@ -267,7 +267,7 @@ class StochSSSpatialModel(StochSSBase):
         try:
             for species in self.model['species']:
                 name = species['name']
-                s_species = Species(name=name, diffusion_constant=species['diffusionConst'])
+                s_species = Species(name=name, diffusion_coefficient=species['diffusionConst'])
                 model.add_species(s_species)
                 model.restrict(s_species, species['types'])
         except KeyError as err:

@@ -403,7 +403,7 @@ class StochSSNotebook(StochSSBase):
                     if self.s_model['is_spatial']:
                         names.append(spec["name"])
                         spec_str = f'{pad}{spec["name"]} = Species(name="{spec["name"]}", '
-                        spec_str += f"diffusion_constant={spec['diffusionConst']})"
+                        spec_str += f"diffusion_coefficient={spec['diffusionConst']})"
                         if len(spec['types']) < len(self.s_model['domain']['types']) - 1:
                             type_str = f"{pad}self.restrict({spec['name']}, {str(spec['types'])})"
                             types_str.append(type_str)
