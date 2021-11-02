@@ -137,7 +137,7 @@ class StochSSSpatialModel(StochSSBase):
                         "type":type_id,
                         "nu":viscosity,
                         "rho":s_domain.rho[i],
-                        "c":s_domain[i],
+                        "c":s_domain.c[i],
                         "fixed":fixed}
             particles.append(particle)
         return particles
