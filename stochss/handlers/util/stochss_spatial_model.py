@@ -357,7 +357,7 @@ class StochSSSpatialModel(StochSSBase):
         if "rho" not in self.model['domain']['particles'][0].keys() or \
                     "c" not in self.model['domain']['particles'][0].keys():
             for particle in self.model['domain']['particles']:
-                particle['rho'] = particle['mass']/particle['vol']
+                particle['rho'] = particle['mass']/particle['volume']
                 particle['c'] = 10
 
 
@@ -457,6 +457,8 @@ class StochSSSpatialModel(StochSSBase):
             path = self.path
         domain = Domain.read_stochss_domain(path)
         fig = domain.plot_types(return_plotly_figure=True)
+        if not fig['data']:
+            self.__get_trace_data(particles=[], name="Un-Assigned")
         fig['layout']['autosize'] = True
         fig['config'] = {"responsive":True}
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
