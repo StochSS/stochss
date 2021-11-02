@@ -459,8 +459,8 @@ class StochSSSpatialModel(StochSSBase):
         fig = domain.plot_types(return_plotly_figure=True)
         if not fig['data']:
             fig['data'].append(self.__get_trace_data(particles=[], name="Un-Assigned"))
-        fig['width'] = None
-        fig['height'] = None
+        fig['layout']['width'] = None
+        fig['layout']['height'] = None
         fig['layout']['autosize'] = True
         fig['config'] = {"responsive":True}
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
