@@ -86,7 +86,7 @@ class ParameterScan():
             return self.model
         tmp_mdl = copy.deepcopy(self.model)
         for name, value in variables.items():
-            tmp_mdl.listOfParameters[name].set_expression(value)
+            tmp_mdl.listOfParameters[name].expression = value
         return tmp_mdl
 
 
