@@ -93,7 +93,7 @@ class StochSSSpatialModel(StochSSBase):
     def __build_stochss_domain(cls, s_domain, data=None):
         particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
         gravity = [0] * 3 if s_domain.gravity is None else s_domain.gravity
-        domain = {"size":s_domain.mesh_size,
+        domain = {"size":s_domain.domain_size,
                   "rho_0":s_domain.rho0, # density
                   "c_0":s_domain.c0, # approx./artificial speed of sound
                   "p_0":s_domain.P0, # atmos/background pressure
@@ -136,6 +136,8 @@ class StochSSSpatialModel(StochSSBase):
                         "mass":s_domain.mass[i],
                         "type":type_id,
                         "nu":viscosity,
+                        "rho":s_domain.rho[i],
+                        "c":s_domain[i],
                         "fixed":fixed}
             particles.append(particle)
         return particles
@@ -438,37 +440,26 @@ class StochSSSpatialModel(StochSSBase):
         return self.__load_domain_from_file(path=path)
 
 
-    def get_domain_plot(self, domain=None, path=None, new=False):
+    def get_domain_plot(self, path=None, new=False):
         '''
         Get a plotly plot of the models domain or a prospective domain
 
         Attributes
         ----------
-        domain : dict
-            The domain to be plotted
         path : str
             Path to a prospective domain
         new : bool
             Indicates whether or not to load an new domain
         '''
-        if domain is None:
-            domain = self.get_domain(path=path, new=new)
-        trace_list = []
-        for i, d_type in enumerate(domain['types']):
-            if len(domain['types']) > 1:
-                particles = list(filter(lambda particle, key=i: particle['type'] == key,
-                                        domain['particles']))
-            else:
-                particles = domain['particles']
-            trace = self.__get_trace_data(particles=particles, name=d_type['name'])
-            trace_list.append(trace)
-        layout = {"scene":{"aspectmode":'data'}, "autosize":True}
-        if len(domain['x_lim']) == 2:
-            layout["xaxis"] = {"range":domain['x_lim']}
-        if len(domain['y_lim']) == 2:
-            layout["yaxis"] = {"range":domain['y_lim']}
-        return json.dumps({"data":trace_list, "layout":layout, "config":{"responsive":True}},
-                          cls=plotly.utils.PlotlyJSONEncoder)
+        if new:
+            path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+        elif path is None:
+            path = self.path
+        domain = Domain.read_stochss_domain(path)
+        fig = domain.plot_types(return_plotly_figure=True)
+        fig['layout']['autosize'] = True
+        fig['config'] = {"responsive":True}
+        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
     def get_notebook_data(self):
