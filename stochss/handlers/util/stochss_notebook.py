@@ -278,7 +278,7 @@ class StochSSNotebook(StochSSBase):
     def __create_domain_string(self, model, pad):
         domain = ["", f"{pad}# Domain",
                   f"{pad}domain = Domain.read_stochss_domain('{self.s_model['path']}')",
-                  f"{pad}self.add_mesh(domain)",
+                  f"{pad}self.add_domain(domain)",
                   "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
         model.extend(domain)
 
