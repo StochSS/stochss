@@ -406,6 +406,28 @@ class StochSSModel(StochSSBase):
         return {"Message":message, "File":s_file}, {"spatial":model, "path":s_path}
 
 
+    def get_live_results(self):
+        '''
+        Get the live output figure for the preview.
+
+        Attributes
+        ----------
+        '''
+        file_name = f".{self.get_name()}-preview.json"
+        try:
+            with open(file_name, "r") as live_fig:
+                fig = json.load(live_fig)
+                fig["config"] = {
+                    "displayModeBar": True,
+                    "responsive": True
+                }
+            return {"results": fig, "timeout":False}
+        except FileNotFoundError:
+            return ""
+        except json.decoder.JSONDecodeError:
+            return ""
+
+
     def get_notebook_data(self):
         '''
         Get the needed data for converting to notebook
