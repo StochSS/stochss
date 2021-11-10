@@ -106,7 +106,7 @@ class EnsembleSimulation(StochSSJob):
                 log.info(f"Running {self.g_model.name} preview simulation")
             live_file = f".{self.g_model.name}-preview.json"
             options = {"file_path": live_file}
-            results = self.g_model.run(timeout=5, live_output="graph", live_output_options=options)
+            results = self.g_model.run(timeout=60, live_output="graph", live_output_options=options)
             if verbose:
                 log.info(f"{self.g_model.name} preview simulation has completed")
                 log.info(f"Generate result plot for {self.g_model.name} preview")
