@@ -212,6 +212,9 @@ class RunModelAPIHandler(APIHandler):
         target = self.get_query_argument(name="target", default=None)
         resp = {"Running":False, "Outfile":outfile, "Results":""}
         if run_cmd == "start":
+            model = StochSSModel(path=path)
+            if os.path.exists(f".{model.get_name()}-preview.json"):
+                os.remove(f".{model.get_name()}-preview.json")
             exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
                         f'{path}', f'{outfile}']
             if target is not None:
