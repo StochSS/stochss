@@ -26,7 +26,7 @@ import traceback
 import numpy
 import plotly
 from escapism import escape
-from spatialpy import Model, Species, Parameter, Reaction, Mesh, MeshError, BoundaryCondition, \
+from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
 
 from .stochss_base import StochSSBase
@@ -93,7 +93,7 @@ class StochSSSpatialModel(StochSSBase):
     def __build_stochss_domain(cls, s_domain, data=None):
         particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
         gravity = [0] * 3 if s_domain.gravity is None else s_domain.gravity
-        domain = {"size":s_domain.mesh_size,
+        domain = {"size":s_domain.domain_size,
                   "rho_0":s_domain.rho0, # density
                   "c_0":s_domain.c0, # approx./artificial speed of sound
                   "p_0":s_domain.P0, # atmos/background pressure
@@ -136,6 +136,8 @@ class StochSSSpatialModel(StochSSBase):
                         "mass":s_domain.mass[i],
                         "type":type_id,
                         "nu":viscosity,
+                        "rho":s_domain.rho[i],
+                        "c":s_domain.c[i],
                         "fixed":fixed}
             particles.append(particle)
         return particles
@@ -163,9 +165,9 @@ class StochSSSpatialModel(StochSSBase):
             gravity = self.model['domain']['gravity']
             if gravity == [0, 0, 0]:
                 gravity = None
-            mesh = Mesh(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
-            self.__convert_particles(mesh=mesh)
-            model.add_mesh(mesh)
+            domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
+            self.__convert_particles(domain=domain)
+            model.add_domain(domain)
             model.staticDomain = self.model['domain']['static']
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
@@ -221,11 +223,12 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_particles(self, mesh):
+    def __convert_particles(self, domain):
         try:
             for particle in self.model['domain']['particles']:
-                mesh.add_point(particle['point'], particle['volume'], particle['mass'],
-                               particle['type'], particle['nu'], particle['fixed'])
+                domain.add_point(particle['point'], particle['volume'], particle['mass'],
+                                 particle['type'], particle['nu'], particle['fixed'],
+                                 particle['rho'], particle['c'])
         except KeyError as err:
             message = "Spatial model domain particle properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -264,7 +267,7 @@ class StochSSSpatialModel(StochSSBase):
         try:
             for species in self.model['species']:
                 name = species['name']
-                s_species = Species(name=name, diffusion_constant=species['diffusionConst'])
+                s_species = Species(name=name, diffusion_coefficient=species['diffusionConst'])
                 model.add_species(s_species)
                 model.restrict(s_species, species['types'])
         except KeyError as err:
@@ -321,7 +324,7 @@ class StochSSSpatialModel(StochSSBase):
             if path.endswith(".domn"):
                 with open(path, "r") as domain_file:
                     return json.load(domain_file)
-            s_domain = Mesh.read_xml_mesh(filename=path)
+            s_domain = Domain.read_xml_mesh(filename=path)
             return self.__build_stochss_domain(s_domain=s_domain)
         except FileNotFoundError as err:
             message = f"Could not find the domain file: {str(err)}"
@@ -329,7 +332,7 @@ class StochSSSpatialModel(StochSSBase):
         except json.decoder.JSONDecodeError as err:
             message = f"The domain file is not JSON decobable: {str(err)}"
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
-        except MeshError as err:
+        except DomainError as err:
             message = f"The domain file is not in proper format: {str(err)}"
             raise DomainFormatError(message, traceback.format_exc()) from err
 
@@ -344,6 +347,19 @@ class StochSSSpatialModel(StochSSBase):
         except json.decoder.JSONDecodeError as err:
             message = f"The spatial model is not JSON decobable: {str(err)}"
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
+
+
+    def __update_domain(self):
+        if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
+            self.model['domain'] = self.get_model_template()['domain']
+        elif "static" not in self.model['domain'].keys():
+            self.model['domain']['static'] = True
+        if self.model['domain']['particles']:
+            if "rho" not in self.model['domain']['particles'][0].keys() or \
+                        "c" not in self.model['domain']['particles'][0].keys():
+                for particle in self.model['domain']['particles']:
+                    particle['rho'] = particle['mass']/particle['volume']
+                    particle['c'] = 10
 
 
     def convert_to_model(self):
@@ -425,37 +441,44 @@ class StochSSSpatialModel(StochSSBase):
         return self.__load_domain_from_file(path=path)
 
 
-    def get_domain_plot(self, domain=None, path=None, new=False):
+    def get_domain_plot(self, path=None, new=False):
         '''
         Get a plotly plot of the models domain or a prospective domain
 
         Attributes
         ----------
-        domain : dict
-            The domain to be plotted
         path : str
             Path to a prospective domain
         new : bool
             Indicates whether or not to load an new domain
         '''
-        if domain is None:
-            domain = self.get_domain(path=path, new=new)
-        trace_list = []
-        for i, d_type in enumerate(domain['types']):
-            if len(domain['types']) > 1:
-                particles = list(filter(lambda particle, key=i: particle['type'] == key,
-                                        domain['particles']))
-            else:
-                particles = domain['particles']
-            trace = self.__get_trace_data(particles=particles, name=d_type['name'])
-            trace_list.append(trace)
-        layout = {"scene":{"aspectmode":'data'}, "autosize":True}
-        if len(domain['x_lim']) == 2:
-            layout["xaxis"] = {"range":domain['x_lim']}
-        if len(domain['y_lim']) == 2:
-            layout["yaxis"] = {"range":domain['y_lim']}
-        return json.dumps({"data":trace_list, "layout":layout, "config":{"responsive":True}},
-                          cls=plotly.utils.PlotlyJSONEncoder)
+        if new:
+            path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+        elif path is None:
+            path = self.path
+        domain = Domain.read_stochss_domain(path)
+        fig = domain.plot_types(return_plotly_figure=True)
+        if not fig['data']:
+            fig['data'].append(self.__get_trace_data(particles=[], name="Un-Assigned"))
+        else:
+            s_domain = self.load()['domain']
+            for i, d_type in enumerate(s_domain['types']):
+                if len(s_domain['types']) > 1:
+                    particles = list(filter(lambda partictle, key=i: particle['type'] == key,
+                                            s_domain['particles']))
+                else:
+                    particles = s_domain['particles']
+                ids = list(map(lambda particle: particle['particle_id'], particles))
+                index = fig['data'].index(
+                    list(filter(lambda trace: trace['name'].endswith(str(d_type['typeID'])), fig['data']))[0]
+                )
+                fig['data'][index]['name'] = d_type['name']
+                fig['data'][index]['ids'] = ids
+        fig['layout']['width'] = None
+        fig['layout']['height'] = None
+        fig['layout']['autosize'] = True
+        fig['config'] = {"responsive":True}
+        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
     def get_notebook_data(self):
@@ -490,8 +513,15 @@ class StochSSSpatialModel(StochSSBase):
             xlim = [coord + data['transformation'][0] for coord in data['xLim']]
             ylim = [coord + data['transformation'][1] for coord in data['yLim']]
             zlim = [coord + data['transformation'][2] for coord in data['zLim']]
-        s_domain = Mesh.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
-                                         ny=data['ny'], nz=data['nz'], **data['type'])
+        dimensions = bool(xlim[1] - xlim[0])
+        dimensions += bool(ylim[1] - ylim[0])
+        dimensions += bool(zlim[1] - zlim[0])
+        if dimensions > 2:
+            s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
+                                               ny=data['ny'], nz=data['nz'], **data['type'])
+        else:
+            s_domain = Domain.create_2D_domain(xlim=xlim, ylim=ylim,
+                                               nx=data['nx'], ny=data['ny'], **data['type'])
         domain = cls.__build_stochss_domain(s_domain=s_domain)
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
         return {"particles":domain['particles'], "limits":limits}
@@ -512,9 +542,9 @@ class StochSSSpatialModel(StochSSBase):
             List of type discriptions (lines from an uploaded file)
         '''
         file = tempfile.NamedTemporaryFile()
-        with open(file.name, "w") as mesh_file:
-            mesh_file.write(mesh)
-        s_domain = Mesh.read_xml_mesh(filename=file.name)
+        with open(file.name, "w") as domain_file:
+            domain_file.write(mesh)
+        s_domain = Domain.read_xml_mesh(filename=file.name)
         domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
         if types is not None:
             type_data = cls.get_types_from_file(lines=types)
@@ -576,10 +606,7 @@ class StochSSSpatialModel(StochSSBase):
             self.model['defaultMode'] = "discrete"
         if "timestepSize" not in self.model['modelSettings'].keys():
             self.model['modelSettings']['timestepSize'] = 1e-5
-        if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
-            self.model['domain'] = self.get_model_template()['domain']
-        elif "static" not in self.model['domain'].keys():
-            self.model['domain']['static'] = True
+        self.__update_domain()
         if "boundaryConditions" not in self.model.keys():
             self.model['boundaryConditions'] = []
         for species in self.model['species']:

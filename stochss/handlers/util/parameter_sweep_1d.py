@@ -150,7 +150,7 @@ class ParameterSweep1D():
                 self.settings['variables'] = {self.param['parameter']:val}
             else:
                 tmp_mdl = copy.deepcopy(self.model)
-                tmp_mdl.listOfParameters[self.param['parameter']].set_expression(val)
+                tmp_mdl.listOfParameters[self.param['parameter']].expression = val
             if verbose:
                 log.info(f"{job_id} --> running: {self.param['parameter']}={val}")
             try:

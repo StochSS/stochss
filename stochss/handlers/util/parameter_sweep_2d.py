@@ -153,8 +153,8 @@ class ParameterSweep2D():
                     self.settings['variables'] = variables
                 else:
                     tmp_mdl = copy.deepcopy(self.model)
-                    tmp_mdl.listOfParameters[self.params[0]['parameter']].set_expression(val1)
-                    tmp_mdl.listOfParameters[self.params[1]['parameter']].set_expression(val2)
+                    tmp_mdl.listOfParameters[self.params[0]['parameter']].expression = val1
+                    tmp_mdl.listOfParameters[self.params[1]['parameter']].expression = val2
                 if verbose:
                     message = f"{job_id} --> running: {self.params[0]['parameter']}={val1}, "
                     message += f"{self.params[1]['parameter']}={val2}"
