@@ -354,11 +354,12 @@ class StochSSSpatialModel(StochSSBase):
             self.model['domain'] = self.get_model_template()['domain']
         elif "static" not in self.model['domain'].keys():
             self.model['domain']['static'] = True
-        if "rho" not in self.model['domain']['particles'][0].keys() or \
-                    "c" not in self.model['domain']['particles'][0].keys():
-            for particle in self.model['domain']['particles']:
-                particle['rho'] = particle['mass']/particle['volume']
-                particle['c'] = 10
+        if self.model['domain']['particles']:
+            if "rho" not in self.model['domain']['particles'][0].keys() or \
+                        "c" not in self.model['domain']['particles'][0].keys():
+                for particle in self.model['domain']['particles']:
+                    particle['rho'] = particle['mass']/particle['volume']
+                    particle['c'] = 10
 
 
     def convert_to_model(self):
@@ -498,8 +499,15 @@ class StochSSSpatialModel(StochSSBase):
             xlim = [coord + data['transformation'][0] for coord in data['xLim']]
             ylim = [coord + data['transformation'][1] for coord in data['yLim']]
             zlim = [coord + data['transformation'][2] for coord in data['zLim']]
-        s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
-                                           ny=data['ny'], nz=data['nz'], **data['type'])
+        dimensions = bool(xlim[1] - xlim[0])
+        dimensions += bool(ylim[1] - ylim[0])
+        dimensions += bool(zlim[1] - zlim[0])
+        if dimensions > 2:
+            s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
+                                               ny=data['ny'], nz=data['nz'], **data['type'])
+        else:
+            s_domain = Domain.create_2D_domain(xlim=xlim, ylim=ylim,
+                                               nx=data['nx'], ny=data['ny'], **data['type'])
         domain = cls.__build_stochss_domain(s_domain=s_domain)
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
         return {"particles":domain['particles'], "limits":limits}
