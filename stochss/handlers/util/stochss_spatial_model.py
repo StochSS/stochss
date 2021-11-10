@@ -460,6 +460,20 @@ class StochSSSpatialModel(StochSSBase):
         fig = domain.plot_types(return_plotly_figure=True)
         if not fig['data']:
             fig['data'].append(self.__get_trace_data(particles=[], name="Un-Assigned"))
+        else:
+            s_domain = self.load()['domain']
+            for i, d_type in enumerate(s_domain['types']):
+                if len(s_domain['types']) > 1:
+                    particles = list(filter(lambda partictle, key=i: particle['type'] == key,
+                                            s_domain['particles']))
+                else:
+                    particles = s_domain['particles']
+                ids = list(map(lambda particle: particle['particle_id'], particles))
+                index = fig['data'].index(
+                    list(filter(lambda trace: trace['name'].endswith(str(d_type['typeID'])), fig['data']))[0]
+                )
+                fig['data'][index]['name'] = d_type['name']
+                fig['data'][index]['ids'] = ids
         fig['layout']['width'] = None
         fig['layout']['height'] = None
         fig['layout']['autosize'] = True
