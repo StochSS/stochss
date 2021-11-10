@@ -266,7 +266,7 @@ class ModelExistsAPIHandler(APIHandler):
 class ImportMeshAPIHandler(APIHandler):
     '''
     ################################################################################################
-    Handler for importing mesh particles from remote file.
+    Handler for importing domain particles from remote file.
     ################################################################################################
     '''
     @web.authenticated

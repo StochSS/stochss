@@ -128,7 +128,7 @@ class StochSSParamSweepNotebook(StochSSNotebook):
         else:
             res_str += "tmp_model.run(**kwargs)"
             run_strs.extend([f"{pad*3}tmp_model = c.ps_class()",
-                             f"{pad*3}tmp_model.listOfParameters[c.p1].set_expression(v1)"])
+                             f"{pad*3}tmp_model.listOfParameters[c.p1].expression = v1"])
         run_strs.extend([f"{pad*3}if c.verbose:",
                          pad * 4 + "print(f'running {c.p1}={v1}')",
                          f"{pad*3}if(c.number_of_trajectories > 1):",
@@ -252,8 +252,8 @@ class StochSSParamSweepNotebook(StochSSNotebook):
         else:
             res_str += "tmp_model.run(**kwargs)"
             run_strs.extend([f"{pad*4}tmp_model = c.ps_class()",
-                             f"{pad*4}tmp_model.listOfParameters[c.p1].set_expression(v1)",
-                             f"{pad*4}tmp_model.listOfParameters[c.p2].set_expression(v2)"])
+                             f"{pad*4}tmp_model.listOfParameters[c.p1].expression = v1",
+                             f"{pad*4}tmp_model.listOfParameters[c.p2].expression = v2"])
         run_strs.extend([f"{pad*4}if c.verbose:",
                          pad * 5 + "print(f'running {c.p1}={v1}, {c.p2}={v2}')",
                          f"{pad*4}if(c.number_of_trajectories > 1):",
