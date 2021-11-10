@@ -212,6 +212,9 @@ class RunModelAPIHandler(APIHandler):
         target = self.get_query_argument(name="target", default=None)
         resp = {"Running":False, "Outfile":outfile, "Results":""}
         if run_cmd == "start":
+            model = StochSSModel(path=path)
+            if os.path.exists(f".{model.get_name()}-preview.json"):
+                os.remove(f".{model.get_name()}-preview.json")
             exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
                         f'{path}', f'{outfile}']
             if target is not None:
@@ -229,6 +232,7 @@ class RunModelAPIHandler(APIHandler):
             log.debug(f"Results for the model preview: {results}")
             if results is None:
                 resp['Running'] = True
+                resp['Results'] = model.get_live_results()
                 log.info("The preview is still running")
             else:
                 resp['Results'] = results
@@ -265,7 +269,7 @@ class ModelExistsAPIHandler(APIHandler):
 class ImportMeshAPIHandler(APIHandler):
     '''
     ################################################################################################
-    Handler for importing mesh particles from remote file.
+    Handler for importing domain particles from remote file.
     ################################################################################################
     '''
     @web.authenticated

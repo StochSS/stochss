@@ -38,67 +38,6 @@ String.prototype.toHtmlEntities = function() {
   });
 };
 
-let operationInfoModalHtml = (infoKey) => {
-  let fileBrowserInfo = `
-    <p>In StochSS we use custom file extensions for a number of files we work with.  Here is a list of our extentions with the files they are associated with:</p>
-    <table style="margin-left: 2em;">
-      <tr>
-        <td width=200> StochSS Model </td>
-        <td> .mdl </td>
-      </tr>
-      <tr>
-        <td width=200> StochSS Spatial Model </td>
-        <td> .smdl </td>
-      </tr>
-      <tr>
-        <td width=200> SBML Model </td>
-        <td> .sbml </td>
-      </tr>
-      <tr>
-        <td width=200> Workflows </td>
-        <td> .wkfl </td>
-      </tr>
-    </table>
-    <br>
-    <p>Other useful file extensions include the following:</p>
-    <table style="margin-left: 2em;">
-      <tr>
-        <td width=200> Jupyter Notebook </td>
-        <td> .ipynb </td>
-      </tr>
-    </table>
-  `;
-  let modelInfo = `
-    Model Information
-  `;
-  let workflowInfo = `
-    Workflow Information
-  `;
-
-  let infoList = {"File Browser":fileBrowserInfo, "Models":modelInfo, "Workflows":workflowInfo}
-  
-  return `
-    <div id="operationInfoModal" class="modal" tabindex="-1" role="dialog">
-      <div class="modal-dialog" role="document">
-        <div class="modal-content info">
-          <div class="modal-header">
-            <h5 class="modal-title"> Working with ${infoKey} </h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p> ${infoList[infoKey]} </p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  ` 
-}
-
 module.exports = View.extend({
   template: bodyTemplate,
   autoRender: true,
@@ -109,8 +48,8 @@ module.exports = View.extend({
   },
   events: {
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
-    'click [data-hook=user-logs-collapse]' : 'collapseExpandLogs'
-    //'click a[href]': 'handleLinkClick'
+    'click [data-hook=user-logs-collapse]' : 'collapseExpandLogs',
+    'click [data-hook=clear-user-logs]' : 'clearUserLogs'
   },
   render: function () {
 
@@ -132,18 +71,7 @@ module.exports = View.extend({
     if(app.getBasePath() === "/") {
       $("#presentation-nav-link").css("display", "none");
     }
-    let self = this;
-    let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
-    $("#user-logs").html(message)
-    this.logBlock = [];
-    this.logs = [];
-    this.getUserLogs();
-    this.scrolled = false;
-    this.scrollCount = 0;
-    $("#user-logs").on("mousewheel", function(e) {
-      self.scrolled = true;
-      self.scrollCount = 0;
-    });
+    this.setupUserLogs();
     return this;
   },
   addNewLogBlock: function () {
@@ -171,6 +99,14 @@ module.exports = View.extend({
       self.logs.push(newLog);
     });
     this.addNewLogBlock();
+  },
+  clearUserLogs: function (e) {
+    let endpoint = path.join(app.getApiPath(), "clear-user-logs");
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        this.setupUserLogs({getLogs: false});
+      }
+    });
   },
   collapseExpandLogs: function (e) {
     let logs = $("#user-logs");
@@ -248,6 +184,21 @@ module.exports = View.extend({
 
   navigate: function (page) {
     window.location = url;
+  },
+  setupUserLogs: function ({getLogs = true}={}) {
+    let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
+    $("#user-logs").html(message)
+    this.logBlock = [];
+    this.logs = [];
+    this.scrolled = false;
+    this.scrollCount = 0;
+    if(getLogs) {
+      this.getUserLogs();
+      $("#user-logs").on("mousewheel", (e) => {
+        this.scrolled = true;
+        this.scrollCount = 0;
+      });
+    }
   },
   updateUserLogs: function () {
     setTimeout(_.bind(this.getUserLogs, this), 1000);

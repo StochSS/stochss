@@ -222,8 +222,8 @@ class StochSSNotebook(StochSSBase):
             imports = ["import numpy as np"]
             if self.s_model['is_spatial']:
                 imports.append("import spatialpy")
-                imports.append("from spatialpy import Model, Species, Parameter, Reaction, Mesh,\\")
-                imports.append("                      PlaceInitialCondition, \\")
+                imports.append("from spatialpy import Model, Species, Parameter, Reaction,\\")
+                imports.append("                      Domain, PlaceInitialCondition, \\")
                 imports.append("                      UniformInitialCondition, \\")
                 imports.append("                      ScatterInitialCondition")
                 return nbf.new_code_cell("\n".join(imports))
@@ -275,12 +275,12 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __create_mesh_string(self, model, pad):
-        mesh = ["", f"{pad}# Domain",
-                f"{pad}mesh = Mesh.read_stochss_domain('{self.s_model['path']}')",
-                f"{pad}self.add_mesh(mesh)",
-                "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
-        model.extend(mesh)
+    def __create_domain_string(self, model, pad):
+        domain = ["", f"{pad}# Domain",
+                  f"{pad}domain = Domain.read_stochss_domain('{self.s_model['path']}')",
+                  f"{pad}self.add_domain(domain)",
+                  "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
+        model.extend(domain)
 
 
     def __create_model_cell(self):
@@ -289,7 +289,7 @@ class StochSSNotebook(StochSSBase):
             model = [f"class {self.get_class_name()}(Model):",
                      "    def __init__(self):",
                      f'{pad}Model.__init__(self, name="{self.get_name()}")']
-            self.__create_mesh_string(model=model, pad=pad)
+            self.__create_domain_string(model=model, pad=pad)
             self.__create_boundary_condition_string(model=model, pad=pad)
             self.__create_species_strings(model=model, pad=pad)
             self.__create_initial_condition_strings(model=model, pad=pad)
@@ -403,7 +403,7 @@ class StochSSNotebook(StochSSBase):
                     if self.s_model['is_spatial']:
                         names.append(spec["name"])
                         spec_str = f'{pad}{spec["name"]} = Species(name="{spec["name"]}", '
-                        spec_str += f"diffusion_constant={spec['diffusionConst']})"
+                        spec_str += f"diffusion_coefficient={spec['diffusionConst']})"
                         if len(spec['types']) < len(self.s_model['domain']['types']) - 1:
                             type_str = f"{pad}self.restrict({spec['name']}, {str(spec['types'])})"
                             types_str.append(type_str)
@@ -564,7 +564,7 @@ class StochSSNotebook(StochSSBase):
             return f"M{name}"
         if l_char in string.ascii_lowercase:
             return name.replace(l_char, l_char.upper(), 1)
-        return name
+        return name.replace(" ", "")
 
 
     def get_gillespy2_solver_name(self):
@@ -604,6 +604,7 @@ class StochSSNotebook(StochSSBase):
             if os.path.exists(dst):
                 exists = True
             else:
+                self.add_presentation_name(file, self.get_name())
                 exists = False
                 with open(dst, "w") as presentation_file:
                     json.dump(notebook_pres, presentation_file)

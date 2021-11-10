@@ -46,6 +46,28 @@ class StochSSBase():
         self.logs = []
 
 
+    def add_presentation_name(self, file, name):
+        '''
+        Add a new presentation to the presentation names file.
+
+        Attributes
+        ----------
+        file : str
+            Name of the presentation file
+        name : str
+            Name of the presentation
+        '''
+        path = os.path.join(self.user_dir, ".presentations", ".presentation_names.json")
+        if os.path.exists(path):
+            with open(path, "r") as names_file:
+                names = json.load(names_file)
+        else:
+            names = {}
+        names[file] = name
+        with open(path, "w") as names_file:
+            json.dump(names, names_file)
+
+
     @classmethod
     def check_project_format(cls, path):
         '''
@@ -85,6 +107,23 @@ class StochSSBase():
         if len(list(filter(lambda file: file.endswith(".mdl"), files))) > 0:
             return False
         return True
+
+
+    def delete_presentation_name(self, file):
+        '''
+        Remove a presentation name from the presentation names file.
+
+        Attributes
+        ----------
+        file : str
+            Name of the presentation file to remove
+        '''
+        path = os.path.join(self.user_dir, ".presentations", ".presentation_names.json")
+        with open(path, "r") as names_file:
+            names = json.load(names_file)
+        del names[file]
+        with open(path, "w") as names_file:
+            json.dump(names, names_file)
 
 
     @classmethod

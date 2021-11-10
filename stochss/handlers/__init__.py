@@ -53,6 +53,7 @@ def get_page_handlers(route_start):
         ## API Handlers
         #
         (r'/stochss/api/user-logs\/?', UserLogsAPIHandler),
+        (r'/stochss/api/clear-user-logs\/?', ClearUserLogsAPIHandler),
         (r"/stochss/api/file/browser-list\/?", ModelBrowserFileList),
         (r"/stochss/api/file/upload\/?", UploadFileAPIHandler),
         (r"/stochss/api/file/upload-from-link\/?", UploadFileFromLinkAPIHandler),

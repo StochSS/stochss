@@ -141,7 +141,7 @@ class StochSSSciopeNotebook(StochSSNotebook):
             run = f"{pad}res = model.run(**kwargs, variables=variables)"
         else:
             func_def = "def set_model_parameters(params, model):"
-            body = f"{pad*2}model.get_parameter(pname).set_expression(params[e])"
+            body = f"{pad*2}model.get_parameter(pname).expression = params[e]"
             return_str = f"{pad}return model"
             call = f"{pad}model_update = set_model_parameters(params, model)"
             run = f"{pad}res = model_update.run(**kwargs)"

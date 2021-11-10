@@ -4,6 +4,9 @@ import re
 import sys
 import time
 import webbrowser
+
+MAX_WAIT_TIME = 60
+
 try:
     import docker
 except ImportError:
@@ -25,11 +28,15 @@ docker_client=docker.from_env()
 #time.sleep(10)
 print("Checking for running StochSS container: stochss-lab")
 container_started = False
+poll_start_time = time.time()
 while not container_started:
+    if (time.time() - MAX_WAIT_TIME) > poll_start_time:
+        print(f"Stopped checking for running StochSS container after {MAX_WAIT_TIME}s")
+        sys.exit(1)
     time.sleep(1)
     try:
         stochss_container=docker_client.containers.get("stochss-lab")
-        print("Generating StochSS webpage...")
+        print("Checking to see if the server is active.")
         jupyter_url_generator=stochss_container.exec_run("jupyter notebook list", demux=False)
         url_regex = r"(?i)\b((?:https?://|www\d{0,3}[.]|[a-z0-9.\-]+[.][a-z]{2,4}/)(?:[^\s()<>]+|\(([^\s()<>]+|(\([^\s()<>]+\)))*\))+(?:\(([^\s()<>]+|(\([^\s()<>]+\)))*\)|[^\s`!()\[\]{};:'\".,<>?«»“”‘’]))"
         jupyter_url_bytes = jupyter_url_generator.output
@@ -40,6 +47,7 @@ while not container_started:
         jupyter_url=jupyter_url_sequence[0]
         jupyter_url=jupyter_url.replace('0.0.0.0','127.0.0.1')
         print(f"Opening StochSS webpage...\n")
+        time.sleep(1)
         webbrowser.open_new_tab(jupyter_url)
         print("Welcome to StochSS!\n\nYou can access your local StochSS service with this URL:\n\n")
         print(jupyter_url+"\n")

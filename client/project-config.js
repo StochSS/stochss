@@ -151,7 +151,7 @@ let getNotebookContext = (view, node) => {
     open: open,
     publish: view.getPublishNotebookContext(node),
     download: download, rename: rename,
-    duplicate: duplicate, delete: deleteFile
+    duplicate: duplicate, moveToTrash: moveToTrash
   }
 }
 

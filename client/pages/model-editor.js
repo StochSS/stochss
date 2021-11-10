@@ -197,17 +197,22 @@ let ModelEditor = PageView.extend({
             errorCB(err, response, body);
           }
           else if(!body.Running){
+            Plotly.purge(this.queryByHook('preview-plot-container'));
             if(body.Results.timeout){
               $(this.queryByHook('model-timeout-message')).collapse('show');
             }
             this.plotResults(body.Results.results);
           }else{
+            if(body.Results) {
+              Plotly.purge(this.queryByHook('preview-plot-container'));
+              this.plotResults(body.Results.results);
+            }
             this.getResults();
           }
         },
         error: errorCB
       });
-    }, 2000);
+    }, 1000);
   },
   handlePresentationClick: function (e) {
     let errorMsg = $(this.queryByHook("error-detected-msg"));
