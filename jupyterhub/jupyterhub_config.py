@@ -238,6 +238,9 @@ def pre_spawn_hook(spawner):
         log.info(msg)
         return
     user_type = None
+    for dom in blacklist:
+        if dom in spawner.user.name:
+            raise Exception('User banned')
     if spawner.user.name in c.Authenticator.admin_users:
         user_type = 'admin'
     elif spawner.user.name in c.StochSS.power_users:
@@ -431,6 +434,7 @@ c.Spawner.mem_guarantee = '2G'
 #  Defaults to an empty set, in which case no user has admin access.
 c.Authenticator.admin_users = admin = set([])
 c.StochSS.power_users = power_users = set([])
+c.StochSS.blacklist = blacklist = set([])
 
 pwd = os.path.dirname(__file__)
 with open(os.path.join(pwd, 'userlist')) as f:
@@ -448,3 +452,5 @@ with open(os.path.join(pwd, 'userlist')) as f:
                     power_users.add(name)
                 elif parts[1] == 'power':
                     power_users.add(name)
+                elif parts[1] == 'blacklist':
+                    blacklist.add(name)
