@@ -245,6 +245,7 @@ def pre_spawn_hook(spawner):
         user_type = 'admin'
     elif spawner.user.name in c.StochSS.power_users:
         user_type = 'power'
+    print(post_message_to_slack(f"New Login: {spawner.user.name} user_type={user_type}"))
     if user_type:
         spawner.mem_limit = None
         log.info(f'Skipping resource limitation for {user_type} user: {spawner.user.name}')
@@ -454,3 +455,33 @@ with open(os.path.join(pwd, 'userlist')) as f:
                     power_users.add(name)
                 elif parts[1] == 'blacklist':
                     blacklist.add(name)
+
+
+
+# Slack integration
+import requests
+import json
+
+# slack access bot token
+slack_user_name = "StochSS Live Bot"                                             
+slack_channel = "#stochss-live"
+slack_icon_emoji = ':red_circle:'
+slack_token = None
+try:
+    with open(".slack_bot_token",'r') as fd:
+        slack_token = fd.readline().strip()                                          
+except:
+    pass
+
+def post_message_to_slack(text, blocks = None):
+    global slack_token, slack_channel, slack_icon_emoji, slack_user_name         
+    if slack_token is None: return
+    return requests.post('https://slack.com/api/chat.postMessage', {             
+        'token': slack_token,                                                    
+        'channel': slack_channel,
+        'text': text,
+        'icon_emoji': slack_icon_emoji,
+        'username': slack_user_name,                                             
+        'blocks': json.dumps(blocks) if blocks else None                         
+    }).json()
+
