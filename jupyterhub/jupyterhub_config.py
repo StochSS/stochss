@@ -238,9 +238,16 @@ def pre_spawn_hook(spawner):
         log.info(msg)
         return
     user_type = None
-    for dom in blacklist:
-        if dom in spawner.user.name:
-            raise Exception('User banned')
+    for elem in blacklist:
+        if elem.beginswith('@'):
+            if elem in spawner.user.name:
+                post_message_to_slack('User {} of banned domain {} attempted to log in'.format(spawner.user.name, elem), blocks = None)
+                raise Exception('User banned')
+        else:
+            if elem == spawner.user.name: 
+                post_message_to_slack('Banned user {} attempted to log in'.format(spawner.user.name), blocks = None)
+                raise Exception('User banned')
+
     if spawner.user.name in c.Authenticator.admin_users:
         user_type = 'admin'
     elif spawner.user.name in c.StochSS.power_users:
@@ -485,3 +492,32 @@ def post_message_to_slack(text, blocks = None):
         'blocks': json.dumps(blocks) if blocks else None                         
     }).json()
 
+def get_power_users():
+    '''
+    Get the list of power users
+    '''
+    power_users_file = os.environ.get('POWER_USERS_FILE')
+    log = logging.getLogger()
+    if not os.path.exists(power_users_file):
+        log.warning('No power users defined!')
+        return []
+    with open(power_users_file) as file:
+        power_users = [ x.rstrip() for x in file.readlines() ]
+    return power_users
+
+def get_blacklist():
+    '''
+    Get the list of power users
+    '''
+    blacklist_file = os.environ.get('BLACKLIST_FILE')
+    log = logging.getLogger()
+    if not os.path.exists(blacklist_file):
+        log.warning('No blacklisted users defined!')
+        return []
+    with open(blacklist_file) as file:
+        blacklist = [ x.rstrip() for x in file.readlines() ]
+    return blacklist
+
+
+c.StochSS.power_users = get_power_users()
+c.StochSS.blacklist = get_blacklist()
