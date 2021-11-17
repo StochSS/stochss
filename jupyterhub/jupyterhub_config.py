@@ -231,6 +231,8 @@ def pre_spawn_hook(spawner):
     Limits the resources available to user containers, excluding a list of power users.
     '''
     log = spawner.log
+
+    log.info(f"Beginning pre_spawn_hook for {spawner.user.name}")
     # Remove the memory limit for power users
     if c.StochSS.user_cpu_count == 0:
         spawner.mem_limit = None
@@ -238,10 +240,25 @@ def pre_spawn_hook(spawner):
         log.info(msg)
         return
     user_type = None
+    for elem in blacklist:
+        if elem.startswith('@'):
+            log.info(f"Checking for domain affiliation: {elem}")
+            if elem in spawner.user.name:
+                post_message_to_slack('User {} of banned domain {} attempted to log in'.format(spawner.user.name, elem), blocks = None)
+                raise Exception('User banned')
+        else:
+            log.info(f"Checking for user: {elem}")
+            if elem == spawner.user.name: 
+                post_message_to_slack('Banned user {} attempted to log in'.format(spawner.user.name), blocks = None)
+                raise Exception('User banned')
+
     if spawner.user.name in c.Authenticator.admin_users:
+        log.info(f"Setting usertype for {spawner.user.name} to 'admin'")
         user_type = 'admin'
     elif spawner.user.name in c.StochSS.power_users:
+        log.info(f"Setting usertype for {spawner.user.name} to 'power'")
         user_type = 'power'
+    print(post_message_to_slack(f"New Login: {spawner.user.name} user_type={user_type}"))
     if user_type:
         spawner.mem_limit = None
         log.info(f'Skipping resource limitation for {user_type} user: {spawner.user.name}')
@@ -431,6 +448,7 @@ c.Spawner.mem_guarantee = '2G'
 #  Defaults to an empty set, in which case no user has admin access.
 c.Authenticator.admin_users = admin = set([])
 c.StochSS.power_users = power_users = set([])
+c.StochSS.blacklist = blacklist = set([])
 
 pwd = os.path.dirname(__file__)
 with open(os.path.join(pwd, 'userlist')) as f:
@@ -448,3 +466,36 @@ with open(os.path.join(pwd, 'userlist')) as f:
                     power_users.add(name)
                 elif parts[1] == 'power':
                     power_users.add(name)
+                elif parts[1] == 'blacklist':
+                    blacklist.add(name)
+
+
+
+# Slack integration
+import requests
+import json
+
+# slack access bot token
+slack_user_name = "StochSS Live Bot"                                             
+slack_channel = "#stochss-live"
+slack_icon_emoji = ':red_circle:'
+slack_token = None
+try:
+    with open(".slack_bot_token",'r') as fd:
+        slack_token = fd.readline().strip()                                          
+except:
+    pass
+
+def post_message_to_slack(text, blocks = None):
+    global slack_token, slack_channel, slack_icon_emoji, slack_user_name         
+    if slack_token is None: return
+    return requests.post('https://slack.com/api/chat.postMessage', {             
+        'token': slack_token,                                                    
+        'channel': slack_channel,
+        'text': text,
+        'icon_emoji': slack_icon_emoji,
+        'username': slack_user_name,                                             
+        'blocks': json.dumps(blocks) if blocks else None                         
+    }).json()
+
+
