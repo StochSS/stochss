@@ -498,28 +498,4 @@ def post_message_to_slack(text, blocks = None):
         'blocks': json.dumps(blocks) if blocks else None                         
     }).json()
 
-def get_power_users():
-    '''
-    Get the list of power users
-    '''
-    power_users_file = os.environ.get('POWER_USERS_FILE')
-    if not os.path.exists(power_users_file):
-        return []
-    with open(power_users_file) as file:
-        power_users = [ x.rstrip() for x in file.readlines() ]
-    return power_users
 
-def get_blacklist():
-    '''
-    Get the list of power users
-    '''
-    blacklist_file = os.environ.get('BLACKLIST_FILE')
-    if not os.path.exists(blacklist_file):
-        return []
-    with open(blacklist_file) as file:
-        blacklist = [ x.rstrip() for x in file.readlines() ]
-    return blacklist
-
-
-c.StochSS.power_users = get_power_users()
-c.StochSS.blacklist = get_blacklist()
