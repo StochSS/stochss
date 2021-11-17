@@ -231,6 +231,8 @@ def pre_spawn_hook(spawner):
     Limits the resources available to user containers, excluding a list of power users.
     '''
     log = spawner.log
+
+    log.info(f"Beginning pre_spawn_hook for {spawner.user.name}")
     # Remove the memory limit for power users
     if c.StochSS.user_cpu_count == 0:
         spawner.mem_limit = None
@@ -239,18 +241,22 @@ def pre_spawn_hook(spawner):
         return
     user_type = None
     for elem in blacklist:
-        if elem.beginswith('@'):
+        if elem.startswith('@'):
+            log.info(f"Checking for domain affiliation: {elem}")
             if elem in spawner.user.name:
                 post_message_to_slack('User {} of banned domain {} attempted to log in'.format(spawner.user.name, elem), blocks = None)
                 raise Exception('User banned')
         else:
+            log.info(f"Checking for user: {elem}")
             if elem == spawner.user.name: 
                 post_message_to_slack('Banned user {} attempted to log in'.format(spawner.user.name), blocks = None)
                 raise Exception('User banned')
 
     if spawner.user.name in c.Authenticator.admin_users:
+        log.info(f"Setting usertype for {spawner.user.name} to 'admin'")
         user_type = 'admin'
     elif spawner.user.name in c.StochSS.power_users:
+        log.info(f"Setting usertype for {spawner.user.name} to 'power'")
         user_type = 'power'
     print(post_message_to_slack(f"New Login: {spawner.user.name} user_type={user_type}"))
     if user_type:
@@ -497,9 +503,7 @@ def get_power_users():
     Get the list of power users
     '''
     power_users_file = os.environ.get('POWER_USERS_FILE')
-    log = logging.getLogger()
     if not os.path.exists(power_users_file):
-        log.warning('No power users defined!')
         return []
     with open(power_users_file) as file:
         power_users = [ x.rstrip() for x in file.readlines() ]
@@ -510,9 +514,7 @@ def get_blacklist():
     Get the list of power users
     '''
     blacklist_file = os.environ.get('BLACKLIST_FILE')
-    log = logging.getLogger()
     if not os.path.exists(blacklist_file):
-        log.warning('No blacklisted users defined!')
         return []
     with open(blacklist_file) as file:
         blacklist = [ x.rstrip() for x in file.readlines() ]
