@@ -33,3 +33,4 @@ userlist
 dist/*
 *.egg-info/
 .vscode/
+.proxies.txt
