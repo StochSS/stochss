@@ -452,22 +452,30 @@ c.StochSS.blacklist = blacklist = set([])
 
 pwd = os.path.dirname(__file__)
 with open(os.path.join(pwd, 'userlist')) as f:
-    for line in f:
-        if not line:
-            continue
+    lines = f.read().strip().split("\n")
+    for line in lines:
         parts = line.split()
-        # in case of newline at the end of userlist file
-        if len(parts) >= 1:
+        if len(parts) > 1:
             name = parts[0]
-            #whitelist.add(name)
-            if len(parts) > 1:
-                if parts[1] == 'admin':
-                    admin.add(name)
-                    power_users.add(name)
-                elif parts[1] == 'power':
-                    power_users.add(name)
-                elif parts[1] == 'blacklist':
+            if parts[1] == 'admin':
+                admin.add(name)
+                power_users.add(name)
+            elif parts[1] == 'power':
+                power_users.add(name)
+            elif parts[1] == 'blacklist':
+                if len(parts) > 2:
+                    index = int(parts[2])
+                    r_args = [int(x) for x in parts[3].split(',')]
+                    for i in range(*r_args):
+                        sub = str(i)
+                        if len(parts) > 4:
+                            rj_args = parts[4].split(',')
+                            rj_args[0] = int(rj_args[0])
+                            sub = sub.rjust(*rj_args)
+                        blacklist.add(f"{name[:index]}{sub}{name[index:]}")
+                else:
                     blacklist.add(name)
+                blacklist.add(name)
 
 
 
