@@ -530,7 +530,12 @@ class StochSSFolder(StochSSBase):
             Overwrite the existing files.
         '''
         ext = remote_path.split('.').pop()
-        body = requests.get(remote_path, allow_redirects=True).content
+        if os.path.exists("/stochss/.proxies.txt"):
+            with open("/stochss/.proxies.txt", "r") as proxy_file:
+                proxies = {"https": proxy_file.read().strip()}
+        else:
+            proxies = None
+        body = requests.get(remote_path, allow_redirects=True, proxies=proxies).content
         if "download_presentation" in remote_path:
             if ext in ("mdl", "smdl"):
                 file = f"{json.loads(body)['name']}.{ext}"
