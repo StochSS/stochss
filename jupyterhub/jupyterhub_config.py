@@ -22,6 +22,9 @@ import os
 import os.path
 import sys
 import re
+import requests
+import json
+
 
 sys.path.append('/srv/jupyterhub/') # pylint: disable=wrong-import-position
 
@@ -245,12 +248,12 @@ def pre_spawn_hook(spawner):
         if elem.startswith('@'):
             log.info(f"Checking for domain affiliation: {elem}")
             if elem in spawner.user.name:
-                post_message_to_slack('User {} of banned domain {} attempted to log in'.format(spawner.user.name, elem), blocks = None)
+                post_message_to_slack(f'User {spawner.user.name} of banned domain {elem} attempted to log in', blocks = None)
                 raise Exception('User banned')
         else:
             log.info(f"Checking for user: {elem}")
             if elem == spawner.user.name or re.search(elem, spawner.user.name) is not None:
-                post_message_to_slack('Banned user {} attempted to log in'.format(spawner.user.name), blocks = None)
+                post_message_to_slack(f'Banned user {spawner.user.name} attempted to log in', blocks = None)
                 raise Exception('User banned')
 
     if spawner.user.name in c.Authenticator.admin_users:
@@ -469,30 +472,26 @@ with open(os.path.join(pwd, 'userlist')) as f:
 
 
 # Slack integration
-import requests
-import json
-
 # slack access bot token
-slack_user_name = "StochSS Live Bot"                                             
+slack_user_name = "StochSS Live Bot"
 slack_channel = "#stochss-live"
 slack_icon_emoji = ':red_circle:'
 slack_token = None
 try:
     with open(".slack_bot_token",'r') as fd:
-        slack_token = fd.readline().strip()                                          
+        slack_token = fd.readline().strip()
 except:
     pass
 
 def post_message_to_slack(text, blocks = None):
-    global slack_token, slack_channel, slack_icon_emoji, slack_user_name         
-    if slack_token is None: return
-    return requests.post('https://slack.com/api/chat.postMessage', {             
-        'token': slack_token,                                                    
+    global slack_token, slack_channel, slack_icon_emoji, slack_user_name
+    if slack_token is None:
+        return
+    return requests.post('https://slack.com/api/chat.postMessage', {
+        'token': slack_token,
         'channel': slack_channel,
         'text': text,
         'icon_emoji': slack_icon_emoji,
-        'username': slack_user_name,                                             
-        'blocks': json.dumps(blocks) if blocks else None                         
+        'username': slack_user_name,
+        'blocks': json.dumps(blocks) if blocks else None
     }).json()
-
-
