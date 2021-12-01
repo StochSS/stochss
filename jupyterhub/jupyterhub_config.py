@@ -21,6 +21,7 @@
 import os
 import os.path
 import sys
+import re
 
 sys.path.append('/srv/jupyterhub/') # pylint: disable=wrong-import-position
 
@@ -248,7 +249,7 @@ def pre_spawn_hook(spawner):
                 raise Exception('User banned')
         else:
             log.info(f"Checking for user: {elem}")
-            if elem == spawner.user.name: 
+            if elem == spawner.user.name or re.search(elem, spawner.user.name) is not None:
                 post_message_to_slack('Banned user {} attempted to log in'.format(spawner.user.name), blocks = None)
                 raise Exception('User banned')
 
@@ -463,18 +464,6 @@ with open(os.path.join(pwd, 'userlist')) as f:
             elif parts[1] == 'power':
                 power_users.add(name)
             elif parts[1] == 'blacklist':
-                if len(parts) > 2:
-                    index = int(parts[2])
-                    r_args = [int(x) for x in parts[3].split(',')]
-                    for i in range(*r_args):
-                        sub = str(i)
-                        if len(parts) > 4:
-                            rj_args = parts[4].split(',')
-                            rj_args[0] = int(rj_args[0])
-                            sub = sub.rjust(*rj_args)
-                        blacklist.add(f"{name[:index]}{sub}{name[index:]}")
-                else:
-                    blacklist.add(name)
                 blacklist.add(name)
 
 
