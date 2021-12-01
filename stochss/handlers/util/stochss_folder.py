@@ -532,7 +532,11 @@ class StochSSFolder(StochSSBase):
         ext = remote_path.split('.').pop()
         if os.path.exists("/stochss/.proxies.txt"):
             with open("/stochss/.proxies.txt", "r") as proxy_file:
-                proxies = {"https": proxy_file.read().strip()}
+                proxy_ip = proxy_file.read().strip()
+                proxies = {
+                    "https": f"httsp://{proxy_ip}",
+                    "http": f"http://{proxy_ip}"
+                }
         else:
             proxies = None
         body = requests.get(remote_path, allow_redirects=True, proxies=proxies).content
