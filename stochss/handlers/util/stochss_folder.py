@@ -534,7 +534,7 @@ class StochSSFolder(StochSSBase):
             with open("/stochss/.proxies.txt", "r") as proxy_file:
                 proxy_ip = proxy_file.read().strip()
                 proxies = {
-                    "https": f"httsp://{proxy_ip}",
+                    "https": f"https://{proxy_ip}",
                     "http": f"http://{proxy_ip}"
                 }
         else:
