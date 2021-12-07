@@ -1,6 +1,16 @@
 version: '2'
 
 services:
+
+  voila:
+    build:
+      context: ./voila/
+      dockerfile: Dockerfile
+    ports:
+     - "8866:8866"
+    volumes:
+     - "${PWD}:/opt/voila"
+
   hub-db:
     image: postgres:9.5
     container_name: jupyterhub-db
