@@ -188,7 +188,6 @@ c.DockerSpawner.notebook_dir = notebook_dir
 # notebook directory in the container
 c.DockerSpawner.volumes = {
     'jupyterhub-user-{username}': notebook_dir,
-    '/stochss/userlist': '/srv/userlist'
 }
 # Set extra environment variables
 c.DockerSpawner.environment = {
