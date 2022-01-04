@@ -186,7 +186,10 @@ notebook_dir = os.environ.get('DOCKER_NOTEBOOK_DIR') or '/home/jovyan/work'
 c.DockerSpawner.notebook_dir = notebook_dir
 # Mount the real user's Docker volume on the host to the notebook user's
 # notebook directory in the container
-c.DockerSpawner.volumes = { 'jupyterhub-user-{username}': notebook_dir }
+c.DockerSpawner.volumes = {
+    'jupyterhub-user-{username}': notebook_dir,
+    '/stochss/userlist': '/srv/userlist'
+}
 # Set extra environment variables
 c.DockerSpawner.environment = {
     'JUPYTER_CONFIG_DIR': os.environ['JUPYTER_CONFIG_DIR']
