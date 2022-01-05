@@ -52,6 +52,19 @@ from tornado.ioloop import IOLoop, PeriodicCallback
 from tornado.options import define, options, parse_command_line
 
 
+def get_power_users():
+    power_users = set([])
+    pwd = "/srv/userlist"
+    with open(os.path.join(pwd, 'userlist')) as f:
+        lines = f.read().strip().split("\n")
+        for line in lines:
+            parts = line.split()
+            if len(parts) > 1:
+                name = parts[0]
+                if parts[1] in ('admin', 'power'):
+                    power_users.add(name)
+    return power_users
+
 def parse_date(date_string):
     """Parse a timestamp
 
@@ -178,8 +191,9 @@ def cull_idle(
         #     return False
         # inactive_limit = server['state']['culltime']
 
+        power_users = get_power_users()
         should_cull = (
-            inactive is not None and inactive.total_seconds() >= inactive_limit
+            log_name not in power_users and inactive is not None and inactive.total_seconds() >= inactive_limit
         )
         if should_cull:
             app_log.info(
@@ -190,7 +204,7 @@ def cull_idle(
             # only check started if max_age is specified
             # so that we can still be compatible with jupyterhub 0.8
             # which doesn't define the 'started' field
-            if age is not None and age.total_seconds() >= max_age:
+            if log_name not in power_users and age is not None and age.total_seconds() >= max_age:
                 app_log.info(
                     "Culling server %s (age: %s, inactive for %s)",
                     log_name,
@@ -285,8 +299,9 @@ def cull_idle(
             # which introduces the 'created' field which is never None
             inactive = age
 
+        power_users = get_power_users()
         should_cull = (
-            inactive is not None and inactive.total_seconds() >= inactive_limit
+            user['name'] not in power_users and inactive is not None and inactive.total_seconds() >= inactive_limit
         )
         if should_cull:
             app_log.info("Culling user %s (inactive for %s)", user['name'], inactive)
@@ -295,7 +310,7 @@ def cull_idle(
             # only check created if max_age is specified
             # so that we can still be compatible with jupyterhub 0.8
             # which doesn't define the 'started' field
-            if age is not None and age.total_seconds() >= max_age:
+            if user['name'] not in power_users and age is not None and age.total_seconds() >= max_age:
                 app_log.info(
                     "Culling user %s (age: %s, inactive for %s)",
                     user['name'],
