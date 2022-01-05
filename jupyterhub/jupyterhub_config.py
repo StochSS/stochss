@@ -269,7 +269,7 @@ def pre_spawn_hook(spawner):
         return
     user_type = None
     platform = "live" if "live" in os.environ['OAUTH_CALLBACK'] else "staging"
-    for elem in blacklist:
+    for elem in c.StochSS.blacklist:
         if elem.startswith('@'):
             log.info(f"Checking for domain affiliation: {elem}")
             if elem in spawner.user.name:
