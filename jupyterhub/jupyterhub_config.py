@@ -202,6 +202,26 @@ c.DockerSpawner.debug = True
 # Spawner(LoggingConfigurable) configuration
 #---------------------------------------------------------------------------------------------------
 
+def update_users_sets():
+    c.Authenticator.admin_users = admin = set([])
+    c.StochSS.power_users = power_users = set([])
+    c.StochSS.blacklist = blacklist = set([])
+
+    pwd = "/srv/userlist"
+    with open(os.path.join(pwd, 'userlist')) as f:
+        lines = f.read().strip().split("\n")
+        for line in lines:
+            parts = line.split()
+            if len(parts) > 1:
+                name = parts[0]
+                if parts[1] == 'admin':
+                    admin.add(name)
+                    power_users.add(name)
+                elif parts[1] == 'power':
+                    power_users.add(name)
+                elif parts[1] == 'blacklist':
+                    blacklist.add(name)
+
 def get_user_cpu_count_or_fail():
     '''
     Get the user cpu count or raise error.
@@ -239,6 +259,8 @@ def pre_spawn_hook(spawner):
     log = spawner.log
 
     log.info(f"Beginning pre_spawn_hook for {spawner.user.name}")
+    # Update admins, power users, and blacklist users
+    update_users_sets()
     # Remove the memory limit for power users
     if c.StochSS.user_cpu_count == 0:
         spawner.mem_limit = None
@@ -246,16 +268,17 @@ def pre_spawn_hook(spawner):
         log.info(msg)
         return
     user_type = None
+    platform = "live" if "live" in os.environ['OAUTH_CALLBACK'] else "staging"
     for elem in blacklist:
         if elem.startswith('@'):
             log.info(f"Checking for domain affiliation: {elem}")
             if elem in spawner.user.name:
-                post_message_to_slack(f'User {spawner.user.name} of banned domain {elem} attempted to log in', blocks = None)
+                post_message_to_slack(f'User {spawner.user.name} of banned domain {elem} attempted to log into {platform}', blocks = None)
                 raise Exception('User banned')
         else:
             log.info(f"Checking for user: {elem}")
             if elem == spawner.user.name or re.search(elem, spawner.user.name) is not None:
-                post_message_to_slack(f'Banned user {spawner.user.name} attempted to log in', blocks = None)
+                post_message_to_slack(f'Banned user {spawner.user.name} attempted to log into {platform}', blocks = None)
                 raise Exception('User banned')
 
     if spawner.user.name in c.Authenticator.admin_users:
@@ -264,7 +287,7 @@ def pre_spawn_hook(spawner):
     elif spawner.user.name in c.StochSS.power_users:
         log.info(f"Setting usertype for {spawner.user.name} to 'power'")
         user_type = 'power'
-    print(post_message_to_slack(f"New Login: {spawner.user.name} user_type={user_type}"))
+    print(post_message_to_slack(f"New Login to {platform}: {spawner.user.name} user_type={user_type}"))
     if user_type:
         spawner.mem_limit = None
         log.info(f'Skipping resource limitation for {user_type} user: {spawner.user.name}')
@@ -452,26 +475,8 @@ c.Spawner.mem_guarantee = '2G'
 #  Admin access should be treated the same way root access is.
 #
 #  Defaults to an empty set, in which case no user has admin access.
-c.Authenticator.admin_users = admin = set([])
-c.StochSS.power_users = power_users = set([])
-c.StochSS.blacklist = blacklist = set([])
 
-pwd = os.path.dirname(__file__)
-with open(os.path.join(pwd, 'userlist')) as f:
-    lines = f.read().strip().split("\n")
-    for line in lines:
-        parts = line.split()
-        if len(parts) > 1:
-            name = parts[0]
-            if parts[1] == 'admin':
-                admin.add(name)
-                power_users.add(name)
-            elif parts[1] == 'power':
-                power_users.add(name)
-            elif parts[1] == 'blacklist':
-                blacklist.add(name)
-
-
+update_users_sets()
 
 # Slack integration
 # slack access bot token
