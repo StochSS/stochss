@@ -23,7 +23,7 @@ import logging
 import traceback
 
 import numpy
-from gillespy2 import TauHybridSolver
+from gillespy2 import TauHybridCSolver
 
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSAPIError, StochSSJobResultsError
@@ -61,7 +61,7 @@ class EnsembleSimulation(StochSSJob):
         solver_map = {"ODE":self.g_model.get_best_solver_algo("ODE"),
                       "SSA":self.g_model.get_best_solver_algo("SSA"),
                       "Tau-Leaping":self.g_model.get_best_solver_algo("Tau-Leaping"),
-                      "Hybrid-Tau-Leaping":TauHybridSolver}
+                      "Hybrid-Tau-Leaping":TauHybridCSolver}
         run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
         instance_solvers = ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]
         if run_settings['solver'].name in instance_solvers :

@@ -166,3 +166,16 @@ class TestGillesPy2Dependency(unittest.TestCase):
             test_model = model()
             with self.subTest(model=test_model.name):
                 test_model.run(solver=TauHybridSolver)
+
+
+    def test_tau_hybrid_c_solver(self):
+        ''' Check if the test_models run with the TauHybridCSolver. '''
+        from gillespy2 import TauHybridCSolver
+
+        self.test_models.append(Oregonator)
+        self.test_models.append(TysonOscillator)
+        self.test_models.remove(VilarOscillator)
+        for model in self.test_models:
+            test_model = model()
+            with self.subTest(model=test_model.name):
+                test_model.run(solver=TauHybridCSolver)

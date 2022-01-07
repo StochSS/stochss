@@ -44,7 +44,7 @@ class StochSSNotebook(StochSSBase):
     MODEL_EXPLORATION = 5
     MODEL_INFERENCE = 6
     SOLVER_MAP = {"SSACSolver":"SSA", "NumPySSASolver":"SSA", "ODESolver":"ODE", "Solver":"SSA",
-                  "TauLeapingSolver":"Tau-Leaping", "TauHybridSolver":"Hybrid-Tau-Leaping",
+                  "TauLeapingSolver":"Tau-Leaping", "TauHybridCSolver":"Hybrid-Tau-Leaping",
                   "ODECSolver":"ODE", "TauLeapingCSolver":"Tau-Leaping"}
 
     def __init__(self, path, new=False, models=None, settings=None):
@@ -236,7 +236,7 @@ class StochSSNotebook(StochSSBase):
             tau_import += f'{self.model.get_best_solver_algo("Tau-Leaping").name}'
             ode_import = f'from gillespy2 import {self.model.get_best_solver_algo("ODE").name}'
             algorithm_map = {'SSA': ssa_import, 'Tau-Leaping': tau_import, 'ODE': ode_import,
-                             'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridSolver'}
+                             'Hybrid-Tau-Leaping': 'from gillespy2 import TauHybridCSolver'}
             algorithm = self.settings['simulationSettings']['algorithm']
             for name, alg_import in algorithm_map.items():
                 if not is_automatic and name == algorithm:
@@ -467,7 +467,7 @@ class StochSSNotebook(StochSSBase):
         solver_map = {"SSA":f'"solver":{ssa_solver}',
                       "ODE":f'"solver":{ode_solver}',
                       "Tau-Leaping":f'"solver":{tau_solver}',
-                      "Hybrid-Tau-Leaping":'"solver":TauHybridSolver'}
+                      "Hybrid-Tau-Leaping":'"solver":TauHybridCSolver'}
         # Map algorithm settings for GillesPy2. GillesPy2 requires snake case, remap camelCase
         settings_map = {"number_of_trajectories":settings['realizations'],
                         "seed":settings['seed'] if settings['seed'] != -1 else None,
@@ -575,7 +575,7 @@ class StochSSNotebook(StochSSBase):
             return solver
         algorithm_map = {'SSA': self.model.get_best_solver_algo("SSA").name,
                          'Tau-Leaping': self.model.get_best_solver_algo("Tau-Leaping").name,
-                         'Hybrid-Tau-Leaping': 'TauHybridSolver',
+                         'Hybrid-Tau-Leaping': 'TauHybridCSolver',
                          'ODE': self.model.get_best_solver_algo("ODE").name}
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
 
