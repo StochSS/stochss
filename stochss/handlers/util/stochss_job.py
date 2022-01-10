@@ -32,6 +32,7 @@ import numpy
 import plotly
 
 from escapism import escape
+from gillespy2 import TauHybridSolver, TauHybridCSolver
 
 from .stochss_base import StochSSBase
 from .stochss_model import StochSSModel
@@ -194,6 +195,14 @@ class StochSSJob(StochSSBase):
             raise StochSSJobResultsError(message)
         f_keys = [f"{name}:{value}" for name, value in fixed.items()]
         return dims, f_keys
+
+
+    def _get_hybrid_solver(self):
+        if self.g_model.listOfAssignmentRules:
+            return TauHybridSolver
+        if self.g_model.listOfFunctionDefinitions:
+            return TauHybridSolver
+        return TauHybridCSolver
 
 
     def __get_info_path(self, full=False):

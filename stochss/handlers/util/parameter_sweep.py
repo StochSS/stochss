@@ -26,8 +26,6 @@ import traceback
 
 import numpy
 
-from gillespy2 import TauHybridCSolver
-
 from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
@@ -83,7 +81,7 @@ class ParameterSweep(StochSSJob):
         solver_map = {"SSA":self.g_model.get_best_solver_algo("SSA"),
                       "Tau-Leaping":self.g_model.get_best_solver_algo("Tau-Leaping"),
                       "ODE":self.g_model.get_best_solver_algo("ODE"),
-                      "Hybrid-Tau-Leaping":TauHybridCSolver}
+                      "Hybrid-Tau-Leaping":self._get_hybrid_solver()}
         run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
         if run_settings['solver'].name in instance_solvers:
             run_settings['solver'] = run_settings['solver'](model=self.g_model)
