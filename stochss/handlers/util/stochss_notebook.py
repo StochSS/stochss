@@ -25,6 +25,7 @@ import nbformat
 from escapism import escape
 from nbformat import v4 as nbf
 
+from gillespy2 import TauHybridSolver, TauHybridCSolver
 from gillespy2.solvers.utilities.cpp_support_test import check_cpp_support
 
 from .stochss_base import StochSSBase
@@ -484,9 +485,9 @@ class StochSSNotebook(StochSSBase):
 
 
     def _get_hybrid_solver(self):
-        if self.g_model.listOfAssignmentRules:
+        if self.model.listOfAssignmentRules:
             return TauHybridSolver
-        if self.g_model.listOfFunctionDefinitions:
+        if self.model.listOfFunctionDefinitions:
             return TauHybridSolver
         return TauHybridCSolver
 

@@ -197,10 +197,10 @@ class StochSSJob(StochSSBase):
         return dims, f_keys
 
 
-    def _get_hybrid_solver(self):
-        if self.g_model.listOfAssignmentRules:
+    def _get_hybrid_solver(self, model):
+        if model.listOfAssignmentRules:
             return TauHybridSolver
-        if self.g_model.listOfFunctionDefinitions:
+        if model.listOfFunctionDefinitions:
             return TauHybridSolver
         return TauHybridCSolver
 
