@@ -82,13 +82,14 @@ class StochSSJob(StochSSBase):
             os.mkdir(self.__get_results_path(full=True))
             info = {"source_model":mdl_path, "wkfl_model":None, "type":self.type, "start_time":None}
             self.update_info(new_info=info, new=True)
-            open(os.path.join(path, "logs.txt"), "w").close()
+            with open(os.path.join(path, "logs.txt"), "w", encoding="utf-8") as log_file:
+                log_file.close()
             shutil.copyfile(os.path.join(self.user_dir, mdl_path),
                             self.get_model_path(full=True))
             if settings is None:
                 self.__create_settings()
             else:
-                with open(self.__get_settings_path(full=True), "w") as settings_file:
+                with open(self.__get_settings_path(full=True), "w", encoding="utf-8") as settings_file:
                     json.dump(settings, settings_file)
         except FileExistsError as err:
             message = f"Could not create your job: {str(err)}"
@@ -102,7 +103,7 @@ class StochSSJob(StochSSBase):
         if self.type == "parameterSweep":
             settings = self.get_settings_template()
             settings['simulationSettings']['realizations'] = 20
-            with open(self.__get_settings_path(full=True), "w") as file:
+            with open(self.__get_settings_path(full=True), "w", encoding="utf-8") as file:
                 json.dump(settings, file, indent=4, sort_keys=True)
         else:
             shutil.copyfile('/stochss/stochss_templates/workflowSettingsTemplate.json',
@@ -197,7 +198,8 @@ class StochSSJob(StochSSBase):
         return dims, f_keys
 
 
-    def _get_hybrid_solver(self, model):
+    @classmethod
+    def _get_hybrid_solver(cls, model):
         if model.listOfAssignmentRules:
             return TauHybridSolver
         if model.listOfFunctionDefinitions:
@@ -235,7 +237,7 @@ class StochSSJob(StochSSBase):
     def __get_run_logs(self):
         path = os.path.join(self.get_path(full=True), "logs.txt")
         try:
-            with open(path, "r") as file:
+            with open(path, "r", encoding="utf-8") as file:
                 logs = file.read()
             self.log("debug", f"Contents of the log file: {logs}")
             if logs:
@@ -292,7 +294,7 @@ class StochSSJob(StochSSBase):
     @classmethod
     def __write_parameters_csv(cls, path, name, data_keys):
         csv_path = os.path.join(path, name, "parameters.csv")
-        with open(csv_path, "w") as csv_file:
+        with open(csv_path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(list(data_keys.keys()))
             csv_writer.writerow(list(data_keys.values()))
@@ -362,12 +364,12 @@ class StochSSJob(StochSSBase):
             elif proc_key == "avg":
                 result = result.average_ensemble()
             self.log("info", "Generating CSV files...")
-            tmp_dir = tempfile.TemporaryDirectory()
-            result.to_csv(path=tmp_dir.name, nametag=name, stamp="")
-            if data_keys:
-                self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=data_keys)
-            self.log("info", "Generating zip archive...")
-            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                result.to_csv(path=tmp_dir.name, nametag=name, stamp="")
+                if data_keys:
+                    self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=data_keys)
+                self.log("info", "Generating zip archive...")
+                return self.__get_csvzip(dirname=tmp_dir.name, name=name)
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -387,18 +389,18 @@ class StochSSJob(StochSSBase):
         '''
         self.log("info", "Getting job results...")
         results = self.__get_pickled_results()
-        tmp_dir = tempfile.TemporaryDirectory()
-        if not isinstance(results, dict):
-            self.log("info", "Generating CSV files...")
-            results.to_csv(path=tmp_dir.name, nametag=name, stamp="")
-            self.log("info", "Generating zip archive...")
-            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
-        def get_name(b_name, tag):
-            return f"{b_name}_{tag}"
-        b_path = os.path.join(tmp_dir.name, get_name(name, "full"))
-        self.log("info", "Generating time series CSV files...")
-        self.__get_full_timeseries_csv(b_path, results, get_name, name)
-        return self.__get_csvzip(dirname=tmp_dir.name, name=get_name(name, "full"))
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            if not isinstance(results, dict):
+                self.log("info", "Generating CSV files...")
+                results.to_csv(path=tmp_dir.name, nametag=name, stamp="")
+                self.log("info", "Generating zip archive...")
+                return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+            def get_name(b_name, tag):
+                return f"{b_name}_{tag}"
+            b_path = os.path.join(tmp_dir.name, get_name(name, "full"))
+            self.log("info", "Generating time series CSV files...")
+            self.__get_full_timeseries_csv(b_path, results, get_name, name)
+            return self.__get_csvzip(dirname=tmp_dir.name, name=get_name(name, "full"))
 
 
     def get_model_path(self, full=False, external=False):
@@ -512,24 +514,24 @@ class StochSSJob(StochSSBase):
             dims, f_keys = self.__get_fixed_keys_and_dims(settings, fixed)
             params = list(filter(lambda param: param['name'] not in fixed.keys(),
                                  settings['parameterSweepSettings']['parameters']))
-            tmp_dir = tempfile.TemporaryDirectory()
-            if dims == 1:
-                kwargs = {"results": self.__get_filtered_1d_results(f_keys)}
-                kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
-                self.log("info", "Generating CSV files...")
-                ParameterSweep1D.to_csv(
-                    param=params[0], kwargs=kwargs, path=tmp_dir.name, nametag=name
-                )
-            else:
-                kwargs = {"results": self.__get_filtered_2d_results(f_keys, params[0])}
-                kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
-                self.log("info", "Generating CSV files...")
-                ParameterSweep2D.to_csv(
-                    params=params, kwargs=kwargs, path=tmp_dir.name, nametag=name
-                )
-            if fixed:
-                self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=fixed)
-            return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                if dims == 1:
+                    kwargs = {"results": self.__get_filtered_1d_results(f_keys)}
+                    kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
+                    self.log("info", "Generating CSV files...")
+                    ParameterSweep1D.to_csv(
+                        param=params[0], kwargs=kwargs, path=tmp_dir.name, nametag=name
+                    )
+                else:
+                    kwargs = {"results": self.__get_filtered_2d_results(f_keys, params[0])}
+                    kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
+                    self.log("info", "Generating CSV files...")
+                    ParameterSweep2D.to_csv(
+                        params=params, kwargs=kwargs, path=tmp_dir.name, nametag=name
+                    )
+                if fixed:
+                    self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=fixed)
+                return self.__get_csvzip(dirname=tmp_dir.name, name=name)
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -673,7 +675,7 @@ class StochSSJob(StochSSBase):
         try:
             path = self.__get_info_path(full=True)
             self.log("debug", f"The path to the job's info file: {path}")
-            with open(path, "r") as info_file:
+            with open(path, "r", encoding="utf-8") as info_file:
                 info = json.load(info_file)
                 if "annotation" not in info:
                     info['annotation'] = ""
@@ -714,7 +716,7 @@ class StochSSJob(StochSSBase):
         '''
         try:
             path = self.__get_settings_path(full=True)
-            with open(path, "r") as settings_file:
+            with open(path, "r", encoding="utf-8") as settings_file:
                 return json.load(settings_file)
         except FileNotFoundError as err:
             if model is None:
@@ -784,9 +786,10 @@ class StochSSJob(StochSSBase):
             # Date object from the datestring parsed from the job's info.json file
             new_info['start_time'] = datetime.datetime.now().strftime("%b %d, %Y  %I:%M %p UTC")
             new_info['wkfl_model'] = self.get_file(path=mdl_path)
-            open(os.path.join(self.path, 'RUNNING'), 'w').close()
+            with open(os.path.join(self.path, 'RUNNING'), 'w', encoding="utf-8") as run_file:
+                run_file.close()
         self.update_info(new_info=new_info)
-        with open(self.__get_settings_path(full=True), "w") as file:
+        with open(self.__get_settings_path(full=True), "w", encoding="utf-8") as file:
             json.dump(settings, file, indent=4, sort_keys=True)
         try:
             os.remove(path)
@@ -811,7 +814,7 @@ class StochSSJob(StochSSBase):
         self.log("debug", f"Original settings: {settings}")
         settings['resultsSettings']['outputs'].append(plot)
         self.log("debug", f"New settings: {settings}")
-        with open(self.__get_settings_path(full=True), "w") as settings_file:
+        with open(self.__get_settings_path(full=True), "w", encoding="utf-8") as settings_file:
             json.dump(settings, settings_file, indent=4, sort_keys=True)
         return {"message":"The plot was successfully saved", "data":plot}
 
@@ -869,5 +872,5 @@ class StochSSJob(StochSSBase):
             if "annotation" in new_info.keys():
                 info['annotation'] = new_info['annotation']
         self.log("debug", f"New info: {info}")
-        with open(self.__get_info_path(full=True), "w") as file:
+        with open(self.__get_info_path(full=True), "w", encoding="utf-8") as file:
             json.dump(info, file, indent=4, sort_keys=True)
