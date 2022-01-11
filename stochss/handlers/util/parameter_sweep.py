@@ -17,11 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-import csv
 import json
 import pickle
 import logging
-import itertools
 import traceback
 
 import numpy
@@ -142,7 +140,7 @@ class ParameterSweep(StochSSJob):
             Indicates whether or not to print debug statements
         '''
         kwargs = self.configure()
-        if "param" in kwargs.keys():
+        if "param" in kwargs:
             job = ParameterSweep1D(**kwargs)
             sim_type = "1D parameter sweep"
         elif len(kwargs['params']) > 2:
