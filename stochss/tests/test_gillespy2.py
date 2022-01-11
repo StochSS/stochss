@@ -175,6 +175,7 @@ class TestGillesPy2Dependency(unittest.TestCase):
         self.test_models.append(Oregonator)
         self.test_models.append(TysonOscillator)
         self.test_models.remove(VilarOscillator)
+        self.test_models.remove(ToggleSwitch)
         for model in self.test_models:
             test_model = model()
             with self.subTest(model=test_model.name):
