@@ -30,6 +30,8 @@ RUN npm install -g configurable-http-proxy@^4.2.0  && rm -rf ~/.npm
 
 RUN mkdir -p /srv/jupyterhub/
 
+RUN mkdir -p /srv/userlist/
+
 WORKDIR /srv/jupyterhub
 
 EXPOSE 8000

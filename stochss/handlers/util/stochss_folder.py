@@ -589,6 +589,8 @@ class StochSSFolder(StochSSBase):
             elif ext == "ipynb":
                 file = json.loads(body)['file']
                 body = json.dumps(json.loads(body)['notebook'])
+            elif ext == "job":
+                file = self.get_file(path=remote_path)
         else:
             file = self.get_file(path=remote_path)
         if "?token=" in file:

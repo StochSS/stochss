@@ -17,16 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-import csv
 import json
 import pickle
 import logging
-import itertools
 import traceback
 
 import numpy
-
-from gillespy2 import TauHybridSolver
 
 from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
@@ -83,7 +79,7 @@ class ParameterSweep(StochSSJob):
         solver_map = {"SSA":self.g_model.get_best_solver_algo("SSA"),
                       "Tau-Leaping":self.g_model.get_best_solver_algo("Tau-Leaping"),
                       "ODE":self.g_model.get_best_solver_algo("ODE"),
-                      "Hybrid-Tau-Leaping":TauHybridSolver}
+                      "Hybrid-Tau-Leaping":self._get_hybrid_solver(self.g_model)}
         run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
         if run_settings['solver'].name in instance_solvers:
             run_settings['solver'] = run_settings['solver'](model=self.g_model)
@@ -144,7 +140,7 @@ class ParameterSweep(StochSSJob):
             Indicates whether or not to print debug statements
         '''
         kwargs = self.configure()
-        if "param" in kwargs.keys():
+        if "param" in kwargs:
             job = ParameterSweep1D(**kwargs)
             sim_type = "1D parameter sweep"
         elif len(kwargs['params']) > 2:
