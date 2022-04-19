@@ -89,7 +89,7 @@ class ParameterSweep1D():
 
     @classmethod
     def __write_csv_file(cls, path, header, param, data):
-        with open(path, "w") as csv_file:
+        with open(path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(header)
             for i, val in enumerate(param['range']):

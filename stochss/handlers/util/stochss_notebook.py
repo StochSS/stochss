@@ -25,7 +25,6 @@ import nbformat
 from escapism import escape
 from nbformat import v4 as nbf
 
-from gillespy2 import TauHybridSolver, TauHybridCSolver
 from gillespy2.solvers.utilities.cpp_support_test import check_cpp_support
 
 from .stochss_base import StochSSBase
@@ -266,13 +265,13 @@ class StochSSNotebook(StochSSBase):
             try:
                 for init_cond in self.s_model['initialConditions']:
                     ic_str = f'{pad}self.add_initial_condition({ic_types[init_cond["icType"]]}('
-                    ic_str += f'species="{init_cond["specie"]["name"]}", count={init_cond["count"]},'
+                    ic_str += f'species="{init_cond["specie"]["name"]}", count={init_cond["count"]}'
                     if init_cond["icType"] == "Place":
                         place = f'{init_cond["x"]}, {init_cond["y"]}, {init_cond["z"]}'
-                        ic_str += f' location=[{place}]))'
+                        ic_str += f', location=[{place}]))'
                     else:
                         types = [type_refs[d_type] for d_type in init_cond["types"]]
-                        ic_str += f' types={types}))'
+                        ic_str += f', types={types}))'
                     initial_conditions.append(ic_str)
                 model.extend(initial_conditions)
             except KeyError as err:
@@ -293,7 +292,7 @@ class StochSSNotebook(StochSSBase):
         pad = '        '
         if self.s_model['is_spatial']:
             types = sorted(self.s_model['domain']['types'], key=lambda d_type: d_type['typeID'])
-            type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
+            type_ids = {d_type['typeID']:d_type['name'] for d_type in types if d_type['typeID'] > 0}
             model = [f"class {self.get_class_name()}(Model):"]
             model.extend([f"    {type_id.upper()} = '{type_id}'" for type_id in type_ids.values()])
             model.extend(["", "    def __init__(self):",
@@ -347,7 +346,7 @@ class StochSSNotebook(StochSSBase):
                     names.append(reac['name'])
                     react_str = self.__create_stoich_spec_string(stoich_species=reac['reactants'])
                     prod_str = self.__create_stoich_spec_string(stoich_species=reac['products'])
-                    
+
                     reac_str = f'{pad}{reac["name"]} = Reaction(name="{reac["name"]}", '
                     reac_str += f'reactants={react_str}, products={prod_str}, '
                     if reac['reactionType'] == 'custom-propensity':
@@ -420,7 +419,7 @@ class StochSSNotebook(StochSSBase):
         species = {}
         for stoich_spec in stoich_species:
             name = stoich_spec['specie']['name']
-            if name in species.keys():
+            if name in species:
                 species[name] += stoich_spec['ratio']
             else:
                 species[name] = stoich_spec['ratio']
@@ -458,7 +457,7 @@ class StochSSNotebook(StochSSBase):
         solver_map = {
             "ODE":f'"solver":{"solver" if self.is_ssa_c else "ODESolver"}',
             "SSA":f'"solver":{"solver" if self.is_ssa_c else "NumPySSASolver"}',
-            "CLE":f'"solver": CLESolver',
+            "CLE":'"solver": CLESolver',
             "Tau-Leaping":f'"solver":{"solver" if self.is_ssa_c else "TauLeapingSolver"}',
             "Hybrid-Tau-Leaping":f'"solver":{"solver" if "CSolver" in tau_hybrid_solver else "TauHybridSolver"}'
         }
@@ -574,14 +573,14 @@ class StochSSNotebook(StochSSBase):
             'Tau-Leaping': self.model.get_best_solver_algo("Tau-Leaping").name,
             'Hybrid-Tau-Leaping': self.model.get_best_solver_algo("Tau-Hybrid").name
         }
-                 
+
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
 
 
     def load(self):
         '''Read the notebook file and return as a dict'''
         try:
-            with open(self.get_path(full=True), "r") as notebook_file:
+            with open(self.get_path(full=True), "r", encoding="utf-8") as notebook_file:
                 return json.load(notebook_file)
         except FileNotFoundError as err:
             message = f"Could not find the notebook file: {str(err)}"
@@ -604,7 +603,7 @@ class StochSSNotebook(StochSSBase):
             else:
                 self.add_presentation_name(file, self.get_name())
                 exists = False
-                with open(dst, "w") as presentation_file:
+                with open(dst, "w", encoding="utf-8") as presentation_file:
                     json.dump(notebook_pres, presentation_file)
             links = self.__get_presentation_links(hostname, file)
             return links, exists
@@ -621,6 +620,6 @@ class StochSSNotebook(StochSSBase):
             List of cells for the new notebook'''
         path = self.get_path(full=True)
         notebook = nbf.new_notebook(cells=cells)
-        with open(path, 'w') as file:
+        with open(path, 'w', encoding="utf-8") as file:
             nbformat.write(notebook, file, version=4)
         return f"Successfully created the notebook {self.get_file()}"

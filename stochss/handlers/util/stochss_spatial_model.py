@@ -28,7 +28,6 @@ import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
-from spatialpy import DomainError
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -67,7 +66,7 @@ class StochSSSpatialModel(StochSSBase):
             new_path, changed = self.get_unique_path(name=self.get_file())
             if changed:
                 self.path = new_path.replace(self.user_dir + '/', "")
-            with open(new_path, "w") as smdl_file:
+            with open(new_path, "w", encoding="utf-8") as smdl_file:
                 json.dump(model, smdl_file, indent=4, sort_keys=True)
         else:
             self.model = None
@@ -228,8 +227,9 @@ class StochSSSpatialModel(StochSSBase):
         try:
             for particle in self.model['domain']['particles']:
                 domain.add_point(
-                    particle['point'], particle['volume'], particle['mass'], type_ids[particle['type']],
-                    particle['nu'], particle['fixed'], particle['rho'], particle['c']
+                    particle['point'], particle['volume'], particle['mass'],
+                    type_ids[particle['type']], particle['nu'], particle['fixed'],
+                    particle['rho'], particle['c']
                 )
         except KeyError as err:
             message = "Spatial model domain particle properties are not properly formatted or "
@@ -291,7 +291,7 @@ class StochSSSpatialModel(StochSSBase):
             for stoich_species in reaction['products']:
                 name = stoich_species['specie']['name']
                 specie = species[name]
-                if specie in products.keys():
+                if specie in products:
                     products[specie] += stoich_species['ratio']
                 else:
                     products[specie] = stoich_species['ratio']
@@ -299,7 +299,7 @@ class StochSSSpatialModel(StochSSBase):
             for stoich_species in reaction['reactants']:
                 name = stoich_species['specie']['name']
                 specie = species[name]
-                if specie in reactants.keys():
+                if specie in reactants:
                     reactants[specie] += stoich_species['ratio']
                 else:
                     reactants[specie] = stoich_species['ratio']
@@ -341,7 +341,7 @@ class StochSSSpatialModel(StochSSBase):
         try:
             path = os.path.join(self.user_dir, path)
             if path.endswith(".domn"):
-                with open(path, "r") as domain_file:
+                with open(path, "r", encoding="utf-8") as domain_file:
                     return json.load(domain_file)
             s_domain = Domain.read_xml_mesh(filename=path)
             return self.__build_stochss_domain(s_domain=s_domain)
@@ -358,7 +358,7 @@ class StochSSSpatialModel(StochSSBase):
 
     def __read_model_file(self):
         try:
-            with open(self.get_path(full=True), "r") as smdl_file:
+            with open(self.get_path(full=True), "r", encoding="utf-8") as smdl_file:
                 self.model = json.load(smdl_file)
         except FileNotFoundError as err:
             message = f"Could not find the spatial model file: {str(err)}"
@@ -493,13 +493,17 @@ class StochSSSpatialModel(StochSSBase):
                 else:
                     particles = s_domain['particles']
                 ids = list(map(lambda particle: particle['particle_id'], particles))
-                index = list(filter(lambda trace: trace['name'].endswith(d_type['name']), fig['data']))
+                index = list(filter(
+                    lambda trace, name=d_type['name']: trace['name'].endswith(name), fig['data']
+                ))
                 if len(index) !=0:
                     index = fig['data'].index(index[0])
                     fig['data'][index]['name'] = d_type['name']
                     fig['data'][index]['ids'] = ids
                 else:
-                    fig['data'].insert(i, self.__get_trace_data(particles=[], name=d_type['name'], index=i))
+                    fig['data'].insert(
+                        i, self.__get_trace_data(particles=[], name=d_type['name'], index=i)
+                    )
                     fig['data'][i]['ids'] = ids
         fig['layout']['width'] = None
         fig['layout']['height'] = None
@@ -568,10 +572,10 @@ class StochSSSpatialModel(StochSSBase):
         types : list
             List of type discriptions (lines from an uploaded file)
         '''
-        file = tempfile.NamedTemporaryFile()
-        with open(file.name, "w") as domain_file:
-            domain_file.write(domain)
-        s_domain = Domain.read_xml_mesh(filename=file.name)
+        with tempfile.NamedTemporaryFile() as file:
+            with open(file.name, "w", encoding="utf-8") as domain_file:
+                domain_file.write(domain)
+            s_domain = Domain.read_xml_mesh(filename=file.name)
         domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
         if types is not None:
             type_data = cls.get_types_from_file(lines=types)
@@ -599,7 +603,7 @@ class StochSSSpatialModel(StochSSBase):
         '''
         if lines is None:
             path = os.path.join(cls.user_dir, path)
-            with open(path, "r") as types_file:
+            with open(path, "r", encoding="utf-8") as types_file:
                 lines = types_file.readlines()
         types = []
         names = []
@@ -693,5 +697,5 @@ class StochSSSpatialModel(StochSSBase):
             Domain to be saved
         '''
         path = self.get_path(full=True)
-        with open(path, 'w') as file:
+        with open(path, 'w', encoding="utf-8") as file:
             file.write(domain)

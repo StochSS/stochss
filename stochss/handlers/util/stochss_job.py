@@ -32,7 +32,6 @@ import numpy
 import plotly
 
 from escapism import escape
-from gillespy2 import TauHybridSolver, TauHybridCSolver
 
 from .stochss_base import StochSSBase
 from .stochss_model import StochSSModel
@@ -89,7 +88,8 @@ class StochSSJob(StochSSBase):
             if settings is None:
                 self.__create_settings()
             else:
-                with open(self.__get_settings_path(full=True), "w", encoding="utf-8") as settings_file:
+                with open(self.__get_settings_path(full=True), "w",
+                                                   encoding="utf-8") as settings_file:
                     json.dump(settings, settings_file)
         except FileExistsError as err:
             message = f"Could not create your job: {str(err)}"
