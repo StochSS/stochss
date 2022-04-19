@@ -293,7 +293,7 @@ class ImportMeshAPIHandler(APIHandler):
         particle_data = json.loads(self.request.body_arguments['particleData'][0].decode())
         try:
             log.info("Generating new particles")
-            resp = StochSSSpatialModel.get_particles_from_remote(doamin=data, data=particle_data,
+            resp = StochSSSpatialModel.get_particles_from_remote(domain=data, data=particle_data,
                                                                  types=types)
             log.debug(f"Number of Particles: {len(resp['particles'])}")
             log.info("Successfully created new particles")
