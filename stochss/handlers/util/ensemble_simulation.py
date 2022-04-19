@@ -22,7 +22,7 @@ import pickle
 import logging
 import traceback
 
-import numpy
+from gillespy2 import TimeSpan
 
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSAPIError, StochSSJobResultsError
