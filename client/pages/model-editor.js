@@ -344,7 +344,6 @@ let ModelEditor = PageView.extend({
       $(this.queryByHook("return-to-project-btn")).css("display", "inline-block");
     }
     if(this.model.is_spatial) {
-      $(this.queryByHook("spatial-beta-message")).css("display", "block");
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
       $(this.queryByHook("stochss-es")).addClass("disabled");
