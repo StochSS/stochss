@@ -24,6 +24,8 @@ import traceback
 
 import numpy
 
+from gillespy2 import TimeSpan
+
 from .stochss_job import StochSSJob
 from .parameter_sweep_1d import ParameterSweep1D
 from .parameter_sweep_2d import ParameterSweep2D
@@ -68,20 +70,20 @@ class ParameterSweep(StochSSJob):
 
 
     def __get_run_settings(self):
-        instance_solvers = ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]
         if self.settings['simulationSettings']['isAutomatic']:
             solver = self.g_model.get_best_solver()
             kwargs = {"number_of_trajectories":1 if "ODE" in solver.name else 20}
-            if solver.name not in instance_solvers:
+            if "CSolver" not in solver.name:
                 return kwargs
             kwargs['solver'] = solver(model=self.g_model)
             return kwargs
-        solver_map = {"SSA":self.g_model.get_best_solver_algo("SSA"),
+        solver_map = {"ODE":self.g_model.get_best_solver_algo("ODE"),
+                      "SSA":self.g_model.get_best_solver_algo("SSA"),
+                      "CLE":self.g_model.get_best_solver_algo("CLE"),
                       "Tau-Leaping":self.g_model.get_best_solver_algo("Tau-Leaping"),
-                      "ODE":self.g_model.get_best_solver_algo("ODE"),
-                      "Hybrid-Tau-Leaping":self._get_hybrid_solver(self.g_model)}
+                      "Hybrid-Tau-Leaping":self.g_model.get_best_solver_algo("Tau-Leaping")}
         run_settings = self.get_run_settings(settings=self.settings, solver_map=solver_map)
-        if run_settings['solver'].name in instance_solvers:
+        if "CSolver" in run_settings['solver'].name:
             run_settings['solver'] = run_settings['solver'](model=self.g_model)
         return run_settings
 
@@ -117,7 +119,9 @@ class ParameterSweep(StochSSJob):
             if "endSim" in keys and "timeStep" in keys:
                 end = self.settings['timespanSettings']['endSim']
                 step_size = self.settings['timespanSettings']['timeStep']
-                self.g_model.timespan(numpy.arange(0, end + step_size, step_size))
+                self.g_model.timespan(
+                    TimeSpan.arange(t=end + step_size, increment=step_size)
+                )
         kwargs = {"model":self.g_model, "settings":run_settings}
         parameters = []
         for param in self.settings['parameterSweepSettings']['parameters']:

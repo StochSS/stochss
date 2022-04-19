@@ -275,13 +275,13 @@ class ImportMeshAPIHandler(APIHandler):
     @web.authenticated
     async def post(self):
         '''
-        Imports particles from a mesh file to add to a domain.
+        Imports particles from a domain file to add to a domain.
 
         Attributes
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        log.info(f"Loading the mesh from {self.request.files['datafile'][0]['filename']}")
+        log.info(f"Loading the doamin from {self.request.files['datafile'][0]['filename']}")
         data = self.request.files['datafile'][0]['body'].decode()
         if "typefile" in self.request.files.keys():
             log.info(f"Loading the particle types from \
@@ -293,7 +293,7 @@ class ImportMeshAPIHandler(APIHandler):
         particle_data = json.loads(self.request.body_arguments['particleData'][0].decode())
         try:
             log.info("Generating new particles")
-            resp = StochSSSpatialModel.get_particles_from_remote(mesh=data, data=particle_data,
+            resp = StochSSSpatialModel.get_particles_from_remote(doamin=data, data=particle_data,
                                                                  types=types)
             log.debug(f"Number of Particles: {len(resp['particles'])}")
             log.info("Successfully created new particles")

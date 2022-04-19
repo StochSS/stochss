@@ -28,6 +28,7 @@ import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
+from spatialpy import DomainError
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -154,7 +155,7 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_domain(self, model):
+    def __convert_domain(self, model, type_ids):
         try:
             xlim = tuple(self.model['domain']['x_lim'])
             ylim = tuple(self.model['domain']['y_lim'])
@@ -166,7 +167,7 @@ class StochSSSpatialModel(StochSSBase):
             if gravity == [0, 0, 0]:
                 gravity = None
             domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
-            self.__convert_particles(domain=domain)
+            self.__convert_particles(domain=domain, type_ids=type_ids)
             model.add_domain(domain)
             model.staticDomain = self.model['domain']['static']
         except KeyError as err:
@@ -175,14 +176,14 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_initial_conditions(self, model):
+    def __convert_initial_conditions(self, model, type_ids):
         try:
             s_species = model.get_all_species()
             for initial_condition in self.model['initialConditions']:
                 species = s_species[initial_condition['specie']['name']]
                 count = initial_condition['count']
                 if initial_condition['icType'] == "Scatter":
-                    types = initial_condition['types']
+                    types = [type_ids[d_type] for d_type in initial_condition['types']]
                     s_ic = ScatterInitialCondition(species, count, types=types)
                 elif initial_condition['icType'] == "Place":
                     location = [initial_condition['x'],
@@ -190,7 +191,7 @@ class StochSSSpatialModel(StochSSBase):
                                 initial_condition['z']]
                     s_ic = PlaceInitialCondition(species, count, location)
                 else:
-                    types = initial_condition['types']
+                    types = [type_ids[d_type] for d_type in initial_condition['types']]
                     s_ic = UniformInitialCondition(species, count, types=types)
                 model.add_initial_condition(s_ic)
         except KeyError as err:
@@ -223,19 +224,20 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_particles(self, domain):
+    def __convert_particles(self, domain, type_ids):
         try:
             for particle in self.model['domain']['particles']:
-                domain.add_point(particle['point'], particle['volume'], particle['mass'],
-                                 particle['type'], particle['nu'], particle['fixed'],
-                                 particle['rho'], particle['c'])
+                domain.add_point(
+                    particle['point'], particle['volume'], particle['mass'], type_ids[particle['type']],
+                    particle['nu'], particle['fixed'], particle['rho'], particle['c']
+                )
         except KeyError as err:
             message = "Spatial model domain particle properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_reactions(self, model):
+    def __convert_reactions(self, model, type_ids):
         try:
             s_params = model.get_all_parameters()
             for reaction in self.model['reactions']:
@@ -247,8 +249,8 @@ class StochSSSpatialModel(StochSSBase):
                 else:
                     rate = None
                     propensity = reaction['propensity']
-                types = reaction['types']
-                if len(types) == len(model.listOfTypeIDs):
+                types = [type_ids[d_type] for d_type in reaction['types']]
+                if len(types) == len(type_ids):
                     types = None
                 s_reaction = Reaction(name=reaction['name'],
                                       reactants=reactants,
@@ -263,13 +265,18 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_species(self, model):
+    def __convert_species(self, model, type_ids):
         try:
             for species in self.model['species']:
                 name = species['name']
-                s_species = Species(name=name, diffusion_coefficient=species['diffusionConst'])
+                types = [type_ids[d_type] for d_type in species['types']]
+                if len(types) == len(type_ids):
+                    types = None
+                s_species = Species(
+                    name=name, diffusion_coefficient=species['diffusionConst'],
+                    restrict_to=types
+                )
                 model.add_species(s_species)
-                model.restrict(s_species, species['types'])
         except KeyError as err:
             message = "Spatial model species are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -304,7 +311,16 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def __get_trace_data(cls, particles, name=""):
+    def __get_trace_data(cls, particles, name="", index=None):
+        common_rgb_values = [
+            '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
+            '#bcbd22', '#17becf', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff',
+            '#800000', '#808000', '#008000', '#800080', '#008080', '#000080', '#ff9999', '#ffcc99',
+            '#ccff99', '#cc99ff', '#ffccff', '#62666a', '#8896bb', '#77a096', '#9d5a6c', '#9d5a6c',
+            '#eabc75', '#ff9600', '#885300', '#9172ad', '#a1b9c4', '#18749b', '#dadecf', '#c5b8a8',
+            '#000117', '#13a8fe', '#cf0060', '#04354b', '#0297a0', '#037665', '#eed284', '#442244',
+            '#ffddee', '#702afb'
+        ]
         ids = []
         x_data = []
         y_data = []
@@ -314,8 +330,11 @@ class StochSSSpatialModel(StochSSBase):
             x_data.append(particle['point'][0])
             y_data.append(particle['point'][1])
             z_data.append(particle['point'][2])
+        marker = {"size":5}
+        if index is not None:
+            marker["color"] = common_rgb_values[(index - 1) % len(common_rgb_values)]
         return plotly.graph_objs.Scatter3d(ids=ids, x=x_data, y=y_data, z=z_data,
-                                           name=name, mode="markers", marker={"size":5})
+                                           name=name, mode="markers", marker=marker)
 
 
     def __load_domain_from_file(self, path):
@@ -397,13 +416,15 @@ class StochSSSpatialModel(StochSSBase):
         name = self.get_name()
         s_model = Model(name=name)
         self.__convert_model_settings(model=s_model)
-        self.__convert_domain(model=s_model)
+        types = sorted(self.model['domain']['types'], key=lambda d_type: d_type['typeID'])
+        type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
+        self.__convert_domain(model=s_model, type_ids=type_ids)
         if "boundaryConditions" in self.model.keys():
             self.__convert_boundary_conditions(model=s_model)
-        self.__convert_species(model=s_model)
-        self.__convert_initial_conditions(model=s_model)
+        self.__convert_species(model=s_model, type_ids=type_ids)
+        self.__convert_initial_conditions(model=s_model, type_ids=type_ids)
         self.__convert_parameters(model=s_model)
-        self.__convert_reactions(model=s_model)
+        self.__convert_reactions(model=s_model, type_ids=type_ids)
         # self.log("debug", str(s_model))
         return s_model
 
@@ -456,24 +477,30 @@ class StochSSSpatialModel(StochSSBase):
             path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
         elif path is None:
             path = self.path
-        domain = Domain.read_stochss_domain(path)
+        try:
+            domain = Domain.read_stochss_domain(path)
+        except DomainError as err:
+            raise DomainFormatError(f"Failed to load the domain.  Reason given: {err}") from err
         fig = domain.plot_types(return_plotly_figure=True)
         if not fig['data']:
-            fig['data'].append(self.__get_trace_data(particles=[], name="Un-Assigned"))
+            fig['data'].append(self.__get_trace_data(particles=[], name="Un-Assigned"), index=0)
         else:
             s_domain = self.load()['domain']
             for i, d_type in enumerate(s_domain['types']):
                 if len(s_domain['types']) > 1:
-                    particles = list(filter(lambda partictle, key=i: particle['type'] == key,
+                    particles = list(filter(lambda particle, key=i: particle['type'] == key,
                                             s_domain['particles']))
                 else:
                     particles = s_domain['particles']
                 ids = list(map(lambda particle: particle['particle_id'], particles))
-                index = fig['data'].index(
-                    list(filter(lambda trace: trace['name'].endswith(str(d_type['typeID'])), fig['data']))[0]
-                )
-                fig['data'][index]['name'] = d_type['name']
-                fig['data'][index]['ids'] = ids
+                index = list(filter(lambda trace: trace['name'].endswith(d_type['name']), fig['data']))
+                if len(index) !=0:
+                    index = fig['data'].index(index[0])
+                    fig['data'][index]['name'] = d_type['name']
+                    fig['data'][index]['ids'] = ids
+                else:
+                    fig['data'].insert(i, self.__get_trace_data(particles=[], name=d_type['name'], index=i))
+                    fig['data'][i]['ids'] = ids
         fig['layout']['width'] = None
         fig['layout']['height'] = None
         fig['layout']['autosize'] = True
@@ -528,14 +555,14 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def get_particles_from_remote(cls, mesh, data, types):
+    def get_particles_from_remote(cls, domain, data, types):
         '''
-        Get a list of stochss particles from a mesh
+        Get a list of stochss particles from a domain
 
         Attributes
         ----------
-        mesh : str
-            Mesh containing particle data
+        domain : str
+            Domain containing particle data
         data : dict
             Property and location data to be applied to each particle
         types : list
@@ -543,7 +570,7 @@ class StochSSSpatialModel(StochSSBase):
         '''
         file = tempfile.NamedTemporaryFile()
         with open(file.name, "w") as domain_file:
-            domain_file.write(mesh)
+            domain_file.write(domain)
         s_domain = Domain.read_xml_mesh(filename=file.name)
         domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
         if types is not None:

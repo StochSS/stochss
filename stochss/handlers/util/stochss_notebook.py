@@ -113,12 +113,11 @@ class StochSSNotebook(StochSSBase):
         pad = "    "
         config = ["def configure_simulation():"]
         # Add solver instantiation line if the c solver are available
-        instance_solvers = ["SSACSolver", "ODECSolver", "TauLeapingCSolver"]
         is_automatic = self.settings['simulationSettings']['isAutomatic']
-        if self.settings['solver'] in instance_solvers:
+        if "CSolver" in self.settings['solver']:
             if is_automatic and self.nb_type <= self.ENSEMBLE_SIMULATION:
                 commented = True
-            elif is_automatic and self.settings['solver'] not in instance_solvers:
+            elif is_automatic and "CSolver" not in self.settings['solver']:
                 commented = True
             else:
                 commented = False
@@ -131,6 +130,7 @@ class StochSSNotebook(StochSSBase):
             settings = self.__get_gillespy2_run_settings()
         settings_lists = {"ODE":['"solver"', '"integrator_options"'],
                           "SSA":['"solver"', '"seed"', '"number_of_trajectories"'],
+                          "CLE":['"solver"', '"seed"', '"number_of_trajectories"', '"tau_tol"'],
                           "Tau-Leaping":['"solver"', '"seed"', '"number_of_trajectories"',
                                          '"tau_tol"'],
                           "Hybrid-Tau-Leaping":['"solver"', '"seed"', '"number_of_trajectories"',
@@ -140,7 +140,7 @@ class StochSSNotebook(StochSSBase):
         for setting in settings:
             key = setting.split(':')[0]
             if self.nb_type > self.ENSEMBLE_SIMULATION and key == '"solver"' and \
-                                                self.settings['solver'] in instance_solvers:
+                                                "CSolver" in self.settings['solver']:
                 start = pad*2
             elif key not in settings_lists[algorithm]:
                 start = f"{pad*2}# "
@@ -232,20 +232,22 @@ class StochSSNotebook(StochSSBase):
             imports.append("import gillespy2")
             imports.append("from gillespy2 import Model, Species, Parameter, Reaction, Event, \\")
             imports.append("                      EventTrigger, EventAssignment, RateRule, \\")
-            imports.append("                      AssignmentRule, FunctionDefinition")
-            ssa_import = f'from gillespy2 import {self.model.get_best_solver_algo("SSA").name}'
-            tau_import = 'from gillespy2 import '
-            tau_import += f'{self.model.get_best_solver_algo("Tau-Leaping").name}'
-            ode_import = f'from gillespy2 import {self.model.get_best_solver_algo("ODE").name}'
-            hybrid_solver = self._get_hybrid_solver().name
-            algorithm_map = {'SSA': ssa_import, 'Tau-Leaping': tau_import, 'ODE': ode_import,
-                             'Hybrid-Tau-Leaping': f'from gillespy2 import {hybrid_solver}'}
+            imports.append("                      AssignmentRule, FunctionDefinition, TimeSpan")
+            tau_leaping_solver = self.model.get_best_solver_algo("Tau-Leaping").name
+            tau_hybrid_solver = self.model.get_best_solver_algo("Tau-Hybrid").name
+            algorithm_map = {
+                'ODE': f'from gillespy2 import {self.model.get_best_solver_algo("ODE").name}',
+                'SSA': f'from gillespy2 import {self.model.get_best_solver_algo("SSA").name}',
+                'CLE': f'from gillespy2 import {self.model.get_best_solver_algo("CLE").name}',
+                'Tau-Leaping': f'from gillespy2 import {tau_leaping_solver}',
+                'Hybrid-Tau-Leaping': f'from gillespy2 import {tau_hybrid_solver}'
+            }
             algorithm = self.settings['simulationSettings']['algorithm']
             for name, alg_import in algorithm_map.items():
                 if not is_automatic and name == algorithm:
                     imports.append(alg_import)
                 elif name == algorithm and self.nb_type > self.ENSEMBLE_SIMULATION and \
-                                                            name == "SSA":
+                                                            "CSolver" in alg_import:
                     imports.append(alg_import)
                 else:
                     imports.append(f"# {alg_import}")
@@ -256,7 +258,7 @@ class StochSSNotebook(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __create_initial_condition_strings(self, model, pad):
+    def __create_initial_condition_strings(self, model, pad, type_refs=None):
         if self.s_model['initialConditions']:
             ic_types = {"Place":"PlaceInitialCondition", "Scatter":"ScatterInitialCondition",
                         "Distribute Uniformly per Voxel":"UniformInitialCondition"}
@@ -264,12 +266,13 @@ class StochSSNotebook(StochSSBase):
             try:
                 for init_cond in self.s_model['initialConditions']:
                     ic_str = f'{pad}self.add_initial_condition({ic_types[init_cond["icType"]]}('
-                    ic_str += f'species={init_cond["specie"]["name"]}, count={init_cond["count"]},'
+                    ic_str += f'species="{init_cond["specie"]["name"]}", count={init_cond["count"]},'
                     if init_cond["icType"] == "Place":
                         place = f'{init_cond["x"]}, {init_cond["y"]}, {init_cond["z"]}'
                         ic_str += f' location=[{place}]))'
                     else:
-                        ic_str += f' types={str(init_cond["types"])}))'
+                        types = [type_refs[d_type] for d_type in init_cond["types"]]
+                        ic_str += f' types={types}))'
                     initial_conditions.append(ic_str)
                 model.extend(initial_conditions)
             except KeyError as err:
@@ -289,15 +292,19 @@ class StochSSNotebook(StochSSBase):
     def __create_model_cell(self):
         pad = '        '
         if self.s_model['is_spatial']:
-            model = [f"class {self.get_class_name()}(Model):",
-                     "    def __init__(self):",
-                     f'{pad}Model.__init__(self, name="{self.get_name()}")']
+            types = sorted(self.s_model['domain']['types'], key=lambda d_type: d_type['typeID'])
+            type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
+            model = [f"class {self.get_class_name()}(Model):"]
+            model.extend([f"    {type_id.upper()} = '{type_id}'" for type_id in type_ids.values()])
+            model.extend(["", "    def __init__(self):",
+                          f'{pad}Model.__init__(self, name="{self.get_name()}")'])
+            type_refs = {index: type_id.upper() for index, type_id in type_ids.items()}
             self.__create_domain_string(model=model, pad=pad)
             self.__create_boundary_condition_string(model=model, pad=pad)
-            self.__create_species_strings(model=model, pad=pad)
-            self.__create_initial_condition_strings(model=model, pad=pad)
+            self.__create_species_strings(model=model, pad=pad, type_refs=type_refs)
+            self.__create_initial_condition_strings(model=model, pad=pad, type_refs=type_refs)
             self.__create_parameter_strings(model=model, pad=pad)
-            self.__create_reaction_strings(model=model, pad=pad)
+            self.__create_reaction_strings(model=model, pad=pad, type_refs=type_refs)
         else:
             model = [f"class {self.get_class_name()}(Model):",
                      "    def __init__(self, parameter_values=None):",
@@ -316,54 +323,45 @@ class StochSSNotebook(StochSSBase):
     def __create_parameter_strings(self, model, pad):
         if self.s_model['parameters']:
             parameters = ["", f"{pad}# Parameters"]
-            if self.s_model['is_spatial']:
-                names = []
+            names = []
             try:
                 for param in self.s_model['parameters']:
-                    if self.s_model['is_spatial']:
-                        names.append(param['name'])
-                        param_str = f'{pad}{param["name"]} = Parameter(name="{param["name"]}", '
-                        param_str += f'expression="{param["expression"]}")'
-                    else:
-                        param_str = f'{pad}self.add_parameter(Parameter(name="{param["name"]}", '
-                        param_str += f'expression="{param["expression"]}"))'
+                    names.append(param['name'])
+                    param_str = f'{pad}{param["name"]} = Parameter(name="{param["name"]}", '
+                    param_str += f'expression="{param["expression"]}")'
                     parameters.append(param_str)
+                parameters.append(f"{pad}self.add_parameter([{', '.join(names)}])")
                 model.extend(parameters)
-                if self.s_model['is_spatial']:
-                    model.append(f"{pad}self.add_parameter([{', '.join(names)}])")
             except KeyError as err:
                 message = "Parameters are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __create_reaction_strings(self, model, pad):
+    def __create_reaction_strings(self, model, pad, type_refs=None):
         if self.s_model['reactions']:
             reactions = ["", f"{pad}# Reactions"]
-            if self.s_model['is_spatial']:
-                names = []
+            names = []
             try:
                 for reac in self.s_model['reactions']:
+                    names.append(reac['name'])
                     react_str = self.__create_stoich_spec_string(stoich_species=reac['reactants'])
                     prod_str = self.__create_stoich_spec_string(stoich_species=reac['products'])
-                    if self.s_model['is_spatial']:
-                        names.append(reac['name'])
-                        reac_str = f'{pad}{reac["name"]} = Reaction(name="{reac["name"]}", '
-                        if len(reac['types']) < len(self.s_model['domain']['types']) - 1:
-                            reac_str += f'restrict_to={str(reac["types"])}, '
-                    else:
-                        reac_str = f'{pad}self.add_reaction(Reaction(name="{reac["name"]}", '
+                    
+                    reac_str = f'{pad}{reac["name"]} = Reaction(name="{reac["name"]}", '
                     reac_str += f'reactants={react_str}, products={prod_str}, '
                     if reac['reactionType'] == 'custom-propensity':
-                        reac_str += f'propensity_function="{reac["propensity"]}")'
+                        reac_str += f'propensity_function="{reac["propensity"]}"'
                     else:
-                        reac_str += f'rate="{reac["rate"]["name"]}")'
-                    if not self.s_model['is_spatial']:
-                        reac_str += ")"
+                        reac_str += f'rate="{reac["rate"]["name"]}"'
+                    if self.s_model['is_spatial']:
+                        types = [f"self.{type_refs[d_type]}" for d_type in reac["types"]]
+                        if len(types) < len(type_refs):
+                            reac_str += f', restrict_to=[{", ".join(types)}]'
+                    reac_str += ")"
                     reactions.append(reac_str)
+                reactions.append(f"{pad}self.add_reaction([{', '.join(names)}])")
                 model.extend(reactions)
-                if self.s_model['is_spatial']:
-                    model.append(f"{pad}self.add_reaction([{', '.join(names)}])")
             except KeyError as err:
                 message = "Reactions are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
@@ -395,30 +393,23 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __create_species_strings(self, model, pad):
+    def __create_species_strings(self, model, pad, type_refs=None):
         if self.s_model['species']:
             species = ["", f"{pad}# Variables"]
-            if self.s_model['is_spatial']:
-                names = []
-                types_str = [""]
+            names = []
             try:
                 for spec in self.s_model['species']:
+                    names.append(spec["name"])
+                    spec_str = f'{pad}{spec["name"]} = Species(name="{spec["name"]}", '
                     if self.s_model['is_spatial']:
-                        names.append(spec["name"])
-                        spec_str = f'{pad}{spec["name"]} = Species(name="{spec["name"]}", '
-                        spec_str += f"diffusion_coefficient={spec['diffusionConst']})"
-                        if len(spec['types']) < len(self.s_model['domain']['types']) - 1:
-                            type_str = f"{pad}self.restrict({spec['name']}, {str(spec['types'])})"
-                            types_str.append(type_str)
+                        types = [f"self.{type_refs[d_type]}" for d_type in spec['types']]
+                        spec_str += f"diffusion_coefficient={spec['diffusionConst']}, "
+                        spec_str += f"restrict_to=[{', '.join(types)}])"
                     else:
-                        spec_str = f'{pad}self.add_species(Species(name="{spec["name"]}", '
                         spec_str += f'initial_value={spec["value"]}, mode="{spec["mode"]}"))'
                     species.append(spec_str)
+                species.append(f"{pad}self.add_species([{', '.join(names)}])")
                 model.extend(species)
-                if self.s_model['is_spatial']:
-                    model.append(f"{pad}self.add_species([{', '.join(names)}])")
-                    if len(types_str) > 1:
-                        model.extend(types_str)
             except KeyError as err:
                 message = "Species are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
@@ -435,9 +426,7 @@ class StochSSNotebook(StochSSBase):
                 species[name] = stoich_spec['ratio']
         spec_list = []
         for name, ratio in species.items():
-            if not self.s_model['is_spatial']:
-                name = f"'{name}'"
-            spec_list.append(f"{name}: {ratio}")
+            spec_list.append(f"'{name}': {ratio}")
         return "{" + ", ".join(spec_list) + "}"
 
 
@@ -450,7 +439,8 @@ class StochSSNotebook(StochSSBase):
             ts_str = f'{pad}self.timespan(np.arange(0, {end + step_size}, {output_freq})'
             ts_str += f", timestep_size={step_size})"
         else:
-            ts_str = f'{pad}self.timespan(np.arange(0, {end + output_freq}, {output_freq}))'
+            ts_str = f'{pad}tspan = TimeSpan(t={end + output_freq}, increment={output_freq})'
+            ts_str = f'{pad}self.timespan(tspan)'
         tspan.append(ts_str)
         model.extend(tspan)
 
@@ -464,13 +454,14 @@ class StochSSNotebook(StochSSBase):
             self.settings['simulationSettings']['realizations'] = 1
             settings['realizations'] = 1
         # Map algorithm for GillesPy2
-        ssa_solver = "solver" if self.is_ssa_c else "NumPySSASolver"
-        ode_solver = "solver" if self.is_ssa_c else "ODESolver"
-        tau_solver = "solver" if self.is_ssa_c else "TauLeapingSolver"
-        solver_map = {"SSA":f'"solver":{ssa_solver}',
-                      "ODE":f'"solver":{ode_solver}',
-                      "Tau-Leaping":f'"solver":{tau_solver}',
-                      "Hybrid-Tau-Leaping":f'"solver":{self._get_hybrid_solver().name}'}
+        tau_hybrid_solver = self.model.get_best_solver_algo("Tau-Hybrid").name
+        solver_map = {
+            "ODE":f'"solver":{"solver" if self.is_ssa_c else "ODESolver"}',
+            "SSA":f'"solver":{"solver" if self.is_ssa_c else "NumPySSASolver"}',
+            "CLE":f'"solver": CLESolver',
+            "Tau-Leaping":f'"solver":{"solver" if self.is_ssa_c else "TauLeapingSolver"}',
+            "Hybrid-Tau-Leaping":f'"solver":{"solver" if "CSolver" in tau_hybrid_solver else "TauHybridSolver"}'
+        }
         # Map algorithm settings for GillesPy2. GillesPy2 requires snake case, remap camelCase
         settings_map = {"number_of_trajectories":settings['realizations'],
                         "seed":settings['seed'] if settings['seed'] != -1 else None,
@@ -482,14 +473,6 @@ class StochSSNotebook(StochSSBase):
         algorithm_settings = [f'"{key}":{val}' for key, val in settings_map.items()]
         run_settings.extend(algorithm_settings)
         return run_settings
-
-
-    def _get_hybrid_solver(self):
-        if self.model.listOfAssignmentRules:
-            return TauHybridSolver
-        if self.model.listOfFunctionDefinitions:
-            return TauHybridSolver
-        return TauHybridCSolver
 
 
     def __get_spatialpy_run_setting(self):
@@ -584,10 +567,14 @@ class StochSSNotebook(StochSSBase):
             solver = self.model.get_best_solver().name
             self.settings['simulationSettings']['algorithm'] = self.SOLVER_MAP[solver]
             return solver
-        algorithm_map = {'SSA': self.model.get_best_solver_algo("SSA").name,
-                         'Tau-Leaping': self.model.get_best_solver_algo("Tau-Leaping").name,
-                         'Hybrid-Tau-Leaping': f'{self._get_hybrid_solver().name}',
-                         'ODE': self.model.get_best_solver_algo("ODE").name}
+        algorithm_map = {
+            'ODE': self.model.get_best_solver_algo("ODE").name,
+            'SSA': self.model.get_best_solver_algo("SSA").name,
+            'CLE': self.model.get_best_solver_algo("CLE").name,
+            'Tau-Leaping': self.model.get_best_solver_algo("Tau-Leaping").name,
+            'Hybrid-Tau-Leaping': self.model.get_best_solver_algo("Tau-Hybrid").name
+        }
+                 
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
 
 

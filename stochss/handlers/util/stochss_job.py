@@ -198,15 +198,6 @@ class StochSSJob(StochSSBase):
         return dims, f_keys
 
 
-    @classmethod
-    def _get_hybrid_solver(cls, model):
-        if model.listOfAssignmentRules:
-            return TauHybridSolver
-        if model.listOfFunctionDefinitions:
-            return TauHybridSolver
-        return TauHybridCSolver
-
-
     def __get_info_path(self, full=False):
         return os.path.join(self.get_path(full=full), "info.json")
 
@@ -594,7 +585,8 @@ class StochSSJob(StochSSBase):
         '''
         settings = settings['simulationSettings']
         kwargs = {"solver":solver_map[settings['algorithm']]}
-        if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping"):
+        if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping") and \
+                                        "CSolver" not in kwargs['solver']:
             integrator_options = {"atol":settings['absoluteTol'], "rtol":settings['relativeTol']}
             kwargs["integrator_options"] = integrator_options
         if settings['algorithm'] == "ODE":

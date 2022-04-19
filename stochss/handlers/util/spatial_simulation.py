@@ -56,7 +56,7 @@ class SpatialSimulation(StochSSJob):
         return self.get_run_settings(settings=self.settings, solver_map=solver_map)
 
 
-    def run(self, preview=False, verbose=False):
+    def run(self, preview=False, verbose=True):
         '''
         Run a SpatialPy ensemble simulation job
 
@@ -70,10 +70,11 @@ class SpatialSimulation(StochSSJob):
         if preview:
             if verbose:
                 self.log("info", "Running a preview spatial ensemble simulation")
-            results = self.s_py_model.run(timeout=60)
+                self.log("info", str(self.s_py_model))
+            results = self.s_py_model.run()
             properties = ["type", "rho", "mass", "nu"]
             t_ndx_list = list(range(len(os.listdir(results.result_dir)) - 1))
-            kwargs = {"t_ndx_list": t_ndx_list, "animated": True, "width": None, "height": None,
+            kwargs = {"t_ndx_list": t_ndx_list, "animated": True, "width": "auto", "height": "auto",
                       "return_plotly_figure": True, "f_duration": 100, "t_duration": 100}
             if self.target in properties or self.target.startswith("v["):
                 if self.target.startswith("v["):

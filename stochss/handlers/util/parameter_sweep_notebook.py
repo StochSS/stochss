@@ -55,7 +55,7 @@ class StochSSParamSweepNotebook(StochSSNotebook):
 
     def __create_1d_config_cell(self):
         pad = "    "
-        if self.settings['solver'] == "SSACSolver":
+        if "CSolver" in self.settings['solver']:
             model_str = f"{pad}model = {self.get_class_name()}()"
         else:
             model_str = f"{pad}ps_class = {self.get_class_name()}"
@@ -168,7 +168,7 @@ class StochSSParamSweepNotebook(StochSSNotebook):
 
     def __create_2d_config_cell(self):
         pad = "    "
-        if self.settings['solver'] == "SSACSolver":
+        if "CSolver" in self.settings['solver']:
             model_str = f"{pad}model = {self.get_class_name()}()"
         else:
             model_str = f"{pad}ps_class = {self.get_class_name()}"

@@ -145,7 +145,7 @@ class ParameterSweep1D():
         else:
             solver_name = self.model.get_best_solver().name
         for val in self.param['range']:
-            if solver_name in ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]:
+            if "CSolver" in solver_name:
                 tmp_mdl = self.model
                 self.settings['variables'] = {self.param['parameter']:val}
             else:

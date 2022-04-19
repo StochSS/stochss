@@ -27,8 +27,10 @@ import traceback
 import numpy
 from escapism import escape
 from gillespy2.sbml.SBMLexport import export
-from gillespy2 import Model, Species, Parameter, Reaction, Event, EventTrigger, EventAssignment, \
-                      RateRule, AssignmentRule, FunctionDefinition
+from gillespy2 import (
+    Model, Species, Parameter, Reaction, Event, EventTrigger, EventAssignment,
+    RateRule, AssignmentRule, FunctionDefinition, TimeSpan
+)
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSAPIError, StochSSFileNotFoundError, FileNotJSONFormatError, \
@@ -137,7 +139,7 @@ class StochSSModel(StochSSBase):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
-            return numpy.arange(0, end + step_size, step_size)
+            return TimeSpan.arange(t=end + step_size, increment=step_size)
         except KeyError as err:
             message = "Model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
