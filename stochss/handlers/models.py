@@ -281,7 +281,7 @@ class ImportMeshAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        log.info(f"Loading the doamin from {self.request.files['datafile'][0]['filename']}")
+        log.info(f"Loading the domain from {self.request.files['datafile'][0]['filename']}")
         data = self.request.files['datafile'][0]['body'].decode()
         if "typefile" in self.request.files.keys():
             log.info(f"Loading the particle types from \
