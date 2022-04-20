@@ -471,7 +471,7 @@ class StochSSJob(StochSSBase):
             if plt_key == "mltplplt":
                 fig = result.plotplotly(return_plotly_figure=True, multiple_graphs=True)
             elif plt_key == "stddevran":
-                fig = result.plotplotly_std_dev_range(return_plotly_figure=True)
+                fig = result.plotplotly_mean_stdev(return_plotly_figure=True)
             else:
                 if plt_key == "stddev":
                     result = result.stddev_ensemble()
