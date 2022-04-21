@@ -24,11 +24,12 @@ import hashlib
 import tempfile
 import traceback
 
-import numpy
 from escapism import escape
 from gillespy2.sbml.SBMLexport import export
-from gillespy2 import Model, Species, Parameter, Reaction, Event, EventTrigger, EventAssignment, \
-                      RateRule, AssignmentRule, FunctionDefinition
+from gillespy2 import (
+    Model, Species, Parameter, Reaction, Event, EventTrigger, EventAssignment,
+    RateRule, AssignmentRule, FunctionDefinition, TimeSpan
+)
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSAPIError, StochSSFileNotFoundError, FileNotJSONFormatError, \
@@ -65,7 +66,7 @@ class StochSSModel(StochSSBase):
             new_path, changed = self.get_unique_path(name=self.get_file())
             if changed:
                 self.path = new_path.replace(self.user_dir + '/', "")
-            with open(new_path, "w") as mdl_file:
+            with open(new_path, "w", encoding="utf-8") as mdl_file:
                 json.dump(model, mdl_file, indent=4, sort_keys=True)
         else:
             self.model = None
@@ -137,7 +138,7 @@ class StochSSModel(StochSSBase):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
-            return numpy.arange(0, end + step_size, step_size)
+            return TimeSpan.arange(t=end + step_size, increment=step_size)
         except KeyError as err:
             message = "Model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -221,14 +222,14 @@ class StochSSModel(StochSSBase):
             reactants = {}
             for stoich_species in reaction['reactants']:
                 name = stoich_species['specie']['name']
-                if name not in reactants.keys():
+                if name not in reactants:
                     reactants[name] = stoich_species['ratio']
                 else:
                     reactants[name] += stoich_species['ratio']
             products = {}
             for stoich_species in reaction['products']:
                 name = stoich_species['specie']['name']
-                if name not in products.keys():
+                if name not in products:
                     products[name] = stoich_species['ratio']
                 else:
                     products[name] += stoich_species['ratio']
@@ -241,7 +242,7 @@ class StochSSModel(StochSSBase):
 
     def __read_model_file(self):
         try:
-            with open(self.get_path(full=True), "r") as mdl_file:
+            with open(self.get_path(full=True), "r", encoding="utf-8") as mdl_file:
                 self.model = json.load(mdl_file)
         except FileNotFoundError as err:
             message = f"Could not find the model file: {str(err)}"
@@ -364,10 +365,10 @@ class StochSSModel(StochSSBase):
         s_path = os.path.join(dirname, s_file)
 
         g_model = self.convert_to_gillespy2()
-        tmp_path = export(g_model, path=tempfile.NamedTemporaryFile().name)
-        self.log("debug", f"Temp path to the sbml file: {tmp_path}")
-        with open(tmp_path, "r") as sbml_file:
-            s_doc = sbml_file.read()
+        with export(g_model, path=tempfile.NamedTemporaryFile().name) as tmp_path:
+            self.log("debug", f"Temp path to the sbml file: {tmp_path}")
+            with open(tmp_path, "r", encoding="utf-8") as sbml_file:
+                s_doc = sbml_file.read()
 
         message = f"{self.get_file()} was successfully converted to {s_file}"
         return {"Message":message}, {"path":s_path, "document":s_doc}
@@ -415,7 +416,7 @@ class StochSSModel(StochSSBase):
         '''
         file_name = f".{self.get_name()}-preview.json"
         try:
-            with open(file_name, "r") as live_fig:
+            with open(file_name, "r", encoding="utf-8") as live_fig:
                 fig = json.load(live_fig)
                 fig["config"] = {
                     "displayModeBar": True,
@@ -453,7 +454,7 @@ class StochSSModel(StochSSBase):
         path = os.path.join(self.user_dir, f".{outfile}.tmp")
         done_path = f"{path}.done"
         if os.path.exists(done_path):
-            with open(path, "r") as file:
+            with open(path, "r", encoding="utf-8") as file:
                 resp = json.load(file)
             os.remove(path)
             os.remove(done_path)
@@ -533,7 +534,7 @@ class StochSSModel(StochSSBase):
         path = self.get_path(full=True)
         self.log("debug", f"Full path to the model: {path}")
         if os.path.exists(path):
-            with open(path, 'w') as file:
+            with open(path, 'w', encoding="utf-8") as file:
                 file.write(model)
             self.log("debug", f"Saved the model: {self.get_name()}")
         else:

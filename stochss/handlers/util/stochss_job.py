@@ -32,7 +32,6 @@ import numpy
 import plotly
 
 from escapism import escape
-from gillespy2 import TauHybridSolver, TauHybridCSolver
 
 from .stochss_base import StochSSBase
 from .stochss_model import StochSSModel
@@ -89,7 +88,8 @@ class StochSSJob(StochSSBase):
             if settings is None:
                 self.__create_settings()
             else:
-                with open(self.__get_settings_path(full=True), "w", encoding="utf-8") as settings_file:
+                with open(self.__get_settings_path(full=True), "w",
+                                                   encoding="utf-8") as settings_file:
                     json.dump(settings, settings_file)
         except FileExistsError as err:
             message = f"Could not create your job: {str(err)}"
@@ -196,15 +196,6 @@ class StochSSJob(StochSSBase):
             raise StochSSJobResultsError(message)
         f_keys = [f"{name}:{value}" for name, value in fixed.items()]
         return dims, f_keys
-
-
-    @classmethod
-    def _get_hybrid_solver(cls, model):
-        if model.listOfAssignmentRules:
-            return TauHybridSolver
-        if model.listOfFunctionDefinitions:
-            return TauHybridSolver
-        return TauHybridCSolver
 
 
     def __get_info_path(self, full=False):
@@ -480,7 +471,7 @@ class StochSSJob(StochSSBase):
             if plt_key == "mltplplt":
                 fig = result.plotplotly(return_plotly_figure=True, multiple_graphs=True)
             elif plt_key == "stddevran":
-                fig = result.plotplotly_std_dev_range(return_plotly_figure=True)
+                fig = result.plotplotly_mean_stdev(return_plotly_figure=True)
             else:
                 if plt_key == "stddev":
                     result = result.stddev_ensemble()
@@ -594,7 +585,8 @@ class StochSSJob(StochSSBase):
         '''
         settings = settings['simulationSettings']
         kwargs = {"solver":solver_map[settings['algorithm']]}
-        if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping"):
+        if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping") and \
+                                        "CSolver" not in kwargs['solver']:
             integrator_options = {"atol":settings['absoluteTol'], "rtol":settings['relativeTol']}
             kwargs["integrator_options"] = integrator_options
         if settings['algorithm'] == "ODE":

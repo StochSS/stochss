@@ -89,7 +89,7 @@ class ParameterSweep1D():
 
     @classmethod
     def __write_csv_file(cls, path, header, param, data):
-        with open(path, "w") as csv_file:
+        with open(path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(header)
             for i, val in enumerate(param['range']):
@@ -145,7 +145,7 @@ class ParameterSweep1D():
         else:
             solver_name = self.model.get_best_solver().name
         for val in self.param['range']:
-            if solver_name in ["SSACSolver", "TauLeapingCSolver", "ODECSolver"]:
+            if "CSolver" in solver_name:
                 tmp_mdl = self.model
                 self.settings['variables'] = {self.param['parameter']:val}
             else:

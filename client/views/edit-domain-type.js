@@ -40,6 +40,7 @@ module.exports = View.extend({
   render: function (attrs, options) {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
+    this.renderNameView()
   },
   handleDeleteType: function (e) {
     let type = Number(e.target.dataset.type);
@@ -66,21 +67,18 @@ module.exports = View.extend({
     this.parent.unassignAllParticles(type);
     this.parent.renderDomainTypes();
   },
+  renderNameView: function () {
+    if(!this.viewMode) {
+      let nameInput = new InputView({
+        parent: this,
+        required: true,
+        name: 'name',
+        valueType: 'string',
+        value: this.model.name
+      });
+      app.registerRenderSubview(this, nameInput, "type-" + this.model.typeID)
+    }
+  },
   update: function () {},
   updateValid: function () {},
-  subviews: {
-    inputName: {
-      waitFor: "model.typeID",
-      prepareView: function (el) {
-        return new InputView({
-          el: "type-" + this.model.typeID,
-          parent: this,
-          required: true,
-          name: 'name',
-          valueType: 'string',
-          value: this.model.name
-        });
-      }
-    }
-  }
 });
