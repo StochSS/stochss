@@ -81,8 +81,8 @@ class SpatialSimulation(StochSSJob):
                     self.target = "v"
                 plot = results.plot_property(property_name=self.target, **kwargs)
             else:
-                concentration = self.s_model['defaultMode'] == "continuous"
-                deterministic = self.s_model['defaultMode'] == "discrete"
+                concentration = self.s_model['defaultMode'] == "discrete-concentration"
+                deterministic = self.s_model['defaultMode'] == "continuous"
                 plot = results.plot_species(species=self.target, concentration=concentration,
                                             deterministic=deterministic, **kwargs)
             plot["layout"]["autosize"] = True
