@@ -138,7 +138,7 @@ class StochSSModel(StochSSBase):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
-            return TimeSpan.arange(t=end + step_size, increment=step_size)
+            return TimeSpan.arange(t=end, increment=step_size)
         except KeyError as err:
             message = "Model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
