@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2021 StochSS developers.
+Copyright (C) 2019-2022 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -81,7 +81,7 @@ class ParameterScan():
 
     def __setup_model(self, variables):
         if "solver" in self.settings.keys() and \
-                        self.settings['solver'].name == "SSACSolver":
+                        "CSolver" in self.settings['solver'].name:
             self.settings['variables'] = variables
             return self.model
         tmp_mdl = copy.deepcopy(self.model)

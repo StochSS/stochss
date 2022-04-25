@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2021 StochSS developers.
+Copyright (C) 2019-2022 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -67,7 +67,7 @@ class TestGillesPy2Dependency(unittest.TestCase):
         ''' Check if the get best solver function works in StochSS. '''
         test_model = self.test_models[0]()
         test_solver = test_model.get_best_solver()
-        self.assertIsInstance(test_solver(), GillesPySolver)
+        self.assertIsInstance(test_solver(model=test_model), GillesPySolver)
 
     ################################################################################################
     # Unit tests for GillesPy2 dependency get_best_solver_algo.
@@ -75,12 +75,12 @@ class TestGillesPy2Dependency(unittest.TestCase):
 
     def test_get_best_solver_algo(self):
         ''' Check if the get best solver algo function works in StochSS. '''
-        test_algos = ["ODE", "SSA", "Tau-Leaping"]
+        test_algos = ["ODE", "SSA", "CLE", "Tau-Leaping", "Tau-Hybrid"]
         test_model = self.test_models[0]()
         for test_algo in test_algos:
             with self.subTest(test_algo=test_algo):
                 test_solver = test_model.get_best_solver_algo(algorithm=test_algo)
-                self.assertIsInstance(test_solver(), GillesPySolver)
+                self.assertIsInstance(test_solver(model=test_model), GillesPySolver)
 
     ################################################################################################
     # Unit tests for GillesPy2 dependency solvers.

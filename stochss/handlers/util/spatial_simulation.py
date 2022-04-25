@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2021 StochSS developers.
+Copyright (C) 2019-2022 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -70,10 +70,10 @@ class SpatialSimulation(StochSSJob):
         if preview:
             if verbose:
                 self.log("info", "Running a preview spatial ensemble simulation")
-            results = self.s_py_model.run(timeout=60)
+            results = self.s_py_model.run()
             properties = ["type", "rho", "mass", "nu"]
             t_ndx_list = list(range(len(os.listdir(results.result_dir)) - 1))
-            kwargs = {"t_ndx_list": t_ndx_list, "animated": True, "width": None, "height": None,
+            kwargs = {"t_ndx_list": t_ndx_list, "animated": True, "width": "auto", "height": "auto",
                       "return_plotly_figure": True, "f_duration": 100, "t_duration": 100}
             if self.target in properties or self.target.startswith("v["):
                 if self.target.startswith("v["):
@@ -81,8 +81,8 @@ class SpatialSimulation(StochSSJob):
                     self.target = "v"
                 plot = results.plot_property(property_name=self.target, **kwargs)
             else:
-                concentration = self.s_model['defaultMode'] == "continuous"
-                deterministic = self.s_model['defaultMode'] == "discrete"
+                concentration = self.s_model['defaultMode'] == "discrete-concentration"
+                deterministic = self.s_model['defaultMode'] == "continuous"
                 plot = results.plot_species(species=self.target, concentration=concentration,
                                             deterministic=deterministic, **kwargs)
             plot["layout"]["autosize"] = True

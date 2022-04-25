@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2021 StochSS developers.
+Copyright (C) 2019-2022 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -473,7 +473,7 @@ module.exports = {
       accept = 'accept=".xml, .sbml"';
     }else if(type === "file" && isSafariV14Plus){
       // only used if using Safari v14+ and only needed to fix upload issue
-      accept = 'accept=".json, .mdl, .smdl, .xml, .sbml, .ipynb, .zip, .md, .csv, .p, .omex, .domn, .txt, .pdf, audio/*, video/*, image/*"';
+      accept = 'accept=".json, .mdl, .smdl, .xml, .sbml, .ipynb, .zip, .md, .csv, .p, .omex, .domn, .txt, .pdf, .py, audio/*, video/*, image/*"';
     }
     
     return templates.upload(modalID, title, accept);

@@ -5,7 +5,7 @@
 # @website https://github.com/stochss/stochss
 # =============================================================================
 
-__version__ = '2.4.5'
+__version__ = '2.4.6'
 __title__ = 'StochSS'
 __description__ = 'StochSS is an integrated development environment (IDE) \
                     for simulation of biochemical networks.'
@@ -14,4 +14,4 @@ __download_url__ = ''
 __author__ = 'StochSS Team'
 __email__ = 'bdrawert@unca.edu'
 __license__ = 'GPL License'
-__copyright__ = 'Copyright (c) 2008-2021'
+__copyright__ = 'Copyright (c) 2008-2022'
