@@ -597,9 +597,9 @@ class StochSSFolder(StochSSBase):
             file = file.split("?token=")[0]
         path = self.get_new_path(dst_path=file)
         if ext == "zip":
-            zip_file = zipfile.ZipFile(path, "r")
-            members = zip_file.namelist()
-            for name in members:
-                if os.path.exists(name):
-                    return True
+            with zipfile.ZipFile(path, "r") as zip_file:
+                members = zip_file.namelist()
+                for name in members:
+                    if os.path.exists(name):
+                        return True
         return os.path.exists(path)
