@@ -22,5 +22,6 @@ var Collection = require('ampersand-collection');
 var WorkflowGroup = require('./workflow-group');
 
 module.exports = Collection.extend({
-  model: WorkflowGroup
+  model: WorkflowGroup,
+  comparator: "name"
 });
