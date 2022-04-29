@@ -70,6 +70,7 @@ let LoadingPage = PageView.extend({
           let yesBtn = document.querySelector("#uploadFileExistsModal .yes-modal-btn");
           let noBtn = document.querySelector("#uploadFileExistsModal .btn-secondary")
           yesBtn.addEventListener('click', function (e) {
+            modal.modal('hide');
             self.uploadFileFromLink(filePath, true);
           });
           noBtn.addEventListener('click', function (e) {
