@@ -77,6 +77,16 @@ let LoadingPage = PageView.extend({
             window.location.href = self.homeLink;
           });
         }
+      },
+      error: function(err, response, body) {
+        if(document.querySelector("#errorModal")) {
+          document.querySelector("#errorModal").remove();
+        }
+        $(self.queryByHook("loading-spinner")).css("display", "none");
+        let modal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+        modal.on('hidden.bs.modal', function (e) {
+          window.location.href = self.homeLink;
+        });
       }
     });
   },
