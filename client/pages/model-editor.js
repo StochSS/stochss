@@ -260,11 +260,13 @@ let ModelEditor = PageView.extend({
       }else if(e.target.dataset.type === "notebook"){
         this.notebookWorkflow(e);
       }else if(!this.model.is_spatial) {
-        if(e.target.dataset.type === "ensemble") {
-          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Ensemble Simulation");
-        }else if(e.target.dataset.type === "psweep") {
-          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep");
-        }
+        this.saveModel(() => {
+          if(e.target.dataset.type === "ensemble") {
+            app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Ensemble Simulation");
+          }else if(e.target.dataset.type === "psweep") {
+            app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep");
+          }
+        });
       }
     }
   },
