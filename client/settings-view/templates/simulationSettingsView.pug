@@ -24,7 +24,7 @@ div#simulation-settings.card
       | Consider the following when selecting an algorithm for your job.  If you would like StochSS to choose the algorithm, select <b>Choose for me</b>.
 
     ul.mb-0
-      li Algorithms <b>ODE</b> and <b>Hybrid ODE/SSA</b> work best to simulate models with a mode of <b>Concentration</b>.
+      li Algorithms <b>ODE</b>, <b>CLE</b>, and <b>Hybrid ODE/SSA</b> work best to simulate models with a mode of <b>Concentration</b>.
       li Algorithns <b>SSA</b>, <b>Tau Leaping</b>, and <b>Hybrid ODE/SSA</b> work best to simulate models with a mode of <b>Population</b>.
       li Algorithm <b>Hybrid ODE/SSA</b> is required if the model contains advanced components.
 
@@ -60,13 +60,21 @@ div#simulation-settings.card
 
           div.col-sm-2
 
+            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-cle", data-name="CLE")
+
+            span.inline CLE
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.cle) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          div.col-sm-2
+
             input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-tau-leaping", data-name="Tau-Leaping")
 
             span.inline Tau Leaping
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.tauLeaping) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          div.col-sm-3
+          div.col-sm-2
 
             input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-hybrid-tau", data-name="Hybrid-Tau-Leaping")
 
@@ -74,7 +82,7 @@ div#simulation-settings.card
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.hybrid) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          div.col-sm-3
+          div.col-sm-2
 
             input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-automatic", data-name="Automatic")
 

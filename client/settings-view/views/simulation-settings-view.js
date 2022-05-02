@@ -32,6 +32,7 @@ module.exports = View.extend({
   events: {
     'change [data-hook=select-ode]' : 'handleSelectSimulationAlgorithmClick',
     'change [data-hook=select-ssa]' : 'handleSelectSimulationAlgorithmClick',
+    'change [data-hook=select-cle]' : 'handleSelectSimulationAlgorithmClick',
     'change [data-hook=select-tau-leaping]' : 'handleSelectSimulationAlgorithmClick',
     'change [data-hook=select-hybrid-tau]' : 'handleSelectSimulationAlgorithmClick',
     'change [data-hook=select-automatic]' : 'handleSelectSimulationAlgorithmClick',
@@ -81,13 +82,14 @@ module.exports = View.extend({
     let isAutomatic = this.model.isAutomatic;
     let isODE = this.model.algorithm === "ODE";
     let isSSA = this.model.algorithm === "SSA";
+    let isCLE = this.model.algorithm === "CLE";
     let isLeaping = this.model.algorithm === "Tau-Leaping";
     let isHybrid = this.model.algorithm === "Hybrid-Tau-Leaping";
     $(this.queryByHook("relative-tolerance")).find('input').prop('disabled', !(isODE || isHybrid || isAutomatic));
     $(this.queryByHook("absolute-tolerance")).find('input').prop('disabled', !(isODE || isHybrid || isAutomatic));
-    $(this.queryByHook("trajectories")).find('input').prop('disabled', !(isSSA || isLeaping || isHybrid || isAutomatic));
-    $(this.queryByHook("seed")).find('input').prop('disabled', !(isSSA || isLeaping || isHybrid || isAutomatic));
-    $(this.queryByHook("tau-tolerance")).find('input').prop('disabled', !(isHybrid || isLeaping || isAutomatic));
+    $(this.queryByHook("trajectories")).find('input').prop('disabled', !(isSSA || isCLE || isLeaping || isHybrid || isAutomatic));
+    $(this.queryByHook("seed")).find('input').prop('disabled', !(isSSA || isCLE || isLeaping || isHybrid || isAutomatic));
+    $(this.queryByHook("tau-tolerance")).find('input').prop('disabled', !(isHybrid || isCLE || isLeaping || isAutomatic));
   },
   handleSelectSimulationAlgorithmClick: function (e) {
     let value = e.target.dataset.name;
@@ -128,7 +130,7 @@ module.exports = View.extend({
   updateValid: function (e) {},
   updateViewer: function () {
     $(this.queryByHook("view-algorithm")).html(this.algorithm);
-    let hideDeterministic = this.model.isAutomatic || this.model.algorithm === "SSA" || this.model.algorithm === "Tau-Leaping";
+    let hideDeterministic = this.model.isAutomatic || this.model.algorithm === "SSA" || this.model.algorithm === "CLE" || this.model.algorithm === "Tau-Leaping";
     let hideStochastic = this.model.isAutomatic || this.model.algorithm === "ODE" ;
     if(hideDeterministic) {
       $(this.queryByHook("view-deterministic-settings")).css("display", "none");

@@ -405,7 +405,7 @@ class StochSSNotebook(StochSSBase):
                         spec_str += f"diffusion_coefficient={spec['diffusionConst']}, "
                         spec_str += f"restrict_to=[{', '.join(types)}])"
                     else:
-                        spec_str += f'initial_value={spec["value"]}, mode="{spec["mode"]}"))'
+                        spec_str += f'initial_value={spec["value"]}, mode="{spec["mode"]}")'
                     species.append(spec_str)
                 species.append(f"{pad}self.add_species([{', '.join(names)}])")
                 model.extend(species)
@@ -437,10 +437,10 @@ class StochSSNotebook(StochSSBase):
             step_size = self.s_model['modelSettings']['timestepSize']
             ts_str = f'{pad}self.timespan(np.arange(0, {end + step_size}, {output_freq})'
             ts_str += f", timestep_size={step_size})"
+            tspan.append(ts_str)
         else:
-            ts_str = f'{pad}tspan = TimeSpan(np.arange(0, {end + output_freq}, {output_freq}))'
-            ts_str = f'{pad}self.timespan(tspan)'
-        tspan.append(ts_str)
+            tspan.append(f'{pad}tspan = TimeSpan(np.arange(0, {end + output_freq}, {output_freq}))')
+            tspan.append(f'{pad}self.timespan(tspan)')
         model.extend(tspan)
 
 

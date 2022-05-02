@@ -356,11 +356,11 @@ class StochSSJob(StochSSBase):
                 result = result.average_ensemble()
             self.log("info", "Generating CSV files...")
             with tempfile.TemporaryDirectory() as tmp_dir:
-                result.to_csv(path=tmp_dir.name, nametag=name, stamp="")
+                result.to_csv(path=tmp_dir, nametag=name, stamp="")
                 if data_keys:
-                    self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=data_keys)
+                    self.__write_parameters_csv(path=tmp_dir, name=name, data_keys=data_keys)
                 self.log("info", "Generating zip archive...")
-                return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+                return self.__get_csvzip(dirname=tmp_dir, name=name)
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -383,15 +383,15 @@ class StochSSJob(StochSSBase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             if not isinstance(results, dict):
                 self.log("info", "Generating CSV files...")
-                results.to_csv(path=tmp_dir.name, nametag=name, stamp="")
+                results.to_csv(path=tmp_dir, nametag=name, stamp="")
                 self.log("info", "Generating zip archive...")
-                return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+                return self.__get_csvzip(dirname=tmp_dir, name=name)
             def get_name(b_name, tag):
                 return f"{b_name}_{tag}"
-            b_path = os.path.join(tmp_dir.name, get_name(name, "full"))
+            b_path = os.path.join(tmp_dir, get_name(name, "full"))
             self.log("info", "Generating time series CSV files...")
             self.__get_full_timeseries_csv(b_path, results, get_name, name)
-            return self.__get_csvzip(dirname=tmp_dir.name, name=get_name(name, "full"))
+            return self.__get_csvzip(dirname=tmp_dir, name=get_name(name, "full"))
 
 
     def get_model_path(self, full=False, external=False):
@@ -511,18 +511,18 @@ class StochSSJob(StochSSBase):
                     kwargs["species"] = list(kwargs['results'][0][0].model.listOfSpecies.keys())
                     self.log("info", "Generating CSV files...")
                     ParameterSweep1D.to_csv(
-                        param=params[0], kwargs=kwargs, path=tmp_dir.name, nametag=name
+                        param=params[0], kwargs=kwargs, path=tmp_dir, nametag=name
                     )
                 else:
                     kwargs = {"results": self.__get_filtered_2d_results(f_keys, params[0])}
                     kwargs["species"] = list(kwargs['results'][0][0][0].model.listOfSpecies.keys())
                     self.log("info", "Generating CSV files...")
                     ParameterSweep2D.to_csv(
-                        params=params, kwargs=kwargs, path=tmp_dir.name, nametag=name
+                        params=params, kwargs=kwargs, path=tmp_dir, nametag=name
                     )
                 if fixed:
-                    self.__write_parameters_csv(path=tmp_dir.name, name=name, data_keys=fixed)
-                return self.__get_csvzip(dirname=tmp_dir.name, name=name)
+                    self.__write_parameters_csv(path=tmp_dir, name=name, data_keys=fixed)
+                return self.__get_csvzip(dirname=tmp_dir, name=name)
         except FileNotFoundError as err:
             message = f"Could not find the results pickle file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
@@ -586,7 +586,7 @@ class StochSSJob(StochSSBase):
         settings = settings['simulationSettings']
         kwargs = {"solver":solver_map[settings['algorithm']]}
         if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping") and \
-                                        "CSolver" not in kwargs['solver']:
+                                        "CSolver" not in kwargs['solver'].name:
             integrator_options = {"atol":settings['absoluteTol'], "rtol":settings['relativeTol']}
             kwargs["integrator_options"] = integrator_options
         if settings['algorithm'] == "ODE":
