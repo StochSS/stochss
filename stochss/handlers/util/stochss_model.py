@@ -385,6 +385,8 @@ class StochSSModel(StochSSBase):
         if self.model is None:
             model = self.load()
         model['is_spatial'] = True
+        if model['defaultMode'] == "dynamic":
+            model['defaultMode'] == "discrete-concentration"
         if "timestepSize" not in self.model['modelSettings'].keys():
             self.model['modelSettings']['timestepSize'] = 1e-5
         if "domain" not in model.keys():
