@@ -439,7 +439,7 @@ class StochSSNotebook(StochSSBase):
             ts_str += f", timestep_size={step_size})"
             tspan.append(ts_str)
         else:
-            tspan.append(f'{pad}tspan = TimeSpan.arange(t={end}, increment={output_freq})')
+            tspan.append(f'{pad}tspan = TimeSpan(np.arange(0, {end + output_freq}, {output_freq}))')
             tspan.append(f'{pad}self.timespan(tspan)')
         model.extend(tspan)
 

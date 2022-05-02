@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import ast
 import json
+import numpy
 import string
 import hashlib
 import tempfile
@@ -138,7 +139,7 @@ class StochSSModel(StochSSBase):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
-            return TimeSpan.arange(t=end, increment=step_size)
+            return TimeSpan(numpy.arange(0, end + step_size, step_size))
         except KeyError as err:
             message = "Model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
