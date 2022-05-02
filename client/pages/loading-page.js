@@ -70,12 +70,23 @@ let LoadingPage = PageView.extend({
           let yesBtn = document.querySelector("#uploadFileExistsModal .yes-modal-btn");
           let noBtn = document.querySelector("#uploadFileExistsModal .btn-secondary")
           yesBtn.addEventListener('click', function (e) {
+            modal.modal('hide');
             self.uploadFileFromLink(filePath, true);
           });
           noBtn.addEventListener('click', function (e) {
             window.location.href = self.homeLink;
           });
         }
+      },
+      error: function(err, response, body) {
+        if(document.querySelector("#errorModal")) {
+          document.querySelector("#errorModal").remove();
+        }
+        $(self.queryByHook("loading-spinner")).css("display", "none");
+        let modal = $(modals.errorHtml(body.Reason, body.Message)).modal();
+        modal.on('hidden.bs.modal', function (e) {
+          window.location.href = self.homeLink;
+        });
       }
     });
   },

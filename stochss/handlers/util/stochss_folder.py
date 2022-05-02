@@ -22,6 +22,7 @@ import pickle
 import shutil
 import string
 import zipfile
+import tempfile
 import datetime
 import traceback
 
@@ -33,7 +34,7 @@ from .stochss_file import StochSSFile
 from .stochss_model import StochSSModel
 from .stochss_sbml import StochSSSBMLModel
 from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
-                            StochSSPermissionsError
+                            StochSSPermissionsError, StochSSUnzipError
 
 
 class StochSSFolder(StochSSBase):
@@ -65,6 +66,38 @@ class StochSSFolder(StochSSBase):
                 message = f"Could not create your directory: {str(err)}"
                 raise StochSSFileExistsError(message, traceback.format_exc()) from err
 
+
+    def __get_file_from_link(self, remote_path):
+        ext = remote_path.split('.').pop().split('?')[0]
+        if os.path.exists("/stochss/.proxies.txt"):
+            with open("/stochss/.proxies.txt", "r") as proxy_file:
+                proxy_ip = proxy_file.read().strip()
+                proxies = {
+                    "https": f"https://{proxy_ip}",
+                    "http": f"http://{proxy_ip}"
+                }
+        else:
+            proxies = None
+        response = requests.get(remote_path, allow_redirects=True, proxies=proxies)
+        body = response.content
+        if "download_presentation" in remote_path:
+            if ext in ("mdl", "smdl"):
+                file = f"{json.loads(body)['name']}.{ext}"
+            elif ext == "ipynb":
+                file = json.loads(body)['file']
+                body = json.dumps(json.loads(body)['notebook'])
+            elif ext == "job":
+                file = self.get_file(path=remote_path)
+        elif "?" in remote_path:
+            file = self.get_file(path=remote_path.split("?")[0])
+        else:
+            file = self.get_file(path=remote_path)
+        if response.status_code == 404:
+            message = f"Could not upload this file as {file} was not found."
+            if "?token=" in remote_path:
+                message += "  The token for this file may be out of date."
+            raise StochSSFileNotFoundError(message, traceback.format_exc())
+        return ext, file, body
 
     def __get_rmt_upld_path(self, file):
         if not file.endswith(".zip"):
@@ -150,18 +183,30 @@ class StochSSFolder(StochSSBase):
         return name
 
 
-    @classmethod
-    def __overwrite(cls, path, ext):
-        if ext == "zip":
-            with zipfile.ZipFile(path, "r") as zip_file:
-                members = zip_file.namelist()
-                for name in members:
-                    if os.path.isdir(name):
-                        shutil.rmtree(name)
-                    elif os.path.exists(name):
-                        os.remove(name)
-        elif os.path.exists(path):
+    def __overwrite(self, path, ext, body):
+        if ext != "zip":
             os.remove(path)
+        else:
+            if os.path.exists(path):
+                os.remove(path)
+            file = self.get_file(path=path)
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                ext_path = os.path.join(tmp_dir, file)
+                with open(ext_path, "wb") as zip_file:
+                    zip_file.write(body)
+                try:
+                    with zipfile.ZipFile(ext_path, 'r') as zip_file:
+                        members = set([name.split('/')[0] for name in zip_file.namelist()])
+                        for name in members:
+                            m_path = self.get_new_path(dst_path=name)
+                            if os.path.exists(m_path):
+                                if os.path.isdir(m_path):
+                                    shutil.rmtree(m_path)
+                                else:
+                                    os.remove(m_path)
+                except zipfile.BadZipFile as err:
+                    message = "File is not a zip file"
+                    raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
     def __upload_file(self, file, body, new_name=None):
@@ -529,38 +574,13 @@ class StochSSFolder(StochSSBase):
         overwrite : bool
             Overwrite the existing files.
         '''
-        ext = remote_path.split('.').pop()
-        if os.path.exists("/stochss/.proxies.txt"):
-            with open("/stochss/.proxies.txt", "r") as proxy_file:
-                proxy_ip = proxy_file.read().strip()
-                proxies = {
-                    "https": f"https://{proxy_ip}",
-                    "http": f"http://{proxy_ip}"
-                }
-        else:
-            proxies = None
-        body = requests.get(remote_path, allow_redirects=True, proxies=proxies).content
-        if "download_presentation" in remote_path:
-            if ext in ("mdl", "smdl"):
-                file = f"{json.loads(body)['name']}.{ext}"
-            elif ext == "ipynb":
-                file = json.loads(body)['file']
-                body = json.dumps(json.loads(body)['notebook'])
-        else:
-            file = self.get_file(path=remote_path)
-        if "404: Not Found" in body.decode():
-            message = f"Could not upload this file as {file} was not found."
-            if "?token=" in file:
-                message += "  The token for this file may be out of date."
-            return {"message": message, "reason":"File Not Found"}
-        if "?token=" in file:
-            file = file.split("?token=")[0]
+        ext, file, body = self.__get_file_from_link(remote_path)
         path = self.get_new_path(dst_path=file)
-        if os.path.exists(path):
-            if not overwrite:
-                message = f"Could not upload this file as {file} already exists"
-                return {"message":message, "reason":"File Already Exists"}
-            self.__overwrite(path=path, ext=ext)
+        if overwrite:
+            self.__overwrite(path=path, ext=ext, body=body)
+        elif os.path.exists(path):
+            message = f"Could not upload this file as {file} already exists"
+            return {"message":message, "reason":"File Already Exists"}
         try:
             file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
             file_type = file_types[ext] if ext in file_types.keys() else "file"
@@ -581,25 +601,22 @@ class StochSSFolder(StochSSBase):
         remote_path : str
             Path to the remote file
         '''
-        ext = remote_path.split('.').pop()
-        body = requests.get(remote_path, allow_redirects=True).content
-        if "download_presentation" in remote_path:
-            if ext in ("mdl", "smdl"):
-                file = f"{json.loads(body)['name']}.{ext}"
-            elif ext == "ipynb":
-                file = json.loads(body)['file']
-                body = json.dumps(json.loads(body)['notebook'])
-            elif ext == "job":
-                file = self.get_file(path=remote_path)
-        else:
-            file = self.get_file(path=remote_path)
-        if "?token=" in file:
-            file = file.split("?token=")[0]
+        ext, file, body = self.__get_file_from_link(remote_path)
         path = self.get_new_path(dst_path=file)
-        if ext == "zip":
-            with zipfile.ZipFile(path, "r") as zip_file:
-                members = zip_file.namelist()
-                for name in members:
-                    if os.path.exists(name):
-                        return True
-        return os.path.exists(path)
+        exists = os.path.exists(path)
+        if ext != "zip" or exists:
+            return exists
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            ext_path = os.path.join(tmp_dir, file)
+            with open(ext_path, "wb") as zip_file:
+                zip_file.write(body)
+            try:
+                with zipfile.ZipFile(ext_path, 'r') as zip_file:
+                    members = set([name.split('/')[0] for name in zip_file.namelist()])
+                    for name in members:
+                        if os.path.exists(self.get_new_path(dst_path=name)):
+                            return True
+            except zipfile.BadZipFile as err:
+                message = "File is not a zip file"
+                raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        return False
