@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import os
+import numpy
 import pickle
 import logging
 import traceback
@@ -88,7 +89,7 @@ class EnsembleSimulation(StochSSJob):
                 end = self.settings['timespanSettings']['endSim']
                 step_size = self.settings['timespanSettings']['timeStep']
                 self.g_model.timespan(
-                    TimeSpan.arange(t=end + step_size, increment=step_size)
+                    TimeSpan(numpy.arange(0, end + step_size, step_size))
                 )
 
 
