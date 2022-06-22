@@ -41,6 +41,9 @@ module.exports = View.extend({
       self.collection.parent.reactions.map(function (reaction) {
         if(reaction.rate && reaction.rate.compID === compID){
           reaction.rate = parameter;
+          if(reaction.reactionType !== 'custom-propensity') {
+            reaction.trigger('change-reaction');
+          }
         }
       });
       self.collection.parent.eventsCollection.map(function (event) {

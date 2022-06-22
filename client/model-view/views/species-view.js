@@ -42,23 +42,21 @@ module.exports = View.extend({
     let self = this;
     this.collection.on('update-species', function (compID, specie, isNameUpdate, isDefaultMode) {
       self.collection.parent.reactions.forEach(function (reaction) {
+        var changedReaction = false;
         reaction.reactants.forEach(function (reactant) {
           if(reactant.specie.compID === compID) {
             reactant.specie = specie;
+            changedReaction = true;
           }
         });
         reaction.products.forEach(function (product) {
           if(product.specie.compID === compID) {
             product.specie = specie;
+            changedReaction = true;
           }
         });
-        if(isNameUpdate) {
-          reaction.buildSummary();
-          if(reaction.selected) {
-            self.parent.reactionsView.setDetailsView(reaction);
-          }
-        }else if(!isDefaultMode || specie.compID === self.collection.models[self.collection.length-1].compID){
-          reaction.checkModes();
+        if(changedReaction) {
+          reaction.trigger('change-reaction');
         }
       });
       self.collection.parent.eventsCollection.forEach(function (event) {
