@@ -27,9 +27,8 @@ module.exports = State.extend({
   props: {
     compID: 'number',
     name: 'string',
-    reactionType: 'string',
-    summary: 'string',
     massaction: 'boolean',
+    odePropensity: 'string',
     propensity: 'string',
     annotation: 'string',
     types: 'object'
@@ -42,29 +41,58 @@ module.exports = State.extend({
     products: StoichSpecies
   },
   session: {
-    selected: {
-      type: 'boolean',
-      default: true,
-    },
     hasConflict: {
       type: 'boolean',
       default: false,
     },
+    maODEPropensity: 'string',
+    maPropensity: 'string',
+    mirrorPropensities: 'boolean',
+    reactionType: 'string',
+    selected: {
+      type: 'boolean',
+      default: false,
+    },
+    summary: 'string'
   },
   initialize: function (attrs, options) {
     var self = this;
     State.prototype.initialize.apply(this, arguments);
-    if(!this.reactionType.startsWith('custom')) {
-      let reactionType = this.updateReactionType();
-      if(this.reactionType !== reactionType){
-        this.reactionType = reactionType
-        this.buildSummary()
-      }
-    }
-    this.on('change-reaction', function () {
-      self.buildSummary();
-      self.checkModes();
+    this.reactionType = this.updateReactionType();
+    this.mirrorPropensities = this.propensity === this.odePropensity;
+    this.buildSummary();
+    this.buildMAPropensities();
+    this.checkModes();
+    this.on('change-reaction', () => {
+      this.buildSummary();
+      this.buildMAPropensities();
+      this.checkModes();
     });
+  },
+  buildMAPropensities: function () {
+    if(this.reactionType === "custom-propensity") { return }
+    var odePropensity = this.rate.name;
+    var propensity = this.rate.name;
+    
+    this.reactants.forEach((stoichSpecies) => {
+      let name = stoichSpecies.specie.name;
+      if(stoichSpecies.ratio == 2) {
+        odePropensity += ` * ${name} * ${name}`;
+        propensity = `0.5 * ${propensity} * ${name} * (${name} - 1) / vol`;
+      }else{
+        odePropensity += ` * ${name}`;
+        propensity += ` * ${name}`;
+      }
+    })
+    
+    let order = this.reactants.length;
+    if(order == 2) {
+      propensity += " / vol";
+    }else if(order == 0) {
+      propensity += " * vol"
+    }
+    this.maODEPropensity = odePropensity;
+    this.maPropensity = propensity;
   },
   buildSummary: function () {
     var summary = "";
@@ -137,6 +165,9 @@ module.exports = State.extend({
     this.hasConflict = Boolean(hasContinuous && (hasDynamic || hasDiscrete))
   },
   updateReactionType: function () {
+    if(!this.massaction) {
+      return "custom-propensity"
+    }
     let numReactants = this.reactants.length
     let numProducts = this.products.length
     let prodRatio1 = numProducts > 0 ? this.products.models[0].ratio : 0
