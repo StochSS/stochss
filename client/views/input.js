@@ -24,6 +24,7 @@ module.exports = AmpersandInputView.extend({
     label: 'string',
     modelKey: 'string',
     valueType: 'string',
+    disabled: 'boolean'
   },
   events: {
     'input input' : 'changeInputHandler',
@@ -32,11 +33,12 @@ module.exports = AmpersandInputView.extend({
     AmpersandInputView.prototype.initialize.apply(this, arguments);
   },
   render: function () {
+    let disabled = this.disabled ? "disabled" : "";
     if(this.label) {
       this.template = [
         '<label>',
             '<span data-hook="label"></span>',
-            '<input class="form-input labeled">',
+            `<input class="form-input labeled" ${disabled}>`,
             '<div data-hook="message-container" class="message message-below message-error text-danger">',
                 '<p data-hook="message-text"></p>',
             '</div>',
@@ -45,7 +47,7 @@ module.exports = AmpersandInputView.extend({
     }else{
       this.template = [
         '<label>',
-            '<input class="form-input">',
+            `<input class="form-input" ${disabled}>`,
             '<div data-hook="message-container" class="message message-below message-error text-danger">',
                 '<p data-hook="message-text"></p>',
             '</div>',
