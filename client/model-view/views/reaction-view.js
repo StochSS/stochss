@@ -204,13 +204,14 @@ module.exports = View.extend({
     if(!this.odePropensityInputView || override) {
       if(this.model.massaction) {
         var required = false;
-        var propensity = this.model.maODEPropensity
-        var modelKey = 'maODEPropensity'
+        var propensity = this.model.maODEPropensity;
+        var modelKey = 'maODEPropensity';
         $(this.queryByHook('mirror-propensities')).prop('disabled', true);
       }else{
         var required = !this.model.mirrorPropensities;
-        var propensity = this.model.odePropensity
-        var modelKey = 'odePropensity'
+        var propensity = this.model.odePropensity;
+        var modelKey = 'odePropensity';
+        $(this.queryByHook('mirror-propensities')).prop('disabled', false);
       }
       
       this.odePropensityInputView = new InputView({
