@@ -243,7 +243,7 @@ class StochSSSpatialModel(StochSSBase):
             for reaction in self.model['reactions']:
                 reactants, products = self.__convert_stoich_species(model=model,
                                                                     reaction=reaction)
-                if reaction['reactionType'] != "custom-propensity":
+                if reaction['massaction']:
                     rate = s_params[reaction['rate']['name']]
                     propensity = None
                     ode_propensity = None

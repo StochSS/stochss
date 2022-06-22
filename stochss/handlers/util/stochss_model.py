@@ -162,7 +162,7 @@ class StochSSModel(StochSSBase):
         try:
             g_parameters = model.get_all_parameters()
             for reaction in self.model['reactions']:
-                if reaction['reactionType'] == "custom-propensity":
+                if not reaction['massaction']:
                     rate = None
                     propensity = reaction['propensity']
                     ode_propensity = reaction['odePropensity']
