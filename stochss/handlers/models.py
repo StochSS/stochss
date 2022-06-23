@@ -375,7 +375,8 @@ class Create3DDomainAPIHandler(APIHandler):
         log.debug("Data used to create the domain: {data}")
         try:
             log.info("Generating new particles")
-            resp = StochSSSpatialModel.get_particles_from_3d_domain(data=data)
+            model = StochSSSpatialModel(path="")
+            resp = model.get_particles_from_3d_domain(data=data)
             log.debug(f"Number of Particles: {len(resp['particles'])}")
             log.info("Successfully created new particles")
             self.write(resp)
