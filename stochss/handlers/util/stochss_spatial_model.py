@@ -122,7 +122,7 @@ class StochSSSpatialModel(StochSSBase):
             if data is None or data['type'] is None:
                 viscosity = s_domain.nu[i]
                 fixed = bool(s_domain.fixed[i])
-                type_id = int(s_domain.type[i])
+                type_id = s_domain.typeNdxMapping[s_domain.type_id[i]]
             else:
                 viscosity = data['type']['nu']
                 fixed = data['type']['fixed']
@@ -462,7 +462,7 @@ class StochSSSpatialModel(StochSSBase):
         return self.__load_domain_from_file(path=path)
 
 
-    def get_domain_plot(self, path=None, new=False):
+    def get_domain_plot(self, path=None, new=False, domains=None):
         '''
         Get a plotly plot of the models domain or a prospective domain
 
@@ -472,20 +472,25 @@ class StochSSSpatialModel(StochSSBase):
             Path to a prospective domain
         new : bool
             Indicates whether or not to load an new domain
+        domains : tuple(spatialpy.Domain, stochss.Domain)
+            Domain objects used to generate plot data.
         '''
-        if new:
-            path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
-        elif path is None:
-            path = self.path
-        try:
-            domain = Domain.read_stochss_domain(path)
-        except DomainError as err:
-            raise DomainFormatError(f"Failed to load the domain.  Reason given: {err}") from err
+        if domains is None:
+            if new:
+                path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+            elif path is None:
+                path = self.path
+            try:
+                domain = Domain.read_stochss_domain(path)
+            except DomainError as err:
+                raise DomainFormatError(f"Failed to load the domain.  Reason given: {err}") from err
+        else:
+            domain = domains[0]
         fig = domain.plot_types(return_plotly_figure=True)
         if not fig['data']:
             fig['data'].append(self.__get_trace_data(particles=[], name="Un-Assigned"), index=0)
         else:
-            s_domain = self.load()['domain']
+            s_domain = self.load()['domain'] if domains is None else domains[1]
             for i, d_type in enumerate(s_domain['types']):
                 if len(s_domain['types']) > 1:
                     particles = list(filter(lambda particle, key=i: particle['type'] == key,
@@ -526,8 +531,7 @@ class StochSSSpatialModel(StochSSBase):
         return {"path":path, "new":True, "models":{"s_model":self.model, "model":s_model}}
 
 
-    @classmethod
-    def get_particles_from_3d_domain(cls, data):
+    def get_particles_from_3d_domain(self, data):
         '''
         Create a new 3D domain and return the particles
 
@@ -553,9 +557,13 @@ class StochSSSpatialModel(StochSSBase):
         else:
             s_domain = Domain.create_2D_domain(xlim=xlim, ylim=ylim,
                                                nx=data['nx'], ny=data['ny'], **data['type'])
-        domain = cls.__build_stochss_domain(s_domain=s_domain)
+        domain = self.__build_stochss_domain(s_domain=s_domain)
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
-        return {"particles":domain['particles'], "limits":limits}
+        resp = {"particles":domain['particles'], "limits":limits}
+        if data['domainExists']:
+            return resp
+        resp['figure'] = json.loads(self.get_domain_plot(domains=(s_domain, domain)))
+        return resp
 
 
     @classmethod
