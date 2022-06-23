@@ -38,7 +38,7 @@ module.exports = View.extend({
   },
   handleBuildDomain: function (e) {
     this.startAction("Creating domain ...")
-    this.data.type = {"type_id":this.type.typeID, "mass":this.type.mass, "nu":this.type.nu, "fixed":this.type.fixed};
+    this.data.type = {"type_id":this.type.name, "mass":this.type.mass, "nu":this.type.nu, "fixed":this.type.fixed};
     this.data.volume = this.type.volume;
     let xtrans = Number($(this.queryByHook("domain-x-trans")).find('input')[0].value);
     let ytrans = Number($(this.queryByHook("domain-y-trans")).find('input')[0].value);
@@ -46,30 +46,45 @@ module.exports = View.extend({
     if(xtrans !== 0 || ytrans !== 0 || ztrans !== 0) {
       this.data.transformation = [xtrans, ytrans, ztrans];
     }
+    this.data.domainExists = Boolean(this.parent.plot);
     let self = this;
     let endpoint = path.join(app.getApiPath(), "spatial-model/3d-domain");
     app.postXHR(endpoint, this.data, {
       success: function (err, response, body) {
-        self.parent.addParticles(body.particles);
-        if(self.parent.domain.x_lim[0] > body.limits.x_lim[0]) {
-          self.parent.domain.x_lim[0] = body.limits.x_lim[0];
+        if(self.data.domainExists) {
+          self.parent.addParticles(body.particles);
+          if(self.parent.domain.x_lim[0] > body.limits.x_lim[0]) {
+            self.parent.domain.x_lim[0] = body.limits.x_lim[0];
+          }
+          if(self.parent.domain.y_lim[0] > body.limits.y_lim[0]) {
+            self.parent.domain.y_lim[0] = body.limits.y_lim[0];
+          }
+          if(self.parent.domain.z_lim[0] > body.limits.z_lim[0]) {
+            self.parent.domain.z_lim[0] = body.limits.z_lim[0];
+          }
+          if(self.parent.domain.x_lim[1] < body.limits.x_lim[1]) {
+            self.parent.domain.x_lim[1] = body.limits.x_lim[1];
+          }
+          if(self.parent.domain.y_lim[1] < body.limits.y_lim[1]) {
+            self.parent.domain.y_lim[1] = body.limits.y_lim[1];
+          }
+          if(self.parent.domain.z_lim[1] < body.limits.z_lim[1]) {
+            self.parent.domain.z_lim[1] = body.limits.z_lim[1];
+          }
+          self.parent.renderDomainLimitations();
+        }else{
+          self.parent.domain.x_lim = body.limits.x_lim;
+          self.parent.domain.y_lim = body.limits.y_lim;
+          self.parent.domain.z_lim = body.limits.z_lim;
+          body.particles.forEach((particle) => {
+            self.parent.domain.particles.addParticle(
+              particle.point, particle.volume, particle.mass, particle.type, particle.nu, particle.fixed
+            );
+          });
+          self.parent.plot = body.figure;
+          self.parent.renderDomainLimitations();
+          self.parent.displayDomain();
         }
-        if(self.parent.domain.y_lim[0] > body.limits.y_lim[0]) {
-          self.parent.domain.y_lim[0] = body.limits.y_lim[0];
-        }
-        if(self.parent.domain.z_lim[0] > body.limits.z_lim[0]) {
-          self.parent.domain.z_lim[0] = body.limits.z_lim[0];
-        }
-        if(self.parent.domain.x_lim[1] < body.limits.x_lim[1]) {
-          self.parent.domain.x_lim[1] = body.limits.x_lim[1];
-        }
-        if(self.parent.domain.y_lim[1] < body.limits.y_lim[1]) {
-          self.parent.domain.y_lim[1] = body.limits.y_lim[1];
-        }
-        if(self.parent.domain.z_lim[1] < body.limits.z_lim[1]) {
-          self.parent.domain.z_lim[1] = body.limits.z_lim[1];
-        }
-        self.parent.renderDomainLimitations();
         self.completeAction("Domain successfully created");
         $('html, body').animate({
             scrollTop: $("#domain-plot").offset().top
