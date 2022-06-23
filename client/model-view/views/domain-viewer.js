@@ -274,7 +274,7 @@ module.exports = View.extend({
   },
   saveDomainToModel: function (e) {
     this.parent.model.domain = this.model;
-    this.parent.modelStateButtons.clickSaveHandler(e);
+    this.parent.parent.clickSaveHandler(e);
     this.reloadDomain();
   },
   selectParticle: function (data) {
