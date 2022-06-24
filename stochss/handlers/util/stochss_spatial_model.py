@@ -540,6 +540,8 @@ class StochSSSpatialModel(StochSSBase):
         data : dict
             Data used to create the 3D domain
         '''
+        if data['type']['type_id'] == "Un-Assigned":
+            data['type']['type_id'] = "UnAssigned"
         if data['transformation'] is None:
             xlim = data['xLim']
             ylim = data['yLim']
