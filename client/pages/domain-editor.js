@@ -410,7 +410,10 @@ let DomainEditor = PageView.extend({
     this.updatePlot();
   },
   displayDomain: function () {
-    let self = this;
+    if(!this.plot) {
+      return
+    }
+    $(this.queryByHook("domain-plot-empty")).css('display', 'none');
     var el = this.queryByHook("domain-plot");
     Plotly.newPlot(el, this.plot);
     el.on('plotly_click', _.bind(this.selectParticle, this));
@@ -706,13 +709,17 @@ let DomainEditor = PageView.extend({
     this.renderTypesFileSelect();
     this.renderCreate3DDomain();
     let self = this;
-    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
-    app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        self.plot = body.fig;
-        self.displayDomain();
-      }
-    });
+    if(this.domain.particles.length > 0) {
+      let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
+      app.getXHR(endpoint, {
+        success: function (err, response, body) {
+          self.plot = body.fig;
+          self.displayDomain();
+        }
+      });
+    }else{
+      this.displayDomain();
+    }
     $(document).ready(function () {
       $('[data-toggle="tooltip"]').tooltip();
       $('[data-toggle="tooltip"]').click(function () {
