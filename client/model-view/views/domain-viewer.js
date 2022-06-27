@@ -154,13 +154,15 @@ module.exports = View.extend({
   },
   reloadDomain: function (domainPath) {
     if(this.domainPath !== domainPath || domainPath === "viewing") {
-      let el = this.elements === null ? this.queryByHook("view-domain-plot") : this.elements.plot;
-      el.removeListener('plotly_click', this.selectParticle);
-      Plotly.purge(el);
-      this.plot = null;
-      this.model.types.forEach(function (type) {
-        type.numParticles = 0;
-      });
+      if(this.plot) {
+        let el = this.elements === null ? this.queryByHook("view-domain-plot") : this.elements.plot;
+        el.removeListener('plotly_click', this.selectParticle);
+        Plotly.purge(el);
+        this.plot = null;
+        this.model.types.forEach(function (type) {
+          type.numParticles = 0;
+        });
+      }
       this.parent.renderDomainViewer(domainPath);
     }
   },
@@ -227,6 +229,10 @@ module.exports = View.extend({
     }
   },
   renderPlot: function (plotElement) {
+    if(this.model.particles.length <= 0) {
+      return
+    }
+    $(this.parent.domainElements.plotEmpty).css('display', 'none');
     if(this.plot === null) {
       let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
       app.getXHR(endpoint, {
