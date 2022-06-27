@@ -597,7 +597,7 @@ module.exports = View.extend({
   },
   getNewDomainContext: function (node) {
     return this.buildContextBase({
-      label: "New Domain (beta)",
+      label: "New Domain",
       action: (data) => {
         this.createDomain(node.original._path);
       }
@@ -609,7 +609,7 @@ module.exports = View.extend({
       label: "New Model",
       submenu: {
         spatial: this.buildContextBase({
-          label: "Spatial (beta)",
+          label: "Spatial",
           action: (data) => {
             this.createModel(node, dirname, true, inProject);
           }
