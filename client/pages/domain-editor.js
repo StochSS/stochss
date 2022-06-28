@@ -140,7 +140,9 @@ let DomainEditor = PageView.extend({
     let fixed = $(this.queryByHook("td-fixed")).prop("checked");
     if(this.selectedType === "new") {
       let name = this.domain.types.addType(vol, mass, nu, fixed)
-      this.addType(name);
+      if(this.domain.particles.length > 0) {
+        this.addType(name);
+      }
     }else{
       let type = this.domain.types.get(this.selectedType, "typeID")
       type.mass = mass;
