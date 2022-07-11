@@ -25,10 +25,12 @@
         	"reflect_z": true},
         "types": [
             {
+                "c":10,
                 "fixed":false,
                 "mass":1.0,
                 "name":"Un-Assigned",
                 "nu":0.0,
+                "rho":1.0,
                 "typeID":0,
                 "volume":1.0
             }
