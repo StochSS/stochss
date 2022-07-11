@@ -593,9 +593,6 @@ class StochSSSpatialModel(StochSSBase):
         domain = self.__build_stochss_domain(s_domain=s_domain, data=data)
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
         resp = {"particles":domain['particles'], "limits":limits}
-        if data['domainExists']:
-            return resp
-        resp['figure'] = json.loads(self.get_domain_plot(domains=(s_domain, domain))[0])
         return resp
 
 

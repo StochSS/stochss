@@ -79,10 +79,7 @@ module.exports = View.extend({
       this.displayFigure();
     }});
   },
-  add3DDomain: function (limits, particles, plot) {
-    if(plot) {
-      this.plot = plot;
-    }
+  add3DDomain: function (limits, particles) {
     let limitsChanged = this.changeDomainLimits(limits, Boolean(plot));
     particles.forEach((particle) => {
       particle = new Particle(particle);

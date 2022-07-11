@@ -81,7 +81,7 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), "spatial-model/3d-domain");
     app.postXHR(endpoint, this.data, {
       success: (err, response, body) => {
-        this.parent.add3DDomain(body.limits, body.particles, body.figure);
+        this.parent.add3DDomain(body.limits, body.particles);
         this.completeAction();
         $('html, body').animate({
             scrollTop: $("#domain-figure").offset().top
