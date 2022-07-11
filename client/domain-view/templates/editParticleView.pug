@@ -1,0 +1,83 @@
+div.mx-1
+
+  div
+
+    h4.inline.mr-2 Type:
+
+    div.inline(data-target="type" data-hook=`particle-type-${this.viewIndex}`)
+
+  div
+
+    h4.inline.mr-2 Location:
+
+    div.inline.mr-2 (x:
+
+    div.inline.ml2(data-target=`location-${this.viewIndex}` data-hook=`x-coord-${this.viewIndex}` data-index="0")
+
+    div.inline.mr-2 ,  y:
+
+    div.inline.ml2(data-target=`location-${this.viewIndex}` data-hook=`y-coord-${this.viewIndex}` data-index="1")
+
+    div.inline.mr-2 ,  z:
+
+    div.inline.ml2(data-target=`location-${this.viewIndex}` data-hook=`z-coord-${this.viewIndex}` data-index="2")
+
+    div.inline )
+
+  h4 Particle Properties
+
+  div.pl-2(data-hook="particle-details")
+
+    hr
+
+    div.mb-3.mx-1.row.head.align-items-baseline
+
+      div.col-sm-2
+
+        h6.inline <b>Mass</b>
+
+      div.col-sm-2
+
+        h6.inline <b>Volume<b>
+
+      div.col-sm-2
+
+        h6.inline <b>Density</b>
+
+      div.col-sm-2
+
+        h6.inline <b>Viscosity</b>
+
+      div.col-sm-2
+
+        h6.inline <b>Speed of Sound</b>
+
+      div.col-sm-2
+
+        h6.inline <b>Fixed</b>
+
+    div.row
+
+      div.col-sm-2
+
+        div(data-hook=`particle-mass-${this.viewIndex}`)
+
+      div.col-sm-2
+
+        div(data-hook=`particle-vol-${this.viewIndex}`)
+
+      div.col-sm-2
+
+        div(data-hook=`particle-rho-${this.viewIndex}`)
+
+      div.col-sm-2
+
+        div(data-hook=`particle-nu-${this.viewIndex}`)
+
+      div.col-sm-2
+
+        div(data-hook=`particle-c-${this.viewIndex}`)
+
+      div.col-sm-2
+
+        input(type="checkbox" data-hook=`particle-fixed-${this.viewIndex}`)
