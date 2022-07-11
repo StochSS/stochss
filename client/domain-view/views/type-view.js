@@ -40,6 +40,7 @@ module.exports = View.extend({
   events: {
     'change [data-hook=type-name]' : 'handleRenameType',
     'change [data-target=type-defaults]' : 'updateView',
+    'change [data-hook=td-fixed]' : 'setTDFixed',
     'click [data-hook=select]' : 'selectType',
     'click [data-hook=unassign-all]' : 'handleUnassignParticles',
     'click [data-hook=delete-type]' : 'handleDeleteType',
@@ -57,6 +58,7 @@ module.exports = View.extend({
         setTimeout(_.bind(this.openTypeDetails, this), 1);
       }
     }
+    $(this.queryByHook('view-td-fixed')).prop('checked', this.model.fixed)
     app.documentSetup();
   },
   handleDeleteType: function (e) {
@@ -84,6 +86,10 @@ module.exports = View.extend({
   },
   selectType: function () {
     this.model.selected = !this.model.selected;
+  },
+  setTDFixed: function (e) {
+    this.model.fixed = e.target.checked;
+    this.updateView();
   },
   update: function () {},
   updateValid: function () {},
