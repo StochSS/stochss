@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import copy
 import string
 import hashlib
 import tempfile
@@ -126,7 +127,7 @@ class StochSSSpatialModel(StochSSBase):
             else:
                 viscosity = data['type']['nu']
                 fixed = data['type']['fixed']
-                type_id = data['type']['typeID']
+                type_id = data['typeID']
             point = list(vertex)
             if data is not None and data['transformation'] is not None:
                 point = [coord + data['transformation'][i] for i, coord in enumerate(point)]
@@ -332,7 +333,7 @@ class StochSSSpatialModel(StochSSBase):
             z_data.append(particle['point'][2])
         marker = {"size":5}
         if index is not None:
-            marker["color"] = common_rgb_values[(index - 1) % len(common_rgb_values)]
+            marker["color"] = common_rgb_values[(index) % len(common_rgb_values)]
         return plotly.graph_objs.Scatter3d(ids=ids, x=x_data, y=y_data, z=z_data,
                                            name=name, mode="markers", marker=marker)
 
@@ -373,12 +374,21 @@ class StochSSSpatialModel(StochSSBase):
             self.model['domain'] = self.get_model_template()['domain']
         elif "static" not in self.model['domain'].keys():
             self.model['domain']['static'] = True
+        if "rho" not in self.model['domain']['types'][0].keys() or \
+                    "c" not in self.model['domain']['types'][0].keys():
+            for d_type in self.model['domain']['types']:
+                if "rho" not in d_type.keys():
+                    d_type['rho'] = d_type['mass'] / d_type['volume']
+                if "c" not in d_type.keys():
+                    d_type['c'] = 10
         if self.model['domain']['particles']:
             if "rho" not in self.model['domain']['particles'][0].keys() or \
                         "c" not in self.model['domain']['particles'][0].keys():
                 for particle in self.model['domain']['particles']:
-                    particle['rho'] = particle['mass']/particle['volume']
-                    particle['c'] = 10
+                    if "rho" not in particle.keys():
+                        particle['rho'] = particle['mass'] / particle['volume']
+                    if "c" not in particle.keys():
+                        particle['c'] = 10
 
 
     def convert_to_model(self):
@@ -478,43 +488,64 @@ class StochSSSpatialModel(StochSSBase):
         if domains is None:
             if new:
                 path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+                s_domain = StochSSSpatialModel(path).load()['domain']
             elif path is None:
                 path = self.path
+                s_domain = self.load()['domain']
             try:
                 domain = Domain.read_stochss_domain(path)
             except DomainError as err:
                 raise DomainFormatError(f"Failed to load the domain.  Reason given: {err}") from err
         else:
             domain = domains[0]
+            s_domain = domains[1]
+        fig_temp_path = "/stochss/stochss_templates/domainPlotTemplate.json"
+        with open(fig_temp_path, "r") as fig_temp_file:
+            fig_temp = json.load(fig_temp_file)
+            trace_temp = copy.deepcopy(fig_temp['data'][0])
+        if len(s_domain['particles']) == 0:
+            fig_temp['data'][0]['name'] = "Un-Assigned"
+            # Case #1: no particles and one type
+            if len(s_domain['types']) == 1:
+                return fig_temp, trace_temp
+            # Case #2: no particles and multiple types
+            for index in range(1, len(s_domain['types'])):
+                trace = copy.deepcopy(trace_temp)
+                trace['name'] = s_domain['types'][index]['name']
+                fig_temp['data'].append(trace)
+            return fig_temp, trace_temp
         fig = domain.plot_types(return_plotly_figure=True)
-        if not fig['data']:
-            fig['data'].append(self.__get_trace_data(particles=[], name="Un-Assigned"), index=0)
+        # Case #3: 1 or more particles and one type
+        if len(s_domain['types']) == 1:
+            fig['data'][0]['name'] = "Un-Assigned"
+            ids = list(filter(lambda particle: particle['particle_id'], s_domain['particles']))
+            fig['data'][0]['ids'] = ids
+        # Case #4: 1 or more particles and multiple types
         else:
-            s_domain = self.load()['domain'] if domains is None else domains[1]
-            for i, d_type in enumerate(s_domain['types']):
-                if len(s_domain['types']) > 1:
-                    particles = list(filter(lambda particle, key=i: particle['type'] == key,
-                                            s_domain['particles']))
+            for index, d_type in enumerate(s_domain['types']):
+                if d_type['name'] == "Un-Assigned":
+                    t_test = lambda trace: trace['name'] in ("Un-Assigned", "UnAssigned")
                 else:
-                    particles = s_domain['particles']
-                ids = list(map(lambda particle: particle['particle_id'], particles))
-                index = list(filter(
-                    lambda trace, name=d_type['name']: trace['name'].endswith(name), fig['data']
-                ))
-                if len(index) !=0:
-                    index = fig['data'].index(index[0])
-                    fig['data'][index]['name'] = d_type['name']
-                    fig['data'][index]['ids'] = ids
+                    t_test = lambda trace, name=d_type['name']: trace['name'] == name
+                traces = list(filter(t_test, fig['data']))
+                if len(traces) == 0:
+                    fig['data'].insert(index, self.__get_trace_data(
+                        particles=[], name=d_type['name'], index=index
+                    ))
                 else:
-                    fig['data'].insert(
-                        i, self.__get_trace_data(particles=[], name=d_type['name'], index=i)
-                    )
-                    fig['data'][i]['ids'] = ids
+                    particles = list(filter(
+                        lambda particle, key=d_type['typeID']: particle['type'] == key,
+                        s_domain['particles']
+                    ))
+                    ids = list(map(lambda particle: particle['particle_id'], particles))
+                    trace = traces[0]
+                    trace['name'] = d_type['name']
+                    trace['ids'] = ids
         fig['layout']['width'] = None
         fig['layout']['height'] = None
         fig['layout']['autosize'] = True
         fig['config'] = {"responsive":True}
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder), trace_temp
 
 
     def get_notebook_data(self):
@@ -559,12 +590,12 @@ class StochSSSpatialModel(StochSSBase):
         else:
             s_domain = Domain.create_2D_domain(xlim=xlim, ylim=ylim,
                                                nx=data['nx'], ny=data['ny'], **data['type'])
-        domain = self.__build_stochss_domain(s_domain=s_domain)
+        domain = self.__build_stochss_domain(s_domain=s_domain, data=data)
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
         resp = {"particles":domain['particles'], "limits":limits}
         if data['domainExists']:
             return resp
-        resp['figure'] = json.loads(self.get_domain_plot(domains=(s_domain, domain)))
+        resp['figure'] = json.loads(self.get_domain_plot(domains=(s_domain, domain))[0])
         return resp
 
 
