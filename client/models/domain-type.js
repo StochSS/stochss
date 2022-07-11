@@ -21,15 +21,21 @@ var State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
+    c: 'number',
     fixed: 'boolean',
     mass: 'number',
     name: 'string',
     nu: 'number',
+    rho: 'number',
     typeID: 'number',
     volume: 'number'
   },
   session: {
-    numParticles: 'number'
+    numParticles: 'number',
+    selected: {
+      type: 'boolean',
+      default: false
+    }
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
