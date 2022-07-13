@@ -32,12 +32,12 @@ module.exports = Collection.extend({
     this.baseModel = this.parent.collection.parent;
     this.baseModel.species.trigger('stoich-species-change');
   },
-  addStoichSpecie: function (specieName) {
+  addStoichSpecie: function (specieName, {ratio=1}={}) {
     var specie = this.parent.collection.parent.species.filter(function (specie) {
         return specie.name === specieName;
     })[0];
     var stoichSpecie = new StoichSpecie({
-        ratio: 1
+        ratio: ratio
     });
     stoichSpecie.specie = specie;
     this.add(stoichSpecie);

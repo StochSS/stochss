@@ -24,6 +24,7 @@ var Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: Parameter,
+  indexes: ['compID'],
   addParameter: function () {
     var id = this.parent.getDefaultID();
     var name = this.getDefaultName();

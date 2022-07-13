@@ -243,12 +243,14 @@ class StochSSSpatialModel(StochSSBase):
             for reaction in self.model['reactions']:
                 reactants, products = self.__convert_stoich_species(model=model,
                                                                     reaction=reaction)
-                if reaction['reactionType'] != "custom-propensity":
+                if reaction['massaction']:
                     rate = s_params[reaction['rate']['name']]
                     propensity = None
+                    ode_propensity = None
                 else:
                     rate = None
                     propensity = reaction['propensity']
+                    ode_propensity = reaction['odePropensity']
                 types = [type_ids[d_type] for d_type in reaction['types']]
                 if len(types) == len(type_ids):
                     types = None
@@ -257,6 +259,7 @@ class StochSSSpatialModel(StochSSBase):
                                       products=products,
                                       rate=rate,
                                       propensity_function=propensity,
+                                      ode_propensity_function=ode_propensity,
                                       restrict_to=types)
                 model.add_reaction(s_reaction)
         except KeyError as err:
@@ -647,6 +650,8 @@ class StochSSSpatialModel(StochSSBase):
                 diff = 0.0 if "diffusionCoeff" not in species.keys() else species['diffusionCoeff']
                 species['diffusionConst'] = diff
         for reaction in self.model['reactions']:
+            if "odePropensity" not in reaction.keys():
+                reaction['odePropensity'] = reaction['propensity']
             if "types" not in reaction.keys():
                 reaction['types'] = list(range(1, len(self.model['domain']['types'])))
         return self.model

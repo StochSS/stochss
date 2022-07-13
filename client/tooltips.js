@@ -53,6 +53,8 @@ module.exports = {
     rate: "The rate of the mass-action reaction.",
     
     propensity: "The custom propensity expression for the reaction.",
+
+    odePropensity: "The custom ode propensity expression for the reaction.",
     
     reactant: "The reactants that are consumed in the reaction, with stoichiometry.",
     

@@ -31,13 +31,13 @@ Reactions = Collection.extend({
   addReaction: function (reactionType, stoichArgs, types) {
     var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
-    var massaction = reactionType === 'custom-massaction';
+    var massaction = reactionType !== 'custom-propensity';
     var reaction = new Reaction({
       compID: id,
       name: name,
-      reactionType: reactionType,
       massaction: massaction,
       propensity: '',
+      odePropensity: '',
       annotation: '',
       types: types,
       reactants: stoichArgs.reactants,
@@ -47,9 +47,12 @@ Reactions = Collection.extend({
     this.setDefaultSpecieForStoichSpecies(reaction.products);
     if(reactionType !== 'custom-propensity')
       reaction.rate = this.getDefaultRate();
-    reaction.buildSummary()
+    reaction.buildSummary();
+    reaction.buildMAPropensities();
+    reaction.reactionType = reactionType;
+    reaction.selected = true;
     this.add(reaction);
-    this.parent.updateValid()
+    this.parent.updateValid();
     return reaction;
   },
   getDefaultName: function () {
@@ -64,11 +67,14 @@ Reactions = Collection.extend({
   },
   setDefaultSpecieForStoichSpecies: function (stoichSpecies) {
     stoichSpecies.forEach(function (stoichSpecie) {
-      stoichSpecie.specie = this.getDefaultSpecie();
+      stoichSpecie.specie = this.getDefaultSpecie(stoichSpecies.indexOf(stoichSpecie));
     }, this);
   },
-  getDefaultSpecie: function () {
-    var specie = this.parent.species.at(0);
+  getDefaultSpecie: function (index) {
+    if(this.parent.species.length <= index) {
+      index -= this.parent.species.length;
+    }
+    var specie = this.parent.species.at(index);
     return specie;
   },
   getDefaultRate: function () {
