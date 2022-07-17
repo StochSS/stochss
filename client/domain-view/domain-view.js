@@ -237,6 +237,7 @@ module.exports = View.extend({
       });
       this.model.particles.removeParticles(particles);
     }
+    this.model.realignTypes(type);
     this.plot.data.splice(type, 1);
     this.renderTypesView();
     this.renderNewParticleView();
