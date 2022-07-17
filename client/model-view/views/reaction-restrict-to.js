@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //views
 let View = require('ampersand-view');
-let TypesView = require('./component-types');
+let DomainTypesView = require('./component-types');
 //templates
-let template = require('../templates/reactionTypes.pug');
+let template = require('../templates/reactionRestrictTo.pug');
 
 module.exports = View.extend({
   template: template,
@@ -31,15 +31,15 @@ module.exports = View.extend({
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
-    this.renderTypes();
+    this.renderDomainTypes();
   },
-  renderTypes: function () {
-    if(this.typesView) {
-      this.typesView.remove();
+  renderDomainTypes: function () {
+    if(this.domainTypesView) {
+      this.domainTypesView.remove();
     }
-    this.typesView = this.renderCollection(
+    this.domainTypesView = this.renderCollection(
       this.baseModel.domain.types,
-      TypesView,
+      DomainTypesView,
       this.queryByHook("reaction-types-container"),
       {"filter": function (model) {
         return model.typeID != 0;

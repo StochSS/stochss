@@ -130,8 +130,8 @@ label {
 }
 
 span.custom {
-  padding-right: 0.25rem;
-  padding-left: 0.25rem;
+  padding-right: 0.5rem;
+  padding-left: 0.5rem;
 }
 
 button.custom {
@@ -302,7 +302,6 @@ input[type="file"]::-ms-browse {
 
 .reaction-list-summary {
   width: auto !important;
-  text-align: center;
 }
 
 .container-part {
@@ -649,13 +648,32 @@ span.checkbox {
   height: auto;
 }
 
+.dropdown-item.rtype.disabled {
+  pointer-events: auto !important;
+}
+
 .reaction-lb2 {
   display: none;
 }
 
-.dropdown-item:hover .reaction-lb2 {
+.dropdown-item:not(.disabled):hover .reaction-lb2 {
   position: absolute;
-  left: 195px;
+  left: 196px;
+  display: inline-block;
+  background-color: black;
+  color: white;
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  border: .5px solid rgb(228, 229, 230) !important;
+  padding: 0px 5px;
+}
+
+.reaction-lb3 {
+  display: none;
+}
+
+.dropdown-item.disabled:hover .reaction-lb3 {
+  position: absolute;
+  left: 196px;
   display: inline-block;
   background-color: black;
   color: white;
@@ -726,4 +744,8 @@ span.checkbox {
 .presentation-header {
   margin-top: 64px;
   padding: 20px 16px;
+}
+
+.hidden {
+  display: none;
 }
