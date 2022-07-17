@@ -343,7 +343,9 @@ class StochSSSpatialModel(StochSSBase):
             path = os.path.join(self.user_dir, path)
             if path.endswith(".domn"):
                 with open(path, "r", encoding="utf-8") as domain_file:
-                    return json.load(domain_file)
+                    s_domain = json.load(domain_file)
+                    self.__update_domain(domain=s_domain)
+                    return s_domain
             s_domain = Domain.read_xml_mesh(filename=path)
             return self.__build_stochss_domain(s_domain=s_domain)
         except FileNotFoundError as err:
@@ -369,26 +371,30 @@ class StochSSSpatialModel(StochSSBase):
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
-    def __update_domain(self):
-        if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
-            self.model['domain'] = self.get_model_template()['domain']
-        elif "static" not in self.model['domain'].keys():
-            self.model['domain']['static'] = True
-        if "rho" not in self.model['domain']['types'][0].keys() or \
-                    "c" not in self.model['domain']['types'][0].keys():
-            for d_type in self.model['domain']['types']:
-                if "rho" not in d_type.keys():
-                    d_type['rho'] = d_type['mass'] / d_type['volume']
-                if "c" not in d_type.keys():
-                    d_type['c'] = 10
-        if self.model['domain']['particles']:
-            if "rho" not in self.model['domain']['particles'][0].keys() or \
-                        "c" not in self.model['domain']['particles'][0].keys():
-                for particle in self.model['domain']['particles']:
-                    if "rho" not in particle.keys():
-                        particle['rho'] = particle['mass'] / particle['volume']
-                    if "c" not in particle.keys():
-                        particle['c'] = 10
+    def __update_domain(self, domain=None):
+        if domain is None:
+            if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
+                self.model['domain'] = self.get_model_template()['domain']
+            domain = self.model['domain']
+        if "static" not in domain.keys():
+            domain['static'] = True
+        type_changes = {}
+        for i, d_type in enumerate(domain['types']):
+            if d_type['typeID'] != i:
+                type_changes[d_type['typeID']] = i
+                d_type['typeID'] = i
+            if "rho" not in d_type.keys():
+                d_type['rho'] = d_type['mass'] / d_type['volume']
+            if "c" not in d_type.keys():
+                d_type['c'] = 10
+        if domain['particles']:
+            for particle in domain['particles']:
+                if particle['type'] in type_changes:
+                    particle['type'] = type_changes[particle['type']]
+                if "rho" not in particle.keys():
+                    particle['rho'] = particle['mass'] / particle['volume']
+                if "c" not in particle.keys():
+                    particle['c'] = 10
 
 
     def convert_to_model(self):
