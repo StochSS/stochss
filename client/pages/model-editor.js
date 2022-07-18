@@ -330,8 +330,8 @@ let ModelEditor = PageView.extend({
     let domainElements = {
       select: $(this.queryByHook("me-select-particle")),
       particle: {view: this, hook: "me-particle-viewer"},
-      plot: this.queryByHook("domain-plot-container"),
-      plotEmpty: this.queryByHook("domain-plot-container-empty"),
+      figure: this.queryByHook("domain-plot-container"),
+      figureEmpty: this.queryByHook("domain-plot-container-empty"),
       type: this.queryByHook("me-types-quick-view")
     }
     this.modelView = new ModelView({
