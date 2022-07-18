@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //views
-var View = require('ampersand-view');
+let View = require('ampersand-view');
 //templates
-var template = require('../templates/includes/quickviewDomainTypes.pug');
+let template = require('../templates/quickviewType.pug');
 
 module.exports = View.extend({
   template: template,
