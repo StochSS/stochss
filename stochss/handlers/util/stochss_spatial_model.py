@@ -501,6 +501,8 @@ class StochSSSpatialModel(StochSSBase):
             elif path is None:
                 path = self.path
                 s_domain = self.load()['domain']
+            else:
+                s_domain = self.__load_domain_from_file(path)
             try:
                 domain = Domain.read_stochss_domain(path)
             except DomainError as err:
