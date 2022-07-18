@@ -28,8 +28,10 @@ let Particle = require('../models/particle');
 let View = require('ampersand-view');
 let TypesView = require('./views/types-view');
 let LimitsView = require('./views/limits-view');
+let QuickviewType = require('./views/quickview-type');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
+let ViewParticleView = require('./views/view-particle');
 let ImportMeshView = require('./views/import-mesh-view');
 let Edit3DDomainView = require('./views/edit-3D-domain-view');
 let TypesDescriptionView = require('./views/types-description-view');
@@ -48,6 +50,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
+    this.plot = attrs.plot ? attrs.plot : null;
     this.elements = attrs.elements ? attrs.elements : null;
     this.queryStr = attrs.queryStr;
     this.newPart = this.createNewParticle();
@@ -59,7 +62,11 @@ module.exports = View.extend({
     this.renderPropertiesView();
     this.renderLimitsView();
     this.renderTypesView();
-    if(!this.readOnly) {
+    if(this.readOnly) {
+      $(this.queryByHook('domain-particles-editor')).css('display', 'none');
+      $(this.queryByHook('domain-figure-preview')).css('display', 'none');
+      this.renderTypesQuickview();
+    }else{
       this.renderNewParticleView();
       this.renderEditParticleView();
       this.renderTypesDescriptionView();
@@ -73,11 +80,15 @@ module.exports = View.extend({
       }
     }
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
-    app.getXHR(endpoint, {success: (err, response, body) => {
-      this.plot = body.fig;
-      this.traceTemp = body.trace_temp;
+    if(this.plot) {
       this.displayFigure();
-    }});
+    }else{
+      app.getXHR(endpoint, {success: (err, response, body) => {
+        this.plot = body.fig;
+        this.traceTemp = body.trace_temp;
+        this.displayFigure();
+      }});
+    }
   },
   add3DDomain: function (limits, particles) {
     let limitsChanged = this.changeDomainLimits(limits, Boolean(plot));
@@ -372,6 +383,17 @@ module.exports = View.extend({
     this.typesDescriptionView = new TypesDescriptionView();
     app.registerRenderSubview(this, this.typesDescriptionView, "particle-types-container");
   },
+  renderTypesQuickview: function () {
+    if(this.typesQuickviewView) {
+      this.typesQuickviewView.remove();
+    } 
+    this.elements.select.css('display', 'block');
+    this.typesQuickviewView = this.renderCollection(
+      this.model.types,
+      QuickviewType,
+      this.elements.type
+    );
+  },
   renderTypesView: function () {
     if(this.typesView) {
       this.typesView.remove();
@@ -397,6 +419,16 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.typesView, "domain-types-container");
   },
+  renderViewParticleView: function () {
+    if(this.viewParticleView) {
+      this.viewParticleView.remove();
+    }
+    this.elements.select.css('display', 'none');
+    this.viewParticleView = new ViewParticleView({
+      model: this.actPart.part
+    });
+    app.registerRenderSubview(this.elements.particle.view, this.viewParticleView, this.elements.particle.hook);
+  },
   resetFigure: function () {
     this.removeFigure();
     this.displayFigure();
@@ -406,7 +438,11 @@ module.exports = View.extend({
     this.actPart.part = this.model.particles.get(point.id, 'particle_id');
     this.actPart.tn = point.curveNumber;
     this.actPart.pn = point.pointNumber;
-    this.renderEditParticleView();
+    if(this.readOnly) {
+      this.renderViewParticleView();
+    }else{
+      this.renderEditParticleView();
+    }
   },
   setParticleTypes: function (typeIDs, types) {
     this.addMissingTypes(typeIDs);
