@@ -400,6 +400,22 @@ class StochSSSpatialModel(StochSSBase):
                     particle['c'] = 10
 
 
+    @classmethod
+    def apply_geometry(cls, particles, d_type):
+        def inside(point):
+            namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+            return eval(d_type['geometry'], locals=namespace)
+        for particle in particles:
+            if inside(particle['point']):
+                particle['type'] = d_type['typeID']
+                particle['mass'] = d_type['mass']
+                particle['volume'] = d_type['volume']
+                particle['rho'] = d_type['rho']
+                particle['nu'] = d_type['nu']
+                particle['c'] = d_type['c']
+                particle['fixed'] = d_type['fixed']
+        return {'particles': particles}
+
     def convert_to_model(self):
         '''
         Convert a spatial model to a non_spatial model
