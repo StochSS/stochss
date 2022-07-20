@@ -150,6 +150,42 @@ module.exports = View.extend({
       this.renderImportMeshView();
     }
   },
+  applyGeometry: function (ids, type) {
+    let actPart = JSON.parse(JSON.stringify(this.actPart));
+    ids.forEach((id) => {
+      let particle = this.model.particles.get(id, 'particle_id');
+      // Set active particle for updating particle in the plot
+      this.actPart = {
+        part: particle,
+        tn: particle.type,
+        pn: this.plot.data[particle.type].ids.indexOf(particle.particle_id)
+      }
+      // Update the particle attributes
+      particle.type = type.typeID;
+      particle.mass = type.mass;
+      particle.volume = type.volume;
+      particle.rho = type.rho;
+      particle.nu = type.nu;
+      particle.c = type.c;
+      particle.fixed = type.fixed;
+      // Update the particle in the figure
+      this.changeParticleType(type.typeID, {update: false});
+    });
+    if(actPart.part) {
+      this.actPart = {
+        part: this.model.particles.get(actPart.part.particle_id, "particle_id"),
+        tn: type.typeID,
+        pn: this.plot.data[type.typeID].ids.indexOf(actPart.part.particle_id)
+      }
+      if(ids.includes(actPart.part.particle_id)) {
+        this.renderEditParticleView();
+      }
+    }else{
+      this.actPart = actPart
+    }
+    this.renderTypesView();
+    this.resetFigure();
+  },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e)
   },
@@ -490,13 +526,15 @@ module.exports = View.extend({
         particle.type = 0;
       }
     });
-    if(actPart.part && actPart.part.type === type) {
+    if(actPart.part) {
       this.actPart = {
         part: this.model.particles.get(actPart.part.particle_id, "particle_id"),
         tn: 0,
         pn: this.plot.data[0].ids.indexOf(actPart.part.particle_id)
       }
-      this.renderEditParticleView();
+      if(actPart.part.type === type) {
+        this.renderEditParticleView();
+      }
     }else{
       this.actPart = actPart
     }
