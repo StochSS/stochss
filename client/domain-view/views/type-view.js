@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let path = require('path');
 let _ = require('underscore');
 //support files
 let app = require('../../app');
@@ -45,6 +46,7 @@ module.exports = View.extend({
     'click [data-hook=unassign-all]' : 'handleUnassignParticles',
     'click [data-hook=delete-type]' : 'handleDeleteType',
     'click [data-hook=delete-all]' : 'handleDeleteTypeAndParticle',
+    'click [data-hook=apply-geometry]' : 'handleApplyGeometry'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -61,7 +63,7 @@ module.exports = View.extend({
     $(this.queryByHook('view-td-fixed')).prop('checked', this.model.fixed)
     app.documentSetup();
   },
-  handleAddGeometry: function (e) {
+  handleApplyGeometry: function (e) {
     let particles = this.model.collection.parent.particles.toJSON();
     let data = {particles: particles, type: this.model.toJSON()}
     let endpoint = path.join(app.getApiPath(), 'spatial-model/apply-geometry');
@@ -190,6 +192,19 @@ module.exports = View.extend({
           valueType: 'number',
           tests: tests.valueTests,
           value: this.model.c
+        });
+      }
+    },
+    inputGeometry: {
+      hook: 'type-geometry',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'geometry',
+          modelKey: 'geometry',
+          valueType: 'string',
+          value: this.model.geometry
         });
       }
     }
