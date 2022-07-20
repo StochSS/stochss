@@ -406,17 +406,12 @@ class StochSSSpatialModel(StochSSBase):
     def apply_geometry(cls, particles, d_type):
         def inside(point):
             namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
-            return eval(d_type['geometry'], locals=namespace)
+            return eval(d_type['geometry'], {}, namespace)
+        ids = []
         for particle in particles:
             if inside(particle['point']):
-                particle['type'] = d_type['typeID']
-                particle['mass'] = d_type['mass']
-                particle['volume'] = d_type['volume']
-                particle['rho'] = d_type['rho']
-                particle['nu'] = d_type['nu']
-                particle['c'] = d_type['c']
-                particle['fixed'] = d_type['fixed']
-        return {'particles': particles}
+                ids.append(particle['particle_id'])
+        return {'particles': ids}
 
     def convert_to_model(self):
         '''
