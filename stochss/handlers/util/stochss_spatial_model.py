@@ -32,7 +32,7 @@ from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, 
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
-                            StochSSModelFormatError, StochSSPermissionsError
+                            StochSSModelFormatError, StochSSPermissionsError, DomainGeometryError
 
 class StochSSSpatialModel(StochSSBase):
     '''
