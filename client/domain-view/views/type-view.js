@@ -69,7 +69,7 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), 'spatial-model/apply-geometry');
     app.postXHR(endpoint, data, {
       success: (err, response, body) => {
-        console.log(body);
+        this.parent.parent.applyGeometry(body.particles, this.model);
       },
       error: (err, response, body) => {
         console.log(body);
