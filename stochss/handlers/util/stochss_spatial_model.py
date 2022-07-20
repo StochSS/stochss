@@ -390,6 +390,8 @@ class StochSSSpatialModel(StochSSBase):
                 d_type['rho'] = d_type['mass'] / d_type['volume']
             if "c" not in d_type.keys():
                 d_type['c'] = 10
+            if "geometry" not in d_type.keys():
+                d_type['geometry'] = ""
         if domain['particles']:
             for particle in domain['particles']:
                 if particle['type'] in type_changes:
