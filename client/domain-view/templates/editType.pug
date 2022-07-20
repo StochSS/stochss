@@ -110,3 +110,7 @@ div.mx-1
         div.col-sm-2
 
           button.btn.btn-outline-secondary.box-shadow(data-hook="apply-geometry") Apply
+
+      div.mdl-edit-btn.save-error-status(data-hook="tg-error" + this.model.typeID)
+
+        span(data-hook="tg-action-error" + this.model.typeID)
