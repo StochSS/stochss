@@ -48,18 +48,31 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.vieWMode = attrs.viewMode ? attrs.viewMode : false;
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
   },
   render: function (attrs, options) {
-    this.template = this.vieWMode ? viewTemplate : editTemplate;
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
-    if(!this.vieWMode) {
+    if(!this.viewMode) {
       if(this.model.selected) {
         setTimeout(_.bind(this.openTypeDetails, this), 1);
       }
     }
     $(this.queryByHook('view-td-fixed')).prop('checked', this.model.fixed)
     app.documentSetup();
+  },
+  handleAddGeometry: function (e) {
+    let particles = this.model.collection.parent.particles.toJSON();
+    let data = {particles: particles, type: this.model.toJSON()}
+    let endpoint = path.join(app.getApiPath(), 'spatial-model/apply-geometry');
+    app.postXHR(endpoint, data, {
+      success: (err, response, body) => {
+        console.log(body);
+      },
+      error: (err, response, body) => {
+        console.log(body);
+      }
+    });
   },
   handleDeleteType: function (e) {
     let type = Number(e.target.dataset.type);
