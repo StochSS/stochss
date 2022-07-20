@@ -5,13 +5,23 @@ div.mx-1
 
   div.row
 
-    div.col-sm-3
+    div.col-sm-6
 
-      div=this.model.name
+      div.row
 
-    div.col-sm-3
+        div.col-sm-6
 
-      div=this.model.numParticles
+          div=this.model.name
+
+        div.col-sm-6
+
+          div=this.model.numParticles
+
+      hr
+
+      h6.inline.mr-2 <b>Geometry</b>:
+
+      div.inline=this.model.geometry
 
     div.col-sm-6
 
