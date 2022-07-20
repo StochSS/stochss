@@ -111,6 +111,16 @@ div.mx-1
 
           button.btn.btn-outline-secondary.box-shadow(data-hook="apply-geometry") Apply
 
-      div.mdl-edit-btn.save-error-status(data-hook="tg-error" + this.model.typeID)
+      div.mdl-edit-btn.saving-status.inline(data-hook="tg-in-progress-" + this.model.typeID)
+
+        div.spinner-grow.mr-2
+
+        span Applying type to particles ...
+
+      div.mdl-edit-btn.saved-status.inline(data-hook="tg-complete-" + this.model.typeID)
+
+        span Type successfully applied
+
+      div.mdl-edit-btn.save-error-status(data-hook="tg-error-" + this.model.typeID)
 
         span(data-hook="tg-action-error" + this.model.typeID)

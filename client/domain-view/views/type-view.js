@@ -63,16 +63,30 @@ module.exports = View.extend({
     $(this.queryByHook('view-td-fixed')).prop('checked', this.model.fixed)
     app.documentSetup();
   },
+  completeAction: function () {
+    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "none");
+    $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "inline-block");
+    setTimeout(() => {
+      $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "none");
+    }, 5000);
+  },
+  errorAction: function (action) {
+    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "none");
+    $(this.queryByHook(`tg-action-error-${this.model.typeID}`)).text(action);
+    $(this.queryByHook(`tg-error-${this.model.typeID}`)).css("display", "block");
+  },
   handleApplyGeometry: function (e) {
+    this.startAction();
     let particles = this.model.collection.parent.particles.toJSON();
     let data = {particles: particles, type: this.model.toJSON()}
     let endpoint = path.join(app.getApiPath(), 'spatial-model/apply-geometry');
     app.postXHR(endpoint, data, {
       success: (err, response, body) => {
         this.parent.parent.applyGeometry(body.particles, this.model);
+        this.completeAction();
       },
       error: (err, response, body) => {
-        console.log(body);
+        this.errorAction(body.Message);
       }
     });
   },
@@ -105,6 +119,11 @@ module.exports = View.extend({
   setTDFixed: function (e) {
     this.model.fixed = e.target.checked;
     this.updateView();
+  },
+  startAction: function () {
+    $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "none");
+    $(this.queryByHook(`tg-error-${this.model.typeID}`)).css("display", "none");
+    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "inline-block");
   },
   update: function () {},
   updateValid: function () {},
