@@ -227,6 +227,27 @@ class DomainFormatError(StochSSAPIError):
         '''
         super().__init__(406, "Domain File Not In Proper Format", msg, trace)
 
+
+class DomainGeometryError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain Geometry Action Failed
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that a geometry action for the a domain failed
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Domain Geometry Action Failed", msg, trace)
+
 ####################################################################################################
 # Job Errors
 ####################################################################################################

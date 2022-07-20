@@ -408,10 +408,14 @@ class StochSSSpatialModel(StochSSBase):
             namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
             return eval(d_type['geometry'], {}, namespace)
         ids = []
-        for particle in particles:
-            if inside(particle['point']):
-                ids.append(particle['particle_id'])
-        return {'particles': ids}
+        try:
+            for particle in particles:
+                if inside(particle['point']):
+                    ids.append(particle['particle_id'])
+            return {'particles': ids}
+        except SyntaxError as err:
+            message = f"Failed to apply geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
 
     def convert_to_model(self):
         '''
