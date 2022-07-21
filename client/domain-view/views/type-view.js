@@ -72,7 +72,7 @@ module.exports = View.extend({
   },
   errorAction: function (action) {
     $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "none");
-    $(this.queryByHook(`tg-action-error-${this.model.typeID}`)).text(action);
+    $(this.queryByHook(`tg-action-error-${this.model.typeID}`)).html(action);
     $(this.queryByHook(`tg-error-${this.model.typeID}`)).css("display", "block");
   },
   handleApplyGeometry: function (e) {
@@ -86,7 +86,15 @@ module.exports = View.extend({
         this.completeAction();
       },
       error: (err, response, body) => {
-        this.errorAction(body.Message);
+        if(body.Traceback.includes("SyntaxError")) {
+          var tracePart = body.Traceback.split('\n').slice(6)
+          tracePart.splice(2, 2)
+          tracePart[1] = tracePart[1].replace(new RegExp('          ', 'g'), '                 ')
+          var errorBlock = `<p class='mb-1' style='white-space:pre'>${body.Message}<br>${tracePart.join('<br>')}</p>`
+        }else{
+          var errorBlock = body.Message
+        }
+        this.errorAction(errorBlock);
       }
     });
   },
