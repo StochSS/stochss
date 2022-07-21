@@ -21,6 +21,7 @@ let path = require('path');
 let _ = require('underscore');
 //support files
 let app = require('../../app');
+let Tooltips = require('../../tooltips');
 let tests = require('../../views/tests');
 //views
 let View = require('ampersand-view');
@@ -51,6 +52,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    this.tooltips = Tooltips.domainType;
   },
   render: function (attrs, options) {
     this.template = this.viewMode ? viewTemplate : editTemplate;
@@ -231,7 +233,8 @@ module.exports = View.extend({
           name: 'geometry',
           modelKey: 'geometry',
           valueType: 'string',
-          value: this.model.geometry
+          value: this.model.geometry,
+          placeholder: "--Expression in terms of 'x', 'y', 'z'--"
         });
       }
     }
