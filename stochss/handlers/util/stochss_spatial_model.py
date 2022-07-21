@@ -28,7 +28,8 @@ import numpy
 import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
-                      PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
+                      PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
+                      Geometry
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -88,6 +89,25 @@ class StochSSSpatialModel(StochSSBase):
                 '''
                 return boundary_condition['expression']
         return NewBC()
+
+
+    @classmethod
+    def __build_geometry(cls, d_type):
+        name = d_type['name'].title()
+        class NewG(Geometry): # pylint: disable=too-few-public-methods
+            '''
+            ########################################################################################
+            Custom SpatialPy Geometry
+            ########################################################################################
+            '''
+            __class__ = f"__main__.{name}"
+            def inside(self, point, on_boundary): # pylint: disable=no-self-use
+                '''
+                Custom inside for geometry
+                '''
+                namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+                return eval(d_type['geometry'], {}, namespace)
+        return NewG()
 
 
     @classmethod
@@ -481,6 +501,42 @@ class StochSSSpatialModel(StochSSBase):
         new_bc = BoundaryCondition(model=model, **kwargs)
         expression = new_bc.expression()
         return {"expression": expression}
+
+
+    @classmethod
+    def fill_geometry(cls, kwargs, d_type):
+        '''
+        Create particles of the given type with the given properties within the geometry.
+
+        Attributes
+        ----------
+        kwargs : dict
+            Arguments passed to Domain.fill_with_particles.
+        d_type : dict
+            StochSS type definition.
+        '''
+        kwargs['geometry_ivar'] = cls.__build_geometry(d_type)
+        kwargs['type_id'] = d_type['type_id']
+        kwargs['mass'] = d_type['mass']
+        kwargs['volume'] = d_type['volume']
+        kwargs['rho'] = d_type['rho']
+        kwargs['nu'] = d_type['nu']
+        kwargs['c'] = d_type['c']
+        kwargs['fixed'] = d_type['fixed']
+        try:
+            domain = Domain(
+                0, (kwargs['xmin'],kwargs['xmax']),
+                (kwargs['ymin'],kwargs['ymax']), (kwargs['zmin'],kwargs['zmax'])
+            )
+            domain.fill_with_particles(**kwargs)
+            particles = cls.__build_stochss_domain_particles(domain)
+            return {'particles': particles}
+        except SyntaxError as err:
+            message = f"Failed to fill geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
+        except NameError as err:
+            message = f"Failed to fill geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
 
 
     def get_domain(self, path=None, new=False):
