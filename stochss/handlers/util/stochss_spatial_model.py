@@ -416,6 +416,9 @@ class StochSSSpatialModel(StochSSBase):
         except SyntaxError as err:
             message = f"Failed to apply geometry. Reason given: {err}"
             raise DomainGeometryError(message, traceback.format_exc()) from err
+        except NameError as err:
+            message = f"Failed to apply geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
 
     def convert_to_model(self):
         '''
