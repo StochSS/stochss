@@ -80,8 +80,14 @@ module.exports = View.extend({
   },
   handleApplyGeometry: function (e) {
     this.startAction();
-    let particles = this.model.collection.parent.particles.toJSON();
-    let data = {particles: particles, type: this.model.toJSON()}
+    let domain = this.model.collection.parent;
+    let particles = domain.particles.toJSON();
+    let center = [
+      domain.x_lim[1] - domain.x_lim[0],
+      domain.y_lim[1] - domain.y_lim[0],
+      domain.z_lim[1] - domain.z_lim[0]
+    ];
+    let data = {particles: particles, type: this.model.toJSON(), center: center}
     let endpoint = path.join(app.getApiPath(), 'spatial-model/apply-geometry');
     app.postXHR(endpoint, data, {
       success: (err, response, body) => {
