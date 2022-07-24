@@ -43,6 +43,7 @@ module.exports = View.extend({
     'change [data-hook=type-name]' : 'handleRenameType',
     'change [data-target=type-defaults]' : 'updateView',
     'change [data-hook=td-fixed]' : 'setTDFixed',
+    'change [data-hook=type-geometry]' : 'updateView',
     'click [data-hook=select]' : 'selectType',
     'click [data-hook=unassign-all]' : 'handleUnassignParticles',
     'click [data-hook=delete-type]' : 'handleDeleteType',
@@ -139,6 +140,7 @@ module.exports = View.extend({
   updateValid: function () {},
   updateView: function () {
     this.parent.renderViewTypeView();
+    this.parent.parent.updateParticleViews({includeGeometry: true});
   },
   subviews: {
     inputTypeID: {
