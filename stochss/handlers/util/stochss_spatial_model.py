@@ -530,7 +530,7 @@ class StochSSSpatialModel(StochSSBase):
             kwargs['zmax'] - kwargs['zmin']
         ]
         kwargs['geometry_ivar'] = cls.__build_geometry(d_type, center)
-        kwargs['type_id'] = d_type['type_id']
+        kwargs['type_id'] = d_type['typeID']
         kwargs['mass'] = d_type['mass']
         kwargs['volume'] = d_type['volume']
         kwargs['rho'] = d_type['rho']

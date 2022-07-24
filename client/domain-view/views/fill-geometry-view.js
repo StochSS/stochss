@@ -33,7 +33,8 @@ module.exports = View.extend({
   events: {
     'change [data-hook=fill-geometry-type-select]' : 'handleTypeUpdate',
     'change [data-target=fill-geometry-limitation]' : 'handleDataUpdate',
-    'change [data-target=fill-geometry-delta]' : 'handleDataUpdate'
+    'change [data-target=fill-geometry-delta]' : 'handleDataUpdate',
+    'click [data-hook=fill-geometry]' : 'handleFillGeometry'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
