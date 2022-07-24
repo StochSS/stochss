@@ -48,6 +48,13 @@ module.exports = View.extend({
     this.getTypes();
     this.renderTypeSelectView();
   },
+  completeAction: function () {
+    $(this.queryByHook("fg-in-progress")).css("display", "none");
+    $(this.queryByHook("fg-complete")).css("display", "inline-block");
+    setTimeout(() => {
+      $(this.queryByHook("fg-complete")).css("display", "none");
+    }, 5000);
+  },
   disable: function () {
     if(this.data.xmin === this.data.xmax) { return true; }
     if(this.data.ymin === this.data.ymax) { return true; }
@@ -58,16 +65,42 @@ module.exports = View.extend({
     if(!this.type) { return true; }
     return false;
   },
+  errorAction: function (action) {
+    $(this.queryByHook("fg-in-progress")).css("display", "none");
+    $(this.queryByHook("fg-action-error")).html(action);
+    $(this.queryByHook("fg-error")).css("display", "block");
+  },
   getTypes: function () {
     this.types = this.parent.model.types.filter((type) => {
       return Boolean(type.geometry);
     });
-    console.log(this.types)
   },
   handleDataUpdate: function (e) {
     let key = e.target.parentElement.parentElement.dataset.name;
     this.data[key] = Number(e.target.value);
     this.toggleFillGeometry();
+  },
+  handleFillGeometry: function () {
+    this.startAction();
+    let data = {kwargs: this.data, type: this.type}
+    let endpoint = path.join(app.getApiPath(), 'spatial-model/fill-geometry');
+    app.postXHR(endpoint, data, {
+      success: (err, response, body) => {
+        this.parent.parent.add3DDomain(body.limits, body.particles);
+        this.completeAction();
+      },
+      error: (err, response, body) => {
+        if(body.Traceback.includes("SyntaxError")) {
+          var tracePart = body.Traceback.split('\n').slice(6)
+          tracePart.splice(2, 2)
+          tracePart[1] = tracePart[1].replace(new RegExp('          ', 'g'), '                 ')
+          var errorBlock = `<p class='mb-1' style='white-space:pre'>${body.Message}<br>${tracePart.join('<br>')}</p>`
+        }else{
+          var errorBlock = body.Message
+        }
+        this.errorAction(errorBlock);
+      }
+    });
   },
   handleTypeUpdate: function (e) {
     if(e.target.value) {
@@ -100,6 +133,11 @@ module.exports = View.extend({
       unselectedText: "Select a Type"
     });
     app.registerRenderSubview(this, this.typeSelectView, "fill-geometry-type-select");
+  },
+  startAction: function () {
+    $(this.queryByHook("fg-complete")).css("display", "none");
+    $(this.queryByHook("fg-error")).css("display", "none");
+    $(this.queryByHook("fg-in-progress")).css("display", "inline-block");
   },
   toggleFillGeometry: function () {
     $(this.queryByHook('fill-geometry')).prop('disabled', this.disable());
