@@ -92,7 +92,7 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def __build_geometry(cls, d_type):
+    def __build_geometry(cls, d_type, center):
         name = d_type['name'].title()
         class NewG(Geometry): # pylint: disable=too-few-public-methods
             '''
@@ -101,13 +101,19 @@ class StochSSSpatialModel(StochSSBase):
             ########################################################################################
             '''
             __class__ = f"__main__.{name}"
+            def __init__(self, center):
+                self.center = center
+
             def inside(self, point, on_boundary): # pylint: disable=no-self-use
                 '''
                 Custom inside for geometry
                 '''
-                namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+                namespace = {
+                    'cx': self.center[0], 'cy': self.center[1], 'cz': self.center[2],
+                    'x': point[0], 'y': point[1], 'z': point[2]
+                }
                 return eval(d_type['geometry'], {}, namespace)
-        return NewG()
+        return NewG(center)
 
 
     @classmethod
@@ -423,9 +429,12 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
-    def apply_geometry(cls, particles, d_type):
+    def apply_geometry(cls, particles, d_type, center):
         def inside(point):
-            namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+            namespace = {
+                'cx': center[0], 'cy': center[1], 'cz': center[2],
+                'x': point[0], 'y': point[1], 'z': point[2]
+            }
             return eval(d_type['geometry'], {}, namespace)
         ids = []
         try:
@@ -515,7 +524,12 @@ class StochSSSpatialModel(StochSSBase):
         d_type : dict
             StochSS type definition.
         '''
-        kwargs['geometry_ivar'] = cls.__build_geometry(d_type)
+        center = [
+            kwargs['xmax'] - kwargs['xmin'],
+            kwargs['ymax'] - kwargs['ymin'],
+            kwargs['zmax'] - kwargs['zmin']
+        ]
+        kwargs['geometry_ivar'] = cls.__build_geometry(d_type, center)
         kwargs['type_id'] = d_type['type_id']
         kwargs['mass'] = d_type['mass']
         kwargs['volume'] = d_type['volume']
