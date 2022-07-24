@@ -87,7 +87,7 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), 'spatial-model/fill-geometry');
     app.postXHR(endpoint, data, {
       success: (err, response, body) => {
-        this.parent.parent.add3DDomain(body.limits, body.particles);
+        this.parent.add3DDomain(body.limits, body.particles);
         this.completeAction();
       },
       error: (err, response, body) => {
