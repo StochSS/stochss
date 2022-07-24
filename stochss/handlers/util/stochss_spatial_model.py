@@ -544,7 +544,8 @@ class StochSSSpatialModel(StochSSBase):
             )
             domain.fill_with_particles(**kwargs)
             particles = cls.__build_stochss_domain_particles(domain)
-            return {'particles': particles}
+            limits = {'x_lim': domain.xlim, 'y_lim': domain.ylim, 'z_lim': domain.zlim}
+            return {'particles': particles, 'limits': limits}
         except SyntaxError as err:
             message = f"Failed to fill geometry. Reason given: {err}"
             raise DomainGeometryError(message, traceback.format_exc()) from err
