@@ -525,11 +525,13 @@ class StochSSSpatialModel(StochSSBase):
             StochSS type definition.
         '''
         center = [
-            kwargs['xmax'] - kwargs['xmin'],
-            kwargs['ymax'] - kwargs['ymin'],
-            kwargs['zmax'] - kwargs['zmin']
+            (kwargs['xmax'] + kwargs['xmin']) / 2,
+            (kwargs['ymax'] + kwargs['ymin']) / 2,
+            (kwargs['zmax'] + kwargs['zmin']) / 2
         ]
         kwargs['geometry_ivar'] = cls.__build_geometry(d_type, center)
+        print(kwargs['geometry_ivar'].center)
+        print(kwargs['geometry_ivar'].inside([0, 0, 0], False))
         kwargs['type_id'] = d_type['typeID']
         kwargs['mass'] = d_type['mass']
         kwargs['vol'] = d_type['volume']
@@ -537,12 +539,14 @@ class StochSSSpatialModel(StochSSBase):
         kwargs['nu'] = d_type['nu']
         kwargs['c'] = d_type['c']
         kwargs['fixed'] = d_type['fixed']
+        print(kwargs)
         try:
             domain = Domain(
                 0, (kwargs['xmin'],kwargs['xmax']),
                 (kwargs['ymin'],kwargs['ymax']), (kwargs['zmin'],kwargs['zmax'])
             )
             domain.fill_with_particles(**kwargs)
+            print(len(domain.vertices))
             particles = cls.__build_stochss_domain_particles(domain)
             limits = {'x_lim': domain.xlim, 'y_lim': domain.ylim, 'z_lim': domain.zlim}
             return {'particles': particles, 'limits': limits}
