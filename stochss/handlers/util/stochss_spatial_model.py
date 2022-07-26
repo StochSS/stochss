@@ -153,7 +153,7 @@ class StochSSSpatialModel(StochSSBase):
             else:
                 viscosity = data['type']['nu']
                 fixed = data['type']['fixed']
-                type_id = data['typeID']
+                type_id = data['typeID'] if 'typeID' in data.keys() else data['type']['typeID']
             point = list(vertex)
             if data is not None and data['transformation'] is not None:
                 point = [coord + data['transformation'][i] for i, coord in enumerate(point)]
@@ -530,24 +530,21 @@ class StochSSSpatialModel(StochSSBase):
             (kwargs['zmax'] + kwargs['zmin']) / 2
         ]
         kwargs['geometry_ivar'] = cls.__build_geometry(d_type, center)
-        print(kwargs['geometry_ivar'].center)
-        print(kwargs['geometry_ivar'].inside([0, 0, 0], False))
-        kwargs['type_id'] = d_type['typeID']
+        kwargs['type_id'] = d_type['name']
         kwargs['mass'] = d_type['mass']
         kwargs['vol'] = d_type['volume']
         kwargs['rho'] = d_type['rho']
         kwargs['nu'] = d_type['nu']
         kwargs['c'] = d_type['c']
         kwargs['fixed'] = d_type['fixed']
-        print(kwargs)
         try:
             domain = Domain(
                 0, (kwargs['xmin'],kwargs['xmax']),
                 (kwargs['ymin'],kwargs['ymax']), (kwargs['zmin'],kwargs['zmax'])
             )
             domain.fill_with_particles(**kwargs)
-            print(len(domain.vertices))
-            particles = cls.__build_stochss_domain_particles(domain)
+            data = {'type': d_type, 'transformation': None}
+            particles = cls.__build_stochss_domain_particles(domain, data=data)
             limits = {'x_lim': domain.xlim, 'y_lim': domain.ylim, 'z_lim': domain.zlim}
             return {'particles': particles, 'limits': limits}
         except SyntaxError as err:
