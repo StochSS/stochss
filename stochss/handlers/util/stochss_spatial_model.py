@@ -410,6 +410,8 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             s_model = self.load()
         s_model['is_spatial'] = False
+        if s_model['defaultMode'] == "discrete-concentration":
+            s_model['defaultMode'] == "dynamic"
         if ".wkgp" in self.path:
             wkgp_path = self.get_dir_name()
             wkgp_path, _ = self.get_unique_path(name=self.get_file(path=wkgp_path),
@@ -684,6 +686,8 @@ class StochSSSpatialModel(StochSSBase):
         self.model['name'] = self.get_name()
         if not self.model['defaultMode']:
             self.model['defaultMode'] = "discrete"
+        elif self.model['defaultMode'] == "dynamic":
+            self.model['defaultMode'] = "discrete-concentration"
         if "timestepSize" not in self.model['modelSettings'].keys():
             self.model['modelSettings']['timestepSize'] = 1e-5
         self.__update_domain()

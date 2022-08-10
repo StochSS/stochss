@@ -709,7 +709,8 @@ class UploadFileFromLinkAPIHandler(APIHandler):
             log.debug(f"Exec command: {exec_cmd}")
             pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
             results, error = pipe.communicate()
-            log.error(f"Errors trown by the subprocess: {error}")
+            if error is not None:
+                log.error(f"Errors thrown by the subprocess: {error}")
             resp = json.loads(results)
             log.debug(f"Response: {resp}")
             self.write(resp)
