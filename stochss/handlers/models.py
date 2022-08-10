@@ -349,7 +349,7 @@ class LoadParticleTypesDescriptions(APIHandler):
         try:
             folder = StochSSFolder(path="")
             test = lambda ext, root, file: bool(
-                "trash" in root.split("/") or file.startswith('.') or 'wkfl' in root
+                "trash" in root.split("/") or file.startswith('.') or 'wkfl' in root or root.startswith('.')
             )
             resp = folder.get_file_list(ext=".txt", test=test)
             log.debug("Response: {resp}")
