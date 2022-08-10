@@ -32,16 +32,27 @@ div#model-view
           
           hr
 
-          div.row
+          div.row(data-hook="model-mode-container")
             div.col-sm-4
               input.mr-2(type="radio" name="default-mode" data-hook="all-continuous" data-name="continuous")
               span Concentration
             div.col-sm-4
               input.mr-2(type="radio" name="default-mode" data-hook="all-discrete" data-name="discrete")
               span Population
-            div.col-sm-4(data-hook="advanced-model-mode")
+            div.col-sm-4
               input.mr-2(type="radio" name="default-mode" data-hook="advanced" data-name="dynamic")
               span Hybrid Concentration/Population
+
+          div.row(data-hook="spatial-model-mode-container")
+            div.col-sm-4
+              input.mr-2(type="radio" name="default-mode" data-hook="spatial-continuous" data-name="continuous")
+              span Concentration
+            div.col-sm-4
+              input.mr-2(type="radio" name="default-mode" data-hook="spatial-discrete" data-name="discrete")
+              span Population (outpust: absolute value)
+            div.col-sm-4
+              input.mr-2(type="radio" name="default-mode" data-hook="spatial-discrete-concentration" data-name="discrete-concentration")
+              span Population (outputs: scaled by volume)
 
         div.tab-pane(id="view-model-mode" data-hook="view-model-mode")
 

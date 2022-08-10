@@ -46,6 +46,9 @@ module.exports = View.extend({
     'change [data-hook=all-continuous]' : 'setDefaultMode',
     'change [data-hook=all-discrete]' : 'setDefaultMode',
     'change [data-hook=advanced]' : 'setDefaultMode',
+    'change [data-hook=spatial-continuous]' : 'setDefaultMode',
+    'change [data-hook=spatial-discrete]' : 'setDefaultMode',
+    'change [data-hook=spatial-discrete-concentration]' : 'setDefaultMode',
     'change [data-hook=edit-volume]' : 'updateVolumeViewer',
     'click [data-hook=collapse-mv-advanced-section]' : 'changeCollapseButtonText',
     'click [data-hook=collapse-system-volume]' : 'changeCollapseButtonText'
@@ -76,14 +79,27 @@ module.exports = View.extend({
       this.setReadOnlyMode("model-mode");
       this.setReadOnlyMode("system-volume");
     }else {
-      if(this.model.defaultMode === "" && !this.model.is_spatial){
-        this.getInitialDefaultMode();
-      }else {
-        let dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'};
-        $(this.queryByHook(dataHooks[this.model.defaultMode])).prop('checked', true);
+      if(this.model.defaultMode === ""){
         if(this.model.is_spatial) {
-          $(this.queryByHook("advanced-model-mode")).css("display", "none");
+          this.model.defaultMode = "discrete";
+          $(this.queryByHook("spatial-discrete")).prop('checked', true);
+        }else{
+          this.getInitialDefaultMode();
+        }
+      }else {
+        if(this.model.is_spatial) {
+          let dataHooks = {
+            'continuous':'spatial-continuous',
+            'discrete':'spatial-discrete',
+            'discrete-concentration':'spatial-discrete-concentration'
+          };
+          $(this.queryByHook(dataHooks[this.model.defaultMode])).prop('checked', true);
+          $(this.queryByHook("model-mode-container")).css("display", "none");
           $(this.queryByHook("system-volume-container")).css("display", "none");
+        }else{
+          let dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'};
+          $(this.queryByHook(dataHooks[this.model.defaultMode])).prop('checked', true);
+          $(this.queryByHook("spatial-model-mode-container")).css("display", "none");
         }
       }
       this.model.reactions.on("change", (reactions) => {
@@ -319,8 +335,10 @@ module.exports = View.extend({
     let prevMode = this.model.defaultMode;
     this.model.defaultMode = e.target.dataset.name;
     this.speciesView.defaultMode = e.target.dataset.name;
-    this.setAllSpeciesModes(prevMode);
-    this.toggleVolumeContainer();
+    if(!this.model.is_spatial) {
+      this.setAllSpeciesModes(prevMode);
+      this.toggleVolumeContainer();
+    }
   },
   setInitialDefaultMode: function (modal, mode) {
     var dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'};
