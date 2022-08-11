@@ -29,7 +29,7 @@ import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
-                      Geometry
+                      Geometry, ModelError
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -553,6 +553,9 @@ class StochSSSpatialModel(StochSSBase):
             message = f"Failed to fill geometry. Reason given: {err}"
             raise DomainGeometryError(message, traceback.format_exc()) from err
         except NameError as err:
+            message = f"Failed to fill geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
+        except ModelError as err:
             message = f"Failed to fill geometry. Reason given: {err}"
             raise DomainGeometryError(message, traceback.format_exc()) from err
 
