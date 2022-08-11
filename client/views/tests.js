@@ -16,38 +16,45 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let startChar = (text) => {
+  if (/^[0-9]+/.test(text)) {
+    return "Field cannot start with a number. Start with letter or underscore." 
+  }
+}
+
+let invalidChar = (text) => {
+  if (!/^[a-zA-Z0-9_]+$/.test(text)) {
+    return "Invalid characters. Please only use letters, numbers, or underscores."
+  }
+}
+
+let nanValue = (value) => {
+  if (isNaN(Number(value))) {
+    return "Must be a number."
+  }
+}
+
+let negValue = (value) => {
+  if (Number(value) < 0) {
+    return "Must be non-negative."
+  }
+}
+
+// function (text) {
+//   if(this.parent.model && this.parent.model.collection){
+//     var isDuplicate = this.parent.model.collection.some(function (m) { return m.name === text && this.parent.model !== m;
+//     }, this);
+//     if (isDuplicate) {
+//       return "No duplicate entries."
+//     }
+//   }
+// },
+
 module.exports = {
-  nameTests: [
-    function (text) {
-      if (/^[0-9]+/.test(text)) {
-        return "Field cannot start with a number. Start with letter or underscore." 
-      }
-    },
-    function (text) {
-      if (!/^[a-zA-Z0-9_]+$/.test(text)) {
-        return "Invalid characters. Please only use letters, numbers, or underscores."
-      }
-    },
-    // function (text) {
-    //   if(this.parent.model && this.parent.model.collection){
-    //     var isDuplicate = this.parent.model.collection.some(function (m) { return m.name === text && this.parent.model !== m;
-    //     }, this);
-    //     if (isDuplicate) {
-    //       return "No duplicate entries."
-    //     }
-    //   }
-    // },
-  ],
-  valueTests: [
-    function (value) {
-      if (isNaN(Number(value))) {
-        return "Must be a number."
-      }
-    },
-    function (value) {
-      if (Number(value) < 0) {
-        return "Must be non-negative."
-      }
-    },
-  ],
+  invalidChar: invalidChar,
+  nameTests: [startChar, invalidChar],
+  nanValue: nanValue,
+  negValue: negValue,
+  startChar: startChar,
+  valueTests: [nanValue, negValue]
 }

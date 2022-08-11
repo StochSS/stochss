@@ -157,6 +157,7 @@ module.exports = View.extend({
           required: true,
           name: 'name',
           modelKey: 'name',
+          tests: [tests.invalidChar],
           valueType: 'string',
           value: this.model.name
         });
