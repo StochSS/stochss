@@ -43,6 +43,7 @@ module.exports = View.extend({
     'change [data-hook=type-name]' : 'handleRenameType',
     'change [data-target=type-defaults]' : 'updateView',
     'change [data-hook=td-fixed]' : 'setTDFixed',
+    'change [data-hook=type-geometry]' : 'updateView',
     'click [data-hook=select]' : 'selectType',
     'click [data-hook=unassign-all]' : 'handleUnassignParticles',
     'click [data-hook=delete-type]' : 'handleDeleteType',
@@ -79,8 +80,14 @@ module.exports = View.extend({
   },
   handleApplyGeometry: function (e) {
     this.startAction();
-    let particles = this.model.collection.parent.particles.toJSON();
-    let data = {particles: particles, type: this.model.toJSON()}
+    let domain = this.model.collection.parent;
+    let particles = domain.particles.toJSON();
+    let center = [
+      (domain.x_lim[1] + domain.x_lim[0]) / 2,
+      (domain.y_lim[1] + domain.y_lim[0]) / 2,
+      (domain.z_lim[1] + domain.z_lim[0]) / 2
+    ];
+    let data = {particles: particles, type: this.model.toJSON(), center: center}
     let endpoint = path.join(app.getApiPath(), 'spatial-model/apply-geometry');
     app.postXHR(endpoint, data, {
       success: (err, response, body) => {
@@ -139,6 +146,7 @@ module.exports = View.extend({
   updateValid: function () {},
   updateView: function () {
     this.parent.renderViewTypeView();
+    this.parent.parent.updateParticleViews({includeGeometry: true});
   },
   subviews: {
     inputTypeID: {
@@ -149,6 +157,7 @@ module.exports = View.extend({
           required: true,
           name: 'name',
           modelKey: 'name',
+          tests: [tests.invalidChar],
           valueType: 'string',
           value: this.model.name
         });

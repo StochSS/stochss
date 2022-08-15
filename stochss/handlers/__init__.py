@@ -87,6 +87,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/spatial-model/import-mesh\/?", ImportMeshAPIHandler),
         (r"/stochss/api/spatial-model/3d-domain\/?", Create3DDomainAPIHandler),
         (r"/stochss/api/spatial-model/apply-geometry\/?", ApplyGeometryAPIHandler),
+        (r"/stochss/api/spatial-model/fill-geometry\/?", FillGeometryAPIHandler),
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),
         (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
         (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),

@@ -297,7 +297,7 @@ class StochSSNotebook(StochSSBase):
             model.extend([f"    {type_id.upper()} = '{type_id}'" for type_id in type_ids.values()])
             model.extend(["", "    def __init__(self):",
                           f'{pad}Model.__init__(self, name="{self.get_name()}")'])
-            type_refs = {index: type_id.upper() for index, type_id in type_ids.items()}
+            type_refs = {index: type_id for index, type_id in type_ids.items()}
             self.__create_domain_string(model=model, pad=pad)
             self.__create_boundary_condition_string(model=model, pad=pad)
             self.__create_species_strings(model=model, pad=pad, type_refs=type_refs)
