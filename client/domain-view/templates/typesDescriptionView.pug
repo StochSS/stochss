@@ -1,0 +1,36 @@
+div.mx-1
+
+  div.text-info(data-hook="type-location-message" style="display: none")
+    | There are multiple type files with that name, please select a location
+
+  div
+
+    div.inline.mr-3
+
+      span.inline.mr-2(for="file-select") Select type description file:
+
+      div.inline(id="file-select" data-hook="file-select")
+
+    div.inline(data-hook="file-location-container" style="display: none")
+
+      span.inlinemr-2(for="file-location-select") Location:
+
+      div.inline(id="file-location-select" data-hook="file-location-select")
+
+  div.my-3
+
+    button.btn.btn-outline-primary.box-shadow(data-hook="set-particle-types-btn" disabled) Set Types
+
+    div.mdl-edit-btn.saving-status.inline(data-hook="st-in-progress")
+
+      div.spinner-grow.mr-2
+
+      span Setting types ...
+
+    div.mdl-edit-btn.saved-status.inline(data-hook="st-complete")
+
+      span
+
+    div.mdl-edit-btn.save-error-status(data-hook="st-error")
+
+      span(data-hook="st-error-action")

@@ -24,17 +24,23 @@ var Collection = require('ampersand-collection');
 module.exports = Collection.extend({
   model: Particle,
   indexes: ['particle_id'],
-  addParticle: function (point, vol, mass, type, nu, fixed) {
+  addParticle: function ({particle=null, point=[0,0,0], vol=1, mass=1, type=0, nu=0, fixed=false, c=10, rho=1}={}) {
     let id = this.parent.getDefaultID();
-    var particle = new Particle({
-        fixed: fixed,
-        mass: mass,
-        nu: nu,
-        particle_id: id,
-        point: point,
-        type: type,
-        volume: vol
-    });
+    if(particle) {
+      particle.particle_id = id;
+    }else{
+      particle = new Particle({
+          c: c,
+          fixed: fixed,
+          mass: mass,
+          nu: nu,
+          particle_id: id,
+          point: point,
+          rho: rho,
+          type: type,
+          volume: vol
+      });
+    }
     this.add(particle);
   },
   removeParticle: function (particle) {

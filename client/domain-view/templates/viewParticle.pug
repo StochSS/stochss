@@ -1,0 +1,117 @@
+div
+
+  h5 Properties
+
+  hr.mt-2.mb-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 ID:
+
+    div.col-sm-6
+
+      div.inline=this.model.particle_id
+
+  hr.my-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 Type:
+
+    div.col-sm-6
+
+      div.inline=this.type
+
+  hr.my-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 Location:
+
+    div.col-sm-6
+
+      div.inline
+
+        div=`X: ${this.model.point[0]}`
+
+        div=`Y: ${this.model.point[1]}`
+
+        div=`Z: ${this.model.point[2]}`
+
+  hr.my-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 Mass:
+
+    div.col-sm-6
+
+      div.inline=this.model.mass
+
+  hr.my-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 Volume:
+
+    div.col-sm-6
+
+      div.inline=this.model.volume
+
+  hr.my-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 Density:
+
+    div.col-sm-6
+
+      div.inline=this.model.rho
+
+  hr.my-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 Viscosity:
+
+    div.col-sm-6
+
+      div.inline=this.model.nu
+
+  hr.my-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 Speed of Sound:
+
+    div.col-sm-6
+
+      div.inline=this.model.c
+
+  hr.my-1
+
+  div.row.mx-1
+
+    div.col-sm-6
+
+      h6 Fixed:
+
+    div.col-sm-6
+
+      input.inline(type="checkbox" checked=this.model.fixed disabled)

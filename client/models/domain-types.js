@@ -24,19 +24,20 @@ var Collection = require('ampersand-collection');
 module.exports = Collection.extend({
   model: Type,
   indexes: ['typeID'],
-  addType: function (vol, mass, nu, fixed, id=null) {
-    if(!id) {
-      id = this.parent.getDefaultTypeID();
-    }
+  addType: function () {
+    let id = this.parent.getDefaultTypeID();
     let name = String(id);
-    var type = new Type({
-        fixed: fixed,
-        mass: mass,
-        nu: nu,
-        typeID: id,
+    let type = new Type({
+        c: 10,
+        fixed: false,
+        mass: 1.0,
         name: name,
-        volume: vol
+        nu: 0.0,
+        rho: 1.0,
+        typeID: id,
+        volume: 1.0
     });
+    type.selected = true;
     this.add(type);
     return name;
   },

@@ -37,6 +37,8 @@ section.page
 
           div(data-hook="domain-plot-container")
 
+          div.text-danger(data-hook="domain-plot-container-empty") The domain currently has no particles to display
+
         div.col-sm-4.overflow-auto(style="max-height:450px;")
 
           div.mt-2.particle-view(data-hook="me-particle-viewer")
@@ -50,8 +52,7 @@ section.page
 
               h4 Particles per Type
 
-              table.table
-                tbody(data-hook="me-types-quick-view")
+              div(data-hook="me-types-quick-view")
 
     div(data-hook="model-run-container")
 

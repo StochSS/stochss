@@ -21,20 +21,25 @@ var State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
+    c: 'number',
     fixed: 'boolean',
     mass: 'number',
     nu: 'number',
     particle_id: 'number',
     point: 'object',
+    rho: 'number',
     type: 'number',
     volume: 'number'
   },
-  session: {
-    pointChanged: 'boolean',
-    typeChanged: 'boolean'
-  },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
+  },
+  comparePoint(point) {
+    if(this.point.length !== point.length) { return false; }
+    for(var i = 0; i < this.point.length; i++) {
+      if(this.point[i] !== point[i]) { return false; }
+    }
+    return true;
   },
   validate: function () {
     return true;

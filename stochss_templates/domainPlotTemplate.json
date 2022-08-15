@@ -1,0 +1,34 @@
+{
+	"data": [
+		{
+			"ids": [],
+			"marker": {
+				"color": "",
+				"size": 5
+			},
+			"mode": "markers",
+			"name": "",
+			"x": [],
+			"y": [],
+			"z": [],
+			"type": "scatter3d"
+		}
+	],
+	"layout": {
+		"width": null,
+		"height": null,
+		"scene": {
+			"aspectmode": "data"
+		},
+		"xaxis": {
+			"range": []
+		},
+		"yaxis": {
+			"range": []
+		},
+		"autosize": true
+	},
+	"config": {
+		"responsive": true
+	}
+}

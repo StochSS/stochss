@@ -17,19 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //views
-var View = require('ampersand-view');
+let View = require('ampersand-view');
 //templates
-var template = require('../templates/includes/viewInitialCondition.pug');
+let template = require('../templates/quickviewType.pug');
 
 module.exports = View.extend({
   template: template,
-  initialize: function (attrs, options) {
-    View.prototype.initialize.apply(this, arguments);
-    let self = this;
-    this.types = [];
-    this.model.types.forEach(function (index) {
-      let type = self.model.collection.parent.domain.types.get(index, "typeID");
-      self.types.push(type.name)
-    });
-  },
 });

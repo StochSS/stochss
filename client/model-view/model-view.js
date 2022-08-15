@@ -186,34 +186,14 @@ module.exports = View.extend({
     if(this.domainViewer) {
       this.domainViewer.remove();
     }
-    if(domainPath && domainPath !== "viewing") {
-      let queryStr = `?path=${this.model.directory}&domain_path=${domainPath}`;
-      let endpoint = path.join(app.getApiPath(), "spatial-model/load-domain") + queryStr;
-      app.getXHR(endpoint, {
-        always: (err, response, body) => {
-          let domain = new Domain(body.domain);
-          this.domainViewer = new DomainViewer({
-            parent: this,
-            model: domain,
-            domainPath: domainPath,
-            readOnly: this.readOnly,
-            domainElements: this.domainElements,
-            domainPlot: this.domainPlot
-          });
-          app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
-        }
-      });
-    }else{
-      this.domainViewer = new DomainViewer({
-        parent: this,
-        model: this.model.domain,
-        domainPath: domainPath,
-        readOnly: this.readOnly,
-        domainElements: this.domainElements,
-        domainPlot: this.domainPlot
-      });
-      app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
-    }
+    this.domainViewer = new DomainViewer({
+      parent: this,
+      model: this.model,
+      readOnly: this.readOnly,
+      domainElements: this.domainElements,
+      domainPlot: this.domainPlot
+    });
+    app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
   },
   renderEventsView: function () {
     if(this.model.is_spatial) { return };
