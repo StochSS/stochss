@@ -17,9 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let path = require('path');
 let _ = require('underscore');
 //support files
 let app = require('../../app');
+let Tooltips = require('../../tooltips');
 let tests = require('../../views/tests');
 //views
 let View = require('ampersand-view');
@@ -45,21 +47,58 @@ module.exports = View.extend({
     'click [data-hook=unassign-all]' : 'handleUnassignParticles',
     'click [data-hook=delete-type]' : 'handleDeleteType',
     'click [data-hook=delete-all]' : 'handleDeleteTypeAndParticle',
+    'click [data-hook=apply-geometry]' : 'handleApplyGeometry'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.vieWMode = attrs.viewMode ? attrs.viewMode : false;
+    this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    this.tooltips = Tooltips.domainType;
   },
   render: function (attrs, options) {
-    this.template = this.vieWMode ? viewTemplate : editTemplate;
+    this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
-    if(!this.vieWMode) {
+    if(!this.viewMode) {
       if(this.model.selected) {
         setTimeout(_.bind(this.openTypeDetails, this), 1);
       }
     }
     $(this.queryByHook('view-td-fixed')).prop('checked', this.model.fixed)
     app.documentSetup();
+  },
+  completeAction: function () {
+    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "none");
+    $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "inline-block");
+    setTimeout(() => {
+      $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "none");
+    }, 5000);
+  },
+  errorAction: function (action) {
+    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "none");
+    $(this.queryByHook(`tg-action-error-${this.model.typeID}`)).html(action);
+    $(this.queryByHook(`tg-error-${this.model.typeID}`)).css("display", "block");
+  },
+  handleApplyGeometry: function (e) {
+    this.startAction();
+    let particles = this.model.collection.parent.particles.toJSON();
+    let data = {particles: particles, type: this.model.toJSON()}
+    let endpoint = path.join(app.getApiPath(), 'spatial-model/apply-geometry');
+    app.postXHR(endpoint, data, {
+      success: (err, response, body) => {
+        this.parent.parent.applyGeometry(body.particles, this.model);
+        this.completeAction();
+      },
+      error: (err, response, body) => {
+        if(body.Traceback.includes("SyntaxError")) {
+          var tracePart = body.Traceback.split('\n').slice(6)
+          tracePart.splice(2, 2)
+          tracePart[1] = tracePart[1].replace(new RegExp('          ', 'g'), '                 ')
+          var errorBlock = `<p class='mb-1' style='white-space:pre'>${body.Message}<br>${tracePart.join('<br>')}</p>`
+        }else{
+          var errorBlock = body.Message
+        }
+        this.errorAction(errorBlock);
+      }
+    });
   },
   handleDeleteType: function (e) {
     let type = Number(e.target.dataset.type);
@@ -90,6 +129,11 @@ module.exports = View.extend({
   setTDFixed: function (e) {
     this.model.fixed = e.target.checked;
     this.updateView();
+  },
+  startAction: function () {
+    $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "none");
+    $(this.queryByHook(`tg-error-${this.model.typeID}`)).css("display", "none");
+    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "inline-block");
   },
   update: function () {},
   updateValid: function () {},
@@ -177,6 +221,20 @@ module.exports = View.extend({
           valueType: 'number',
           tests: tests.valueTests,
           value: this.model.c
+        });
+      }
+    },
+    inputGeometry: {
+      hook: 'type-geometry',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'geometry',
+          modelKey: 'geometry',
+          valueType: 'string',
+          value: this.model.geometry,
+          placeholder: "--Expression in terms of 'x', 'y', 'z'--"
         });
       }
     }

@@ -32,7 +32,7 @@ from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, 
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
-                            StochSSModelFormatError, StochSSPermissionsError
+                            StochSSModelFormatError, StochSSPermissionsError, DomainGeometryError
 
 class StochSSSpatialModel(StochSSBase):
     '''
@@ -390,6 +390,8 @@ class StochSSSpatialModel(StochSSBase):
                 d_type['rho'] = d_type['mass'] / d_type['volume']
             if "c" not in d_type.keys():
                 d_type['c'] = 10
+            if "geometry" not in d_type.keys():
+                d_type['geometry'] = ""
         if domain['particles']:
             for particle in domain['particles']:
                 if particle['type'] in type_changes:
@@ -399,6 +401,24 @@ class StochSSSpatialModel(StochSSBase):
                 if "c" not in particle.keys():
                     particle['c'] = 10
 
+
+    @classmethod
+    def apply_geometry(cls, particles, d_type):
+        def inside(point):
+            namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+            return eval(d_type['geometry'], {}, namespace)
+        ids = []
+        try:
+            for particle in particles:
+                if inside(particle['point']):
+                    ids.append(particle['particle_id'])
+            return {'particles': ids}
+        except SyntaxError as err:
+            message = f"Failed to apply geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
+        except NameError as err:
+            message = f"Failed to apply geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
 
     def convert_to_model(self):
         '''

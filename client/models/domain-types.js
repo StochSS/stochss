@@ -30,6 +30,7 @@ module.exports = Collection.extend({
     let type = new Type({
         c: 10,
         fixed: false,
+        geometry: "",
         mass: 1.0,
         name: name,
         nu: 0.0,
