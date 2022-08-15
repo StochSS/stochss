@@ -618,11 +618,11 @@ class StochSSSpatialModel(StochSSBase):
         dimensions += bool(ylim[1] - ylim[0])
         dimensions += bool(zlim[1] - zlim[0])
         if dimensions > 2:
-            s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
-                                               ny=data['ny'], nz=data['nz'], **data['type'])
+            s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, numx=data['nx'],
+                                               numy=data['ny'], numz=data['nz'], **data['type'])
         else:
             s_domain = Domain.create_2D_domain(xlim=xlim, ylim=ylim,
-                                               nx=data['nx'], ny=data['ny'], **data['type'])
+                                               numx=data['nx'], numy=data['ny'], **data['type'])
         domain = self.__build_stochss_domain(s_domain=s_domain, data=data)
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
         resp = {"particles":domain['particles'], "limits":limits}
