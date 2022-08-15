@@ -32,6 +32,7 @@ let QuickviewType = require('./views/quickview-type');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
+let FillGeometryView = require('./views/fill-geometry-view');
 let ImportMeshView = require('./views/import-mesh-view');
 let Edit3DDomainView = require('./views/edit-3D-domain-view');
 let TypesDescriptionView = require('./views/types-description-view');
@@ -67,11 +68,8 @@ module.exports = View.extend({
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
       this.renderTypesQuickview();
     }else{
-      this.renderNewParticleView();
-      this.renderEditParticleView();
+      this.updateParticleViews({includeGeometry: true});
       this.renderTypesDescriptionView();
-      this.renderEdit3DDomainView();
-      this.renderImportMeshView();
     }
     if(!this.elements) {
       this.elements = {
@@ -91,7 +89,7 @@ module.exports = View.extend({
     }
   },
   add3DDomain: function (limits, particles) {
-    let limitsChanged = this.changeDomainLimits(limits, Boolean(plot));
+    let limitsChanged = this.changeDomainLimits(limits, false);
     particles.forEach((particle) => {
       particle = new Particle(particle);
       this.model.particles.addParticle({particle: particle});
@@ -118,10 +116,7 @@ module.exports = View.extend({
     }
     this.renderTypesView();
     if(types) {
-      this.renderNewParticleView();
-      this.renderEditParticleView();
-      this.renderEdit3DDomainView();
-      this.renderImportMeshView();
+      this.updateParticleViews();
     }
     this.resetFigure();
   },
@@ -144,10 +139,7 @@ module.exports = View.extend({
     newTrace.name = name;
     this.plot.data.push(newTrace);
     if(update) {
-      this.renderNewParticleView();
-      this.renderEditParticleView();
-      this.renderEdit3DDomainView();
-      this.renderImportMeshView();
+      this.updateParticleViews();
     }
   },
   applyGeometry: function (ids, type) {
@@ -287,10 +279,7 @@ module.exports = View.extend({
     this.model.realignTypes(type);
     this.plot.data.splice(type, 1);
     this.renderTypesView();
-    this.renderNewParticleView();
-    this.renderEditParticleView();
-    this.renderEdit3DDomainView();
-    this.renderImportMeshView();
+    this.updateParticleViews({includeGeometry: true});
     this.resetFigure();
   },
   displayFigure: function () {
@@ -345,10 +334,6 @@ module.exports = View.extend({
   },
   renameType: function (index, name) {
     this.plot.data[index].name = name;
-    this.renderNewParticleView();
-    this.renderEditParticleView();
-    this.renderEdit3DDomainView();
-    this.renderImportMeshView();
     this.resetFigure();
   },
   renderEdit3DDomainView: function () {
@@ -373,6 +358,13 @@ module.exports = View.extend({
     $(this.queryByHook("edit-select-message")).css('display', disable ? 'block' : 'none');
     $(this.queryByHook("save-selected-particle")).prop('disabled', disable);
     $(this.queryByHook("remove-selected-particle")).prop('disabled', disable);
+  },
+  renderFillGeometryView: function () {
+    if(this.fillGeometryView) {
+      this.fillGeometryView.remove();
+    }
+    this.fillGeometryView = new FillGeometryView();
+    app.registerRenderSubview(this, this.fillGeometryView, 'fill-geometry-container');
   },
   renderImportMeshView: function () {
     if(this.importMeshView) {
@@ -504,10 +496,7 @@ module.exports = View.extend({
       this.actPart = actPart
     }
     this.resetFigure();
-    this.renderNewParticleView();
-    this.renderEditParticleView();
-    this.renderEdit3DDomainView();
-    this.renderImportMeshView();
+    this.updateParticleViews();
   },
   startAction: function (prefix) {
     $(this.queryByHook(`${prefix}-complete`)).css('display', 'none');
@@ -541,6 +530,15 @@ module.exports = View.extend({
     if(update) {
       this.renderTypesView();
       this.resetFigure();
+    }
+  },
+  updateParticleViews: function ({includeGeometry=false}={}) {
+    this.renderNewParticleView();
+    this.renderEditParticleView();
+    this.renderEdit3DDomainView();
+    this.renderImportMeshView();
+    if(includeGeometry) {
+      this.renderFillGeometryView();
     }
   }
 });
