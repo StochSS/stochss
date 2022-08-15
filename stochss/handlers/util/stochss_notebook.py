@@ -349,8 +349,9 @@ class StochSSNotebook(StochSSBase):
 
                     reac_str = f'{pad}{reac["name"]} = Reaction(name="{reac["name"]}", '
                     reac_str += f'reactants={react_str}, products={prod_str}, '
-                    if reac['reactionType'] == 'custom-propensity':
+                    if not reac['massaction']:
                         reac_str += f'propensity_function="{reac["propensity"]}"'
+                        reac_str += f'odepropensity_function="{reac["odePropensity"]}"'
                     else:
                         reac_str += f'rate="{reac["rate"]["name"]}"'
                     if self.s_model['is_spatial']:
