@@ -35,7 +35,8 @@
                 "volume":1.0
             }
         ],
-        "particles": []
+        "particles": [],
+        "template_version": 1
     },
 	"species": [],
     "initialConditions": [],
@@ -44,5 +45,6 @@
 	"rules": [],
 	"eventsCollection": [],
 	"functionDefinitions": [],
-	"boundaryConditions": []
+	"boundaryConditions": [],
+	"template_version": 1
 }

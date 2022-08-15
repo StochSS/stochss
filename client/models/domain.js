@@ -33,7 +33,8 @@ module.exports = State.extend({
     x_lim: 'object',
     y_lim: 'object',
     z_lim: 'object',
-    static: 'boolean'
+    static: 'boolean',
+    template_version: 'number'
   },
   collections: {
     types: Types,
