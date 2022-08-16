@@ -126,7 +126,6 @@ let DomainEditor = PageView.extend({
       this.model.saveModel(() => {
         this.completeAction("Domain saved to model");
       });
-      window.location.replace(this.getBreadcrumbData().model.href);
     }
   },
   handleSaveToFile: function () {
