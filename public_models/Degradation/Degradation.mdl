@@ -42,7 +42,7 @@
             "name": "reaction",
             "reactionType": "destruction",
             "summary": "protein \\rightarrow \\emptyset",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [

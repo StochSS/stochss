@@ -126,7 +126,7 @@
             "name": "reaction1",
             "reactionType": "four",
             "summary": "B+F \\rightarrow A+F",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -221,7 +221,7 @@
             "name": "reaction2",
             "reactionType": "merge",
             "summary": "A+B \\rightarrow P",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -411,7 +411,7 @@
             "name": "reaction4",
             "reactionType": "dimerization",
             "summary": "2A \\rightarrow P",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -470,7 +470,7 @@
             "name": "reaction5",
             "reactionType": "four",
             "summary": "C+F \\rightarrow B+F",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
