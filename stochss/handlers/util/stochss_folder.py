@@ -456,36 +456,39 @@ class StochSSFolder(StochSSBase):
         Attributes
         ----------
         '''
-        path = os.path.join(cls.user_dir, ".presentations")
-        files = [file for file in os.listdir(path) if not file.startswith('.')]
         presentations = []
-        if not files:
+        try:
+            path = os.path.join(cls.user_dir, ".presentations")
+            files = [file for file in os.listdir(path) if not file.startswith('.')]
+            if not files:
+                return presentations
+            names = cls.__get_names_from_file(path, files)
+            need_names = not bool(names)
+            safe_chars = set(string.ascii_letters + string.digits)
+            hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
+            for file in files:
+                file_path = os.path.join(path, file)
+                ctime = os.path.getctime(file_path)
+                routes = {
+                    "smdl": "present-model",
+                    "mdl": "present-model",
+                    "job": "present-job",
+                    "ipynb": "present-notebook"
+                }
+                name, ext = cls.__get_presentation_name(names, file, file_path)
+                presentation = {
+                    "file": file, "name": f"{name}.{ext}",
+                    "link": f"/stochss/{routes[ext]}?owner={hostname}&file={file}",
+                    "size": os.path.getsize(file_path),
+                    "ctime": datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y")
+                }
+                presentations.append(presentation)
+            if need_names or len(names.keys()) != len(files):
+                with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
+                    json.dump(names, names_file)
             return presentations
-        names = cls.__get_names_from_file(path, files)
-        need_names = not bool(names)
-        safe_chars = set(string.ascii_letters + string.digits)
-        hostname = escape(os.environ.get('JUPYTERHUB_USER'), safe=safe_chars)
-        for file in files:
-            file_path = os.path.join(path, file)
-            ctime = os.path.getctime(file_path)
-            routes = {
-                "smdl": "present-model",
-                "mdl": "present-model",
-                "job": "present-job",
-                "ipynb": "present-notebook"
-            }
-            name, ext = cls.__get_presentation_name(names, file, file_path)
-            presentation = {
-                "file": file, "name": f"{name}.{ext}",
-                "link": f"/stochss/{routes[ext]}?owner={hostname}&file={file}",
-                "size": os.path.getsize(file_path),
-                "ctime": datetime.datetime.fromtimestamp(ctime).strftime("%b %d, %Y")
-            }
-            presentations.append(presentation)
-        if need_names or len(names.keys()) != len(files):
-            with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
-                json.dump(names, names_file)
-        return presentations
+        except FileNotFoundError:
+            return presentations
 
 
     def get_project_list(self):
