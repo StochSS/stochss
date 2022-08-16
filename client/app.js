@@ -100,31 +100,45 @@ let registerRenderSubview = (parent, view, hook) => {
 let getXHR = (endpoint, {
   always = function (err, response, body) {}, success = function (err, response, body) {},
   error = function (err, response, body) {}}={}) => {
-  xhr({uri: endpoint, json: true}, function (err, response, body) {
-    if(response.statusCode < 400) {
-      success(err, response, body);
-    }else if(response.statusCode < 500) {
-      error(err, response, body);
-    }else{
-      console.log("Critical Error Detected");
-    }
-    always(err, response, body);
-  });
+  try {
+    xhr({uri: endpoint, json: true}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        success(err, response, body);
+      }else if(response.statusCode < 500) {
+        error(err, response, body);
+      }else{
+        console.log("Critical Error Detected");
+      }
+      always(err, response, body);
+    });
+  }catch(exception){
+    console.log(exception);
+    let response = {Reason: "Network Error", Message: exception};
+    let body = {response: response, err: exception}
+    error(exception, response, body);
+  }
 };
 
 let postXHR = (endpoint, data, {
   always = function (err, response, body) {}, success = function (err, response, body) {},
   error = function (err, response, body) {}}={}, isJSON) => {
-  xhr({uri: endpoint, json: isJSON !== undefined ? isJSON : true, method: "post", body: data}, function (err, response, body) {
-    if(response.statusCode < 400) {
-      success(err, response, body);
-    }else if(response.statusCode < 500) {
-      error(err, response, body);
-    }else{
-      console.log("Critical Error Detected");
-    }
-    always(err, response, body);
-  });
+  try {
+    xhr({uri: endpoint, json: isJSON !== undefined ? isJSON : true, method: "post", body: data}, function (err, response, body) {
+      if(response.statusCode < 400) {
+        success(err, response, body);
+      }else if(response.statusCode < 500) {
+        error(err, response, body);
+      }else{
+        console.log("Critical Error Detected");
+      }
+      always(err, response, body);
+    });
+  }catch(exception){
+    console.log(exception);
+    let response = {Reason: "Network Error", Message: exception};
+    let body = {response: response, err: exception}
+    error(exception, response, body);
+  }
 };
 
 let getBrowser = () => {
