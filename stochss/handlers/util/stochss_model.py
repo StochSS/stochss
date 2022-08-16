@@ -162,18 +162,21 @@ class StochSSModel(StochSSBase):
         try:
             g_parameters = model.get_all_parameters()
             for reaction in self.model['reactions']:
-                if reaction['reactionType'] == "custom-propensity":
+                if not reaction['massaction']:
                     rate = None
                     propensity = reaction['propensity']
+                    ode_propensity = reaction['odePropensity']
                 else:
                     rate = g_parameters[reaction['rate']['name']]
                     propensity = None
+                    ode_propensity = None
                 reactants, products = self.__convert_stoich_species(reaction=reaction)
                 g_reaction = Reaction(name=reaction['name'],
                                       reactants=reactants,
                                       products=products,
                                       rate=rate,
-                                      propensity_function=propensity)
+                                      propensity_function=propensity,
+                                      ode_propensity_function=ode_propensity)
                 model.add_reaction(g_reaction)
         except KeyError as err:
             message = "Reactions are not properly formatted or "
@@ -295,6 +298,8 @@ class StochSSModel(StochSSBase):
         if "reactions" not in self.model.keys():
             return
         for reaction in self.model['reactions']:
+            if "odePropensity" not in reaction.keys():
+                reaction['odePropensity'] = reaction['propensity']
             try:
                 if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
                     expression = ast.literal_eval(reaction['rate']['expression'])
@@ -385,6 +390,8 @@ class StochSSModel(StochSSBase):
         if self.model is None:
             model = self.load()
         model['is_spatial'] = True
+        if model['defaultMode'] == "dynamic":
+            model['defaultMode'] == "discrete-concentration"
         if "timestepSize" not in self.model['modelSettings'].keys():
             self.model['modelSettings']['timestepSize'] = 1e-5
         if "domain" not in model.keys():

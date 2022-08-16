@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import copy
 import string
 import hashlib
 import tempfile
@@ -27,11 +28,12 @@ import numpy
 import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
-                      PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition
+                      PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
+                      Geometry, ModelError
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
-                            StochSSModelFormatError, StochSSPermissionsError
+                            StochSSModelFormatError, StochSSPermissionsError, DomainGeometryError
 
 class StochSSSpatialModel(StochSSBase):
     '''
@@ -90,6 +92,31 @@ class StochSSSpatialModel(StochSSBase):
 
 
     @classmethod
+    def __build_geometry(cls, d_type, center):
+        name = d_type['name'].title()
+        class NewG(Geometry): # pylint: disable=too-few-public-methods
+            '''
+            ########################################################################################
+            Custom SpatialPy Geometry
+            ########################################################################################
+            '''
+            __class__ = f"__main__.{name}"
+            def __init__(self, center):
+                self.center = center
+
+            def inside(self, point, on_boundary): # pylint: disable=no-self-use
+                '''
+                Custom inside for geometry
+                '''
+                namespace = {
+                    'cx': self.center[0], 'cy': self.center[1], 'cz': self.center[2],
+                    'x': point[0], 'y': point[1], 'z': point[2]
+                }
+                return eval(d_type['geometry'], {}, namespace)
+        return NewG(center)
+
+
+    @classmethod
     def __build_stochss_domain(cls, s_domain, data=None):
         particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
         gravity = [0] * 3 if s_domain.gravity is None else s_domain.gravity
@@ -122,11 +149,11 @@ class StochSSSpatialModel(StochSSBase):
             if data is None or data['type'] is None:
                 viscosity = s_domain.nu[i]
                 fixed = bool(s_domain.fixed[i])
-                type_id = int(s_domain.type[i])
+                type_id = s_domain.typeNdxMapping[s_domain.type_id[i]]
             else:
                 viscosity = data['type']['nu']
                 fixed = data['type']['fixed']
-                type_id = data['type']['typeID']
+                type_id = data['typeID'] if 'typeID' in data.keys() else data['type']['typeID']
             point = list(vertex)
             if data is not None and data['transformation'] is not None:
                 point = [coord + data['transformation'][i] for i, coord in enumerate(point)]
@@ -243,12 +270,14 @@ class StochSSSpatialModel(StochSSBase):
             for reaction in self.model['reactions']:
                 reactants, products = self.__convert_stoich_species(model=model,
                                                                     reaction=reaction)
-                if reaction['reactionType'] != "custom-propensity":
+                if reaction['massaction']:
                     rate = s_params[reaction['rate']['name']]
                     propensity = None
+                    ode_propensity = None
                 else:
                     rate = None
                     propensity = reaction['propensity']
+                    ode_propensity = reaction['odePropensity']
                 types = [type_ids[d_type] for d_type in reaction['types']]
                 if len(types) == len(type_ids):
                     types = None
@@ -257,6 +286,7 @@ class StochSSSpatialModel(StochSSBase):
                                       products=products,
                                       rate=rate,
                                       propensity_function=propensity,
+                                      ode_propensity_function=ode_propensity,
                                       restrict_to=types)
                 model.add_reaction(s_reaction)
         except KeyError as err:
@@ -332,7 +362,7 @@ class StochSSSpatialModel(StochSSBase):
             z_data.append(particle['point'][2])
         marker = {"size":5}
         if index is not None:
-            marker["color"] = common_rgb_values[(index - 1) % len(common_rgb_values)]
+            marker["color"] = common_rgb_values[(index) % len(common_rgb_values)]
         return plotly.graph_objs.Scatter3d(ids=ids, x=x_data, y=y_data, z=z_data,
                                            name=name, mode="markers", marker=marker)
 
@@ -342,7 +372,9 @@ class StochSSSpatialModel(StochSSBase):
             path = os.path.join(self.user_dir, path)
             if path.endswith(".domn"):
                 with open(path, "r", encoding="utf-8") as domain_file:
-                    return json.load(domain_file)
+                    s_domain = json.load(domain_file)
+                    self.__update_domain(domain=s_domain)
+                    return s_domain
             s_domain = Domain.read_xml_mesh(filename=path)
             return self.__build_stochss_domain(s_domain=s_domain)
         except FileNotFoundError as err:
@@ -368,18 +400,56 @@ class StochSSSpatialModel(StochSSBase):
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
-    def __update_domain(self):
-        if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
-            self.model['domain'] = self.get_model_template()['domain']
-        elif "static" not in self.model['domain'].keys():
-            self.model['domain']['static'] = True
-        if self.model['domain']['particles']:
-            if "rho" not in self.model['domain']['particles'][0].keys() or \
-                        "c" not in self.model['domain']['particles'][0].keys():
-                for particle in self.model['domain']['particles']:
-                    particle['rho'] = particle['mass']/particle['volume']
-                    particle['c'] = 10
+    def __update_domain(self, domain=None):
+        if domain is None:
+            if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
+                self.model['domain'] = self.get_model_template()['domain']
+            domain = self.model['domain']
+        if "template_version" not in domain or domain['template_version'] != self.TEMPLATE_VERSION:
+            if "static" not in domain.keys():
+                domain['static'] = True
+            type_changes = {}
+            for i, d_type in enumerate(domain['types']):
+                if d_type['typeID'] != i:
+                    type_changes[d_type['typeID']] = i
+                    d_type['typeID'] = i
+                if "rho" not in d_type.keys():
+                    d_type['rho'] = d_type['mass'] / d_type['volume']
+                if "c" not in d_type.keys():
+                    d_type['c'] = 10
+                if "geometry" not in d_type.keys():
+                    d_type['geometry'] = ""
+            if domain['particles']:
+                for particle in domain['particles']:
+                    if particle['type'] in type_changes:
+                        particle['type'] = type_changes[particle['type']]
+                    if "rho" not in particle.keys():
+                        particle['rho'] = particle['mass'] / particle['volume']
+                    if "c" not in particle.keys():
+                        particle['c'] = 10
+            domain['template_version'] = self.TEMPLATE_VERSION
 
+
+    @classmethod
+    def apply_geometry(cls, particles, d_type, center):
+        def inside(point):
+            namespace = {
+                'cx': center[0], 'cy': center[1], 'cz': center[2],
+                'x': point[0], 'y': point[1], 'z': point[2]
+            }
+            return eval(d_type['geometry'], {}, namespace)
+        ids = []
+        try:
+            for particle in particles:
+                if inside(particle['point']):
+                    ids.append(particle['particle_id'])
+            return {'particles': ids}
+        except SyntaxError as err:
+            message = f"Failed to apply geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
+        except NameError as err:
+            message = f"Failed to apply geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
 
     def convert_to_model(self):
         '''
@@ -391,6 +461,8 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             s_model = self.load()
         s_model['is_spatial'] = False
+        if s_model['defaultMode'] == "discrete-concentration":
+            s_model['defaultMode'] == "dynamic"
         if ".wkgp" in self.path:
             wkgp_path = self.get_dir_name()
             wkgp_path, _ = self.get_unique_path(name=self.get_file(path=wkgp_path),
@@ -444,6 +516,52 @@ class StochSSSpatialModel(StochSSBase):
         return {"expression": expression}
 
 
+    @classmethod
+    def fill_geometry(cls, kwargs, d_type):
+        '''
+        Create particles of the given type with the given properties within the geometry.
+
+        Attributes
+        ----------
+        kwargs : dict
+            Arguments passed to Domain.fill_with_particles.
+        d_type : dict
+            StochSS type definition.
+        '''
+        center = [
+            (kwargs['xmax'] + kwargs['xmin']) / 2,
+            (kwargs['ymax'] + kwargs['ymin']) / 2,
+            (kwargs['zmax'] + kwargs['zmin']) / 2
+        ]
+        kwargs['geometry_ivar'] = cls.__build_geometry(d_type, center)
+        kwargs['type_id'] = d_type['name']
+        kwargs['mass'] = d_type['mass']
+        kwargs['vol'] = d_type['volume']
+        kwargs['rho'] = d_type['rho']
+        kwargs['nu'] = d_type['nu']
+        kwargs['c'] = d_type['c']
+        kwargs['fixed'] = d_type['fixed']
+        try:
+            domain = Domain(
+                0, (kwargs['xmin'],kwargs['xmax']),
+                (kwargs['ymin'],kwargs['ymax']), (kwargs['zmin'],kwargs['zmax'])
+            )
+            domain.fill_with_particles(**kwargs)
+            data = {'type': d_type, 'transformation': None}
+            particles = cls.__build_stochss_domain_particles(domain, data=data)
+            limits = {'x_lim': domain.xlim, 'y_lim': domain.ylim, 'z_lim': domain.zlim}
+            return {'particles': particles, 'limits': limits}
+        except SyntaxError as err:
+            message = f"Failed to fill geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
+        except NameError as err:
+            message = f"Failed to fill geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
+        except ModelError as err:
+            message = f"Failed to fill geometry. Reason given: {err}"
+            raise DomainGeometryError(message, traceback.format_exc()) from err
+
+
     def get_domain(self, path=None, new=False):
         '''
         Get a prospective domain
@@ -462,7 +580,7 @@ class StochSSSpatialModel(StochSSBase):
         return self.__load_domain_from_file(path=path)
 
 
-    def get_domain_plot(self, path=None, new=False):
+    def get_domain_plot(self, path=None, new=False, domains=None):
         '''
         Get a plotly plot of the models domain or a prospective domain
 
@@ -472,44 +590,72 @@ class StochSSSpatialModel(StochSSBase):
             Path to a prospective domain
         new : bool
             Indicates whether or not to load an new domain
+        domains : tuple(spatialpy.Domain, stochss.Domain)
+            Domain objects used to generate plot data.
         '''
-        if new:
-            path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
-        elif path is None:
-            path = self.path
-        try:
-            domain = Domain.read_stochss_domain(path)
-        except DomainError as err:
-            raise DomainFormatError(f"Failed to load the domain.  Reason given: {err}") from err
-        fig = domain.plot_types(return_plotly_figure=True)
-        if not fig['data']:
-            fig['data'].append(self.__get_trace_data(particles=[], name="Un-Assigned"), index=0)
+        if domains is None:
+            if new:
+                path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+                s_domain = StochSSSpatialModel(path).load()['domain']
+            elif path is None:
+                path = self.path
+                s_domain = self.load()['domain']
+            else:
+                s_domain = self.__load_domain_from_file(path)
+            try:
+                domain = Domain.read_stochss_domain(path)
+            except DomainError as err:
+                raise DomainFormatError(f"Failed to load the domain.  Reason given: {err}") from err
         else:
-            s_domain = self.load()['domain']
-            for i, d_type in enumerate(s_domain['types']):
-                if len(s_domain['types']) > 1:
-                    particles = list(filter(lambda particle, key=i: particle['type'] == key,
-                                            s_domain['particles']))
+            domain = domains[0]
+            s_domain = domains[1]
+        fig_temp_path = "/stochss/stochss_templates/domainPlotTemplate.json"
+        with open(fig_temp_path, "r") as fig_temp_file:
+            fig_temp = json.load(fig_temp_file)
+            trace_temp = copy.deepcopy(fig_temp['data'][0])
+        if len(s_domain['particles']) == 0:
+            fig_temp['data'][0]['name'] = "Un-Assigned"
+            # Case #1: no particles and one type
+            if len(s_domain['types']) == 1:
+                return fig_temp, trace_temp
+            # Case #2: no particles and multiple types
+            for index in range(1, len(s_domain['types'])):
+                trace = copy.deepcopy(trace_temp)
+                trace['name'] = s_domain['types'][index]['name']
+                fig_temp['data'].append(trace)
+            return fig_temp, trace_temp
+        fig = domain.plot_types(return_plotly_figure=True)
+        # Case #3: 1 or more particles and one type
+        if len(s_domain['types']) == 1:
+            fig['data'][0]['name'] = "Un-Assigned"
+            ids = list(filter(lambda particle: particle['particle_id'], s_domain['particles']))
+            fig['data'][0]['ids'] = ids
+        # Case #4: 1 or more particles and multiple types
+        else:
+            for index, d_type in enumerate(s_domain['types']):
+                if d_type['name'] == "Un-Assigned":
+                    t_test = lambda trace: trace['name'] in ("Un-Assigned", "UnAssigned")
                 else:
-                    particles = s_domain['particles']
-                ids = list(map(lambda particle: particle['particle_id'], particles))
-                index = list(filter(
-                    lambda trace, name=d_type['name']: trace['name'].endswith(name), fig['data']
-                ))
-                if len(index) !=0:
-                    index = fig['data'].index(index[0])
-                    fig['data'][index]['name'] = d_type['name']
-                    fig['data'][index]['ids'] = ids
+                    t_test = lambda trace, name=d_type['name']: trace['name'] == name
+                traces = list(filter(t_test, fig['data']))
+                if len(traces) == 0:
+                    fig['data'].insert(index, self.__get_trace_data(
+                        particles=[], name=d_type['name'], index=index
+                    ))
                 else:
-                    fig['data'].insert(
-                        i, self.__get_trace_data(particles=[], name=d_type['name'], index=i)
-                    )
-                    fig['data'][i]['ids'] = ids
+                    particles = list(filter(
+                        lambda particle, key=d_type['typeID']: particle['type'] == key,
+                        s_domain['particles']
+                    ))
+                    ids = list(map(lambda particle: particle['particle_id'], particles))
+                    trace = traces[0]
+                    trace['name'] = d_type['name']
+                    trace['ids'] = ids
         fig['layout']['width'] = None
         fig['layout']['height'] = None
         fig['layout']['autosize'] = True
         fig['config'] = {"responsive":True}
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
+        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder), trace_temp
 
 
     def get_notebook_data(self):
@@ -526,8 +672,7 @@ class StochSSSpatialModel(StochSSBase):
         return {"path":path, "new":True, "models":{"s_model":self.model, "model":s_model}}
 
 
-    @classmethod
-    def get_particles_from_3d_domain(cls, data):
+    def get_particles_from_3d_domain(self, data):
         '''
         Create a new 3D domain and return the particles
 
@@ -536,6 +681,8 @@ class StochSSSpatialModel(StochSSBase):
         data : dict
             Data used to create the 3D domain
         '''
+        if data['type']['type_id'] == "Un-Assigned":
+            data['type']['type_id'] = "UnAssigned"
         if data['transformation'] is None:
             xlim = data['xLim']
             ylim = data['yLim']
@@ -548,14 +695,15 @@ class StochSSSpatialModel(StochSSBase):
         dimensions += bool(ylim[1] - ylim[0])
         dimensions += bool(zlim[1] - zlim[0])
         if dimensions > 2:
-            s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, nx=data['nx'],
-                                               ny=data['ny'], nz=data['nz'], **data['type'])
+            s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, numx=data['nx'],
+                                               numy=data['ny'], numz=data['nz'], **data['type'])
         else:
             s_domain = Domain.create_2D_domain(xlim=xlim, ylim=ylim,
-                                               nx=data['nx'], ny=data['ny'], **data['type'])
-        domain = cls.__build_stochss_domain(s_domain=s_domain)
+                                               numx=data['nx'], numy=data['ny'], **data['type'])
+        domain = self.__build_stochss_domain(s_domain=s_domain, data=data)
         limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
-        return {"particles":domain['particles'], "limits":limits}
+        resp = {"particles":domain['particles'], "limits":limits}
+        return resp
 
 
     @classmethod
@@ -633,22 +781,28 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             self.__read_model_file()
         self.model['name'] = self.get_name()
-        if not self.model['defaultMode']:
-            self.model['defaultMode'] = "discrete"
-        if "timestepSize" not in self.model['modelSettings'].keys():
-            self.model['modelSettings']['timestepSize'] = 1e-5
-        self.__update_domain()
-        if "boundaryConditions" not in self.model.keys():
-            self.model['boundaryConditions'] = []
-        for species in self.model['species']:
-            if "types" not in species.keys():
-                species['types'] = list(range(1, len(self.model['domain']['types'])))
-            if "diffusionConst" not in species.keys():
-                diff = 0.0 if "diffusionCoeff" not in species.keys() else species['diffusionCoeff']
-                species['diffusionConst'] = diff
-        for reaction in self.model['reactions']:
-            if "types" not in reaction.keys():
-                reaction['types'] = list(range(1, len(self.model['domain']['types'])))
+        if "template_version" not in self.model or self.model['template_version'] != self.TEMPLATE_VERSION:
+            if not self.model['defaultMode']:
+                self.model['defaultMode'] = "discrete"
+            elif self.model['defaultMode'] == "dynamic":
+                self.model['defaultMode'] = "discrete-concentration"
+            if "timestepSize" not in self.model['modelSettings'].keys():
+                self.model['modelSettings']['timestepSize'] = 1e-5
+            self.__update_domain()
+            if "boundaryConditions" not in self.model.keys():
+                self.model['boundaryConditions'] = []
+            for species in self.model['species']:
+                if "types" not in species.keys():
+                    species['types'] = list(range(1, len(self.model['domain']['types'])))
+                if "diffusionConst" not in species.keys():
+                    diff = 0.0 if "diffusionCoeff" not in species.keys() else species['diffusionCoeff']
+                    species['diffusionConst'] = diff
+            for reaction in self.model['reactions']:
+                if "odePropensity" not in reaction.keys():
+                    reaction['odePropensity'] = reaction['propensity']
+                if "types" not in reaction.keys():
+                    reaction['types'] = list(range(1, len(self.model['domain']['types'])))
+            self.model['template_version'] = self.TEMPLATE_VERSION
         return self.model
 
 

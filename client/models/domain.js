@@ -33,7 +33,8 @@ module.exports = State.extend({
     x_lim: 'object',
     y_lim: 'object',
     z_lim: 'object',
-    static: 'boolean'
+    static: 'boolean',
+    template_version: 'number'
   },
   collections: {
     types: Types,
@@ -71,6 +72,23 @@ module.exports = State.extend({
     let id = this.def_type_id;
     this.def_type_id += 1;
     return id;
+  },
+  realignTypes: function (oldType) {
+    this.def_type_id -= 1;
+    this.types.forEach((type) => {
+      if(type.typeID > oldType) {
+        let id = type.typeID - 1;
+        if(type.name === type.typeID.toString()) {
+          type.name = id.toString();
+        }
+        type.typeID = id;
+      }
+    });
+    this.particles.forEach((particle) => {
+      if(particle.type > oldType) {
+        particle.type -= 1;
+      }
+    });
   },
   validateModel: function () {
     if(!this.particles.validateCollection()) return false;

@@ -18,32 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 //views
 let View = require('ampersand-view');
-let TypesView = require('./component-types');
 //templates
-let template = require('../templates/reactionTypes.pug');
+let template = require('../templates/viewParticle.pug');
 
 module.exports = View.extend({
   template: template,
-  initialize: function (args) {
-    View.prototype.initialize.apply(this, arguments);
-    this.modelType = "reaction";
-    this.baseModel = this.parent.parent.collection.parent;
-  },
-  render: function () {
-    View.prototype.render.apply(this, arguments);
-    this.renderTypes();
-  },
-  renderTypes: function () {
-    if(this.typesView) {
-      this.typesView.remove();
-    }
-    this.typesView = this.renderCollection(
-      this.baseModel.domain.types,
-      TypesView,
-      this.queryByHook("reaction-types-container"),
-      {"filter": function (model) {
-        return model.typeID != 0;
-      }}
-    );
+  initialize: function (attrs, options) {
+    this.type = this.model.collection.parent.types.get(this.model.type, "typeID").name;
   }
 });

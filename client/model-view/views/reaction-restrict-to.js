@@ -17,13 +17,33 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //views
-var View = require('ampersand-view');
+let View = require('ampersand-view');
+let DomainTypesView = require('./component-types');
 //templates
-var template = require('../templates/includes/viewParticle.pug');
+let template = require('../templates/reactionRestrictTo.pug');
 
 module.exports = View.extend({
   template: template,
-  initialize: function (attrs, options) {
-    this.type = this.model.collection.parent.types.get(this.model.type, "typeID").name;
+  initialize: function (args) {
+    View.prototype.initialize.apply(this, arguments);
+    this.modelType = "reaction";
+    this.baseModel = this.parent.parent.collection.parent;
+  },
+  render: function () {
+    View.prototype.render.apply(this, arguments);
+    this.renderDomainTypes();
+  },
+  renderDomainTypes: function () {
+    if(this.domainTypesView) {
+      this.domainTypesView.remove();
+    }
+    this.domainTypesView = this.renderCollection(
+      this.baseModel.domain.types,
+      DomainTypesView,
+      this.queryByHook("reaction-types-container"),
+      {"filter": function (model) {
+        return model.typeID != 0;
+      }}
+    );
   }
 });

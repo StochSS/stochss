@@ -174,9 +174,11 @@ class LoadDomainAPIHandler(APIHandler):
         log.info("Generating the domain plot")
         try:
             model = StochSSSpatialModel(path=path)
-            fig = json.loads(model.get_domain_plot(path=d_path, new=new))
+            fig, trace_temp = model.get_domain_plot(path=d_path, new=new)
             log.info("Loading the domain plot")
-            resp = {"fig":fig}
+            if isinstance(fig, str):
+                fig = json.loads(fig)
+            resp = {"fig":fig, "trace_temp": trace_temp}
             log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
@@ -346,7 +348,9 @@ class LoadParticleTypesDescriptions(APIHandler):
         self.set_header('Content-Type', 'application/json')
         try:
             folder = StochSSFolder(path="")
-            test = lambda ext, root, file: bool("trash" in root.split("/"))
+            test = lambda ext, root, file: bool(
+                "trash" in root.split("/") or file.startswith('.') or 'wkfl' in root or root.startswith('.')
+            )
             resp = folder.get_file_list(ext=".txt", test=test)
             log.debug("Response: {resp}")
             self.write(resp)
@@ -375,7 +379,8 @@ class Create3DDomainAPIHandler(APIHandler):
         log.debug("Data used to create the domain: {data}")
         try:
             log.info("Generating new particles")
-            resp = StochSSSpatialModel.get_particles_from_3d_domain(data=data)
+            model = StochSSSpatialModel(path="")
+            resp = model.get_particles_from_3d_domain(data=data)
             log.debug(f"Number of Particles: {len(resp['particles'])}")
             log.info("Successfully created new particles")
             self.write(resp)
@@ -473,6 +478,61 @@ class CreateNewBoundCondAPIHandler(APIHandler):
             model = StochSSSpatialModel(path=path)
             resp = model.create_boundary_condition(kwargs)
             log.info("Successfully created the new boundary condition")
+            log.debug(f"Response Message: {resp}")
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+class ApplyGeometryAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler apply type and properties to particles.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Apply type and properties to particles.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        data = json.loads(self.request.body.decode())
+        log.debug(f"Type used to apply geometry: {data['type']}")
+        try:
+            log.info("Applying type and properties to particles.")
+            resp = StochSSSpatialModel.apply_geometry(data['particles'], data['type'], data['center'])
+            log.info("Successfully applied type and properties to particles.")
+            log.debug(f"Response Message: {resp}")
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+class FillGeometryAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler fill geometry with particles.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Fill a geomatry with particles.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        data = json.loads(self.request.body.decode())
+        log.debug(f"Agrs passed to Domain.fill_with_particles: {data['kwargs']}")
+        log.debug(f"Type used to fill geometry: {data['type']}")
+        try:
+            log.info("Creating particles within the geometry.")
+            resp = StochSSSpatialModel.fill_geometry(data['kwargs'], data['type'])
+            log.info("Successfully filled the geometry particles.")
             log.debug(f"Response Message: {resp}")
             self.write(resp)
         except StochSSAPIError as err:

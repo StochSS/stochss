@@ -1,0 +1,175 @@
+div#domain-limits-editor.card
+
+  div.card-header.pb-0
+
+    h3.inline.mr-3 Limits
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="domain-limits-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="domain-limits-edit-tab" data-toggle="tab" href="#edit-domain-limits") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="domain-limits-view-tab" data-toggle="tab" href="#view-domain-limits") View
+
+    button.btn.btn-ouline-collapse(data-toggle="collapse" data-target="#domain-limits-section" data-hook="collapse-domain-limits") -
+
+  div.collapse.show(id="domain-limits-section" data-hook="domain-limits-section")
+
+    div.card-body.tab-content
+
+      div.tab-pane.active(id="edit-domain-limits" data-hook="edit-domain-limits")
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+          
+          div.col-sm-3
+
+            h6.inline <b>X-Axis</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Y-Axis</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Z-Axis</b>
+
+        div.mt-3.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Minimum</b>
+
+          div.col-sm-3
+
+            div(data-hook="x-lim-min" data-target="limitation" data-name="x_lim" data-index="0")
+
+          div.col-sm-3
+
+            div(data-hook="y-lim-min" data-target="limitation" data-name="y_lim" data-index="0")
+
+          div.col-sm-3
+
+            div(data-hook="z-lim-min" data-target="limitation" data-name="z_lim" data-index="0")
+
+        hr
+
+        div.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Maximum</b>
+
+          div.col-sm-3
+
+            div(data-hook="x-lim-max" data-target="limitation" data-name="x_lim" data-index="1")
+
+          div.col-sm-3
+
+            div(data-hook="y-lim-max" data-target="limitation" data-name="y_lim" data-index="1")
+
+          div.col-sm-3
+
+            div(data-hook="z-lim-max" data-target="limitation" data-name="z_lim" data-index="1")
+
+        hr
+
+        div.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Reflect</b>
+
+          div.col-sm-3
+
+            input(type="checkbox" id="x-reflect" data-hook="reflect_x" data-target="reflect" disabled)
+
+          div.col-sm-3
+
+            input(type="checkbox" id="y-reflect" data-hook="reflect_y" data-target="reflect" disabled)
+
+          div.col-sm-3
+
+            input(type="checkbox" id="z-reflect" data-hook="reflect_z" data-target="reflect" disabled)
+
+      div.tab-pane(id="view-domain-limits" data-hook="view-domain-limits")
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+          
+          div.col-sm-3
+
+            h6.inline <b>X-Axis</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Y-Axis</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Z-Axis</b>
+
+        div.mt-3.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Minimum</b>
+
+          div.col-sm-3
+
+            div=this.model.x_lim[0]
+
+          div.col-sm-3
+
+            div=this.model.y_lim[0]
+
+          div.col-sm-3
+
+            div=this.model.z_lim[0]
+
+        hr
+
+        div.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Maximum</b>
+
+          div.col-sm-3
+
+            div=this.model.x_lim[1]
+
+          div.col-sm-3
+
+            div=this.model.y_lim[1]
+
+          div.col-sm-3
+
+            div=this.model.z_lim[1]
+
+        hr
+
+        div.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Reflect</b>
+
+          div.col-sm-3
+
+            input(type="checkbox" id="x-reflect" data-hook="view-reflect_x" data-target="reflect" disabled)
+
+          div.col-sm-3
+
+            input(type="checkbox" id="y-reflect" data-hook="view-reflect_y" data-target="reflect" disabled)
+
+          div.col-sm-3
+
+            input(type="checkbox" id="z-reflect" data-hook="view-reflect_z" data-target="reflect" disabled)

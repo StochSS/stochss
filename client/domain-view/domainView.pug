@@ -1,0 +1,126 @@
+div#domain-view
+
+  div(data-hook="domain-properties-container")
+
+  div(data-hook="domain-limits-container")
+
+  div(data-hook="domain-types-container")
+
+  div#domain-particles-editor.card(data-hook="domain-particles-editor")
+
+    div.card-header.pb-0
+
+      h3.inline.mr-3 Particles
+
+      div.inline.mr-3
+
+        ul.nav.nav-tabs.card-header-tabs(id="domain-particles-tabs")
+
+          li.nav-item
+
+            a.nav-link.tab.active(data-hook="new-particle-tab" data-toggle="tab" href="#create-new-particle") Create New
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="edit-particle-tab" data-toggle="tab" href="#edit-selected-particle") Edit Selected
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="particle-types-tab" data-toggle="tab" href="#set-particle-types") Set Types from File
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="3d-domain-tab" data-toggle="tab" href="#create-3d-domain") Create 3D Domain
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="import-particles-tab" data-toggle="tab" href="#import-particles") Import Mesh
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="fill-geometry-tab" data-toggle="tab" href="#fill-geometry") Fill Geometry
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-particles-section" data-hook="collapse-domain-particles") -
+
+    div.collapse.show(id="domain-particles-section" data-hook="domain-particles-section")
+
+      div.card-body.tab-content
+
+        div.tab-pane.active(id="create-new-particle" data-hook="new-particle-section")
+
+          div(data-hook="new-particle-container")
+
+          button.btn.btn-outline-primary.box-shadow(data-hook="add-new-particle") Add Particle
+
+          div.mdl-edit-btn.saving-status.inline(data-hook="anp-in-progress")
+
+            div.spinner-grow.mr-2
+
+            span Adding particle ...
+
+          div.mdl-edit-btn.saved-status.inline(data-hook="anp-complete")
+
+            span Particle Added
+
+        div.tab-pane(id="edit-selected-particle" data-hook="edit-particle-section")
+
+          div.text-info.mb-4(data-hook="edit-select-message" style="display: none")
+            | Click on a particle in the Domain section to begin editing.
+
+          div(data-hook="edit-particle-container")
+
+          button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-selected-particle") Save Particle
+
+          div.mdl-edit-btn.saving-status.inline(data-hook="esp-in-progress")
+
+            div.spinner-grow.mr-2
+
+            span Saving particle ...
+
+          div.mdl-edit-btn.saved-status.inline(data-hook="esp-complete")
+
+            span Particle Saved
+
+          button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="remove-selected-particle") Remove Particle
+
+          div.mdl-edit-btn.saving-status.inline(data-hook="rsp-in-progress")
+
+            div.spinner-grow.mr-2
+
+            span Removing particle ...
+
+          div.mdl-edit-btn.saved-status.inline(data-hook="rsp-complete")
+
+            span Particle Removed
+
+        div.tab-pane(id="set-particle-types" data-hook="set-particle-types-section")
+
+          div(data-hook="particle-types-container")
+
+        div.tab-pane(id="create-3d-domain" data-hook="3d-domain-section")
+
+          div(data-hook="3d-domain-container")
+
+        div.tab-pane(id="import-particles" data-hook="import-particles-section")
+
+          div(data-hook="import-particles-container")
+
+        div.tab-pane(id="fill-geometry" data-hook="fill-geometry-section")
+
+          div(data-hook="fill-geometry-container")
+
+  div#domain-figure-preview.card(data-hook="domain-figure-preview")
+
+    div.card-header.pb-0
+
+      h3.inline.mr-3 Domain
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-figure-container" data-hook="collapse-domain-figure") -
+
+    div.collapse.show(id="domain-figure-container" data-hook="domain-figure-container")
+
+      div.card-body
+
+        div(id="domain-figure" data-hook="domain-figure" style="height: 800px")
+
+        div.text-danger(data-hook="domain-figure-empty") The domain currently has no particles to display

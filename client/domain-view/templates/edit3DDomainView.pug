@@ -1,0 +1,231 @@
+div.mx-1
+
+  h4.mt-3 Particle Distribution
+
+  div
+
+    hr
+
+    div.mb-3.mx-1.row.head.align-items-baseline
+
+      div.col-sm-3
+
+      div.col-sm-2
+
+        h6.inline <b>X-Plane</b>
+
+      div.col-sm-2
+
+        h6.inline <b>Y-Plane</b>
+
+      div.col-sm-2
+
+        h6.inline <b>Z-Plane</b>
+
+      div.col-sm-3
+
+        h6.inline <b>Total</b>
+
+    div.row
+
+      div.col-sm-3
+
+        h6.inline <b>Number of Particles</b>
+
+      div.col-sm-2
+
+        div(data-target="edit-3d-domain-n" data-hook="edit-3d-domain-nx" data-key="nx")
+
+      div.col-sm-2
+
+        div(data-target="edit-3d-domain-n" data-hook="edit-3d-domain-ny" data-key="ny")
+
+      div.col-sm-2
+
+        div(data-target="edit-3d-domain-n" data-hook="edit-3d-domain-nz" data-key="nz")
+
+      div.col-sm-3
+
+        div(data-target="3d-domain-n" data-hook="3d-domain-n")
+
+  h4.mt-3 Domain Limits
+
+  div
+
+    div.mx-1.row.head.align-items-baseline
+
+      div.col-sm-3
+      
+      div.col-sm-3
+
+        h6.inline <b>X-Axis</b>
+
+      div.col-sm-3
+
+        h6.inline <b>Y-Axis</b>
+
+      div.col-sm-3
+
+        h6.inline <b>Z-Axis</b>
+
+    div.mt-3.mx-1.row
+
+      div.col-sm-3
+
+        h6.inline <b>Minimum</b>
+
+      div.col-sm-3
+
+        div(data-hook="edit-3d-domain-x-lim-min" data-target="edit-3d-domain-limitation" data-name="xLim" data-index="0")
+
+      div.col-sm-3
+
+        div(data-hook="edit-3d-domain-y-lim-min" data-target="edit-3d-domain-limitation" data-name="yLim" data-index="0")
+
+      div.col-sm-3
+
+        div(data-hook="edit-3d-domain-z-lim-min" data-target="edit-3d-domain-limitation" data-name="zLim" data-index="0")
+
+    hr
+
+    div.mx-1.row
+
+      div.col-sm-3
+
+        h6.inline <b>Maximum</b>
+
+      div.col-sm-3
+
+        div(data-hook="edit-3d-domain-x-lim-max" data-target="edit-3d-domain-limitation" data-name="xLim" data-index="1")
+
+      div.col-sm-3
+
+        div(data-hook="edit-3d-domain-y-lim-max" data-target="edit-3d-domain-limitation" data-name="yLim" data-index="1")
+
+      div.col-sm-3
+
+        div(data-hook="edit-3d-domain-z-lim-max" data-target="edit-3d-domain-limitation" data-name="zLim" data-index="1")
+
+  div.mt-3
+
+    h4.inline Advanced
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#edit-3D-domain-advanced" data-hook="collapse-3D-domain-advanced") +
+
+  div.collapse(id="edit-3D-domain-advanced" data-hook="3D-domain-advanced-container")
+
+    div.mt-3
+
+      h5.inline.mr-2 Type:
+
+      div.inline(data-hook="edit-3d-domain-type-select")
+
+    div.mt-3
+
+      h5 Type Defaults
+
+      hr
+
+      div.mb-3.mx-1.row.head.align-items-baseline
+
+        div.col-sm-2
+
+          h6.inline <b>Mass</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Volume</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Density</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Viscosity</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Speed of Sound</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Fixed</b>
+
+      div.row.pl-3
+
+        div.col-sm-2
+
+          div(data-hook="edit-3d-domain-td-mass")
+
+        div.col-sm-2
+
+          div(data-hook="edit-3d-domain-td-vol")
+
+        div.col-sm-2
+
+          div(data-hook="edit-3d-domain-td-rho")
+
+        div.col-sm-2
+
+          div(data-hook="edit-3d-domain-td-nu")
+
+        div.col-sm-2
+
+          div(data-hook="edit-3d-domain-td-c")
+
+        div.col-sm-2
+
+          input(type="checkbox" data-hook="edit-3d-domain-td-fixed" disabled)
+
+    div.my-3
+
+      h5 Particle Transformations
+
+      hr
+
+      div.mb-3.mx-1.row.head.align-items-baseline
+
+        div.col-sm-4
+
+          h6.inline <b>X-Axis</b>
+
+        div.col-sm-4
+
+          h6.inline <b>Y-Axis</b>
+
+        div.col-sm-4
+
+          h6.inline <b>Z-Axis</b>
+
+      div.row
+
+        div.col-sm-4
+
+          div(data-target="edit-3d-domain-trans" data-hook="edit-3d-domain-x-trans" data-index="0")
+
+        div.col-sm-4
+
+          div(data-target="edit-3d-domain-trans" data-hook="edit-3d-domain-y-trans" data-index="1")
+
+        div.col-sm-4
+
+          div(data-target="edit-3d-domain-trans" data-hook="edit-3d-domain-z-trans" data-index="2")
+
+  div.inline
+
+    button.btn.btn-outline-primary(data-hook="build-3d-domain") Build Domain
+
+  div.mdl-edit-btn.saving-status.inline(data-hook="c3dd-in-progress")
+
+    div.spinner-grow.mr-2
+
+    span Creating domain ...
+
+  div.mdl-edit-btn.saved-status.inline(data-hook="c3dd-complete")
+
+    span Domain successfully created
+
+  div.mdl-edit-btn.save-error-status(data-hook="c3dd-error")
+
+    span(data-hook="c3dd-action-error")

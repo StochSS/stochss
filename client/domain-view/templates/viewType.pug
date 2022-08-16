@@ -1,0 +1,48 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 1)
+    hr
+
+  div.row
+
+    div.col-sm-6
+
+      div.row
+
+        div.col-sm-6
+
+          div=this.model.name
+
+        div.col-sm-6
+
+          div=this.model.numParticles
+
+      hr
+
+      h6.inline.mr-2 <b>Geometry</b>:
+
+      div.inline=this.model.geometry
+
+    div.col-sm-6
+
+      div.row
+
+        div.col-sm-6
+
+          div="Mass: " + this.model.mass
+
+          div="Volume: " + this.model.volume
+
+          div="Density: " + this.model.rho
+
+        div.col-sm-6
+
+          div="Viscosity: " + this.model.nu
+
+          div="Speed of Sound: " + this.model.c
+
+          div
+
+            span.mr-3(for="view-td-fixed") Fixed:
+
+            input(type="checkbox" data-hook="view-td-fixed" disabled)

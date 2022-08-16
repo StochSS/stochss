@@ -43,7 +43,8 @@ module.exports = Model.extend({
     defaultID: 'number',
     defaultMode: 'string',
     annotation: 'string',
-    volume: 'any'
+    volume: 'any',
+    template_version: 'number'
   },
   collections: {
     species: Species,

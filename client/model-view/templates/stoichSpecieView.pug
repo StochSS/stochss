@@ -1,0 +1,21 @@
+div
+
+  label.select
+
+    div.inline(data-hook="custom-decrement")
+
+      button.btn.btn-outline-secondary.btn-sm(data-hook='decrement') -
+
+    span.custom(data-hook="ratio")
+
+    div.inline(data-hook="custom-increment")
+    
+      button.btn.btn-outline-secondary.btn-sm(data-hook='increment') +
+
+    select(data-hook="select-stoich-specie")
+
+      span.message.message-below.message-error(data-hook="message-container")
+
+        p(data-hook="message-text")
+
+    button.btn.btn-outline-secondary.custom.btn-sm(data-hook='custom-remove') X

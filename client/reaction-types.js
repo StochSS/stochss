@@ -55,11 +55,11 @@ module.exports = {
   'custom-massaction': {
     reactants: [ { ratio: 1 } ],
     products: [ { ratio: 1 } ],
-    label: 'Custom mass action'
+    label: 'Custom Mass Action'
   },
   'custom-propensity': {
     reactants: [ { ratio: 1 } ],
     products: [ { ratio: 1 } ],
-    label: 'Custom propensity'
+    label: 'Custom Propensity'
   }
 }
