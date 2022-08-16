@@ -128,7 +128,7 @@
             "name": "rxn2",
             "reactionType": "destruction",
             "summary": "X \\rightarrow \\emptyset",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -168,7 +168,7 @@
             "name": "rxn3",
             "reactionType": "split",
             "summary": "X \\rightarrow X+Y",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -245,7 +245,7 @@
             "name": "rxn4",
             "reactionType": "destruction",
             "summary": "Y \\rightarrow \\emptyset",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [

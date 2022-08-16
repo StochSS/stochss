@@ -171,7 +171,7 @@
             "name": "SP",
             "reactionType": "change",
             "summary": "Susceptible \\rightarrow Prescribed\\_User",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -230,7 +230,7 @@
             "name": "SA_a",
             "reactionType": "change",
             "summary": "Susceptible \\rightarrow Addicted",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -289,7 +289,7 @@
             "name": "SA_p",
             "reactionType": "change",
             "summary": "Susceptibl \\rightarrow Addicted",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -348,7 +348,7 @@
             "name": "PA",
             "reactionType": "change",
             "summary": "Prescribed\\_User \\rightarrow Addicted",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -407,7 +407,7 @@
             "name": "PS",
             "reactionType": "change",
             "summary": "Prescribed\\_User \\rightarrow Susceptible",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -466,7 +466,7 @@
             "name": "AR",
             "reactionType": "change",
             "summary": "Addicted \\rightarrow Rehab",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -525,7 +525,7 @@
             "name": "RA",
             "reactionType": "change",
             "summary": "Rehab \\rightarrow Addicted",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -584,7 +584,7 @@
             "name": "RS",
             "reactionType": "change",
             "summary": "Rehab \\rightarrow Susceptible",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -643,7 +643,7 @@
             "name": "mu_S",
             "reactionType": "split",
             "summary": "Susceptible \\rightarrow Susceptible+Natural\\_Deaths",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -720,7 +720,7 @@
             "name": "mu_P",
             "reactionType": "split",
             "summary": "Prescribed\\_User \\rightarrow Susceptible+Natural\\_Deaths",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -797,7 +797,7 @@
             "name": "mu_R",
             "reactionType": "split",
             "summary": "Rehab \\rightarrow Susceptible+Natural\\_Deaths",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -874,7 +874,7 @@
             "name": "mu_prime_A",
             "reactionType": "split",
             "summary": "Addicted \\rightarrow Susceptible+Addicted\\_Deaths",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [

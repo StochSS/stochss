@@ -170,7 +170,7 @@
             "name": "r2",
             "reactionType": "merge",
             "summary": "s2+s4 \\rightarrow s3",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [

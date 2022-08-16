@@ -151,7 +151,7 @@
             "name": "du",
             "reactionType": "destruction",
             "summary": "A \\rightarrow \\emptyset",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
@@ -191,7 +191,7 @@
             "name": "dv",
             "reactionType": "destruction",
             "summary": "B \\rightarrow \\emptyset",
-            "massaction": false,
+            "massaction": true,
             "propensity": "",
             "annotation": "",
             "subdomains": [
