@@ -59,6 +59,7 @@ class StochSSSpatialModel(StochSSBase):
         if new:
             if model is None:
                 model = self.get_model_template()
+                model['defaultMode'] = "discrete"
             if not model['is_spatial']:
                 model['is_spatial'] = True
             if isinstance(model, str):

@@ -79,7 +79,7 @@ module.exports = View.extend({
       this.setReadOnlyMode("model-mode");
       this.setReadOnlyMode("system-volume");
     }else {
-      if(this.model.defaultMode === ""){
+      if(this.model.defaultMode === "" && !this.model.is_spatial){
         if(this.model.is_spatial) {
           this.model.defaultMode = "discrete";
           $(this.queryByHook("spatial-discrete")).prop('checked', true);
