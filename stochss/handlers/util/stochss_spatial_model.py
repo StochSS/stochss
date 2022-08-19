@@ -84,6 +84,9 @@ class StochSSSpatialModel(StochSSBase):
             ########################################################################################
             '''
             __class__ = f"__main__.{boundary_condition['name']}"
+            def __init__(self):
+                pass
+
             def expression(self): # pylint: disable=no-self-use
                 '''
                 Custom expression for boundary condition
