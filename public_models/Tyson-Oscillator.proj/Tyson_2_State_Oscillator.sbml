@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<sbml xmlns="http://www.sbml.org/sbml/level3/version2/core" level="3" version="2">
+  <model name="Tyson_2_State_Oscillator">
+    <listOfCompartments>
+      <compartment id="vol" spatialDimensions="3" size="300" constant="true"/>
+    </listOfCompartments>
+    <listOfSpecies>
+      <species id="X" compartment="vol" initialAmount="196" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+      <species id="Y" compartment="vol" initialAmount="255" substanceUnits="mole" hasOnlySubstanceUnits="false" boundaryCondition="false" constant="false"/>
+    </listOfSpecies>
+    <listOfParameters>
+      <parameter id="P" value="2" constant="true"/>
+      <parameter id="kt" value="20" constant="true"/>
+      <parameter id="kd" value="1" constant="true"/>
+      <parameter id="a0" value="0.005" constant="true"/>
+      <parameter id="a1" value="0.05" constant="true"/>
+      <parameter id="a2" value="0.1" constant="true"/>
+      <parameter id="kdx" value="1" constant="true"/>
+    </listOfParameters>
+    <listOfReactions>
+      <reaction id="rxn1" reversible="true">
+        <listOfProducts>
+          <speciesReference species="X" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <divide/>
+              <apply>
+                <times/>
+                <ci> vol </ci>
+                <cn type="integer"> 1 </cn>
+              </apply>
+              <apply>
+                <plus/>
+                <cn type="integer"> 1 </cn>
+                <apply>
+                  <divide/>
+                  <apply>
+                    <times/>
+                    <ci> Y </ci>
+                    <ci> Y </ci>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> vol </ci>
+                    <ci> vol </ci>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="rxn2" reversible="true">
+        <listOfReactants>
+          <speciesReference species="X" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> kdx </ci>
+              <ci> X </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="rxn3" reversible="true">
+        <listOfReactants>
+          <speciesReference species="X" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <listOfProducts>
+          <speciesReference species="X" stoichiometry="1" constant="true"/>
+          <speciesReference species="Y" stoichiometry="1" constant="true"/>
+        </listOfProducts>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> kt </ci>
+              <ci> X </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="rxn4" reversible="true">
+        <listOfReactants>
+          <speciesReference species="Y" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <times/>
+              <ci> kd </ci>
+              <ci> Y </ci>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+      <reaction id="rxn5" reversible="true">
+        <listOfReactants>
+          <speciesReference species="Y" stoichiometry="1" constant="true"/>
+        </listOfReactants>
+        <kineticLaw>
+          <math xmlns="http://www.w3.org/1998/Math/MathML">
+            <apply>
+              <divide/>
+              <ci> Y </ci>
+              <apply>
+                <plus/>
+                <ci> a0 </ci>
+                <apply>
+                  <times/>
+                  <ci> a1 </ci>
+                  <apply>
+                    <divide/>
+                    <ci> Y </ci>
+                    <ci> vol </ci>
+                  </apply>
+                </apply>
+                <apply>
+                  <divide/>
+                  <apply>
+                    <times/>
+                    <ci> a2 </ci>
+                    <ci> Y </ci>
+                    <ci> Y </ci>
+                  </apply>
+                  <apply>
+                    <times/>
+                    <ci> vol </ci>
+                    <ci> vol </ci>
+                  </apply>
+                </apply>
+              </apply>
+            </apply>
+          </math>
+        </kineticLaw>
+      </reaction>
+    </listOfReactions>
+  </model>
+</sbml>

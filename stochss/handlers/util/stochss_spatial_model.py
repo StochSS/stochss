@@ -59,6 +59,7 @@ class StochSSSpatialModel(StochSSBase):
         if new:
             if model is None:
                 model = self.get_model_template()
+                model['defaultMode'] = "discrete"
             if not model['is_spatial']:
                 model['is_spatial'] = True
             if isinstance(model, str):
@@ -83,6 +84,9 @@ class StochSSSpatialModel(StochSSBase):
             ########################################################################################
             '''
             __class__ = f"__main__.{boundary_condition['name']}"
+            def __init__(self):
+                pass
+
             def expression(self): # pylint: disable=no-self-use
                 '''
                 Custom expression for boundary condition

@@ -350,12 +350,12 @@ class StochSSNotebook(StochSSBase):
                     reac_str = f'{pad}{reac["name"]} = Reaction(name="{reac["name"]}", '
                     reac_str += f'reactants={react_str}, products={prod_str}, '
                     if not reac['massaction']:
-                        reac_str += f'propensity_function="{reac["propensity"]}"'
-                        reac_str += f'odepropensity_function="{reac["odePropensity"]}"'
+                        reac_str += f'propensity_function="{reac["propensity"]}", '
+                        reac_str += f'ode_propensity_function="{reac["odePropensity"]}"'
                     else:
                         reac_str += f'rate="{reac["rate"]["name"]}"'
                     if self.s_model['is_spatial']:
-                        types = [f"self.{type_refs[d_type]}" for d_type in reac["types"]]
+                        types = [f"self.{type_refs[d_type].upper()}" for d_type in reac["types"]]
                         if len(types) < len(type_refs):
                             reac_str += f', restrict_to=[{", ".join(types)}]'
                     reac_str += ")"
@@ -402,7 +402,7 @@ class StochSSNotebook(StochSSBase):
                     names.append(spec["name"])
                     spec_str = f'{pad}{spec["name"]} = Species(name="{spec["name"]}", '
                     if self.s_model['is_spatial']:
-                        types = [f"self.{type_refs[d_type]}" for d_type in spec['types']]
+                        types = [f"self.{type_refs[d_type].upper()}" for d_type in spec['types']]
                         spec_str += f"diffusion_coefficient={spec['diffusionConst']}, "
                         spec_str += f"restrict_to=[{', '.join(types)}])"
                     else:

@@ -371,10 +371,10 @@ class StochSSModel(StochSSBase):
         s_path = os.path.join(dirname, s_file)
 
         g_model = self.convert_to_gillespy2()
-        with export(g_model, path=tempfile.NamedTemporaryFile().name) as tmp_path:
-            self.log("debug", f"Temp path to the sbml file: {tmp_path}")
-            with open(tmp_path, "r", encoding="utf-8") as sbml_file:
-                s_doc = sbml_file.read()
+        tmp_path = export(g_model, path=tempfile.NamedTemporaryFile().name)
+        self.log("debug", f"Temp path to the sbml file: {tmp_path}")
+        with open(tmp_path, "r", encoding="utf-8") as sbml_file:
+            s_doc = sbml_file.read()
 
         message = f"{self.get_file()} was successfully converted to {s_file}"
         return {"Message":message}, {"path":s_path, "document":s_doc}
