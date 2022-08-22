@@ -121,7 +121,7 @@ class ParameterSweep(StochSSJob):
                 end = self.settings['timespanSettings']['endSim']
                 step_size = self.settings['timespanSettings']['timeStep']
                 self.g_model.timespan(
-                    TimeSpan(numpy(0, end + step_size, step_size))
+                    TimeSpan.arange(step_size, t=end + step_size)
                 )
         kwargs = {"model":self.g_model, "settings":run_settings}
         parameters = []

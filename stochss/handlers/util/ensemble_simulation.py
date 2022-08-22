@@ -89,7 +89,7 @@ class EnsembleSimulation(StochSSJob):
                 end = self.settings['timespanSettings']['endSim']
                 step_size = self.settings['timespanSettings']['timeStep']
                 self.g_model.timespan(
-                    TimeSpan(numpy.arange(0, end + step_size, step_size))
+                    TimeSpan.arange(step_size, t=end + step_size)
                 )
 
 
