@@ -121,7 +121,7 @@ class StochSSNotebook(StochSSBase):
             else:
                 commented = False
             start = f"{pad}# " if commented else pad
-            if self.nb_type > self.PARAMETER_SWEEP_2D:
+            if self.nb_type in (self.MODEL_EXPLORATION, self.MODEL_INFERENCE):
                 del_dir = ", delete_directory=False"
             else:
                 del_dir = ""
