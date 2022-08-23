@@ -79,27 +79,24 @@ module.exports = View.extend({
       this.setReadOnlyMode("model-mode");
       this.setReadOnlyMode("system-volume");
     }else {
-      if(this.model.defaultMode === "" && !this.model.is_spatial){
-        if(this.model.is_spatial) {
-          this.model.defaultMode = "discrete";
-          $(this.queryByHook("spatial-discrete")).prop('checked', true);
-        }else{
+      if(this.model.is_spatial) {
+        this.model.defaultMode = "discrete";
+        $(this.queryByHook("spatial-discrete")).prop('checked', true);
+        let dataHooks = {
+          'continuous':'spatial-continuous',
+          'discrete':'spatial-discrete',
+          'discrete-concentration':'spatial-discrete-concentration'
+        };
+        $(this.queryByHook(dataHooks[this.model.defaultMode])).prop('checked', true);
+        $(this.queryByHook("model-mode-container")).css("display", "none");
+        $(this.queryByHook("system-volume-container")).css("display", "none");
+      }else{
+        let dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'};
+        $(this.queryByHook("spatial-model-mode-container")).css("display", "none");
+        if (this.model.defaultMode === ""){
           this.getInitialDefaultMode();
-        }
-      }else {
-        if(this.model.is_spatial) {
-          let dataHooks = {
-            'continuous':'spatial-continuous',
-            'discrete':'spatial-discrete',
-            'discrete-concentration':'spatial-discrete-concentration'
-          };
-          $(this.queryByHook(dataHooks[this.model.defaultMode])).prop('checked', true);
-          $(this.queryByHook("model-mode-container")).css("display", "none");
-          $(this.queryByHook("system-volume-container")).css("display", "none");
         }else{
-          let dataHooks = {'continuous':'all-continuous', 'discrete':'all-discrete', 'dynamic':'advanced'};
           $(this.queryByHook(dataHooks[this.model.defaultMode])).prop('checked', true);
-          $(this.queryByHook("spatial-model-mode-container")).css("display", "none");
         }
       }
       this.model.reactions.on("change", (reactions) => {

@@ -121,7 +121,11 @@ class StochSSNotebook(StochSSBase):
             else:
                 commented = False
             start = f"{pad}# " if commented else pad
-            config.append(f"{start}solver = {self.settings['solver']}(model=model)")
+            if self.nb_type in (self.MODEL_EXPLORATION, self.MODEL_INFERENCE):
+                del_dir = ", delete_directory=False"
+            else:
+                del_dir = ""
+            config.append(f"{start}solver = {self.settings['solver']}(model=model{del_dir})")
         config.append(pad + "kwargs = {")
         if self.s_model['is_spatial']:
             settings = self.__get_spatialpy_run_setting()
