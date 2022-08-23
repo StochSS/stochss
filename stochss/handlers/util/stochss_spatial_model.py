@@ -29,7 +29,7 @@ import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
-                      Geometry, ModelError
+                      Geometry, ModelError, TimeSpan
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -235,8 +235,8 @@ class StochSSSpatialModel(StochSSBase):
             end = self.model['modelSettings']['endSim']
             output_freq = self.model['modelSettings']['timeStep']
             step_size = self.model['modelSettings']['timestepSize']
-            tspan = numpy.arange(0, end + step_size, output_freq)
-            model.timespan(tspan, timestep_size=step_size)
+            tspan = TimeSpan.arange(output_freq, t=end + step_size, timestep_size=step_size)
+            model.timespan(tspan)
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
