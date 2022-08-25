@@ -17,7 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
 import logging
-import traceback
+
+from presentation_error import StochSSAPIError, report_error
 
 from jupyterhub.handlers.base import BaseHandler
 
@@ -41,9 +42,9 @@ class DownloadExampleAPIHandler(BaseHandler):
         log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/zip')
         try:
-        	path = os.path.join("/tmp/presentation_cache", file)
+            path = os.path.join("/tmp/presentation_cache", file)
             with open(path, "rb") as exmp_file:
-            	example = exmp_file.read()
+                example = exmp_file.read()
             self.set_header('Content-Disposition', f'attachment; filename="{file}"')
             self.write(example)
         except StochSSAPIError as load_err:
