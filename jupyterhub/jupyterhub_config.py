@@ -34,6 +34,7 @@ from notebook_presentation import NotebookAPIHandler, DownNotebookPresentationAP
 from job_presentation import (
     JobAPIHandler, DownJobPresentationAPIHandler, PlotJobResultsAPIHandler, DownloadCSVAPIHandler
 )
+from library_example import DownloadExampleAPIHandler
 # Page handlers
 from handlers import (
     HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler,
@@ -95,6 +96,7 @@ c.JupyterHub.extra_handlers = [
         (r"/stochss/present-job\/?", JobPresentationHandler),
         (r"/stochss/present-model\/?", ModelPresentationHandler),
         (r"/stochss/present-notebook\/?", NotebookPresentationHandler),
+        (r"/stochss/library-example/(\w+)\/?", DownloadExampleAPIHandler),
         (r"/stochss/multiple-plots\/?", MultiplePlotsHandler),
         (r"/stochss/api/file/json-data\/?", JsonFileAPIHandler),
         (r"/stochss/download_presentation/(\w+)/(.+)\/?", DownModelPresentationAPIHandler),
