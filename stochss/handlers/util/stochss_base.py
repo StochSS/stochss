@@ -18,9 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import time
 import shutil
+import hashlib
 import datetime
+import tempfile
 import traceback
+
+import requests
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
                             FileNotJSONFormatError
@@ -46,6 +51,104 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
+    def __build_example_dropdown(self, exm_data):
+        header = "<li class='dropdown-item py-0'>__KEY__</li>"
+        divider = "<li class='dropdown-divider'></li>"
+        entry_li = "<li class='dropdown-item nav-drop-item'>__ENTRY_A__</li>"
+        entry_a = "<a class='nav-link nav-drop-item__ALERT__' href='__OPEN_LINK__'>__NAME__</a>"
+        # Well Mixed Examples
+        example_list = [header.replace("__KEY__", "Well-Mixed"), divider]
+        for entry in exm_data['Well-Mixed']:
+            exm_a = entry_a.replace("__ALERT__", entry['alert'])
+            exm_a = exm_a.replace("__OPEN_LINK__", entry['open_link'])
+            exm_a = exm_a.replace("__NAME__", entry['name'])
+            example_list.append(entry_li.replace("__ENTRY_A__", exm_a))
+        # Spatial Examples
+        example_list.extend([header.replace("__KEY__", "Spatial"), divider])
+        for entry in exm_data['Spatial']:
+            exm_a = entry_a.replace("__ALERT__", entry['alert'])
+            exm_a = exm_a.replace("__OPEN_LINK__", entry['open_link'])
+            exm_a = exm_a.replace("__NAME__", entry['name'])
+            example_list.append(entry_li.replace("__ENTRY_A__", exm_a))
+        return "".join(example_list)
+
+    def __get_entry(self, entries, name):
+        for entry in entries:
+            if entry['name'] == name:
+                return entry
+        return None
+
+    def __get_from_remote(self):
+        p_path = "/stochss/.proxies.txt"
+        rel_path = "https://raw.githubusercontent.com/StochSS/StochSS_Example_Library/main/example_data.json"
+        if os.path.exists(p_path):
+            with open(p_path, "r", encoding="utf-8") as proxy_file:
+                proxy_ip = proxy_file.read().strip()
+                proxies = {
+                    "https": f"https://{proxy_ip}",
+                    "http": f"http://{proxy_ip}"
+                }
+        else:
+            proxies = None
+
+        response = requests.get(rel_path, allow_redirects=True, proxies=proxies)
+        exm_data = json.loads(response.content.decode())
+        exm_data['Download-Time'] = time.time()
+        return exm_data
+
+    def __update_exm_data(self, exm_data, old_exm_data=None):
+        for entry in exm_data['Well-Mixed']:
+            entry['alert'] = " text-success"
+            if old_exm_data is not None:
+                old_entry = self.__get_entry(old_exm_data['Well-Mixed'], entry['name'])
+                entry['mod_time'] = old_entry['mod_time']
+                entry['umd5_sum'] = old_entry['umd5_sum']
+        for entry in exm_data['Spatial']:
+            entry['alert'] = " text-success"
+            if old_exm_data is not None:
+                old_entry = self.__get_entry(old_exm_data['Spatial'], entry['name'])
+                entry['mod_time'] = old_entry['mod_time']
+                entry['umd5_sum'] = old_entry['umd5_sum']
+
+    def __update_umd5_sums(self, exm_data, files=None):
+        e_path = "Examples"
+        if files is None:
+            if not os.path.exists(e_path):
+                return
+
+            projs = []
+            non_projs = []
+            for file in os.listdir(e_path):
+                if file.endswith("proj"):
+                    projs.append(file)
+                else:
+                    non_projs.append(file)
+            self.__update_umd5_sums(exm_data, files=non_projs)
+            self.__update_umd5_sums(exm_data, files=projs)
+        else:
+            tmp_dir = tempfile.TemporaryDirectory()
+            for example in files:
+                if example in exm_data['Names']:
+                    entry = self.__get_entry(
+                        exm_data['Well-Mixed'], exm_data['Name-Mappings'][example]
+                    )
+                    if entry is None:
+                        entry = self.__get_entry(
+                            exm_data['Spatial'], exm_data['Name-Mappings'][example]
+                        )
+                    # Update MD5 Sum for users example files
+                    # if os.path.getmtime(os.path.join(e_path, example)) != entry['mod_time']:
+                    #     entry['mod_time'] = os.path.getmtime(os.path.join(e_path, example))
+                    #     zip_path = os.path.join(tmp_dir.name, exm_data['Name-Mappings'][example])
+                    #     shutil.make_archive(zip_path, "zip", e_path, example)
+                    #     with open(f"{zip_path}.zip", "rb") as zip_file:
+                    #         entry['umd5_sum'] = hashlib.md5(zip_file.read()).hexdigest()
+                    # if entry['umd5_sum'] == entry['error']:
+                    #     entry['alert'] = " text-danger"
+                    # elif entry['umd5_sum'] != entry['md5_sum']:
+                    #     entry['alert'] = " text-warning"
+                    # else:
+                    entry['alert'] = ""
 
     def add_presentation_name(self, file, name):
         '''
@@ -60,12 +163,12 @@ class StochSSBase():
         '''
         path = os.path.join(self.user_dir, ".presentations", ".presentation_names.json")
         if os.path.exists(path):
-            with open(path, "r") as names_file:
+            with open(path, "r", encoding="utf-8") as names_file:
                 names = json.load(names_file)
         else:
             names = {}
         names[file] = name
-        with open(path, "w") as names_file:
+        with open(path, "w", encoding="utf-8") as names_file:
             json.dump(names, names_file)
 
 
@@ -120,10 +223,10 @@ class StochSSBase():
             Name of the presentation file to remove
         '''
         path = os.path.join(self.user_dir, ".presentations", ".presentation_names.json")
-        with open(path, "r") as names_file:
+        with open(path, "r", encoding="utf-8") as names_file:
             names = json.load(names_file)
         del names[file]
-        with open(path, "w") as names_file:
+        with open(path, "w", encoding="utf-8") as names_file:
             json.dump(names, names_file)
 
 
@@ -173,7 +276,7 @@ class StochSSBase():
         path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
         self.log("debug", f"Using model template at: {path}")
         try:
-            with open(path, 'r') as template:
+            with open(path, 'r', encoding="utf-8") as template:
                 if as_string:
                     return template.read()
                 return json.load(template)
@@ -197,7 +300,7 @@ class StochSSBase():
         path = '/stochss/stochss_templates/workflowSettingsTemplate.json'
         self.log("debug", f"Using settings template at: {path}")
         try:
-            with open(path, 'r') as template:
+            with open(path, 'r', encoding="utf-8") as template:
                 if as_string:
                     return template.read()
                 return json.load(template)
@@ -348,6 +451,28 @@ class StochSSBase():
 
         return os.path.join(dirname, cp_file)
 
+    def load_example_library(self):
+        '''
+        Load the example library dropdown list.
+        '''
+        if os.path.exists(self.path):
+            with open(self.path, "r", encoding="utf-8") as exm_lib:
+                old_exm_data = json.load(exm_lib)
+            # Update example library if the last update was more than 24 hours old
+            if old_exm_data['Download-Time'] < (time.time() - (60 * 60 * 24)):
+                exm_data = self.__get_from_remote()
+                self.__update_exm_data(exm_data, old_exm_data=old_exm_data)
+            else:
+                exm_data = old_exm_data
+                self.__update_exm_data(exm_data)
+        else:
+            exm_data = self.__get_from_remote()
+
+        self.__update_umd5_sums(exm_data)
+        with open(self.path, "w", encoding="utf-8") as data_file:
+            json.dump(exm_data, data_file, sort_keys=True, indent=4)
+
+        return self.__build_example_dropdown(exm_data)
 
     def log(self, level, message):
         '''
