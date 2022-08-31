@@ -55,6 +55,7 @@ img.quickstart {
   background-color: #000033;
   color: white;
   bottom: 0;
+  max-height: 225px;
 }
 
 #user-logs:not(.show) {
