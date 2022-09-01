@@ -358,7 +358,8 @@ let ModelEditor = PageView.extend({
     this.renderModelView();
     this.modelSettings = new TimespanSettingsView({
       parent: this,
-      model: this.model.modelSettings
+      model: this.model.modelSettings,
+      isSpatial: this.model.is_spatial
     });
     app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
     if(validate && !this.model.valid) {

@@ -22,7 +22,8 @@ let app = require('../app');
 let View = require('ampersand-view');
 let TimespanSettingsView = require('./views/timespan-settings-view');
 let ParameterSettingsView = require('./views/parameter-settings-view');
-let SimulationSettingsView = require('./views/well-mixed-settings-view');
+let WellMixedSettingsView = require('./views/well-mixed-settings-view');
+let SpatialSettingsView = require('./views/spatial-settings-view');
 //templates
 let template = require('./settingsView.pug');
 
@@ -60,7 +61,8 @@ module.exports = View.extend({
     if(this.simulationSettingsView) {
       this.simulationSettingsView.remove();
     }
-    this.simulationSettingsView = new SimulationSettingsView({
+    let settingsView = this.type.includes("Spatial") ? SpatialSettingsView : WellMixedSettingsView;
+    this.simulationSettingsView = new settingsView({
       model: this.model.simulationSettings,
       readOnly: this.readOnly
     });
@@ -72,7 +74,8 @@ module.exports = View.extend({
     }
     this.timespanSettingsView = new TimespanSettingsView({
       model: this.model.timespanSettings,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      isSpatial: this.type === "Spatial Ensemble Simulation"
     });
     app.registerRenderSubview(this, this.timespanSettingsView, "timespan-settings-container");
   }
