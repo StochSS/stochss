@@ -62,6 +62,8 @@ class StochSSWorkflow(StochSSBase):
             settings = self.get_settings_template()
             if wkfl_type == "Parameter Sweep":
                 settings['simulationSettings']['realizations'] = 20
+            if wkfl_type == "Spatial Ensemble Simulation":
+                settings['simulationSettings']['realizations'] = 1
             if os.path.exists(mdl_path):
                 with open(mdl_path, "r") as mdl_file:
                     timespan_settings = json.load(mdl_file)['modelSettings']

@@ -259,13 +259,14 @@ let ModelEditor = PageView.extend({
         this.runPreview();
       }else if(e.target.dataset.type === "notebook"){
         this.notebookWorkflow(e);
-      }else if(!this.model.is_spatial) {
+      }else if (e.target.dataset.type === "ensemble") {
+        let type = this.model.is_spatial ? "Spatial Ensemble Simulation" : "Ensemble Simulation"
         this.saveModel(() => {
-          if(e.target.dataset.type === "ensemble") {
-            app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Ensemble Simulation");
-          }else if(e.target.dataset.type === "psweep") {
-            app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep");
-          }
+          app.newWorkflow(this, this.model.directory, this.model.is_spatial, type);
+        });
+      }else if(!this.model.is_spatial && e.target.dataset.type === "psweep") {
+        this.saveModel(() => {
+          app.newWorkflow(this, this.model.directory, this.model.is_spatial, "Parameter Sweep");
         });
       }
     }
@@ -349,7 +350,6 @@ let ModelEditor = PageView.extend({
     if(this.model.is_spatial) {
       $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
       this.openDomainPlot();
-      $(this.queryByHook("stochss-es")).addClass("disabled");
       $(this.queryByHook("stochss-ps")).addClass("disabled");
     }
     if(app.getBasePath() === "/") {
