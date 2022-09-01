@@ -25,7 +25,7 @@ let Tooltips = require('../../tooltips');
 let InputView = require('../../views/input');
 let View = require('ampersand-view');
 //templates
-let template = require('../templates/simulationSettingsView.pug');
+let template = require('../templates/wellMixedSettingsView.pug');
 
 module.exports = View.extend({
   template: template,

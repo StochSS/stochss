@@ -22,7 +22,7 @@ let app = require('../app');
 let View = require('ampersand-view');
 let TimespanSettingsView = require('./views/timespan-settings-view');
 let ParameterSettingsView = require('./views/parameter-settings-view');
-let SimulationSettingsView = require('./views/simulation-settings-view');
+let SimulationSettingsView = require('./views/well-mixed-settings-view');
 //templates
 let template = require('./settingsView.pug');
 
