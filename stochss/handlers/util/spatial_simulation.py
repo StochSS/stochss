@@ -88,4 +88,6 @@ class SpatialSimulation(StochSSJob):
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot
+        else:
+            print("Running spatial simulation")
         return None

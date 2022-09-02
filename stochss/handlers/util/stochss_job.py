@@ -49,8 +49,13 @@ class StochSSJob(StochSSBase):
     ################################################################################################
     '''
 
-    TYPES = {"gillespy":"_ES", "parameterSweep":"_PS"}
-    TITLES = {"gillespy":"Ensemble Simulation", "parameterSweep":"Parameter Sweep"}
+    TYPES = {
+        "gillespy":"_ES", "spatial":"_SES", "parameterSweep":"_PS"
+    }
+    TITLES = {
+        "gillespy":"Ensemble Simulation", "spatial":"Spatial Ensemble Simulation",
+        "parameterSweep":"Parameter Sweep"
+    }
 
     def __init__(self, path, new=False, data=None):
         '''

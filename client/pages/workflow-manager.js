@@ -103,21 +103,25 @@ let WorkflowManager = PageView.extend({
   },
   clickStartJobHandler: function (e) {
     this.saving();
-    let self = this;
-    let type = this.model.type === "Ensemble Simulation" ? "gillespy" : "parameterSweep";
-    let data = {"settings": this.model.settings.toJSON(),
-                "mdl_path": this.model.model,
-                "type": type, "time_stamp": this.getTimeStamp()};
-    let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
-    let initEndpoint = path.join(app.getApiPath(), "workflow/init-job") + queryStr;
+    let types = {
+      "Ensemble Simulation": "gillespy",
+      "Parameter Sweep": "parameterSweep",
+      "Spatial Ensemble Simulation": "spatial"
+    };
+    let data = {
+      "settings": this.model.settings.toJSON(), "mdl_path": this.model.model,
+      "type": types[this.model.type], "time_stamp": this.getTimeStamp()
+    };
+    let queryStr = `?path=${this.model.directory}&data=${JSON.stringify(data)}`;
+    let initEndpoint = `${path.join(app.getApiPath(), "workflow/init-job")}${queryStr}`;
     app.getXHR(initEndpoint, {
-      success: function (err, response, body) {
-        self.saved();
-        let runQuery = "?path=" + body + "&type=" + type;
-        let runEndpoint = path.join(app.getApiPath(), "workflow/run-job") + runQuery;
+      success: (err, response, body) => {
+        this.saved();
+        let runQuery = `?path=${body}&type=${data.type}`;
+        let runEndpoint = `${path.join(app.getApiPath(), "workflow/run-job")}${runQuery}`;
         app.getXHR(runEndpoint, {
-          success: function (err, response, body) {
-            self.updateWorkflow(true);
+          success: (err, response, body) => {
+            this.updateWorkflow(true);
           }
         });
       }
