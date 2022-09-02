@@ -589,7 +589,7 @@ class StochSSJob(StochSSBase):
             Dictionary mapping algorithm to solver
         '''
         settings = settings['simulationSettings']
-        kwargs = {"solver":solver_map[settings['algorithm']]}
+        kwargs = {} if solver_map is None else {"solver":solver_map[settings['algorithm']]}
         if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping") and \
                                         "CSolver" not in kwargs['solver'].name:
             integrator_options = {"atol":settings['absoluteTol'], "rtol":settings['relativeTol']}
