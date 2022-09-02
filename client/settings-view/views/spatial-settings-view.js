@@ -16,9 +16,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery');
+//support files
+let app = require('../../app');
+let tests = require('../../views/tests');
+let Tooltips = require('../../tooltips');
+//views
+let InputView = require('../../views/input');
+let View = require('ampersand-view');
+//templates
+let template = require('../templates/spatialSettingsView.pug');
+
 module.exports = View.extend({
   template: template,
   events: {
+    'change [data-hook=trajectories]' : 'updateViewTraj',
+    'change [data-hook=seed]' : 'updateViewSeed',
+    'click [data-hook=collapse-settings-view]' :  'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -40,8 +54,45 @@ module.exports = View.extend({
     }else {
       app.tooltipSetup();
     }
-    this.updateViewer();
   },
-  updateViewer: function () {
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  update: function (e) {},
+  updateValid: function (e) {},
+  updateViewSeed: function (e) {
+    $(this.queryByHook("view-seed")).html(this.model.seed);
+  },
+  updateViewTraj: function (e) {
+    $(this.queryByHook("view-realizations")).html(this.model.realizations);
+  },
+  subviews: {
+    inputSeed: {
+      hook: 'seed',
+      prepareView: function () {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'seed',
+          modelKey: 'seed',
+          valueType: 'number',
+          value: this.model.seed
+        });
+      }
+    },
+    inputRealizations: {
+      hook: 'trajectories',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'realizations',
+          tests: tests.valueTests,
+          modelKey: 'realizations',
+          valueType: 'number',
+          value: this.model.realizations
+        });
+      }
+    }
   }
 });
