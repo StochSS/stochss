@@ -361,9 +361,12 @@ class StochSSJob(StochSSBase):
                 result = result.average_ensemble()
             self.log("info", "Generating CSV files...")
             with tempfile.TemporaryDirectory() as tmp_dir:
-                result.to_csv(path=tmp_dir, nametag=name, stamp="")
-                if data_keys:
-                    self.__write_parameters_csv(path=tmp_dir, name=name, data_keys=data_keys)
+                if hasattr(result, "to_csv"):
+                    result.to_csv(path=tmp_dir, nametag=name, stamp="")
+                    if data_keys:
+                        self.__write_parameters_csv(path=tmp_dir, name=name, data_keys=data_keys)
+                else:
+                    result.export_to_csv(folder_name=os.path.join(tmp_dir, name))
                 self.log("info", "Generating zip archive...")
                 return self.__get_csvzip(dirname=tmp_dir, name=name)
         except FileNotFoundError as err:
@@ -388,7 +391,10 @@ class StochSSJob(StochSSBase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             if not isinstance(results, dict):
                 self.log("info", "Generating CSV files...")
-                results.to_csv(path=tmp_dir, nametag=name, stamp="")
+                if hasattr(results, "to_csv"):
+                    results.to_csv(path=tmp_dir, nametag=name, stamp="")
+                else:
+                    results.export_to_csv(folder_name=os.path.join(tmp_dir, name))
                 self.log("info", "Generating zip archive...")
                 return self.__get_csvzip(dirname=tmp_dir, name=name)
             def get_name(b_name, tag):

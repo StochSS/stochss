@@ -107,6 +107,7 @@ module.exports = View.extend({
       this.renderSweepParameterView();
     }else{
       var type = "spatial";
+      $(this.queryByHook("spatial-plot-csv")).css('display', 'none');
     }
     this.getPlot(type);
   },
