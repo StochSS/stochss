@@ -29,10 +29,11 @@ let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let SweepParametersView = require('./sweep-parameter-range-view');
 //templates
-let gillespyResultsTemplate = require('../templates/gillespyResultsView.pug');
-let gillespyResultsEnsembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
-let parameterSweepResultsTemplate = require('../templates/parameterSweepResultsView.pug');
-let parameterScanTemplate = require('../templates/parameterScanResultsView.pug');
+let wellMixedTemplate = require('../templates/gillespyResultsView.pug');
+let ensembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
+let sweepTemplate = require('../templates/parameterSweepResultsView.pug');
+let scanTemplate = require('../templates/parameterScanResultsView.pug');
+let spatialTemplate = require('../templates/spatialResultsView.pug');
 
 module.exports = View.extend({
   events: {
@@ -66,12 +67,13 @@ module.exports = View.extend({
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
                      this.model.settings.simulationSettings.algorithm !== "ODE";
-    let isParameterScan = this.model.settings.parameterSweepSettings.parameters.length > 2
-    if(this.titleType === "Parameter Sweep"){
-      this.template = isParameterScan ? parameterScanTemplate : parameterSweepResultsTemplate;
-    }else{
-      this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
+    let isParameterScan = this.model.settings.parameterSweepSettings.parameters.length > 2;
+    let templates = {
+      "Ensemble Simulation": isEnsemble ? ensembleTemplate : wellMixedTemplate,
+      "Parameter Sweep": isParameterScan ? scanTemplate : sweepTemplate,
+      "Spatial Ensemble Simulation": spatialTemplate
     }
+    this.template = templates[this.titleType];
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
       $(this.queryByHook("job-presentation")).css("display", "none");
@@ -86,7 +88,7 @@ module.exports = View.extend({
     }
     if(this.titleType === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";
-    }else{
+    }else if(this.titleType === "Parameter Sweep") {
       this.tsPlotData = {"parameters":{}};
       this.fixedParameters = {};
       var type = "ts-psweep";
@@ -103,6 +105,8 @@ module.exports = View.extend({
       }
       this.getPlot("psweep");
       this.renderSweepParameterView();
+    }else{
+      var type = "spatial";
     }
     this.getPlot(type);
   },
@@ -200,6 +204,10 @@ module.exports = View.extend({
       data['sim_type'] = "GillesPy2_PS";
       data['data_keys'] = this.getDataKeys(true);
       data['plt_key'] = type === "ts-psweep-mp" ? "mltplplt" : this.tsPlotData.type;
+    }else if(type === "spatial") {
+      data['sim_type'] = "SpatialPy";
+      data['data_keys'] = {};
+      data['plt_key'] = type;
     }else {
       data['sim_type'] = "GillesPy2";
       data['data_keys'] = {};

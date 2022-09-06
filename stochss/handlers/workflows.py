@@ -240,6 +240,10 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
                 fig = job.get_plot_from_results(data_keys=body['data_keys'],
                                                 plt_key=body['plt_key'], add_config=True)
                 job.print_logs(log)
+            elif body['sim_type'] == "SpatialPy":
+                fig = job.get_plot_from_spatial_results(
+                    data_keys=body['data_keys'], add_config=True
+                )
             else:
                 fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
                                                        kwargs=body['plt_key'], add_config=True)

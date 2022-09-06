@@ -494,6 +494,34 @@ class StochSSJob(StochSSBase):
             message = f"The requested plot is not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
+    def get_plot_from_spatial_results(self, data_keys, add_config=False):
+        '''
+        Get the plotly figure for the results of a job
+
+        Attributes
+        ----------
+        data_keys : dict
+            Dictionary of param names and values used to identify the correct data.
+        add_config : bool
+            Whether or not to add plotly config settings.
+        '''
+        try:
+            self.log("info", "Loading the results...")
+            result = self.__get_filtered_ensemble_results(None)
+            self.log("info", "Generating the plot...")
+            fig = result.plot_property(
+                "type", width="auto", height="auto", animated=True, return_plotly_figure=True
+            )
+            if add_config:
+                fig['config'] = {"responsive": True}
+            self.log("info", "Loading the plot...")
+            return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
     def get_psweep_csvzip_from_results(self, fixed, name):
         '''
