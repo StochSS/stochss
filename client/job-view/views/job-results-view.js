@@ -311,18 +311,17 @@ module.exports = View.extend({
     this.getPlot(type);
   },
   handleConvertToNotebookClick: function (e) {
-    let self = this;
-    if(this.titleType === "Ensemble Simulation") {
-      var type = "gillespy";
-    }else if(this.titleType === "Parameter Sweep" && this.model.settings.parameterSweepSettings.parameters.length > 1) {
-      var type = "2d_parameter_sweep";
-    }else{
-      var type = "1d_parameter-sweep";
+    let is2D = this.model.settings.parameterSweepSettings.parameters.length > 1;
+    let types = {
+      "Ensemble Simulation": "gillespy",
+      "Spatial Ensemble Simulation": "spatialpy",
+      "Parameter Sweep": is2D ? "2d_parameter_sweep" : "1d_parameter-sweep"
     }
-    let queryStr = "?path=" + this.model.directory + "&type=" + type;
-    let endpoint = path.join(app.getApiPath(), "workflow/notebook") + queryStr;
+    let type = types[this.titleType];
+    let queryStr = `?path=${this.model.directory}&type=${type}`;
+    let endpoint = `${path.join(app.getApiPath(), "workflow/notebook")}${queryStr}`;
     app.getXHR(endpoint, {
-      success: function (err, response, body) {
+      success: (err, response, body) => {
         window.open(path.join(app.getBasePath(), "notebooks", body.FilePath));
       }
     });

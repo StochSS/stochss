@@ -284,7 +284,7 @@ class WorkflowNotebookHandler(APIHandler):
                 file_obj = StochSSJob(path=path)
             log.info(f"Loading data for {file_obj.get_file()}")
             kwargs = file_obj.get_notebook_data()
-            if "type" in kwargs.keys():
+            if "type" in kwargs:
                 wkfl_type = kwargs['type']
                 kwargs = kwargs['kwargs']
                 log.info(f"Converting {file_obj.get_file()} to notebook")
