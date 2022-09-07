@@ -515,9 +515,23 @@ class StochSSJob(StochSSBase):
             self.log("info", "Loading the results...")
             result = self.__get_filtered_ensemble_results(None)
             self.log("info", "Generating the plot...")
-            fig = result.plot_property(
-                "type", width="auto", height="auto", animated=True, return_plotly_figure=True
-            )
+            if data_keys['target'] in ("type", "nu", "rho", "mass"):
+                fig = result.plot_property(
+                    data_keys['target'], width="auto", height="auto", animated=True,
+                    return_plotly_figure=True
+                )
+            elif data_keys['target'] == "v":
+                fig = result.plot_property(
+                    data_keys['target'], p_ndx=data_keys['index'], width="auto", height="auto",
+                    animated=True, return_plotly_figure=True
+                )
+            else:
+                concentration = data_keys['mode'] == "discrete-concentration"
+                deterministic = data_keys['mode'] == "continuous"
+                fig = result.plot_species(
+                    data_keys['target'], concentration=concentration, deterministic=deterministic,
+                    width="auto", height="auto", animated=True, return_plotly_figure=True
+                )
             if add_config:
                 fig['config'] = {"responsive": True}
             self.log("info", "Loading the plot...")

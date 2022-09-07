@@ -40,6 +40,8 @@ module.exports = View.extend({
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
+    'change [data-hook=target-of-interest-list]' : 'getPlotForTarget',
+    'change [data-hook=target-mode-list]' : 'getPlotForTargetMode',
     'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
@@ -60,7 +62,7 @@ module.exports = View.extend({
     this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : false;
     this.wkflName = attrs.wkflName;
     this.titleType = attrs.titleType;
-    this.tooltips = Tooltips.parameterSweepResults;
+    this.tooltips = Tooltips.jobResults;
     this.plots = {};
     this.plotArgs = {};
   },
@@ -107,6 +109,10 @@ module.exports = View.extend({
       this.renderSweepParameterView();
     }else{
       var type = "spatial";
+      this.spatialTarget = "type";
+      this.targetIndex = null;
+      this.targetMode = "discrete";
+      this.renderTargetOfInterestView();
       $(this.queryByHook("spatial-plot-csv")).css('display', 'none');
     }
     this.getPlot(type);
@@ -150,29 +156,28 @@ module.exports = View.extend({
     window.open(endpoint);
   },
   getPlot: function (type) {
-    let self = this;
     this.cleanupPlotContainer(type);
     let data = this.getPlotData(type);
     if(data === null) { return };
     let storageKey = JSON.stringify(data);
     data['plt_data'] = this.getPlotLayoutData();
     if(Boolean(this.plots[storageKey])) {
-      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt'];
+      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial'];
       if(renderTypes.includes(type)) {
         this.plotFigure(this.plots[storageKey], type);
       }
     }else{
-      let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
-      let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
+      let queryStr = `?path=${this.model.directory}&data=${JSON.stringify(data)}`;
+      let endpoint = `${path.join(app.getApiPath(), "workflow/plot-results")}${queryStr}`;
       app.getXHR(endpoint, {
-        success: function (err, response, body) {
-          self.plots[storageKey] = body;
-          self.plotFigure(body, type);
+        success: (err, response, body) => {
+          this.plots[storageKey] = body;
+          this.plotFigure(body, type);
         },
-        error: function (err, response, body) {
-          $(self.queryByHook(type + "-plot-spinner")).css("display", "none");
-          let message = "<p>" + body.Message + "</p><p><b>Please re-run this job to get this plot</b></p>";
-          $(self.queryByHook(type + "-plot")).html(message);
+        error: (err, response, body) => {
+          $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
+          let message = `<p>${body.Message}</p><p><b>Please re-run this job to get this plot</b></p>`;
+          $(this.queryByHook(type + "-plot")).html(message);
         }
       });
     }
@@ -207,7 +212,9 @@ module.exports = View.extend({
       data['plt_key'] = type === "ts-psweep-mp" ? "mltplplt" : this.tsPlotData.type;
     }else if(type === "spatial") {
       data['sim_type'] = "SpatialPy";
-      data['data_keys'] = {};
+      data['data_keys'] = {
+        target: this.spatialTarget, index: this.targetIndex, mode: this.targetMode
+      };
       data['plt_key'] = type;
     }else {
       data['sim_type'] = "GillesPy2";
@@ -236,6 +243,27 @@ module.exports = View.extend({
     })[0];
     this.model.settings.parameterSweepSettings.speciesOfInterest = species;
     this.getPlot('psweep')
+  },
+  getPlotForTarget: function (e) {
+    let value = e.target.value;
+    if(["0", "1", "2"].includes(value)) {
+      this.spatialTarget = "v";
+      this.targetIndex = number(value);
+    }else{
+      this.spatialTarget = value;
+      this.targetIndex = null;
+    }
+    if(!["type", "v", "nu", "rho", "mass"].includes(this.spatialTarget)) {
+      $(this.queryByHook('job-results-mode')).css('display', 'inline-block');
+      this.renderTargetModeView();
+    }else{
+      $(this.queryByHook('job-results-mode')).css('display', 'none');
+    }
+    this.getPlot("spatial");
+  },
+  getPlotForTargetMode: function (e) {
+    this.targetMode = e.target.value;
+    this.getPlot("spatial");
   },
   getPlotKey: function (type) {
     if(type === "psweep") {
@@ -472,6 +500,44 @@ module.exports = View.extend({
         options
       );
     }
+  },
+  renderTargetOfInterestView: function () {
+    let species = this.model.model.species.map((specie) => {
+      return [specie.name, specie.name];
+    });
+    let header = Boolean(species) ? "Variables" : "Variables (empty)";
+    let properties = [
+      ["type", "Type"], ["0", "X Velocity"], ["1", "Y Velocity"], ["2", "Z Velocity"],
+      ["rho", "Density"], ["mass", "Mass"], ["nu", "Viscosity"]
+    ];
+    let options = [
+      {groupName: "Properties", options: properties},
+      {groupName: header, options: species}
+    ];
+    let targetOfInterestView = new SelectView({
+      name: 'target',
+      required: true,
+      eagerValidate: true,
+      groupOptions: options,
+      value: this.spatialTarget
+    });
+    app.registerRenderSubview(this, targetOfInterestView, "target-of-interest-list");
+  },
+  renderTargetModeView: function () {
+    if(this.targetModeView) { return; }
+    let options = [
+      ["discrete", "Population (outputs: absolute value)"],
+      ["discrete-concentration", "Population (outputs: scaled by volume)"],
+      ["continuous", "Concentration"]
+    ];
+    this.targetModeView = new SelectView({
+      name: 'target-mode',
+      required: true,
+      eagerValidate: true,
+      options: options,
+      value: this.targetMode
+    });
+    app.registerRenderSubview(this, this.targetModeView, "target-mode-list");
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
