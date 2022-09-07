@@ -57,6 +57,9 @@ div#workflow-results.card
 
             div(data-hook="spatial-plot")
 
+            div(data-hook="spatial-plot-loading-msg")
+              | Spatial results may take a while to load.  Load times are dependant on the number of outputs, number of variables, and the number of domain particles.
+
             div.spinner-border.workflow-plot(data-hook="spatial-plot-spinner")
 
             button.btn.btn-primary.box-shadow(data-hook="spatial-edit-plot" data-target="edit-plot" disabled) Edit Plot

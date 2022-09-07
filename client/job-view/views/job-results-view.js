@@ -137,22 +137,24 @@ module.exports = View.extend({
     }, 5000);
   },
   cleanupPlotContainer: function (type) {
-    let el = this.queryByHook(type + "-plot");
+    let el = this.queryByHook(`${type}-plot`);
     Plotly.purge(el);
     $(this.queryByHook(type + "-plot")).empty();
     if(type === "ts-psweep" || type === "psweep"){
-      $(this.queryByHook(type + "-download")).prop("disabled", true);
-      $(this.queryByHook(type + "-edit-plot")).prop("disabled", true);
+      $(this.queryByHook(`${type}-download`)).prop("disabled", true);
+      $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", true);
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
+    }else if(type === "spatial") {
+      $(this.queryByHook("spatial-plot-loading-msg")).css("display", "block");
     }
-    $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
+    $(this.queryByHook(`${type}-plot-spinner`)).css("display", "block");
   },
   downloadCSV: function (csvType, data) {
-    var queryStr = "?path=" + this.model.directory + "&type=" + csvType;
+    var queryStr = `?path=${this.model.directory}&type=${csvType}`;
     if(data) {
-      queryStr += "&data=" + JSON.stringify(data);
+      queryStr += `&data=${JSON.stringify(data)}`;
     }
-    let endpoint = path.join(app.getApiPath(), "job/csv") + queryStr;
+    let endpoint = `${path.join(app.getApiPath(), "job/csv")}${queryStr}`;
     window.open(endpoint);
   },
   getPlot: function (type) {
@@ -175,9 +177,12 @@ module.exports = View.extend({
           this.plotFigure(body, type);
         },
         error: (err, response, body) => {
-          $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
+          if(type === "spatial") {
+            $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
+          }
+          $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
           let message = `<p>${body.Message}</p><p><b>Please re-run this job to get this plot</b></p>`;
-          $(this.queryByHook(type + "-plot")).html(message);
+          $(this.queryByHook(`${type}-plot`)).html(message);
         }
       });
     }
@@ -405,13 +410,15 @@ module.exports = View.extend({
     });
   },
   plotFigure: function (figure, type) {
-    let self = this;
-    let hook = type + "-plot";
+    let hook = `${type}-plot`;
     let el = this.queryByHook(hook);
     Plotly.newPlot(el, figure);
-    $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
-    $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
-    $(this.queryByHook(type + "-download")).prop("disabled", false);
+    if(type === "spatial") {
+      $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
+    }
+    $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
+    $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", false);
+    $(this.queryByHook(`${type}-download`)).prop("disabled", false);
     if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
       $(this.queryByHook("multiple-plots")).prop("disabled", false);
     }
