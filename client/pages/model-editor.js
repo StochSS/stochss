@@ -21,7 +21,7 @@ let path = require('path');
 //support files
 let app = require('../app');
 let modals = require('../modals');
-let Plotly = require('../lib/plotly');
+let Plotly = require('plotly.js-dist');
 //views
 let PageView = require('../pages/base');
 let ModelView = require('../model-view/model-view');
