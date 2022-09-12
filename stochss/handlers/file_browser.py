@@ -818,7 +818,7 @@ class ImportFromLibrary(APIHandler):
         ----------
         '''
         try:
-            system = StochSSBase(path="example-library.json")
+            system = StochSSBase(path=".example-library.json")
             examples = system.load_example_library()
             self.write(examples)
         except StochSSAPIError as err:

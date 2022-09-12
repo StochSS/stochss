@@ -284,8 +284,9 @@ def pre_spawn_hook(spawner):
             if elem.startswith('@'):
                 log.info(f"Checking for domain affiliation: {elem}")
                 if elem in spawner.user.name:
+                    name = spawner.user.name
                     post_message_to_slack(
-                      f'User {name} of banned domain {elem} attempted to log into {platform}'
+                        f'User {name} of banned domain {elem} attempted to log into {platform}'
                     )
                     raise Exception('User banned')
             else:
