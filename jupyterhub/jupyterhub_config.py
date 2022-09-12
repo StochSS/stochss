@@ -269,17 +269,6 @@ def pre_spawn_hook(spawner):
         return
     user_type = None
     platform = "live" if "live" in os.environ['OAUTH_CALLBACK'] else "staging"
-    for elem in c.StochSS.blacklist:
-        if elem.startswith('@'):
-            log.info(f"Checking for domain affiliation: {elem}")
-            if elem in spawner.user.name:
-                post_message_to_slack(f'User {spawner.user.name} of banned domain {elem} attempted to log into {platform}', blocks = None)
-                raise Exception('User banned')
-        else:
-            log.info(f"Checking for user: {elem}")
-            if elem == spawner.user.name or re.search(elem, spawner.user.name) is not None:
-                post_message_to_slack(f'Banned user {spawner.user.name} attempted to log into {platform}', blocks = None)
-                raise Exception('User banned')
 
     if spawner.user.name in c.Authenticator.admin_users:
         log.info(f"Setting usertype for {spawner.user.name} to 'admin'")
@@ -287,6 +276,24 @@ def pre_spawn_hook(spawner):
     elif spawner.user.name in c.StochSS.power_users:
         log.info(f"Setting usertype for {spawner.user.name} to 'power'")
         user_type = 'power'
+    else:
+        for elem in c.StochSS.blacklist:
+            if elem.startswith('@'):
+                log.info(f"Checking for domain affiliation: {elem}")
+                if elem in spawner.user.name:
+                    post_message_to_slack(f'User {spawner.user.name} of banned domain {elem} attempted to log into {platform}', blocks = None)
+                    raise Exception('User banned')
+            else:
+                log.info(f"Checking for user: {elem}")
+                try:
+                    if elem == spawner.user.name or re.search(elem, spawner.user.name) is not None:
+                        post_message_to_slack(f'Banned user {spawner.user.name} attempted to log into {platform}', blocks = None)
+                        raise Exception('User banned')
+                except re.error as err:
+                    post_message_to_slack(
+                        f'Blacklist entry {elem} on {platform} is an invalid regular expression.'
+                    )
+
     print(post_message_to_slack(f"New Login to {platform}: {spawner.user.name} user_type={user_type}"))
     if user_type:
         spawner.mem_limit = None
