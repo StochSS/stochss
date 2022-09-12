@@ -21,7 +21,7 @@ let path = require('path');
 let _ = require('underscore');
 //support files
 let app = require('../app');
-let Plotly = require('../lib/plotly');
+let Plotly = require('plotly.js-dist');
 //models
 let Particle = require('../models/particle');
 //views
