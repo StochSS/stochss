@@ -19,7 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import ast
 import json
-import numpy
 import string
 import hashlib
 import tempfile
@@ -391,7 +390,7 @@ class StochSSModel(StochSSBase):
             model = self.load()
         model['is_spatial'] = True
         if model['defaultMode'] == "dynamic":
-            model['defaultMode'] == "discrete-concentration"
+            model['defaultMode'] = "discrete-concentration"
         if "timestepSize" not in self.model['modelSettings'].keys():
             self.model['modelSettings']['timestepSize'] = 1e-5
         if "domain" not in model.keys():
@@ -542,8 +541,9 @@ class StochSSModel(StochSSBase):
         path = self.get_path(full=True)
         self.log("debug", f"Full path to the model: {path}")
         if os.path.exists(path):
+            model = json.loads(model)
             with open(path, 'w', encoding="utf-8") as file:
-                file.write(model)
+                json.dump(model, file, sort_keys=True, indent=4)
             self.log("debug", f"Saved the model: {self.get_name()}")
         else:
             message = f"Could not find the model file: {self.get_path()}"
