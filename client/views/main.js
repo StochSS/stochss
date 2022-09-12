@@ -42,14 +42,15 @@ module.exports = View.extend({
   template: bodyTemplate,
   autoRender: true,
   initialize: function () {
-      this.listenTo(App, 'page', this.handleNewPage);
-      this.homePath = window.location.pathname.startsWith("/user") ? "/hub/spawn" : "stochss/home"
-    
+    this.listenTo(App, 'page', this.handleNewPage);
+    this.homePath = window.location.pathname.startsWith("/user") ? "/hub/spawn" : "stochss/home"
+    this.ulClosed = false;
   },
   events: {
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
     'click [data-hook=user-logs-collapse]' : 'collapseExpandLogs',
-    'click [data-hook=clear-user-logs]' : 'clearUserLogs'
+    'click [data-hook=clear-user-logs]' : 'clearUserLogs',
+    'click [data-hook=close-user-logs]' : 'closeUserLogs',
   },
   render: function () {
 
@@ -72,6 +73,7 @@ module.exports = View.extend({
       $("#presentation-nav-link").css("display", "none");
     }
     this.setupUserLogs();
+    this.getExampleLibrary();
     return this;
   },
   addNewLogBlock: function () {
@@ -108,6 +110,31 @@ module.exports = View.extend({
       }
     });
   },
+  closeUserLogs: function (e) {
+    let open = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16">
+        <path d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z"/>
+      </svg>
+    `
+    let closed = `
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-right-fill" viewBox="0 0 16 16">
+        <path d="m12.14 8.753-5.482 4.796c-.646.566-1.658.106-1.658-.753V3.204a1 1 0 0 1 1.659-.753l5.48 4.796a1 1 0 0 1 0 1.506z"/>
+      </svg>
+    `
+    let logs = $("#user-logs-body");
+    if(logs.css("display") === "block") {
+      logs.css("display", "none");
+      $(this.queryByHook("user-logs-collapse")).css("display", "none");
+      this.ulClosed = true;
+      $(this.queryByHook("close-user-logs")).html(closed);
+    }else{
+      logs.css("display", "block");
+      $(this.queryByHook("user-logs-collapse")).css("display", "inline-block");
+      this.ulClosed = false;
+      this.updateUserLogs();
+      $(this.queryByHook("close-user-logs")).html(open);
+    }
+  },
   collapseExpandLogs: function (e) {
     let logs = $("#user-logs");
     let classes = logs.attr("class").split(/\s+/);
@@ -128,6 +155,7 @@ module.exports = View.extend({
     element.scrollTop = element.scrollHeight;
   },
   getUserLogs: function () {
+    if(this.ulClosed) { return; }
     let self = this;
     let queryStr = "?logNum=" + this.logs.length;
     let endpoint = path.join(app.getApiPath(), "user-logs") + queryStr;
@@ -162,6 +190,14 @@ module.exports = View.extend({
     let minutes = date.getMinutes();
     stamp += (minutes < 10 ? '0' + minutes : minutes) + ":";
     return log.replace(time, stamp);
+  },
+  getExampleLibrary: function () {
+    let endpoint = path.join(app.getApiPath(), "example-library");
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        $("#exampleLibraryDropdown").html(body);
+      }
+    });
   },
   handleNewPage: function (view) {
     this.pageSwitcher.set(view);
