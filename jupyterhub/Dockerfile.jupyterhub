@@ -1,6 +1,6 @@
 ARG JUPYTERHUB_VERSION
 #FROM jupyterhub/jupyterhub-onbuild:$JUPYTERHUB_VERSION
-FROM ubuntu:18.04
+FROM ubuntu:20.04
 
 USER root
 
@@ -26,13 +26,13 @@ RUN locale-gen $LC_ALL
 
 RUN python3 -m pip install --no-cache --upgrade setuptools pip
 
+
 RUN npm install -g configurable-http-proxy@^4.2.0  && rm -rf ~/.npm
 
 RUN mkdir -p /srv/jupyterhub/
 
 RUN mkdir -p /srv/userlist/
 
-WORKDIR /srv/jupyterhub
 
 EXPOSE 8000
 
@@ -41,18 +41,33 @@ RUN python3 -m pip install --no-cache-dir \
         jupyterhub==1.1.0 \
         oauthenticator==0.11.* \
         dockerspawner==0.11.* \
-        psycopg2==2.7.* \
+        #psycopg2==2.7.* \
+        psycopg2-binary==2.9.* \
         nbviewer==1.0.1 \
         notebook \
         gillespy2==1.7.0 \
-        spatialpy==1.1.0
+        spatialpy==1.1.0 \
+        plotly
 
-COPY static/*    /usr/local/share/jupyterhub/static/
+#  build the PUG pages
+#WORKDIR /srv/
+#RUN npm  install
+#RUN npm run build-home
 
-COPY custom/favicon.ico /usr/local/share/jupyterhub/static/favicon.ico
+#COPY static/*    /usr/local/share/jupyterhub/static/
+#
+#COPY custom/favicon.ico /usr/local/share/jupyterhub/static/favicon.ico
+#
+#COPY custom/custom.js    /opt/stochss-config/.jupyter/custom/custom.js
+#
+#COPY cull_idle_servers.py /srv/jupyterhub/cull_idle_servers.py
 
-COPY custom/custom.js    /opt/stochss-config/.jupyter/custom/custom.js
-
-COPY cull_idle_servers.py /srv/jupyterhub/cull_idle_servers.py
-
+WORKDIR /srv/
+COPY . /srv/
+RUN npm install
+RUN npm run build-home
+RUN cp /srv/jupyterhub/static/* /usr/local/share/jupyterhub/static/
+RUN cp /srv/jupyterhub/custom/favicon.ico /usr/local/share/jupyterhub/static/favicon.ico
+#
+WORKDIR /srv/jupyterhub
 CMD ["jupyterhub" "-f" "/srv/jupyterhub/jupyterhub_config.py"]

@@ -84,31 +84,32 @@ cert:
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
 
 build_home_page:
-	npm run build-home
+#	npm run build-home
 
 build_hub: build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
-	cd ./jupyterhub && docker-compose build
+	docker-compose --env-file jupyterhub/.env -f jupyterhub/docker-compose.yml build
+	#cd ./jupyterhub && docker-compose build
 
 build_hub_clean: build_home_page check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
-	cd ./jupyterhub && docker-compose build --no-cache
+	docker-compose --env-file jupyterhub/.env -f jupyterhub/docker-compose.yml build --no-cache
 
 
 run_hub_dev:
 	export AUTH_CLASS='jupyterhub.auth.DummyAuthenticator' && \
 	export OAUTH_FILE='.oauth.dummy.env' && \
-	cd ./jupyterhub && docker-compose up
+	cd jupyterhub && docker-compose up &
 
 run_hub_staging: build_hub_clean build_clean check_files_staging kill_hub
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.staging.env' && \
-	cd ./jupyterhub && docker-compose up &
+	cd jupyterhub && docker-compose up &
 
 run_hub_prod: build_hub_clean build_clean check_files_prod kill_hub
 	export AUTH_CLASS=oauthenticator.GoogleOAuthenticator && \
 	export OAUTH_FILE='.oauth.prod.env' && \
-	cd ./jupyterhub && docker-compose up &
+	cd jupyterhub && docker-compose up &
 
 kill_hub:
 	export AUTH_CLASS='' && \
