@@ -282,9 +282,11 @@ class WorkflowNotebookHandler(APIHandler):
             kwargs = file_obj.get_notebook_data()
             if "type" in kwargs.keys():
                 wkfl_type = kwargs['type']
+                results = kwargs['results']
                 kwargs = kwargs['kwargs']
                 log.info(f"Converting {file_obj.get_file()} to notebook")
             else:
+                results = None
                 log.info(f"Creating notebook workflow for {file_obj.get_file()}")
             log.debug(f"Type of workflow to be run: {wkfl_type}")
             if wkfl_type in ("1d_parameter_sweep", "2d_parameter_sweep"):
@@ -299,7 +301,7 @@ class WorkflowNotebookHandler(APIHandler):
                 notebook = StochSSNotebook(**kwargs)
                 notebooks = {"gillespy":notebook.create_es_notebook,
                              "spatial":notebook.create_ses_notebook}
-            resp = notebooks[wkfl_type]()
+            resp = notebooks[wkfl_type](results)
             notebook.print_logs(log)
             log.debug(f"Response: {resp}")
             log.info(f"Successfully created the notebook for {file_obj.get_file()}")
