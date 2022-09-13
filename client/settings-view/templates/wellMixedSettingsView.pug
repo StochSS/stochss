@@ -42,7 +42,7 @@ div#simulation-settings.card
 
         div.row.my-3
 
-          div.col-sm-2
+          div.col-sm-3
 
             input.pl-2.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-ode", data-name="ODE")
             
@@ -50,15 +50,7 @@ div#simulation-settings.card
 
             div.inline.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          div.col-sm-2
-
-            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-ssa", data-name="SSA")
-
-            span.inline SSA
-
-            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ssa) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-
-          div.col-sm-2
+          div.col-sm-3
 
             input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-cle", data-name="CLE")
 
@@ -66,15 +58,7 @@ div#simulation-settings.card
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.cle) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          div.col-sm-2
-
-            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-tau-leaping", data-name="Tau-Leaping")
-
-            span.inline Tau Leaping
-
-            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.tauLeaping) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-
-          div.col-sm-2
+          div.col-sm-3
 
             input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-hybrid-tau", data-name="Hybrid-Tau-Leaping")
 
@@ -82,7 +66,25 @@ div#simulation-settings.card
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.hybrid) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          div.col-sm-2
+        div.row
+
+          div.col-sm-3
+
+            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-ssa", data-name="SSA")
+
+            span.inline SSA
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.ssa) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          div.col-sm-3
+
+            input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-tau-leaping", data-name="Tau-Leaping")
+
+            span.inline Tau Leaping
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.tauLeaping) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          div.col-sm-3
 
             input.mr-2.inline(type="radio", name="simAlgorithm", data-hook="select-automatic", data-name="Automatic")
 

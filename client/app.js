@@ -167,21 +167,26 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   if(document.querySelector('#newWorkflowModal')) {
     document.querySelector('#newWorkflowModal').remove()
   }
+  let typeCodes = {
+    "Ensemble Simulation": "_ES",
+    "Spatial Ensemble Simulation": "_SES",
+    "Parameter Sweep": "_PS"
+  }
   let self = parent;
   let ext = isSpatial ? /.smdl/g : /.mdl/g
-  let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
+  let typeCode = typeCodes[type];
   let name = mdlPath.split('/').pop().replace(ext, typeCode)
   let modal = $(modals.createWorkflowHtml(name, type)).modal();
   let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
   let input = document.querySelector('#newWorkflowModal #workflowNameInput');
   okBtn.disabled = false;
-  input.addEventListener("keyup", function (event) {
+  input.addEventListener("keyup", (event) => {
     if(event.keyCode === 13){
       event.preventDefault();
       okBtn.click();
     }
   });
-  input.addEventListener("input", function (e) {
+  input.addEventListener("input", (e) => {
     let endErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputEndCharError')
     let charErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputSpecCharError')
     let error = validateName(input.value)
@@ -189,19 +194,19 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
     charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
     endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
   });
-  okBtn.addEventListener('click', function (e) {
+  okBtn.addEventListener('click', (e) => {
     modal.modal("hide");
-    let wkflFile = input.value.trim() + ".wkfl";
+    let wkflFile = `${input.value.trim()}.wkfl`;
     if(mdlPath.includes(".proj") && !mdlPath.includes(".wkgp")){
       var wkflPath = path.join(path.dirname(mdlPath), "WorkflowGroup1.wkgp", wkflFile);
     }else{
       var wkflPath = path.join(path.dirname(mdlPath), wkflFile);
     }
-    let queryString = "?path=" + wkflPath + "&model=" + mdlPath + "&type=" + type;
+    let queryString = `?path=${wkflPath}&model=${mdlPath}&type=${type}`;
     let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
     getXHR(endpoint, {
-      success: function (err, response, body) {
-        window.location.href = path.join(getBasePath(), "stochss/workflow/edit") + "?path=" + body.path;
+      success: (err, response, body) => {
+        window.location.href = `${path.join(getBasePath(), "stochss/workflow/edit")}?path=${body.path}`;
       }
     });
   });

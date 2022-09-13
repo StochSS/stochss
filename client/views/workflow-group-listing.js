@@ -55,7 +55,8 @@ module.exports = View.extend({
     app.changeCollapseButtonText(this, e);
   },
   handleEnsembleSimulationClick: function (e) {
-    this.newWorkflow("Ensemble Simulation")
+    let type = this.model.model.is_spatial ? "Spatial Ensemble Simulation" : "Ensemble Simulation";
+    this.newWorkflow(type);
   },
   handleParameterSweepClick: function (e) {
     this.newWorkflow("Parameter Sweep")

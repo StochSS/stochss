@@ -57,26 +57,34 @@ div#domain-viewer.card
 
         div(data-hook="view-domain-plot-container" style="display: none")
 
-          div: h4 Domain and Particle Preview
+          div.card-header.pb-0
 
-          div.row
+            h4.inline.mr-3 Domain and Particle Preview
 
-            div.col-sm-8
+            button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-domain-preview" data-hook="collapse-domain-preview-btn") -
 
-              div(data-hook="view-domain-plot")
+          div.collapse.show(id="collapse-domain-preview")
 
-            div.col-sm-4
+            div.card-body
 
-              div.mt-2.particle-view(data-hook="domain-particle-viewer")
+              div.row
 
-              div.mt-2.particle-view(data-hook="domain-select-particle")
+                div.col-sm-8
 
-                div.text-info
-                  | Click on a particle to view its properties.
+                  div(data-hook="view-domain-plot")
 
-                div.mt-2
+                div.col-sm-4
 
-                  h4 Particles per Type
+                  div.mt-2.particle-view(data-hook="domain-particle-viewer")
 
-                  table.table
-                    tbody(data-hook="domain-types-quick-view")
+                  div.mt-2.particle-view(data-hook="domain-select-particle")
+
+                    div.text-info
+                      | Click on a particle to view its properties.
+
+                    div.mt-2
+
+                      h4 Particles per Type
+
+                      table.table
+                        tbody(data-hook="domain-types-quick-view")

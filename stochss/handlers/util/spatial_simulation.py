@@ -17,9 +17,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-from spatialpy import Solver
+import numpy
+import pickle
+import logging
+import traceback
+
+from spatialpy import TimeSpan, Solver
 
 from .stochss_job import StochSSJob
+from .stochss_errors import StochSSAPIError, StochSSJobResultsError
+
+log = logging.getLogger("stochss")
 
 class SpatialSimulation(StochSSJob):
     '''
@@ -52,9 +60,29 @@ class SpatialSimulation(StochSSJob):
 
 
     def __get_run_settings(self):
-        solver_map = {"SSA":Solver(model=self.s_py_model)}
-        return self.get_run_settings(settings=self.settings, solver_map=solver_map)
+        return self.get_run_settings(settings=self.settings, solver_map=None)
 
+    @classmethod
+    def __store_pickled_results(cls, results):
+        try:
+            with open('results/results.p', 'wb') as results_file:
+                pickle.dump(results, results_file)
+        except Exception as err:
+            message = f"Error storing pickled results: {err}\n{traceback.format_exc()}"
+            log.error(message)
+            return message
+        return False
+
+    def __update_timespan(self):
+        if "timespanSettings" in self.settings:
+            keys = self.settings['timespanSettings'].keys()
+            if "endSim" in keys and "timeStep" in keys and "timestepSize" in keys:
+                end = self.settings['timespanSettings']['endSim']
+                step_size = self.settings['timespanSettings']['timeStep']
+                timestep_size = self.settings['timespanSettings']['timestepSize']
+                self.s_py_model.timespan(
+                    TimeSpan.arange(step_size, t=end + step_size, timestep_size=timestep_size)
+                )
 
     def run(self, preview=False, verbose=False):
         '''
@@ -88,4 +116,19 @@ class SpatialSimulation(StochSSJob):
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot
+        if verbose:
+            log.info("Running the spatial ensemble simulation")
+        self.__update_timespan()
+        kwargs = self.__get_run_settings()
+        results = self.s_py_model.run(**kwargs)
+        if verbose:
+            log.info("The spatial ensemble simulation has completed")
+            log.info("Storing the results as pickle")
+        if not 'results' in os.listdir():
+            os.mkdir('results')
+        pkl_err = self.__store_pickled_results(results=results)
+        if pkl_err:
+            message = "An unexpected error occured with the result object"
+            trace = str(pkl_err)
+            raise StochSSJobResultsError(message, trace)
         return None
