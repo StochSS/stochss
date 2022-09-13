@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let path = require('path');
 //support files
 let app = require('../app');
-let Plotly = require('../lib/plotly');
+let Plotly = require('plotly.js-dist');
 //views
 var PageView = require('../pages/base');
 //templates

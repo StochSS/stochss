@@ -34,7 +34,7 @@ from .stochss_file import StochSSFile
 from .stochss_model import StochSSModel
 from .stochss_sbml import StochSSSBMLModel
 from .stochss_errors import StochSSFileExistsError, StochSSFileNotFoundError, \
-                            StochSSPermissionsError, StochSSUnzipError
+                            StochSSPermissionsError
 
 
 class StochSSFolder(StochSSBase):
@@ -70,7 +70,7 @@ class StochSSFolder(StochSSBase):
     def __get_file_from_link(self, remote_path):
         ext = remote_path.split('.').pop().split('?')[0]
         if os.path.exists("/stochss/.proxies.txt"):
-            with open("/stochss/.proxies.txt", "r") as proxy_file:
+            with open("/stochss/.proxies.txt", "r", encoding="utf-8") as proxy_file:
                 proxy_ip = proxy_file.read().strip()
                 proxies = {
                     "https": f"https://{proxy_ip}",
@@ -114,7 +114,7 @@ class StochSSFolder(StochSSBase):
         _path = file if self.path == "none" else os.path.join(self.path, file)
         ext = file.split('.').pop() if "." in file else None
         node = {"text":file, "type":"other", "_path":_path, "children":False}
-        if ext in types.keys():
+        if ext in types:
             file_type = types[ext]
             node['type'] = file_type
             if file_type == "workflow":
@@ -143,7 +143,7 @@ class StochSSFolder(StochSSBase):
 
     @classmethod
     def __get_presentation_model_name(cls, file_path):
-        with open(file_path, "r") as model_file:
+        with open(file_path, "r", encoding="utf-8") as model_file:
             name = json.load(model_file)['name']
         return name
 
@@ -168,7 +168,8 @@ class StochSSFolder(StochSSBase):
     def __get_names_from_file(cls, path, files):
         if not os.path.exists(os.path.join(path, ".presentation_names.json")):
             return {}
-        with open(os.path.join(path, ".presentation_names.json"), "r") as names_file:
+        path = os.path.join(path, ".presentation_names.json")
+        with open(path, "r", encoding="utf-8") as names_file:
             names = json.load(names_file)
         if len(names.keys()) != len(files):
             return {}
@@ -177,7 +178,7 @@ class StochSSFolder(StochSSBase):
 
     @classmethod
     def __get_presentation_notebook_name(cls, file_path):
-        with open(file_path, "r") as nb_file:
+        with open(file_path, "r", encoding="utf-8") as nb_file:
             file = json.load(nb_file)['file']
             name = cls.get_name(cls, path=file)
         return name
@@ -198,7 +199,10 @@ class StochSSFolder(StochSSBase):
                     with zipfile.ZipFile(ext_path, 'r') as zip_file:
                         members = set([name.split('/')[0] for name in zip_file.namelist()])
                         for name in members:
-                            m_path = self.get_new_path(dst_path=name)
+                            if "Examples" in path:
+                                m_path = self.get_new_path(dst_path=os.path.join("Examples", name))
+                            else:
+                                m_path = self.get_new_path(dst_path=name)
                             if os.path.exists(m_path):
                                 if os.path.isdir(m_path):
                                     shutil.rmtree(m_path)
@@ -411,7 +415,7 @@ class StochSSFolder(StochSSBase):
                 exclude = False if test is None else test(ext, root, file)
                 if not exclude and '.' in file and f".{file.split('.').pop()}" in ext:
                     path = os.path.join(root, file) if root else file
-                    if file in domain_files.keys():
+                    if file in domain_files:
                         domain_paths[domain_files[file]].append(path)
                     else:
                         index = str(len(domain_files.keys()))
@@ -484,7 +488,8 @@ class StochSSFolder(StochSSBase):
                 }
                 presentations.append(presentation)
             if need_names or len(names.keys()) != len(files):
-                with open(os.path.join(path, ".presentation_names.json"), "w") as names_file:
+                path = os.path.join(path, ".presentation_names.json")
+                with open(path, "w", encoding="utf-8") as names_file:
                     json.dump(names, names_file)
             return presentations
         except FileNotFoundError:
@@ -578,7 +583,12 @@ class StochSSFolder(StochSSBase):
             Overwrite the existing files.
         '''
         ext, file, body = self.__get_file_from_link(remote_path)
-        path = self.get_new_path(dst_path=file)
+        if "github.com/StochSS/StochSS_Example_Library/raw/" in remote_path:
+            path = self.get_new_path(dst_path=os.path.join("Examples", file))
+            self.path = "Examples"
+            new_path = os.path.join(self.path, file)
+        else:
+            path = self.get_new_path(dst_path=file)
         if overwrite:
             self.__overwrite(path=path, ext=ext, body=body)
         elif os.path.exists(path):
@@ -586,9 +596,10 @@ class StochSSFolder(StochSSBase):
             return {"message":message, "reason":"File Already Exists"}
         try:
             file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
-            file_type = file_types[ext] if ext in file_types.keys() else "file"
+            file_type = file_types[ext] if ext in file_types else "file"
             _ = self.upload(file_type=file_type, file=file, body=body)
-            new_path = self.__get_rmt_upld_path(file=file)
+            if "github.com/StochSS/StochSS_Example_Library/raw/" not in remote_path:
+                new_path = self.__get_rmt_upld_path(file=file)
             message = f"Successfully uploaded the file {file} to {new_path}"
             return {"message":message, "file_path":new_path}
         except StochSSFileExistsError as err:
@@ -605,7 +616,10 @@ class StochSSFolder(StochSSBase):
             Path to the remote file
         '''
         ext, file, body = self.__get_file_from_link(remote_path)
-        path = self.get_new_path(dst_path=file)
+        if "github.com/StochSS/StochSS_Example_Library/raw/" in remote_path:
+            path = self.get_new_path(dst_path=os.path.join("Examples", file))
+        else:
+            path = self.get_new_path(dst_path=file)
         exists = os.path.exists(path)
         if ext != "zip" or exists:
             return exists
@@ -617,7 +631,11 @@ class StochSSFolder(StochSSBase):
                 with zipfile.ZipFile(ext_path, 'r') as zip_file:
                     members = set([name.split('/')[0] for name in zip_file.namelist()])
                     for name in members:
-                        if os.path.exists(self.get_new_path(dst_path=name)):
+                        if "github.com/StochSS/StochSS_Example_Library/raw/" in remote_path:
+                            mem_path = self.get_new_path(dst_path=os.path.join("Examples", name))
+                        else:
+                            mem_path = self.get_new_path(dst_path=name)
+                        if os.path.exists(mem_path):
                             return True
             except zipfile.BadZipFile as err:
                 message = "File is not a zip file"

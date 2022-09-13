@@ -50,7 +50,6 @@ let FileBrowser = PageView.extend({
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments)
-    this.getProjects();
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments)
@@ -61,6 +60,7 @@ let FileBrowser = PageView.extend({
       }
     });
     app.documentSetup();
+    this.getProjects();
     if(app.getBasePath() === "/") {
       $("#presentations").css("display", "none");
     }else{
@@ -147,6 +147,10 @@ let FileBrowser = PageView.extend({
       PresentationView,
       this.queryByHook("presentation-list")
     );
+    let href = window.location.href;
+    if(href.includes("#file-browser-section")) {
+      location.href = "stochss/files#file-browser-section";
+    }
   },
   renderProjectsView: function (projects) {
     if(this.projectsView) {
@@ -159,6 +163,12 @@ let FileBrowser = PageView.extend({
       EditProjectView,
       this.queryByHook("projects-view-container")
     );
+    let href = window.location.href;
+    if(href.includes("#file-browser-section")) {
+      location.href = "stochss/files#file-browser-section";
+    }else if(href.includes("#presentation-browser-section")) {
+      location.href = "stochss/files#presentation-browser-section";
+    }
   },
   update: function (target) {
     if(target === "Projects") {

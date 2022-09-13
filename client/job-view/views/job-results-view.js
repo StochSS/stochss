@@ -22,7 +22,7 @@ let path = require('path');
 let app = require('../../app');
 let modals = require('../../modals');
 let Tooltips = require('../../tooltips');
-let Plotly = require('../../lib/plotly');
+let Plotly = require('plotly.js-dist');
 //views
 let InputView = require('../../views/input');
 let View = require('ampersand-view');
