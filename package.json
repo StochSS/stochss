@@ -1,6 +1,6 @@
 {
   "name": "stochss",
-  "version": "2.0.1",
+  "version": "2.4.12",
   "description": "",
   "main": "webpack.config.js",
   "scripts": {
@@ -39,6 +39,7 @@
     "jstree": "^3.3.8",
     "katex": "^0.11.0",
     "local-links": "^1.4.1",
+    "plotly.js-dist": "^1.58.5",
     "popper.js": "^1.15.0",
     "pug": "^2.0.3",
     "underscore": "^1.9.1",

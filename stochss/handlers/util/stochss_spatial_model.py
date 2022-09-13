@@ -24,7 +24,6 @@ import hashlib
 import tempfile
 import traceback
 
-import numpy
 import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
@@ -436,6 +435,18 @@ class StochSSSpatialModel(StochSSBase):
 
     @classmethod
     def apply_geometry(cls, particles, d_type, center):
+        '''
+        Set the properties of the particles found within the geometry.
+
+        Attributes
+        ----------
+        particles : list
+            List of existing particles.
+        d_type : str
+            StochSS domain type.
+        center : list
+            Vector representing the center of the geometry.
+        '''
         def inside(point):
             namespace = {
                 'cx': center[0], 'cy': center[1], 'cz': center[2],
@@ -466,7 +477,7 @@ class StochSSSpatialModel(StochSSBase):
             s_model = self.load()
         s_model['is_spatial'] = False
         if s_model['defaultMode'] == "discrete-concentration":
-            s_model['defaultMode'] == "dynamic"
+            s_model['defaultMode'] = "dynamic"
         if ".wkgp" in self.path:
             wkgp_path = self.get_dir_name()
             wkgp_path, _ = self.get_unique_path(name=self.get_file(path=wkgp_path),
@@ -614,7 +625,7 @@ class StochSSSpatialModel(StochSSBase):
             domain = domains[0]
             s_domain = domains[1]
         fig_temp_path = "/stochss/stochss_templates/domainPlotTemplate.json"
-        with open(fig_temp_path, "r") as fig_temp_file:
+        with open(fig_temp_path, "r", encoding="utf-8") as fig_temp_file:
             fig_temp = json.load(fig_temp_file)
             trace_temp = copy.deepcopy(fig_temp['data'][0])
         if len(s_domain['particles']) == 0:
@@ -785,7 +796,8 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             self.__read_model_file()
         self.model['name'] = self.get_name()
-        if "template_version" not in self.model or self.model['template_version'] != self.TEMPLATE_VERSION:
+        if "template_version" not in self.model or \
+                self.model['template_version'] != self.TEMPLATE_VERSION:
             if not self.model['defaultMode']:
                 self.model['defaultMode'] = "discrete"
             elif self.model['defaultMode'] == "dynamic":
@@ -799,7 +811,10 @@ class StochSSSpatialModel(StochSSBase):
                 if "types" not in species.keys():
                     species['types'] = list(range(1, len(self.model['domain']['types'])))
                 if "diffusionConst" not in species.keys():
-                    diff = 0.0 if "diffusionCoeff" not in species.keys() else species['diffusionCoeff']
+                    if "diffusionCoeff" not in species.keys():
+                        diff = 0.0
+                    else:
+                        diff = species['diffusionCoeff']
                     species['diffusionConst'] = diff
             for reaction in self.model['reactions']:
                 if "odePropensity" not in reaction.keys():
@@ -854,6 +869,7 @@ class StochSSSpatialModel(StochSSBase):
         domain : str
             Domain to be saved
         '''
+        domain = json.loads(domain)
         path = self.get_path(full=True)
         with open(path, 'w', encoding="utf-8") as file:
-            file.write(domain)
+            json.dump(domain, file, sort_keys=True, indent=4)
