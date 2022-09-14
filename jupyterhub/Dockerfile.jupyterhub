@@ -8,9 +8,11 @@ ENV DEBIAN_FRONTEND=noninteractive
 
 RUN apt-get update  && apt-get install -yq --no-install-recommends \
         ca-certificates \
+        gcc \
         curl \
         gnupg \
         locales \
+        python3-dev \
         python3-pip \
         python3-pycurl \
     && apt-get clean \
@@ -32,7 +34,6 @@ RUN npm install -g configurable-http-proxy@^4.2.0  && rm -rf ~/.npm
 RUN mkdir -p /srv/jupyterhub/
 
 RUN mkdir -p /srv/userlist/
-
 
 EXPOSE 8000
 
