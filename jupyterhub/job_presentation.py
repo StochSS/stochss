@@ -54,6 +54,7 @@ class JobAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
+        log.setLevel(logging.DEBUG)
         owner = self.get_query_argument(name="owner")
         log.debug(f"Container id of the owner: {owner}")
         file = self.get_query_argument(name="file")
@@ -67,6 +68,7 @@ class JobAPIHandler(BaseHandler):
                 job = get_presentation_from_user(owner=owner, file=file, kwargs={"file": file},
                                                  process_func=process_job_presentation)
             log.debug(f"Contents of the json file: {job}")
+            log.setLevel(logging.WARNING)
             self.write(job)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
@@ -199,7 +201,10 @@ def process_job_presentation(path, file=None, for_download=False):
             json.dump(job['job'], job_file, sort_keys=True, indent=4)
         with open(os.path.join(job_dir, "results.p"), "wb") as res_file:
             pickle.dump(job['results'], res_file)
-        return job['job']
+        model = StochSSModel(model=job['job']['model'])
+        data = model.load()
+        job['job']['model'] = data['model']
+        return {"job": job['job'], "domainPlot": data['domainPlot']}
     job_zip = make_zip_for_download(job)
     return job_zip, job['name']
 
