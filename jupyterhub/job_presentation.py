@@ -123,6 +123,10 @@ class PlotJobResultsAPIHandler(BaseHandler):
                 fig = job.get_plot_from_results(data_keys=body['data_keys'],
                                                 plt_key=body['plt_key'], add_config=True)
                 job.print_logs(log)
+            elif body['sim_type'] == "SpatialPy":
+                fig = job.get_plot_from_spatial_results(
+                    data_keys=body['data_keys'], add_config=True
+                )
             else:
                 fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
                                                        kwargs=body['plt_key'], add_config=True)
@@ -455,6 +459,46 @@ class StochSSJob(StochSSBase):
             message = f"The requested plot is not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
+
+    def get_plot_from_spatial_results(self, data_keys, add_config=False):
+        '''
+        Get the plotly figure for the results of a job
+
+        Attributes
+        ----------
+        data_keys : dict
+            Dictionary of param names and values used to identify the correct data.
+        add_config : bool
+            Whether or not to add plotly config settings.
+        '''
+        try:
+            result = self.__get_filtered_ensemble_results(None)
+            if data_keys['target'] in ("type", "nu", "rho", "mass"):
+                fig = result.plot_property(
+                    data_keys['target'], width="auto", height="auto", animated=True,
+                    return_plotly_figure=True
+                )
+            elif data_keys['target'] == "v":
+                fig = result.plot_property(
+                    data_keys['target'], p_ndx=data_keys['index'], width="auto", height="auto",
+                    animated=True, return_plotly_figure=True
+                )
+            else:
+                concentration = data_keys['mode'] == "discrete-concentration"
+                deterministic = data_keys['mode'] == "continuous"
+                fig = result.plot_species(
+                    data_keys['target'], concentration=concentration, deterministic=deterministic,
+                    width="auto", height="auto", animated=True, return_plotly_figure=True
+                )
+            if add_config:
+                fig['config'] = {"responsive": True}
+            return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
     def get_psweep_csvzip_from_results(self, fixed, name):
         '''
