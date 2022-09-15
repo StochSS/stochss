@@ -203,6 +203,9 @@ def process_job_presentation(path, file=None, for_download=False):
             pickle.dump(job['results'], res_file)
         model = StochSSModel(model=job['job']['model'])
         data = model.load()
+        log.debug("*"*100)
+        log.debug(data.keys())
+        log.debug("*"*100)
         job['job']['model'] = data['model']
         return {"job": job['job'], "domainPlot": data['domainPlot']}
     job_zip = make_zip_for_download(job)
@@ -595,7 +598,9 @@ class StochSSJob(StochSSBase):
             return {"job": job}
         model = StochSSModel(job['model'])
         data = model.load()
-        print(data.keys())
+        log.debug("*"*100)
+        log.debug(data.keys())
+        log.debug("*"*100)
         job['model'] = data['model']
         return {"job": job, "domainPlot": data['domainPlot']}
 
