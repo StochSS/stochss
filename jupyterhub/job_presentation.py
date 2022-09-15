@@ -589,9 +589,9 @@ class StochSSJob(StochSSBase):
         if not job['model']['is_spatial']:
             return {"job": job}
         model = StochSSModel(job['model'])
-        data, domain_plot = model.load()
-        job['model'] = data
-        return {"job": job, "domainPlot": domain_plot}
+        data = model.load()
+        job['model'] = data['model']
+        return {"job": job, "domainPlot": data['domain_plot']}
 
 
     def update_fig_layout(self, fig=None, plt_data=None):
