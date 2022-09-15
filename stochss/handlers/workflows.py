@@ -223,8 +223,7 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
     @web.authenticated
     async def get(self):
         '''
-        Retrieve a plot figure of the workflow results based on the plot type
-        in the request body.
+        Retrieve a plot figure of the job results based on the plot type in the request body.
 
         Attributes
         ----------
