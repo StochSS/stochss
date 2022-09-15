@@ -591,7 +591,7 @@ class StochSSJob(StochSSBase):
         model = StochSSModel(job['model'])
         data = model.load()
         job['model'] = data['model']
-        return {"job": job, "domainPlot": data['domain_plot']}
+        return {"job": job, "domainPlot": data['domainPlot']}
 
 
     def update_fig_layout(self, fig=None, plt_data=None):
