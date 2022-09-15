@@ -31,7 +31,7 @@ import numpy
 import plotly
 
 from presentation_base import StochSSBase, get_presentation_from_user
-from model_presentation import StochSSModel
+from model_presentation import StochSSSpatialModel
 from presentation_error import StochSSJobResultsError, StochSSFileNotFoundError, report_error, \
                                PlotNotAvailableError, StochSSAPIError
 
@@ -54,7 +54,6 @@ class JobAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         owner = self.get_query_argument(name="owner")
         log.debug(f"Container id of the owner: {owner}")
         file = self.get_query_argument(name="file")
@@ -68,7 +67,6 @@ class JobAPIHandler(BaseHandler):
                 job = get_presentation_from_user(owner=owner, file=file, kwargs={"file": file},
                                                  process_func=process_job_presentation)
             log.debug(f"Contents of the json file: {job}")
-            log.setLevel(logging.WARNING)
             self.write(job)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
@@ -201,11 +199,10 @@ def process_job_presentation(path, file=None, for_download=False):
             json.dump(job['job'], job_file, sort_keys=True, indent=4)
         with open(os.path.join(job_dir, "results.p"), "wb") as res_file:
             pickle.dump(job['results'], res_file)
-        model = StochSSModel(model=job['job']['model'])
+        if not job['job']['model']['is_spatial']:
+            return {"job": job['job']}
+        model = StochSSSpatialModel(model=job['job']['model'])
         data = model.load()
-        log.debug("*"*100)
-        log.debug(data.keys())
-        log.debug("*"*100)
         job['job']['model'] = data['model']
         return {"job": job['job'], "domainPlot": data['domainPlot']}
     job_zip = make_zip_for_download(job)
@@ -596,11 +593,8 @@ class StochSSJob(StochSSBase):
             job = json.load(job_file)
         if not job['model']['is_spatial']:
             return {"job": job}
-        model = StochSSModel(job['model'])
+        model = StochSSSpatialModel(job['model'])
         data = model.load()
-        log.debug("*"*100)
-        log.debug(data.keys())
-        log.debug("*"*100)
         job['model'] = data['model']
         return {"job": job, "domainPlot": data['domainPlot']}
 
