@@ -590,6 +590,7 @@ class StochSSJob(StochSSBase):
             return {"job": job}
         model = StochSSModel(job['model'])
         data = model.load()
+        print(data.keys())
         job['model'] = data['model']
         return {"job": job, "domainPlot": data['domainPlot']}
 
