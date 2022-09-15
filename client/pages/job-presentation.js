@@ -54,7 +54,7 @@ let JobPresentationPage = PageView.extend({
         this.titleType = body.titleType;
         this.model.set(body);
         this.renderSubviews(false);
-        console.log(body.domainPlot)
+        this.domainPlot = body.domainPlot ? body.domainPlot : null;
       },
       error: (err, response, body) => {
         this.renderSubviews(true);
@@ -86,6 +86,9 @@ let JobPresentationPage = PageView.extend({
       titleType: this.titleType,
       newFormat: true,
       readOnly: true
+    }
+    if(this.domainPlot) {
+      options.domainPlot = this.domainPlot;
     }
     let jobView = new JobView(options);
     app.registerRenderSubview(this, jobView, "job-view");
