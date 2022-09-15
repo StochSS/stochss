@@ -31,6 +31,7 @@ import numpy
 import plotly
 
 from presentation_base import StochSSBase, get_presentation_from_user
+from model_presentation import StochSSModel
 from presentation_error import StochSSJobResultsError, StochSSFileNotFoundError, report_error, \
                                PlotNotAvailableError, StochSSAPIError
 
@@ -584,7 +585,13 @@ class StochSSJob(StochSSBase):
         ----------
         '''
         with open(os.path.join(self.path, "job.json"), "r") as job_file:
-            return json.load(job_file)
+            job = json.load(job_file)
+        if not job['model']['is_spatial']:
+            return {"job": job}
+        model = StochSSModel(job['model'])
+        data, domain_plot = model.load()
+        job['model'] = data
+        return {"job": job, "domainPlot": domain_plot}
 
 
     def update_fig_layout(self, fig=None, plt_data=None):
