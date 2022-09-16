@@ -50,9 +50,9 @@ let JobPresentationPage = PageView.extend({
     let endpoint = `api/job/load?file=${file}&owner=${owner}`;
     app.getXHR(endpoint, {
       success: (err, response, body) => {
-        this.title = body.name;
-        this.titleType = body.titleType;
-        this.model.set(body);
+        this.title = body.job.name;
+        this.titleType = body.job.titleType;
+        this.model.set(body.job);
         this.domainPlot = body.domainPlot ? body.domainPlot : null;
         this.renderSubviews(false);
       },
