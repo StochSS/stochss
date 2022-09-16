@@ -51,24 +51,13 @@ RUN python3 -m pip install --no-cache-dir \
         plotly
 
 #  build the PUG pages
-#WORKDIR /srv/
-#RUN npm  install
-#RUN npm run build-home
-
-#COPY static/*    /usr/local/share/jupyterhub/static/
-#
-#COPY custom/favicon.ico /usr/local/share/jupyterhub/static/favicon.ico
-#
-#COPY custom/custom.js    /opt/stochss-config/.jupyter/custom/custom.js
-#
-#COPY cull_idle_servers.py /srv/jupyterhub/cull_idle_servers.py
-
 WORKDIR /srv/
 COPY . /srv/
+
 RUN npm install
 RUN npm run build-home
 RUN cp /srv/jupyterhub/static/* /usr/local/share/jupyterhub/static/
 RUN cp /srv/jupyterhub/custom/favicon.ico /usr/local/share/jupyterhub/static/favicon.ico
-#
+
 WORKDIR /srv/jupyterhub
 CMD ["jupyterhub" "-f" "/srv/jupyterhub/jupyterhub_config.py"]

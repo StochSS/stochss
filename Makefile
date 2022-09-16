@@ -83,15 +83,14 @@ cert:
 	@echo "Generating certificate..."
 	openssl req -x509 -nodes -days 365 -newkey rsa:2048 -keyout $(SSL_KEY) -out $(SSL_CERT)
 
-build_home_page:
-#	npm run build-home
+create_dep_dirs:
+	mkdir -p "./userlist"
 
-build_hub: build_home_page check-files network volumes
+build_hub: create_dep_dirs check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	docker-compose --env-file jupyterhub/.env -f jupyterhub/docker-compose.yml build
-	#cd ./jupyterhub && docker-compose build
 
-build_hub_clean: build_home_page check-files network volumes
+build_hub_clean: create_dep_dirs check-files network volumes
 	export AUTH_CLASS='' && export OAUTH_FILE='.oauth.dummy.env' && \
 	docker-compose --env-file jupyterhub/.env -f jupyterhub/docker-compose.yml build --no-cache
 
