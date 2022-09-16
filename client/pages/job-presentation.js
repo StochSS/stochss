@@ -53,8 +53,8 @@ let JobPresentationPage = PageView.extend({
         this.title = body.name;
         this.titleType = body.titleType;
         this.model.set(body);
-        this.renderSubviews(false);
         this.domainPlot = body.domainPlot ? body.domainPlot : null;
+        this.renderSubviews(false);
       },
       error: (err, response, body) => {
         this.renderSubviews(true);
@@ -80,17 +80,14 @@ let JobPresentationPage = PageView.extend({
     }
   },
   renderJobView: function () {
-    let options = {
+    let jobView = new JobView({
       model: this.model,
       wkflName: this.title,
       titleType: this.titleType,
+      domainPlot: this.domainPlot,
       newFormat: true,
       readOnly: true
-    }
-    if(this.domainPlot) {
-      options.domainPlot = this.domainPlot;
-    }
-    let jobView = new JobView(options);
+    });
     app.registerRenderSubview(this, jobView, "job-view");
   }
 });
