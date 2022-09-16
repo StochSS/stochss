@@ -17,15 +17,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
-import numpy
 import pickle
 import logging
 import traceback
 
-from spatialpy import TimeSpan, Solver
+from spatialpy import TimeSpan
 
 from .stochss_job import StochSSJob
-from .stochss_errors import StochSSAPIError, StochSSJobResultsError
+from .stochss_errors import StochSSJobResultsError
 
 log = logging.getLogger("stochss")
 
