@@ -195,7 +195,7 @@ def process_job_presentation(path, file=None, for_download=False):
         job_dir = os.path.join(dirname, file)
         job['job']['directory'] = job_dir
         os.mkdir(job_dir)
-        with open(os.path.join(job_dir, "job.json"), "w") as job_file:
+        with open(os.path.join(job_dir, "job.json"), "w", encoding="utf-8") as job_file:
             json.dump(job['job'], job_file, sort_keys=True, indent=4)
         with open(os.path.join(job_dir, "results.p"), "wb") as res_file:
             pickle.dump(job['results'], res_file)
@@ -237,7 +237,7 @@ def make_zip_for_download(job):
     if "No logs" in job['job']['logs']:
         Path(os.path.join(job_path, "logs.txt")).touch()
     else:
-        with open(os.path.join(job_path, "logs.txt"), "w") as logs_file:
+        with open(os.path.join(job_path, "logs.txt"), "w", encoding="utf-8") as logs_file:
             logs_file.write(job['job']['logs'])
     wkfl_path = os.path.dirname(job_path)
     settings = {"model": info['source_model'], "settings": job['job']['settings'],
@@ -262,7 +262,7 @@ def write_json(path, body):
     body : dict
         Contents of the file.
     '''
-    with open(path, "w") as file:
+    with open(path, "w", encoding="utf-8") as file:
         json.dump(body, file, sort_keys=True, indent=4)
 
 
@@ -367,7 +367,7 @@ class StochSSJob(StochSSBase):
     @classmethod
     def __write_parameters_csv(cls, path, name, data_keys):
         csv_path = os.path.join(path, name, "parameters.csv")
-        with open(csv_path, "w") as csv_file:
+        with open(csv_path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(list(data_keys.keys()))
             csv_writer.writerow(list(data_keys.values()))
@@ -589,7 +589,7 @@ class StochSSJob(StochSSBase):
         Attributes
         ----------
         '''
-        with open(os.path.join(self.path, "job.json"), "r") as job_file:
+        with open(os.path.join(self.path, "job.json"), "r", encoding="utf-8") as job_file:
             job = json.load(job_file)
         if not job['model']['is_spatial']:
             return {"job": job}
@@ -660,7 +660,7 @@ class ParameterSweep1D():
 
     @classmethod
     def __write_csv_file(cls, path, header, param, data):
-        with open(path, "w") as csv_file:
+        with open(path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(header)
             for i, val in enumerate(param['range']):
@@ -785,7 +785,7 @@ class ParameterSweep2D():
 
     @classmethod
     def __write_csv_file(cls, path, header, params, data):
-        with open(path, "w") as csv_file:
+        with open(path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(header)
             for i, val1 in enumerate(params[0]['range']):

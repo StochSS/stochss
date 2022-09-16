@@ -179,7 +179,7 @@ class RunWorkflowAPIHandler(APIHandler):
             log.debug(f"Exec command sent to the subprocess: {exec_cmd}")
             log.debug('Sending the workflow run cmd')
             job = subprocess.Popen(exec_cmd)
-            with open(os.path.join(path, "RUNNING"), "w") as file:
+            with open(os.path.join(path, "RUNNING"), "w", encoding="utf-8") as file:
                 file.write(f"Subprocess id: {job.pid}")
             log.debug('The workflow has started')
         except StochSSAPIError as err:

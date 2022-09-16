@@ -101,7 +101,7 @@ def process_model_presentation(path, file=None, for_download=False):
     for_download : bool
         Whether or not the model presentation is being downloaded.
     '''
-    with open(path, "r") as mdl_file:
+    with open(path, "r", encoding="utf-8") as mdl_file:
         model = json.load(mdl_file)
     if for_download:
         return model
@@ -277,7 +277,9 @@ class StochSSSpatialModel(StochSSBase):
     def __update_domain(self, domain=None):
         if domain is None:
             if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
-                self.model['domain'] = self.get_model_template()['domain']
+                raise StochSSAPIError(
+                    406, "Domain Error", "The model does not contain a domain", None
+                )
             domain = self.model['domain']
         if "template_version" not in domain or domain['template_version'] != self.TEMPLATE_VERSION:
             if "static" not in domain.keys():
