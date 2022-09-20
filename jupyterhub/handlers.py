@@ -118,7 +118,7 @@ class MessageAPIHandler(BaseHandler):
         Attributes
         ----------
         '''
-        path = "/srv/jupyterhub//userlist/messages.json"
+        path = "/srv/userlist/messages.json"
         if os.path.exists(path):
             with open(path, "r", encoding="utf-8") as msg_file:
                 messages = json.load(msg_file)
