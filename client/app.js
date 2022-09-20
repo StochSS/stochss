@@ -254,9 +254,9 @@ let switchToEditTab = (view, section) => {
 let maintenance = () => {
   getXHR("stochss/api/message", {
     always: (err, response, body) => {
-      if(body.length === 0) { console.log(null) }
+      if(body.messages.length === 0) { console.log(null) }
       var html = ``;
-      body.forEach((data) => {
+      body.messages.forEach((data) => {
         if(data.start) {
           let s_date = new Date(data.start);
           let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(s_date);
