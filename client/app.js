@@ -251,8 +251,8 @@ let switchToEditTab = (view, section) => {
   }
 }
 
-let maintenance: function () {
-  getXHR("api/message" {
+let maintenance: () => {
+  getXHR("api/message", {
     always: (err, response, body) => {
       console.log(body)
     }
