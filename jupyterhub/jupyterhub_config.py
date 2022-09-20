@@ -37,7 +37,7 @@ from job_presentation import (
 # Page handlers
 from handlers import (
     HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler,
-    MultiplePlotsHandler
+    MultiplePlotsHandler, MessageAPIHandler
 )
 
 ## Class for authenticating users.
