@@ -103,3 +103,25 @@ class MultiplePlotsHandler(BaseHandler):
         '''
         html = self.render_template("multiple-plots-page.html")
         self.finish(html)
+
+class MessageAPIHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Handler for retrieving user messages.
+    ################################################################################################
+    '''
+    async def get(self):
+        '''
+        Get the messages from the message file.
+
+        Attributes
+        ----------
+        '''
+        path = "/srv/jupyterhub//userlist/messages.json"
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as msg_file:
+                message = json.load(msg_file)
+        else:
+            message = None
+        self.write(message)
+        self.finish()

@@ -92,6 +92,7 @@ c.JupyterHub.default_url = '/stochss'
 # StochSS request handlers
 c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
+        (r"/stochss/api/message\/?", MessageAPIHandler),
         (r"/stochss/present-job\/?", JobPresentationHandler),
         (r"/stochss/present-model\/?", ModelPresentationHandler),
         (r"/stochss/present-notebook\/?", NotebookPresentationHandler),
