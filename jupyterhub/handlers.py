@@ -123,6 +123,6 @@ class MessageAPIHandler(BaseHandler):
             with open(path, "r", encoding="utf-8") as msg_file:
                 message = json.load(msg_file)
         else:
-            message = None
+            message = {}
         self.write(message)
         self.finish()
