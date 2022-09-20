@@ -251,6 +251,25 @@ let switchToEditTab = (view, section) => {
   }
 }
 
+let maintenance: function () {
+  getXHR("api/message" {
+    always: (err, response, body) => {
+      console.log(body)
+    }
+  });
+
+  // let s_date = new Date("Sep 26, 2022  14:00 EST");
+  // let e_date = new Date("Sep 26, 2022  18:00 EST");
+  // let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(s_date);
+  // let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(s_date);
+  // let tz = s_date.toString().split('(').pop().split(')')[0];
+  // let m_day = `${day} ${mon} ${s_date.getDate()} ${s_date.getFullYear()}`;
+  // let m_start = `${s_date.getHours()}:00 ${tz}`;
+  // let m_end = `${e_date.getHours()}:00 ${tz}`;
+  // let m_time = `${m_day} from ${m_start} to ${m_end}`;
+  // return `StochSS Live! will be down for scheduled maintenance on ${m_time}`;
+}
+
 module.exports = {
     routePrefix: routePrefix,
     getApiPath: getApiPath,
@@ -265,7 +284,8 @@ module.exports = {
     documentSetup: documentSetup,
     copyToClipboard: copyToClipboard,
     switchToEditTab: switchToEditTab,
-    validateName: validateName
+    validateName: validateName,
+    maintenance: maintenance
 };
 
 
