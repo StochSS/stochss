@@ -254,7 +254,36 @@ let switchToEditTab = (view, section) => {
 let maintenance = () => {
   getXHR("stochss/api/message", {
     always: (err, response, body) => {
-      console.log(body)
+      if(body.length === 0) { console.log(null) }
+      var html = ``;
+      body.forEach((data) => {
+        if(data.start) {
+          let s_date = new Date(data.start);
+          let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(s_date);
+          let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(s_date);
+          let s_day = `${day} ${mon} ${s_date.getDate()} ${s_date.getFullYear()}`;
+          data.message.replace("__DATE__", s_day);
+
+          let tz = s_date.toString().split('(').pop().split(')')[0];
+          var minutes = s_date.getMinutes() < 10 ? `0${s_date.getMinutes()}` : s_date.getMinutes();
+          let m_start = `${s_date.getHours()}:${minutes} ${tz}`;
+          data.message.replace("__START__", m_start);
+        }
+        if(data.end) {
+          let e_date = new Date(data.end);
+          let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(e_date);
+          let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(e_date);
+          let e_day = `${day} ${mon} ${e_date.getDate()} ${e_date.getFullYear()}`;
+          data.message.replace("__DATE__", e_day);
+
+          let tz = e_date.toString().split('(').pop().split(')')[0];
+          var minutes = e_date.getMinutes() < 10 ? `0${e_date.getMinutes()}` : e_date.getMinutes();
+          let m_end = `${e_date.getHours()}:${minutes} ${tz}`;
+          data.message.replace("__END__", m_end);
+        }
+        html += `<h4 class='display-5 mt-2'>${message}</h4>`;
+      });
+      console.log(html)
     }
   });
 
