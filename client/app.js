@@ -252,7 +252,7 @@ let switchToEditTab = (view, section) => {
 }
 
 let maintenance = () => {
-  getXHR("api/message", {
+  getXHR("stochss/api/message", {
     always: (err, response, body) => {
       console.log(body)
     }
