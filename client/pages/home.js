@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let app = require('../app');
 let PageView = require('./base');
 let graphics = require('../graphics');
 let domReady = require('domready');
