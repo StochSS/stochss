@@ -296,7 +296,7 @@ let maintenance = (view) => {
         }else if(Object.keys(styles).includes(data.style)) {
           var style = styles[data.style];
         }else {
-          var style = date.style;
+          var style = data.style;
         }
         html += `<h4 class='display-5 mt-2'>${data.message} style='${style}'</h4>`;
       });
