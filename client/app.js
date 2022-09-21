@@ -257,31 +257,40 @@ let maintenance = () => {
       if(body.messages.length === 0) { console.log(null) }
       var html = ``;
       body.messages.forEach((data) => {
+        var message = data.message
         if(data.start) {
           let s_date = new Date(data.start);
           let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(s_date);
           let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(s_date);
           let s_day = `${day} ${mon} ${s_date.getDate()} ${s_date.getFullYear()}`;
-          data.message.replace("__DATE__", s_day);
+          console.log(s_day)
+          message.replace("__DATE__", s_day);
+          console.log(message)
 
           let tz = s_date.toString().split('(').pop().split(')')[0];
           var minutes = s_date.getMinutes() < 10 ? `0${s_date.getMinutes()}` : s_date.getMinutes();
           let m_start = `${s_date.getHours()}:${minutes} ${tz}`;
-          data.message.replace("__START__", m_start);
+          console.log(m_start)
+          message.replace("__START__", m_start);
+          console.log(message)
         }
         if(data.end) {
           let e_date = new Date(data.end);
           let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(e_date);
           let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(e_date);
           let e_day = `${day} ${mon} ${e_date.getDate()} ${e_date.getFullYear()}`;
-          data.message.replace("__DATE__", e_day);
+          console.log(e_day)
+          message.replace("__DATE__", e_day);
+          console.log(message)
 
           let tz = e_date.toString().split('(').pop().split(')')[0];
           var minutes = e_date.getMinutes() < 10 ? `0${e_date.getMinutes()}` : e_date.getMinutes();
           let m_end = `${e_date.getHours()}:${minutes} ${tz}`;
-          data.message.replace("__END__", m_end);
+          console.log(m_end)
+          message.replace("__END__", m_end);
+          console.log(message)
         }
-        html += `<h4 class='display-5 mt-2'>${data.message}</h4>`;
+        html += `<h4 class='display-5 mt-2'>${message}</h4>`;
       });
       console.log(html)
     }
