@@ -281,7 +281,7 @@ let maintenance = () => {
           let m_end = `${e_date.getHours()}:${minutes} ${tz}`;
           data.message.replace("__END__", m_end);
         }
-        html += `<h4 class='display-5 mt-2'>${message}</h4>`;
+        html += `<h4 class='display-5 mt-2'>${data.message}</h4>`;
       });
       console.log(html)
     }
