@@ -251,47 +251,56 @@ let switchToEditTab = (view, section) => {
   }
 }
 
-let maintenance = () => {
+let maintenance = (view) => {
   getXHR("stochss/api/message", {
     always: (err, response, body) => {
       if(body.messages.length === 0) { console.log(null) }
       var html = ``;
       body.messages.forEach((data) => {
+        let styles = {
+          "primary": "background-color: rgba(0, 123, 255, 0.5) !important;",
+          "secondary": "background-color: rgba(108, 117, 125, 0.5) !important;",
+          "light": "background-color: rgba(248, 249, 250, 0.5) !important;",
+          "dark": "background-color: rgba(52, 58, 64, 0.5) !important;",
+          "success": "background-color: rgba(40, 167, 69, 0.5) !important;",
+          "info": "background-color: rgba(23, 162, 184, 0.5) !important;",
+          "warning": "background-color: rgba(255, 193, 7, 0.5) !important;",
+          "danger": "background-color: rgba(220, 53, 69, 0.5) !important;"
+        }
         if(data.start) {
           let s_date = new Date(data.start);
           let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(s_date);
           let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(s_date);
           let s_day = `${day} ${mon} ${s_date.getDate()} ${s_date.getFullYear()}`;
-          console.log(s_day)
           data.message = data.message.replace("__DATE__", s_day);
-          console.log(data.message)
 
           let tz = s_date.toString().split('(').pop().split(')')[0];
           var minutes = s_date.getMinutes() < 10 ? `0${s_date.getMinutes()}` : s_date.getMinutes();
           let m_start = `${s_date.getHours()}:${minutes} ${tz}`;
-          console.log(m_start)
           data.message = data.message.replace("__START__", m_start);
-          console.log(data.message)
         }
         if(data.end) {
           let e_date = new Date(data.end);
           let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(e_date);
           let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(e_date);
           let e_day = `${day} ${mon} ${e_date.getDate()} ${e_date.getFullYear()}`;
-          console.log(e_day)
           data.message = data.message.replace("__DATE__", e_day);
-          console.log(data.message)
 
           let tz = e_date.toString().split('(').pop().split(')')[0];
           var minutes = e_date.getMinutes() < 10 ? `0${e_date.getMinutes()}` : e_date.getMinutes();
           let m_end = `${e_date.getHours()}:${minutes} ${tz}`;
-          console.log(m_end)
           data.message = data.message.replace("__END__", m_end);
-          console.log(data.message)
         }
-        html += `<h4 class='display-5 mt-2'>${data.message}</h4>`;
+        if(!data.style) {
+          var style = styles.warning;
+        }else if(Object.keys(styles).includes(data.style)) {
+          var style = styles[data.style];
+        }else {
+          var style = date.style;
+        }
+        html += `<h4 class='display-5 mt-2'>${data.message} style='${style}'</h4>`;
       });
-      console.log(html)
+      $(view.queryByHook('message-to-users')).html(html);
     }
   });
 

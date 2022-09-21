@@ -34,9 +34,8 @@ let HomePage = PageView.extend({
       'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick'
     },
     render: function () {
-      this.maintenance = app.maintenance();
       PageView.prototype.render.apply(this, arguments);
-      //$(this.queryByHook('stochss-logo')).html(graphics['logo'])
+      app.maintenance(this);
     },
     handleRegistrationLinkClick: function () {
       $(this.queryByHook("registration-form")).collapse('show');
