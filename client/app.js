@@ -298,22 +298,11 @@ let maintenance = (view) => {
         }else {
           var style = data.style;
         }
-        html += `<h4 class='display-5 mt-2'>${data.message} style='${style}'</h4>`;
+        html += `<h4 class='display-5 mt-2' style='${style}'>${data.message}</h4>`;
       });
       $(view.queryByHook('message-to-users')).html(html);
     }
   });
-
-  // let s_date = new Date("Sep 26, 2022  14:00 EST");
-  // let e_date = new Date("Sep 26, 2022  18:00 EST");
-  // let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(s_date);
-  // let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(s_date);
-  // let tz = s_date.toString().split('(').pop().split(')')[0];
-  // let m_day = `${day} ${mon} ${s_date.getDate()} ${s_date.getFullYear()}`;
-  // let m_start = `${s_date.getHours()}:00 ${tz}`;
-  // let m_end = `${e_date.getHours()}:00 ${tz}`;
-  // let m_time = `${m_day} from ${m_start} to ${m_end}`;
-  // return `StochSS Live! will be down for scheduled maintenance on ${m_time}`;
 }
 
 module.exports = {
