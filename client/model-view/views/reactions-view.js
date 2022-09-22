@@ -89,7 +89,9 @@ module.exports = View.extend({
       attr = attrKey[0].toLowerCase().replace(/ /g, '');
       key = attrKey[1];
     }
-    this.renderEditReactionView({'key': key, 'attr': attr});
+    if(this.readOnly) {
+      this.renderEditReactionView({'key': key, 'attr': attr});
+    }
     this.renderViewReactionView({'key': key, 'attr': attr});
   },
   getStoichArgsForReactionType: function(type) {
