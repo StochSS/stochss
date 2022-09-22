@@ -191,6 +191,7 @@ module.exports = State.extend({
     if(attr !== null) {
       checks['reactantsproducts'] = checks.reactants || checks.products;
       checks['propensities'] = checks.propensity || checks.odepropensity;
+      checks['massaction'] = this.massaction === Boolean(key);
       let otherAttrs = {
         'stochasticpropensityfunction': 'propensity', 'odepropensityfunction': 'odePropensity',
         'rateparameter': 'rate','rateconstant': 'rate', 'stoichspecies': 'reactantsproducts'

@@ -89,7 +89,7 @@ module.exports = View.extend({
       attr = attrKey[0].toLowerCase().replace(/ /g, '');
       key = attrKey[1];
     }
-    if(this.readOnly) {
+    if(!this.readOnly) {
       this.renderEditReactionView({'key': key, 'attr': attr});
     }
     this.renderViewReactionView({'key': key, 'attr': attr});
