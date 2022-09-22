@@ -16,7 +16,9 @@ div#events.card
 
           a.nav-link.tab(data-hook="events-view-tab" data-toggle="tab" href="#view-events") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#events-container", data-hook="collapse") +
+    button.btn.btn-outline-collapse.inline(data-toggle="collapse", data-target="#events-container", data-hook="collapse") +
+
+    div.inline(data-hook="event-filter" style="float: right;")
 
   div.card-body
 
