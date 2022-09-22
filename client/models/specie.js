@@ -45,6 +45,13 @@ module.exports = State.extend({
   contains: function (attr, key) {
     if(key === null) { return true; }
 
+    let types = []
+    if(this.types) {
+      this.types.forEach((typeID) => {
+        types.push(this.collection.parent.domain.types.get(typeID, "typeID").name);
+      });
+    }
+
     let checks = {
       'name': this.name.includes(key),
       'value': this.value === Number(key),
@@ -52,7 +59,7 @@ module.exports = State.extend({
       'switchTol': this.isSwitchTol && this.switchTol === Number(key),
       'switchMin': !this.isSwitchTol && this.switchMin === Number(key),
       'diffusionConst': this.diffusionConst === Number(key),
-      'types': this.types && this.types.includes(key)
+      'types': types.includes(key)
     }
 
     if(attr !== null) {
