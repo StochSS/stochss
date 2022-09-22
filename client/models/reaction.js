@@ -169,6 +169,12 @@ module.exports = State.extend({
 
     let reactants = this.reactants.map((reactant) => { return reactant.specie.name; });
     let products = this.products.map((product) => { return product.specie.name; });
+    let types = []
+    if(this.types) {
+      this.types.forEach((typeID) => {
+        types.push(this.collection.parent.domain.types.get(typeID, "typeID").name);
+      });
+    }
     
     let checks = {
       'name': this.name.includes(key),
@@ -179,7 +185,7 @@ module.exports = State.extend({
       'propensity': this.reactionType === "custom-propensity" && this.propensity.includes(key),
       'odepropensity': this.reactionType === "custom-propensity" && this.odePropensity.includes(key),
       'rate': this.reactionType !== "custom-propensity" && this.rate.name === key,
-      'types': this.types && this.types.includes(key)
+      'types': types.includes(key)
     }
 
     if(attr !== null) {
