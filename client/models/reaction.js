@@ -194,7 +194,8 @@ module.exports = State.extend({
       checks['massaction'] = this.massaction === Boolean(key);
       let otherAttrs = {
         'stochasticpropensityfunction': 'propensity', 'odepropensityfunction': 'odePropensity',
-        'rateparameter': 'rate','rateconstant': 'rate', 'stoichspecies': 'reactantsproducts'
+        'rateparameter': 'rate','rateconstant': 'rate', 'stoichspecies': 'reactantsproducts',
+        'restrictto': 'types'
       }
       if(Object.keys(otherAttrs).includes(attr)) {
         attr = otherAttrs[attr];

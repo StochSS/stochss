@@ -65,7 +65,7 @@ module.exports = State.extend({
     if(attr !== null) {
       let otherAttrs = {
         'initialcondition': 'value', 'initialvalue': 'value',
-        'switchingtolerance': 'switchTol',
+        'switchingtolerance': 'switchTol', 'restrictto': 'types',
         'minimumvalueforswitching': 'switchMin'
       }
       if(Object.keys(otherAttrs).includes(attr)) {
