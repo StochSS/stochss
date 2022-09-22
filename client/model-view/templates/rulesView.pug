@@ -16,7 +16,9 @@ div#rules-editor.card
 
           a.nav-link.tab(data-hook="rules-view-tab" data-toggle="tab" href="#view-rules") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-rules", data-hook="collapse") +
+    button.btn.btn-outline-collapse.inline(data-toggle="collapse", data-target="#collapse-rules", data-hook="collapse") +
+
+    div.inline(data-hook="rule-filter" style="float: right;")
 
   div.card-body
     p.mb-0

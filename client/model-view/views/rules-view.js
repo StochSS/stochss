@@ -24,6 +24,7 @@ let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
 let RuleView = require('./rule-view');
+let InputView = require('../../views/input');
 //templates
 let template = require('../templates/rulesView.pug');
 
@@ -32,7 +33,8 @@ module.exports = View.extend({
   events: {
     'click [data-hook=rate-rule]' : 'addRule',
     'click [data-hook=assignment-rule]' : 'addRule',
-    'click [data-hook=collapse]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'change [data-hook=rule-filter]' : 'filterRules'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -67,6 +69,19 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
+  filterRules: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
+    if(!this.readOnly) {
+      this.renderEditRules({'key': key, 'attr': attr});
+    }
+    this.renderViewRules({'key': key, 'attr': attr});
+  },
   openSection: function () {
     if(!$(this.queryByHook("rules-list-container")).hasClass("show")) {
       let ruleCollapseBtn = $(this.queryByHook("collapse"));
@@ -84,18 +99,20 @@ module.exports = View.extend({
     katex.render("dx/dt = f(W)", this.queryByHook("rr-doc-func"), options);
     katex.render("x = f(V)", this.queryByHook("ar-doc-func"), options);
   },
-  renderEditRules: function () {
+  renderEditRules: function ({key=null, attr=null}={}) {
     if(this.rulesView) {
       this.rulesView.remove();
     }
+    let options = {filter: (model) => { return model.contains(attr, key); }}
     this.rulesView = this.renderCollection(
       this.collection,
       RuleView,
-      this.queryByHook('edit-rule-list-container')
+      this.queryByHook('edit-rule-list-container'),
+      options
     );
     app.tooltipSetup();
   },
-  renderViewRules: function () {
+  renderViewRules: function ({key=null, attr=null}={}) {
     if(this.viewRulesView) {
       this.viewRulesView.remove();
     }
@@ -105,7 +122,10 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook("rules-annotation-header")).css("display", "block");
     }
-    let options = {viewOptions: {viewMode: true}};
+    let options = {
+      viewOptions: {viewMode: true, hasAnnotations: this.containsMdlWithAnn},
+      filter: (model) => { return model.contains(attr, key); }
+    }
     this.viewRulesView = this.renderCollection(
       this.collection,
       RuleView,
@@ -122,5 +142,19 @@ module.exports = View.extend({
     $(this.queryByHook('add-rule')).prop('disabled', disabled);
   },
   update: function () {},
-  updateValid: function () {}
+  updateValid: function () {},
+  subviews: {
+    filter: {
+      hook: 'rule-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string',
+          placeholder: 'filter'
+        });
+      }
+    }
+  }
 });
