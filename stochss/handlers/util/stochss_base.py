@@ -20,9 +20,7 @@ import os
 import json
 import time
 import shutil
-import hashlib
 import datetime
-import tempfile
 import traceback
 
 import requests
@@ -51,26 +49,30 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
-    def __build_example_dropdown(self, exm_data):
-        header = "<li class='dropdown-item py-0'>__KEY__</li>"
-        divider = "<li class='dropdown-divider'></li>"
-        entry_li = "<li class='dropdown-item nav-drop-item'>__ENTRY_A__</li>"
-        entry_a = "<a class='nav-link nav-drop-item__ALERT__' href='__OPEN_LINK__'>__NAME__</a>"
+    def __build_example_html(self, exm_data):
+        row = "<div class='row'>__CONTENTS__</div>"
+        entry = "__ALERT__' href='__OPEN_LINK__' role='button' style='width: 100%'>__NAME__</a>"
+        entry_a = f"<a class='btn box-shadow btn-outline-{entry}"
+
         # Well Mixed Examples
-        example_list = [header.replace("__KEY__", "Well-Mixed"), divider]
+        wm_list = []
         for entry in exm_data['Well-Mixed']:
             exm_a = entry_a.replace("__ALERT__", entry['alert'])
             exm_a = exm_a.replace("__OPEN_LINK__", entry['open_link'])
             exm_a = exm_a.replace("__NAME__", entry['name'])
-            example_list.append(entry_li.replace("__ENTRY_A__", exm_a))
+            wm_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
+        well_mixed = row.replace("__CONTENTS__", ''.join(wm_list))
+
         # Spatial Examples
-        example_list.extend([header.replace("__KEY__", "Spatial"), divider])
+        s_list = []
         for entry in exm_data['Spatial']:
             exm_a = entry_a.replace("__ALERT__", entry['alert'])
             exm_a = exm_a.replace("__OPEN_LINK__", entry['open_link'])
             exm_a = exm_a.replace("__NAME__", entry['name'])
-            example_list.append(entry_li.replace("__ENTRY_A__", exm_a))
-        return "".join(example_list)
+            s_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
+        spatial = row.replace("__CONTENTS__", ''.join(s_list))
+
+        return {"wellMixed": well_mixed, "spatial": spatial}
 
     def __get_entry(self, entries, name):
         for entry in entries:
@@ -98,13 +100,13 @@ class StochSSBase():
 
     def __update_exm_data(self, exm_data, old_exm_data=None):
         for entry in exm_data['Well-Mixed']:
-            entry['alert'] = " text-success"
+            entry['alert'] = " success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Well-Mixed'], entry['name'])
                 entry['mod_time'] = old_entry['mod_time']
                 entry['umd5_sum'] = old_entry['umd5_sum']
         for entry in exm_data['Spatial']:
-            entry['alert'] = " text-success"
+            entry['alert'] = " success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Spatial'], entry['name'])
                 entry['mod_time'] = old_entry['mod_time']
@@ -126,7 +128,6 @@ class StochSSBase():
             self.__update_umd5_sums(exm_data, files=non_projs)
             self.__update_umd5_sums(exm_data, files=projs)
         else:
-            tmp_dir = tempfile.TemporaryDirectory()
             for example in files:
                 if example in exm_data['Names']:
                     entry = self.__get_entry(
@@ -136,19 +137,7 @@ class StochSSBase():
                         entry = self.__get_entry(
                             exm_data['Spatial'], exm_data['Name-Mappings'][example]
                         )
-                    # Update MD5 Sum for users example files
-                    # if os.path.getmtime(os.path.join(e_path, example)) != entry['mod_time']:
-                    #     entry['mod_time'] = os.path.getmtime(os.path.join(e_path, example))
-                    #     zip_path = os.path.join(tmp_dir.name, exm_data['Name-Mappings'][example])
-                    #     shutil.make_archive(zip_path, "zip", e_path, example)
-                    #     with open(f"{zip_path}.zip", "rb") as zip_file:
-                    #         entry['umd5_sum'] = hashlib.md5(zip_file.read()).hexdigest()
-                    # if entry['umd5_sum'] == entry['error']:
-                    #     entry['alert'] = " text-danger"
-                    # elif entry['umd5_sum'] != entry['md5_sum']:
-                    #     entry['alert'] = " text-warning"
-                    # else:
-                    entry['alert'] = ""
+                    entry['alert'] = "primary"
 
     def add_presentation_name(self, file, name):
         '''
@@ -472,7 +461,7 @@ class StochSSBase():
         with open(self.path, "w", encoding="utf-8") as data_file:
             json.dump(exm_data, data_file, sort_keys=True, indent=4)
 
-        return self.__build_example_dropdown(exm_data)
+        return self.__build_example_html(exm_data)
 
     def log(self, level, message):
         '''
