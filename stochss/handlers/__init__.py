@@ -49,6 +49,7 @@ def get_page_handlers(route_start):
         (r'/stochss/project/manager\/?', ProjectManagerHandler),
         (r'/stochss/loading-page\/?', LoadingPageHandler),
         (r'/stochss/multiple-plots\/?', MultiplePlotsHandler),
+        (r'/stochss/example-library\/?', ExampleLibraryHandler),
         #
         ## API Handlers
         #
