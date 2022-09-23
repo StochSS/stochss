@@ -28,12 +28,19 @@ import initPage from './page.js';
 
 let exampleLibrary = PageView.extend({
   template: template,
+  events: {
+  	'click [data-hook=collapse-well-mixed]' : 'changeCollapseButtonText',
+  	'click [data-hook=collapse-spatial]' : 'changeCollapseButtonText'
+  },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
   },
   render: function (attrs, options) {
   	PageView.prototype.render.apply(this, arguments);
   	this.getExampleLibrary();
+  },
+  changeCollapseButtonText: function (e) {
+  	app.changeCollapseButtonText(this, e)
   },
   getExampleLibrary: function () {
     let endpoint = path.join(app.getApiPath(), "example-library");
