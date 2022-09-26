@@ -30,6 +30,7 @@ from gillespy2.core import log as gillespy2_log
 sys.path.append("/stochss/stochss/") # pylint: disable=wrong-import-position
 sys.path.append("/stochss/stochss/handlers/") # pylint: disable=wrong-import-position
 from util.ensemble_simulation import EnsembleSimulation
+from util.spatial_simulation import SpatialSimulation
 from util.parameter_sweep import ParameterSweep
 from handlers.log import init_log
 
@@ -67,7 +68,7 @@ def report_error(err):
     message = f"Job errors: {str(err)}\n{traceback.format_exc()}"
     gillespy2_log.error(message)
     log.error(message)
-    open('ERROR', 'w').close()
+    open('ERROR', 'w', encoding="utf-8").close()
 
 
 def setup_logger(log_path):
@@ -105,7 +106,11 @@ def setup_logger(log_path):
 
 if __name__ == "__main__":
     args = get_parsed_args()
-    jobs = {"gillespy":EnsembleSimulation, "parameterSweep":ParameterSweep}
+    jobs = {
+        "gillespy":EnsembleSimulation,
+        "spatial": SpatialSimulation,
+        "parameterSweep":ParameterSweep
+    }
     try:
         os.chdir(args.path)
         job = jobs[args.type](path=args.path)
@@ -117,4 +122,4 @@ if __name__ == "__main__":
         job_handler.close()
         user_handler.close()
         # update status to complete
-        open('COMPLETE', 'w').close()
+        open('COMPLETE', 'w', encoding="utf-8").close()

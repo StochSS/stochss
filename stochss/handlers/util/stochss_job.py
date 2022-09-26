@@ -49,8 +49,13 @@ class StochSSJob(StochSSBase):
     ################################################################################################
     '''
 
-    TYPES = {"gillespy":"_ES", "parameterSweep":"_PS"}
-    TITLES = {"gillespy":"Ensemble Simulation", "parameterSweep":"Parameter Sweep"}
+    TYPES = {
+        "gillespy":"_ES", "spatial":"_SES", "parameterSweep":"_PS"
+    }
+    TITLES = {
+        "gillespy":"Ensemble Simulation", "spatial":"Spatial Ensemble Simulation",
+        "parameterSweep":"Parameter Sweep"
+    }
 
     def __init__(self, path, new=False, data=None):
         '''
@@ -356,9 +361,12 @@ class StochSSJob(StochSSBase):
                 result = result.average_ensemble()
             self.log("info", "Generating CSV files...")
             with tempfile.TemporaryDirectory() as tmp_dir:
-                result.to_csv(path=tmp_dir, nametag=name, stamp="")
-                if data_keys:
-                    self.__write_parameters_csv(path=tmp_dir, name=name, data_keys=data_keys)
+                if hasattr(result, "to_csv"):
+                    result.to_csv(path=tmp_dir, nametag=name, stamp="")
+                    if data_keys:
+                        self.__write_parameters_csv(path=tmp_dir, name=name, data_keys=data_keys)
+                else:
+                    result.export_to_csv(folder_name=os.path.join(tmp_dir, name))
                 self.log("info", "Generating zip archive...")
                 return self.__get_csvzip(dirname=tmp_dir, name=name)
         except FileNotFoundError as err:
@@ -383,7 +391,10 @@ class StochSSJob(StochSSBase):
         with tempfile.TemporaryDirectory() as tmp_dir:
             if not isinstance(results, dict):
                 self.log("info", "Generating CSV files...")
-                results.to_csv(path=tmp_dir, nametag=name, stamp="")
+                if hasattr(results, "to_csv"):
+                    results.to_csv(path=tmp_dir, nametag=name, stamp="")
+                else:
+                    results.export_to_csv(folder_name=os.path.join(tmp_dir, name))
                 self.log("info", "Generating zip archive...")
                 return self.__get_csvzip(dirname=tmp_dir, name=name)
             def get_name(b_name, tag):
@@ -433,14 +444,15 @@ class StochSSJob(StochSSBase):
         file = f"{self.get_name()}.ipynb"
         dirname = self.get_dir_name()
         if ".wkfl" in dirname:
-            code = "_ES" if info['type'] == "gillespy" else "_PS"
+            codes = {"gillespy": "_ES", "spatial": "_SES", "parameterSweep": "_PS"}
+            code = codes[info['type']]
             wkfl_name = self.get_name(path=dirname).replace(code, "_NB")
             file = f"{wkfl_name}_{file}"
             dirname = os.path.dirname(dirname)
         path = os.path.join(dirname, file)
         g_model, s_model = self.load_models()
         settings = self.load_settings()
-        if info['type'] == "gillespy":
+        if info['type'] in ("gillespy", "spatial"):
             wkfl_type = info['type']
         elif info['type'] == "parameterSweep" and \
                     len(settings['parameterSweepSettings']['parameters']) == 1:
@@ -489,6 +501,48 @@ class StochSSJob(StochSSBase):
             message = f"The requested plot is not available: {str(err)}"
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
+    def get_plot_from_spatial_results(self, data_keys, add_config=False):
+        '''
+        Get the plotly figure for the results of a job
+
+        Attributes
+        ----------
+        data_keys : dict
+            Dictionary of param names and values used to identify the correct data.
+        add_config : bool
+            Whether or not to add plotly config settings.
+        '''
+        try:
+            self.log("info", "Loading the results...")
+            result = self.__get_filtered_ensemble_results(None)
+            self.log("info", "Generating the plot...")
+            if data_keys['target'] in ("type", "nu", "rho", "mass"):
+                fig = result.plot_property(
+                    data_keys['target'], width="auto", height="auto", animated=True,
+                    return_plotly_figure=True
+                )
+            elif data_keys['target'] == "v":
+                fig = result.plot_property(
+                    data_keys['target'], p_ndx=data_keys['index'], width="auto", height="auto",
+                    animated=True, return_plotly_figure=True
+                )
+            else:
+                concentration = data_keys['mode'] == "discrete-concentration"
+                deterministic = data_keys['mode'] == "continuous"
+                fig = result.plot_species(
+                    data_keys['target'], concentration=concentration, deterministic=deterministic,
+                    width="auto", height="auto", animated=True, return_plotly_figure=True
+                )
+            if add_config:
+                fig['config'] = {"responsive": True}
+            self.log("info", "Loading the plot...")
+            return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
     def get_psweep_csvzip_from_results(self, fixed, name):
         '''
@@ -584,7 +638,7 @@ class StochSSJob(StochSSBase):
             Dictionary mapping algorithm to solver
         '''
         settings = settings['simulationSettings']
-        kwargs = {"solver":solver_map[settings['algorithm']]}
+        kwargs = {} if solver_map is None else {"solver":solver_map[settings['algorithm']]}
         if settings['algorithm'] in ("ODE", "Hybrid-Tau-Leaping") and \
                                         "CSolver" not in kwargs['solver'].name:
             integrator_options = {"atol":settings['absoluteTol'], "rtol":settings['relativeTol']}
@@ -694,6 +748,7 @@ class StochSSJob(StochSSBase):
         else:
             model_obj = StochSSSpatialModel(path=path)
             model = model_obj.convert_to_spatialpy()
+            model_obj.model['path'] = model_obj.get_file()
         return model, model_obj.model
 
 

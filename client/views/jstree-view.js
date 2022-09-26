@@ -488,12 +488,7 @@ module.exports = View.extend({
     return this.buildContextWithSubmenus({
       label: "New Workflow",
       submenu: {
-        ensembleSimulation: this.buildContextBase({
-          label: "Ensemble Simulation",
-          action: (data) => {
-            this.newWorkflow(node, "Ensemble Simulation");
-          }
-        }),
+        ensembleSimulation: this.getEnsembleNewWorkflowContext(node),
         parameterSweep: this.buildContextBase({
           label: "Parameter Sweep",
           action: (data) => {
@@ -623,6 +618,15 @@ module.exports = View.extend({
       }
     });
   },
+  getEnsembleNewWorkflowContext: function (node) {
+    return this.buildContextBase({
+      label: "Ensemble Simulation",
+      action: (data) => {
+        let type = node.original.type === "spatial" ? "Spatial Ensemble Simulation" : "Ensemble Simulation";
+        this.newWorkflow(node, type);
+      }
+    });
+  },
   getNotebookNewWorkflowContext: function (node) {
     return this.buildContextBase({
       label: "Jupyter Notebook",
@@ -682,6 +686,15 @@ module.exports = View.extend({
             this.config.toModel(this, node, identifier);
           }
         })
+      }
+    });
+  },
+  getSpatialNewWorkflowContext: function (node) {
+    return this.buildContextWithSubmenus({
+      label: "New Workflow",
+      submenu: {
+        ensembleSimulation: this.getEnsembleNewWorkflowContext(node),
+        jupyterNotebook: this.getNotebookNewWorkflowContext(node)
       }
     });
   },

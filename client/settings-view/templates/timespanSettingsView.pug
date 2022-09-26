@@ -43,7 +43,7 @@ div#preview-settings.card
 
           div.col-sm-6
 
-            if this.parent.model.is_spatial
+            if this.isSpatial
               h6 <b>Timestep Size</b>
 
         div.mx-1.my-3.row
@@ -54,7 +54,7 @@ div#preview-settings.card
 
           div.col-sm-6
 
-            if this.parent.model.is_spatial
+            if this.isSpatial
               div
 
                 div.row
@@ -98,7 +98,7 @@ div#preview-settings.card
 
           div.col-sm-3
 
-            if this.parent.model.is_spatial
+            if this.isSpatial
               h6 <b>Timestep Size</b>
 
         div.mx-1.my-3.row
@@ -107,7 +107,7 @@ div#preview-settings.card
 
           div.col-sm-3(data-hook="view-time-step")=this.model.timeStep
 
-          if this.parent.model.is_spatial
+          if this.isSpatial
             div.col-sm-6(data-hook="view-timestep-size")=this.model.timestepSize
             
 

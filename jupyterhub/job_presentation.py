@@ -31,6 +31,7 @@ import numpy
 import plotly
 
 from presentation_base import StochSSBase, get_presentation_from_user
+from model_presentation import StochSSSpatialModel
 from presentation_error import StochSSJobResultsError, StochSSFileNotFoundError, report_error, \
                                PlotNotAvailableError, StochSSAPIError
 
@@ -123,6 +124,10 @@ class PlotJobResultsAPIHandler(BaseHandler):
                 fig = job.get_plot_from_results(data_keys=body['data_keys'],
                                                 plt_key=body['plt_key'], add_config=True)
                 job.print_logs(log)
+            elif body['sim_type'] == "SpatialPy":
+                fig = job.get_plot_from_spatial_results(
+                    data_keys=body['data_keys'], add_config=True
+                )
             else:
                 fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
                                                        kwargs=body['plt_key'], add_config=True)
@@ -190,11 +195,16 @@ def process_job_presentation(path, file=None, for_download=False):
         job_dir = os.path.join(dirname, file)
         job['job']['directory'] = job_dir
         os.mkdir(job_dir)
-        with open(os.path.join(job_dir, "job.json"), "w") as job_file:
+        with open(os.path.join(job_dir, "job.json"), "w", encoding="utf-8") as job_file:
             json.dump(job['job'], job_file, sort_keys=True, indent=4)
         with open(os.path.join(job_dir, "results.p"), "wb") as res_file:
             pickle.dump(job['results'], res_file)
-        return job['job']
+        if not job['job']['model']['is_spatial']:
+            return {"job": job['job']}
+        model = StochSSSpatialModel(model=job['job']['model'])
+        data = model.load()
+        job['job']['model'] = data['model']
+        return {"job": job['job'], "domainPlot": data['domainPlot']}
     job_zip = make_zip_for_download(job)
     return job_zip, job['name']
 
@@ -227,7 +237,7 @@ def make_zip_for_download(job):
     if "No logs" in job['job']['logs']:
         Path(os.path.join(job_path, "logs.txt")).touch()
     else:
-        with open(os.path.join(job_path, "logs.txt"), "w") as logs_file:
+        with open(os.path.join(job_path, "logs.txt"), "w", encoding="utf-8") as logs_file:
             logs_file.write(job['job']['logs'])
     wkfl_path = os.path.dirname(job_path)
     settings = {"model": info['source_model'], "settings": job['job']['settings'],
@@ -252,7 +262,7 @@ def write_json(path, body):
     body : dict
         Contents of the file.
     '''
-    with open(path, "w") as file:
+    with open(path, "w", encoding="utf-8") as file:
         json.dump(body, file, sort_keys=True, indent=4)
 
 
@@ -357,7 +367,7 @@ class StochSSJob(StochSSBase):
     @classmethod
     def __write_parameters_csv(cls, path, name, data_keys):
         csv_path = os.path.join(path, name, "parameters.csv")
-        with open(csv_path, "w") as csv_file:
+        with open(csv_path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(list(data_keys.keys()))
             csv_writer.writerow(list(data_keys.values()))
@@ -456,6 +466,46 @@ class StochSSJob(StochSSBase):
             raise PlotNotAvailableError(message, traceback.format_exc()) from err
 
 
+    def get_plot_from_spatial_results(self, data_keys, add_config=False):
+        '''
+        Get the plotly figure for the results of a job
+
+        Attributes
+        ----------
+        data_keys : dict
+            Dictionary of param names and values used to identify the correct data.
+        add_config : bool
+            Whether or not to add plotly config settings.
+        '''
+        try:
+            result = self.__get_filtered_ensemble_results(None)
+            if data_keys['target'] in ("type", "nu", "rho", "mass"):
+                fig = result.plot_property(
+                    data_keys['target'], width="auto", height="auto", animated=True,
+                    return_plotly_figure=True
+                )
+            elif data_keys['target'] == "v":
+                fig = result.plot_property(
+                    data_keys['target'], p_ndx=data_keys['index'], width="auto", height="auto",
+                    animated=True, return_plotly_figure=True
+                )
+            else:
+                concentration = data_keys['mode'] == "discrete-concentration"
+                deterministic = data_keys['mode'] == "continuous"
+                fig = result.plot_species(
+                    data_keys['target'], concentration=concentration, deterministic=deterministic,
+                    width="auto", height="auto", animated=True, return_plotly_figure=True
+                )
+            if add_config:
+                fig['config'] = {"responsive": True}
+            return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+        except FileNotFoundError as err:
+            message = f"Could not find the results pickle file: {str(err)}"
+            raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
+        except KeyError as err:
+            message = f"The requested plot is not available: {str(err)}"
+            raise PlotNotAvailableError(message, traceback.format_exc()) from err
+
     def get_psweep_csvzip_from_results(self, fixed, name):
         '''
         Get the csv file of the parameter sweep plot data for download
@@ -539,8 +589,14 @@ class StochSSJob(StochSSBase):
         Attributes
         ----------
         '''
-        with open(os.path.join(self.path, "job.json"), "r") as job_file:
-            return json.load(job_file)
+        with open(os.path.join(self.path, "job.json"), "r", encoding="utf-8") as job_file:
+            job = json.load(job_file)
+        if not job['model']['is_spatial']:
+            return {"job": job}
+        model = StochSSSpatialModel(job['model'])
+        data = model.load()
+        job['model'] = data['model']
+        return {"job": job, "domainPlot": data['domainPlot']}
 
 
     def update_fig_layout(self, fig=None, plt_data=None):
@@ -604,7 +660,7 @@ class ParameterSweep1D():
 
     @classmethod
     def __write_csv_file(cls, path, header, param, data):
-        with open(path, "w") as csv_file:
+        with open(path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(header)
             for i, val in enumerate(param['range']):
@@ -729,7 +785,7 @@ class ParameterSweep2D():
 
     @classmethod
     def __write_csv_file(cls, path, header, params, data):
-        with open(path, "w") as csv_file:
+        with open(path, "w", encoding="utf-8") as csv_file:
             csv_writer = csv.writer(csv_file)
             csv_writer.writerow(header)
             for i, val1 in enumerate(params[0]['range']):

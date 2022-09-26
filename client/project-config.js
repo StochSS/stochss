@@ -214,12 +214,7 @@ let getSpatialModelContext = (view, node) => {
   return {
     edit: view.getEditModelContext(node),
     extract: getExtractContext(view, node, "model"),
-    newWorkflow: view.buildContextWithSubmenus({
-      label: "New Workflow",
-      submenu: {
-        jupyterNotebook: view.getNotebookNewWorkflowContext(node)
-      }
-    }),
+    newWorkflow: view.getSpatialNewWorkflowContext(node),
     convert: view.getSmdlConvertContext(node, "spatial/to-model"),
     download: view.getDownloadContext(node, downloadOptions),
     rename: view.getRenameContext(node),

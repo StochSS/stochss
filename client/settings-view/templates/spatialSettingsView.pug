@@ -1,0 +1,69 @@
+div#simulation-settings.card
+
+  div.card-header.pb-0
+
+    h3.inline.mr-3 Simulation Settings
+    
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="sim-settings-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook=this.model.elementID + "-sim-settings-edit-tab" data-toggle="tab" href="#" + this.model.elementID + "-edit-sim-settings") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook=this.model.elementID + "-sim-settings-view-tab" data-toggle="tab" href="#" + this.model.elementID + "-view-sim-settings") View
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "collapse-settings", data-hook="collapse-settings-view") -
+
+  div.collapse(class="show" id=this.model.elementID + "collapse-settings")
+
+    div.card-body.tab-content
+
+      div.tab-pane.active(id=this.model.elementID + "-edit-sim-settings" data-hook=this.model.elementID + "-edit-sim-settings")
+
+        h5.inline Stochastic Settings
+
+        hr.mt-0
+
+        div.mx-1.row.head.align-items-baseline
+
+          dvi.col-sm-6
+
+            h6.inline <b>Trajectories</b>
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.realizations) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          dvi.col-sm-6
+
+            h6.inline <b>Seed</b>
+
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.seed) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        div.row.my-3
+
+          div.col-sm-6(data-hook="trajectories")
+
+          div.col-sm-6(data-hook="seed")
+
+      div.tab-pane(id=this.model.elementID + "-view-sim-settings" data-hook=this.model.elementID + "-view-sim-settings")
+
+        h5 Stochastic Settings
+
+        hr
+
+        div.row
+
+          div.col-sm-6
+
+            h6.inline.pr-2 Trajectories: 
+
+            div.inline(data-hook="view-realizations")=this.model.realizations
+
+          div.col-sm-6
+
+            h6.inline.pr-2 Seed: 
+
+            div.inline(data-hook="view-seed")=this.model.seed

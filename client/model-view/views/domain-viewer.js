@@ -37,6 +37,7 @@ module.exports = View.extend({
     'click [data-hook=domain-edit-tab]' : 'handleModeSwitch',
     'click [data-hook=domain-view-tab]' : 'handleModeSwitch',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-domain-preview-btn]' : 'changeCollapseButtonText',
     'click [data-hook=select-external-domain]' : 'handleViewExternalDomains',
     'click [data-hook=edit-domain-btn]' : 'editDomain',
     'click [data-hook=create-domain]' : 'editDomain',

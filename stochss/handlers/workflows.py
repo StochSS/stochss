@@ -179,7 +179,7 @@ class RunWorkflowAPIHandler(APIHandler):
             log.debug(f"Exec command sent to the subprocess: {exec_cmd}")
             log.debug('Sending the workflow run cmd')
             job = subprocess.Popen(exec_cmd)
-            with open(os.path.join(path, "RUNNING"), "w") as file:
+            with open(os.path.join(path, "RUNNING"), "w", encoding="utf-8") as file:
                 file.write(f"Subprocess id: {job.pid}")
             log.debug('The workflow has started')
         except StochSSAPIError as err:
@@ -223,8 +223,7 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
     @web.authenticated
     async def get(self):
         '''
-        Retrieve a plot figure of the workflow results based on the plot type
-        in the request body.
+        Retrieve a plot figure of the job results based on the plot type in the request body.
 
         Attributes
         ----------
@@ -240,6 +239,10 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
                 fig = job.get_plot_from_results(data_keys=body['data_keys'],
                                                 plt_key=body['plt_key'], add_config=True)
                 job.print_logs(log)
+            elif body['sim_type'] == "SpatialPy":
+                fig = job.get_plot_from_spatial_results(
+                    data_keys=body['data_keys'], add_config=True
+                )
             else:
                 fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
                                                        kwargs=body['plt_key'], add_config=True)
@@ -280,7 +283,7 @@ class WorkflowNotebookHandler(APIHandler):
                 file_obj = StochSSJob(path=path)
             log.info(f"Loading data for {file_obj.get_file()}")
             kwargs = file_obj.get_notebook_data()
-            if "type" in kwargs.keys():
+            if "type" in kwargs:
                 wkfl_type = kwargs['type']
                 kwargs = kwargs['kwargs']
                 log.info(f"Converting {file_obj.get_file()} to notebook")
