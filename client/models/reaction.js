@@ -164,6 +164,49 @@ module.exports = State.extend({
     }
     this.hasConflict = Boolean(hasContinuous && (hasDynamic || hasDiscrete))
   },
+  contains: function (attr, key) {
+    if(key === null) { return true; }
+
+    let reactants = this.reactants.map((reactant) => { return reactant.specie.name; });
+    let products = this.products.map((product) => { return product.specie.name; });
+    let types = []
+    if(this.types) {
+      this.types.forEach((typeID) => {
+        types.push(this.collection.parent.domain.types.get(typeID, "typeID").name);
+      });
+    }
+    
+    let checks = {
+      'name': this.name.includes(key),
+      'reactiontype': this.reactionType === key,
+      'massaction': key === "massaction" && this.massaction,
+      'reactants': reactants.includes(key),
+      'products': products.includes(key),
+      'propensity': this.reactionType === "custom-propensity" && this.propensity.includes(key),
+      'odepropensity': this.reactionType === "custom-propensity" && this.odePropensity.includes(key),
+      'rate': this.reactionType !== "custom-propensity" && this.rate.name === key,
+      'types': types.includes(key)
+    }
+
+    if(attr !== null) {
+      checks['reactantsproducts'] = checks.reactants || checks.products;
+      checks['propensities'] = checks.propensity || checks.odepropensity;
+      checks['massaction'] = this.massaction === Boolean(key);
+      let otherAttrs = {
+        'stochasticpropensityfunction': 'propensity', 'odepropensityfunction': 'odePropensity',
+        'rateparameter': 'rate','rateconstant': 'rate', 'stoichspecies': 'reactantsproducts',
+        'restrictto': 'types'
+      }
+      if(Object.keys(otherAttrs).includes(attr)) {
+        attr = otherAttrs[attr];
+      }
+      return checks[attr];
+    }
+    for(let attribute in checks) {
+      if(checks[attribute]) { return true; }
+    }
+    return false;
+  },
   updateReactionType: function () {
     if(!this.massaction) {
       return "custom-propensity"

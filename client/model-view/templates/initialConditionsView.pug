@@ -16,7 +16,9 @@ div#initial-conditions.card
 
           a.nav-link.tab(data-hook="initial-conditions-view-tab" data-toggle="tab" href="#view-initial-conditions") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#initial-condition" data-hook="initial-condition-button") +
+    button.btn.btn-outline-collapse.inline(data-toggle="collapse" data-target="#initial-condition" data-hook="initial-condition-button") +
+
+    div.inline(data-hook="initial-condition-filter" style="float: right;")
 
   div.card-body
     p.mb-0

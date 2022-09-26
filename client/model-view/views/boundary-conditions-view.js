@@ -23,8 +23,8 @@ let app = require('../../app');
 let tests = require('../../views/tests');
 let Tooltips = require('../../tooltips');
 //views
-let InputView = require('../../views/input');
 let View = require('ampersand-view');
+let InputView = require('../../views/input');
 let SelectView = require('ampersand-select-view');
 let BoundaryConditionView = require('./boundary-condition-view');
 //templates
@@ -47,6 +47,7 @@ module.exports = View.extend({
     'change [data-hook=new-bc-y-max]' : 'handleSetValue',
     'change [data-hook=new-bc-z-min]' : 'handleSetValue',
     'change [data-hook=new-bc-z-max]' : 'handleSetValue',
+    'change [data-hook=boundary-condition-filter]' : 'filterBoundaryConditions',
     'click [data-hook=collapse-bc]' : 'changeCollapseButtonText',
     'click [data-hook=collapse-new-bc' : 'changeCollapseButtonText',
     'click [data-hook=add-new-bc]' : 'handleAddBCClick'
@@ -76,6 +77,19 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  filterBoundaryConditions: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
+    if(!this.readOnly) {
+      this.renderEditBoundaryConditionView({'key': key, 'attr': attr});
+    }
+    this.renderViewBoundaryConditionView({'key': key, 'attr': attr});
   },
   handleAddBCClick: function (e) {
     let endpoint = path.join(app.getApiPath(), "model/new-bc");
@@ -141,18 +155,20 @@ module.exports = View.extend({
     }
     this.toggleAddNewBCButton();
   },
-  renderEditBoundaryConditionView: function () {
+  renderEditBoundaryConditionView: function ({key=null, attr=null}={}) {
     if(this.editBoundaryConditionView) {
       this.editBoundaryConditionView.remove();
     }
+    let options = {filter: (model) => { return model.contains(attr, key); }}
     this.editBoundaryConditionView = this.renderCollection(
       this.collection,
       BoundaryConditionView,
-      this.queryByHook("edit-boundary-conditions-list")
+      this.queryByHook("edit-boundary-conditions-list"),
+      options
     );
     app.tooltipSetup();
   },
-  renderViewBoundaryConditionView: function () {
+  renderViewBoundaryConditionView: function ({key=null, attr=null}={}) {
     if(this.viewBoundaryConditionView) {
       this.viewBoundaryConditionView.remove();
     }
@@ -162,7 +178,10 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook("bc-annotation-header")).css("display", "block");
     }
-    let options = {viewOptions: {viewMode: true}};
+    let options = {
+      viewOptions: {viewMode: true, hasAnnotations: this.containsMdlWithAnn},
+      filter: (model) => { return model.contains(attr, key); }
+    }
     this.viewBoundaryConditionView = this.renderCollection(
       this.collection,
       BoundaryConditionView,
@@ -213,6 +232,18 @@ module.exports = View.extend({
     return value;
   },
   subviews: {
+    filter: {
+      hook: 'boundary-condition-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string',
+          placeholder: 'filter'
+        });
+      }
+    },
     newBCName: {
       hook: "new-bc-name",
       prepareView: function (el) {
