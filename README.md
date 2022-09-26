@@ -61,7 +61,31 @@ StochSS uses [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#) as the 
 
 - [Optional] By default multi-user StochSS is set up to allocate 2 logical cpus per user, reserving 2 logical cpus for the hub container and underlying OS. You can define "power users" that are excluded from resource limitations using the same method as above for adding an admin, but instead of following the username with 'admin', use the keyword 'power' instead.
 
-- [Optional] To disseminate messages to all users, make a JSON decodable file called `messages` in the `userlist/` directory. The contents of the `messages` file should be formatted as a list of dictionaries defining each message. Accepted keys are `message`, string containing the message to be display with tags for dates and time i.e. `StochSS Live! will be down for scheduled maintenance on __DATE__ from __START__ to __END__` an additional `__DATE__` tag can be added if the start and end dates differ, `start`, string representing the starting date and time i.e. `Sep 26, 2022  14:00 EST`, `end`, string representing the ending date and time i.e. `Sep 26, 2022  18:00 EST`, and `style`, a string containing a background color keyword i.e. `warning` or css i.e. `background-color: rgba(160, 32, 240, 0.5) !important;`.
+- [Optional] To disseminate messages to all users, make a JSON decodable file called `messages.json` in the `userlist/` directory. The contents of the `messages` file should be formatted as a list of dictionaries defining each message. Accepted keys are `message`, string containing the message to be display with tags for dates and time i.e. `StochSS Live! will be down for scheduled maintenance on __DATE__ from __START__ to __END__` an additional `__DATE__` tag can be added if the start and end dates differ, `start`, string representing the starting date and time i.e. `Sep 26, 2022  14:00 EST`, `end`, string representing the ending date and time i.e. `Sep 26, 2022  18:00 EST`, and `style`, a string containing a background color keyword i.e. `warning` or css i.e. `background-color: rgba(160, 32, 240, 0.5) !important;`.
+
+```python
+[
+    {
+        "message": "StochSS Live! will be down for scheduled maintenance on __DATE__ from __START__ to __END__",
+        "start": "Sep 26, 2022  14:00 EST",
+        "end": "Sep 26, 2022  18:00 EST",
+        "style": "info"
+    },
+    {
+        "message": "StochSS Live! will be down for scheduled maintenance from"
+    },
+    {
+        "message": "__DATE__ __START__ to __DATE__ __END__",
+        "start": "Sep 26, 2022  14:00 EST",
+        "end": "Sep 27, 2022  14:00 EST",
+        "style": "warning"
+    },
+    {
+        "message": "StochSS Live! is down for scheduled maintenanc",
+        "style": "background-color: rgba(160, 32, 240, 0.5) !important;"
+    }
+]
+```
 
 ### Run Locally
 
