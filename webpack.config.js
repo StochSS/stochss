@@ -6,6 +6,7 @@ module.exports = {
   entry: {
     home: './client/pages/users-home.js',
     quickstart: './client/pages/quickstart.js',
+    exampleLibrary: './client/pages/example-library.js',
     browser: './client/pages/browser.js',
     editor: './client/pages/model-editor.js',
     domainEditor: './client/pages/domain-editor.js',
@@ -33,6 +34,13 @@ module.exports = {
       filename: 'stochss-quickstart.html',
       template: 'page_template.pug',
       name: 'quickstart',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | Example Library',
+      filename: 'stochss-example-library.html',
+      template: 'page_template.pug',
+      name: 'exampleLibrary',
       inject: false
     }),
     new HtmlWebpackPlugin({

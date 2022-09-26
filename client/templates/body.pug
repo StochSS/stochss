@@ -51,15 +51,7 @@ body
                   a.nav-link(href="stochss/files#file-browser-section" title="Explore your StochSS files") Files
 
               li.nav_item
-                div.dropdown
-                  button.dropdown-toggle.nav-item.nav-link.dropbtn.nav-drop#exampleLibrary(
-                    data-hook="example-library",
-                    data-toggle="dropdown",
-                    aria-haspopup="true",
-                    aria-expanded="false",
-                    type="button"
-                  ) Example Library <span class="caret"></span>
-                  ul.nav.dropdown-menu.dropdown-content.nav-drop-content(id="exampleLibraryDropdown" aria-labelledby="exampleLibrary")
+                div: a.nav-link(href="stochss/example-library" title="Import Examples from Library") Example Library
 
               li.nav-item
                 div: a.nav-link(target="_blank" href="tree" title="Browse your files in a Jupyter interface") Jupyter Notebooks
