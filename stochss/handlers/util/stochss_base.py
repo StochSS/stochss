@@ -67,7 +67,7 @@ class StochSSBase():
         s_list = []
         for entry in exm_data['Spatial']:
             exm_a = entry_a.replace("__ALERT__", entry['alert'])
-            exm_a = exm_a.replace("__OPEN_LINK__", entry['open_link'])
+            exm_a = exm_a.replace("__OPEN_LINK__", f"{home}?open={entry['open_link']}")
             exm_a = exm_a.replace("__NAME__", entry['name'])
             s_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
         spatial = row.replace("__CONTENTS__", ''.join(s_list))
