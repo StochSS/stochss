@@ -57,7 +57,7 @@ StochSS uses [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#) as the 
 
 - In addition to the single-user requirements, you will need [Docker Compose](https://docs.docker.com/compose/install/).  
 
-- [Optional] To set admins for JupyterHub, make a file called `userlist` in the `userlist/` directory. On each line of this file place a username followed by the word 'admin'. For example: `myuser admin`. If using Google OAuth, the uesername will be a Gmail address. Navigate to `/hub/admin` to use the JupyterHub admin interface.
+- [Optional] To set admins for JupyterHub, make a file called `userlist` in the `userlist/` directory. On each line of this file place a username followed by the word 'admin'. For example: `myuser admin`. If using Google OAuth, the username will be a Gmail address. Navigate to `/hub/admin` to use the JupyterHub admin interface.
 
 - [Optional] By default multi-user StochSS is set up to allocate 2 logical cpus per user, reserving 2 logical cpus for the hub container and underlying OS. You can define "power users" that are excluded from resource limitations using the same method as above for adding an admin, but instead of following the username with 'admin', use the keyword 'power' instead.
 
@@ -81,7 +81,7 @@ StochSS uses [JupyterHub](https://jupyterhub.readthedocs.io/en/stable/#) as the 
         "style": "warning"
     },
     {
-        "message": "StochSS Live! is down for scheduled maintenanc",
+        "message": "StochSS Live! is down for scheduled maintenance",
         "style": "background-color: rgba(160, 32, 240, 0.5) !important;"
     }
 ]
