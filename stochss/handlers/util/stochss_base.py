@@ -49,7 +49,7 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
-    def __build_example_html(self, exm_data):
+    def __build_example_html(self, exm_data, home):
         row = "<div class='row'>__CONTENTS__</div>"
         entry = "__ALERT__' href='__OPEN_LINK__' role='button' style='width: 100%'>__NAME__</a>"
         entry_a = f"<a class='btn box-shadow btn-outline-{entry}"
@@ -58,7 +58,7 @@ class StochSSBase():
         wm_list = []
         for entry in exm_data['Well-Mixed']:
             exm_a = entry_a.replace("__ALERT__", entry['alert'])
-            exm_a = exm_a.replace("__OPEN_LINK__", entry['open_link'])
+            exm_a = exm_a.replace("__OPEN_LINK__", f"{home}?open={entry['open_link']}")
             exm_a = exm_a.replace("__NAME__", entry['name'])
             wm_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
         well_mixed = row.replace("__CONTENTS__", ''.join(wm_list))
@@ -100,13 +100,13 @@ class StochSSBase():
 
     def __update_exm_data(self, exm_data, old_exm_data=None):
         for entry in exm_data['Well-Mixed']:
-            entry['alert'] = " success"
+            entry['alert'] = "success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Well-Mixed'], entry['name'])
                 entry['mod_time'] = old_entry['mod_time']
                 entry['umd5_sum'] = old_entry['umd5_sum']
         for entry in exm_data['Spatial']:
-            entry['alert'] = " success"
+            entry['alert'] = "success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Spatial'], entry['name'])
                 entry['mod_time'] = old_entry['mod_time']
@@ -440,7 +440,7 @@ class StochSSBase():
 
         return os.path.join(dirname, cp_file)
 
-    def load_example_library(self):
+    def load_example_library(self, home):
         '''
         Load the example library dropdown list.
         '''
@@ -461,7 +461,7 @@ class StochSSBase():
         with open(self.path, "w", encoding="utf-8") as data_file:
             json.dump(exm_data, data_file, sort_keys=True, indent=4)
 
-        return self.__build_example_html(exm_data)
+        return self.__build_example_html(exm_data, home)
 
     def log(self, level, message):
         '''
