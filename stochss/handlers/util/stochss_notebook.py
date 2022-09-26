@@ -62,6 +62,8 @@ class StochSSNotebook(StochSSBase):
             self.model = models["model"]
             if settings is None:
                 self.settings = self.get_settings_template()
+                if self.s_model['is_spatial']:
+                    self.settings['simulationSettings']['realizations'] = 1
             else:
                 self.settings = settings
                 if "timespanSettings" in settings.keys():
@@ -111,10 +113,11 @@ class StochSSNotebook(StochSSBase):
             "CLE": ["solver", "algorithm", "seed", "number_of_trajectories", "tau_tol"],
             "Tau-Leaping": ["solver", "algorithm", "seed", "number_of_trajectories", "tau_tol"],
             "Hybrid-Tau-Leaping": [
-                "solver", "algorithm", "number_of_trajectories", "seed", "tau_tol", "integrator_options"
+                "solver", "algorithm", "number_of_trajectories",
+                "seed", "tau_tol", "integrator_options"
             ]
         }
-        
+
         pad = "    "
         config = ["def configure_simulation():"]
         if use_solver:
@@ -122,7 +125,7 @@ class StochSSNotebook(StochSSBase):
                 nb_solver = "spatialpy.solver(model=model)"
             else:
                 solver = self.get_gillespy2_solver_name()
-                nb_solver = f"gillespy2.{solver.__name__}(model=model)"
+                nb_solver = f"gillespy2.{solver}(model=model)"
             config.append(f"{pad}solver = {nb_solver}")
 
         config.append(pad + "kwargs = {")
@@ -223,6 +226,120 @@ class StochSSNotebook(StochSSBase):
         nb_run = "\n".join(nb_run)
         return nbf.new_markdown_cell(nb_run_header), nbf.new_code_cell(nb_run)
 
+    def __create_spatial_boundary_conditions(self, nb_model, index):
+        if len(self.s_model['boundaryConditions']) > 0:
+            pad = '    '
+            tmp = f"{pad}__NAME__ = __OBJECT__()"
+            names = []
+            n_len = 8
+            bound_conds = ["", f"{pad}# Boundary Conditions"]
+            try:
+                for s_bound_cond in self.s_model['boundaryConditions']:
+                    name = f"{s_bound_cond['name'].lower()}_bc"
+                    n_len, n_names = self.__add_name(names, n_len, name)
+                    if n_names is not None:
+                        names = n_names
+                    nb_bound_cond = tmp.replace("__NAME__", name)
+                    nb_bound_cond = nb_bound_cond.replace("__OBJECT__", s_bound_cond['name'])
+                    bound_conds.append(nb_bound_cond)
+                bound_conds.append(f"{pad}model.add_boundary_condition([\n{pad*2}{', '.join(names)}\n{pad}])")
+                nb_model.insert(index, '\n'.join(bound_conds))
+                index += 1
+            except KeyError as err:
+                message = "Boundary conditions are not properly formatted or "
+                message += f"are referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return index
+
+    def __create_spatial_boundary_condition_cells(self, cells):
+        index = 3
+        if len(self.s_model['boundaryConditions']) > 0:
+            pad = "    "
+            tmp_body = f"{pad}def expression(self):\n{pad*2}return '''__EXPRESSION__'''"
+            tmp = f"class __NAME__(spatialpy.BoundaryCondition):\n{tmp_body}"
+            try:
+                bc_header = "***\n## Creating the Boundary Conditions for the System\n***"
+                cells.insert(2, nbf.new_markdown_cell(bc_header))
+                index = 3
+                for s_bound_cond in self.s_model['boundaryConditions']:
+                    bc_cell = tmp.replace("__NAME__", s_bound_cond['name'])
+                    bc_cell = bc_cell.replace("__EXPRESSION__", s_bound_cond['expression'])
+                    cells.insert(index, nbf.new_code_cell(bc_cell))
+                    index += 1
+                return index + 1
+            except KeyError as err:
+                message = "Boundary conditions are not properly formatted or "
+                message += f"are referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return index
+
+    def __create_spatial_domain(self, nb_model, index):
+        try:
+            pad = '    '
+            tmp = f"{pad}model.__TYPE__ = '__ID__'"
+            nb_domain = [
+                "", f"{pad}# Define Domain Type IDs as constants of the Model",
+                "", f"{pad}# Domain",
+                f"{pad}domain = spatialpy.Domain.read_stochss_domain('{self.s_model['path']}')",
+                f"{pad}model.add_domain(domain)", "",
+                f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
+            ]
+            d_index = 2
+            for d_type in self.s_model['domain']['types']:
+                if d_type['typeID'] > 0:
+                    nb_type = tmp.replace("__TYPE__", d_type['name'].upper())
+                    nb_type = nb_type.replace("__ID__", d_type['name'])
+                    nb_domain.insert(d_index, nb_type)
+                    d_index += 1
+            nb_model.insert(index, '\n'.join(nb_domain))
+        except KeyError as err:
+            message = "The domain is not properly formatted or "
+            message += f"is referenced incorrectly for notebooks: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return index + 1
+
+    def __create_spatial_initial_condition(self, nb_model, index, type_refs):
+        if len(self.s_model['initialConditions']) > 0:
+            pad = '    '
+            args_tmp = "species='__SPECIES__', count=__COUNT__, __DATA__"
+            tmp = f"{pad}__NAME__ = spatialpy.__OBJECT__({args_tmp})"
+            names = []
+            n_len = 8
+            ic_types = {
+                "Place":"PlaceInitialCondition",
+                "Scatter":"ScatterInitialCondition",
+                "Distribute Uniformly per Voxel":"UniformInitialCondition"
+            }
+            init_cond = ["", f"{pad}# Initial Conditions"]
+            try:
+                for s_init_cond in self.s_model['initialConditions']:
+                    name = f"{s_init_cond['specie']['name']}_ic"
+                    n_len, n_names = self.__add_name(names, n_len, name)
+                    if n_names is not None:
+                        names = n_names
+                    nb_init_cond = tmp.replace("__OBJECT__", ic_types[s_init_cond['icType']])
+                    nb_init_cond = nb_init_cond.replace("__NAME__", name)
+                    nb_init_cond = nb_init_cond.replace(
+                        "__SPECIES__", s_init_cond['specie']['name']
+                    )
+                    nb_init_cond = nb_init_cond.replace("__COUNT__", str(s_init_cond['count']))
+                    if s_init_cond['icType'] == "Place":
+                        location = f"location=[{s_init_cond['x']}, {s_init_cond['y']}, {s_init_cond['z']}]"
+                        nb_init_cond = nb_init_cond.replace("__DATA__", location)
+                    else:
+                        types = [type_refs[d_type] for d_type in s_init_cond['types']]
+                        restrict_to = f"types=[{', '.join(types)}]"
+                        nb_init_cond = nb_init_cond.replace("__DATA__", restrict_to)
+                    init_cond.append(nb_init_cond)
+                init_cond.append(f"{pad}model.add_initial_condition([\n{pad*2}{', '.join(names)}\n{pad}])")
+                nb_model.insert(index, '\n'.join(init_cond))
+                index += 1
+            except KeyError as err:
+                message = "Initial Conditions are not properly formatted or "
+                message += f"are referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return index
+
     def __create_spatial_model_cell(self, func_name):
         pad = '    '
         frequency = self.s_model['modelSettings']['timeStep']
@@ -236,25 +353,45 @@ class StochSSNotebook(StochSSBase):
             f"{pad}model.timespan(tspan)", f"{pad}return model"
         ]
         type_refs = self.__get_object_types()
-        index = 2
+        index = self.__create_spatial_domain(nb_model, 2)
+        index = self.__create_spatial_species(nb_model, index, type_refs)
+        index = self.__create_spatial_initial_condition(nb_model, index, type_refs)
         index = self.__create_parameters(nb_model, index)
         index = self.__create_reactions(nb_model, index, type_refs=type_refs)
-        # types = sorted(self.s_model['domain']['types'], key=lambda d_type: d_type['typeID'])
-        # type_ids = {d_type['typeID']:d_type['name'] for d_type in types if d_type['typeID'] > 0}
-        # model = [f"class {self.get_class_name()}(Model):"]
-        # model.extend([f"    {type_id.upper()} = '{type_id}'" for type_id in type_ids.values()])
-        # model.extend(["", "    def __init__(self):",
-        #               f'{pad}Model.__init__(self, name="{self.get_name()}")'])
-        # type_refs = {index: type_id for index, type_id in type_ids.items()}
-        # self.__create_domain_string(model=model, pad=pad)
-        # self.__create_boundary_condition_string(model=model, pad=pad)
-        # self.__create_species_strings(model=model, pad=pad, type_refs=type_refs)
-        # self.__create_initial_condition_strings(model=model, pad=pad, type_refs=type_refs)
-        # self.__create_parameter_strings(model=model, pad=pad)
-        # self.__create_reaction_strings(model=model, pad=pad, type_refs=type_refs)
-        
-        # self.__create_tspan_string(model=model, pad=pad)
+        index = self.__create_spatial_boundary_conditions(nb_model, index)
         return nbf.new_code_cell("\n".join(nb_model))
+
+    def __create_spatial_species(self, nb_model, index, type_refs):
+        if len(self.s_model['species']) > 0:
+            pad = '    '
+            args_tmp = "name='__NAME__', diffusion_coefficient=__VALUE____RESTRICT_TO__"
+            tmp = f"{pad}__NAME__ = spatialpy.Species({args_tmp})"
+            names = []
+            n_len = 8
+            species = ["", f"{pad}# Variables"]
+            try:
+                for s_species in self.s_model['species']:
+                    name = s_species['name']
+                    n_len, n_names = self.__add_name(names, n_len, name)
+                    if n_names is not None:
+                        names = n_names
+                    nb_spec = tmp.replace("__NAME__", name)
+                    nb_spec = nb_spec.replace("__VALUE__", str(s_species['diffusionConst']))
+                    if len(s_species['types']) == len(type_refs):
+                        nb_spec = nb_spec.replace("__RESTRICT_TO__", "")
+                    else:
+                        types = [type_refs[d_type] for d_type in s_species['types']]
+                        restrict_to = f", restrict_to=[{', '.join(types)}]"
+                        nb_spec = nb_spec.replace("__RESTRICT_TO__", restrict_to)
+                    species.append(nb_spec)
+                species.append(f"{pad}model.add_species([\n{pad*2}{', '.join(names)}\n{pad}])")
+                nb_model.insert(index, '\n'.join(species))
+                index += 1
+            except KeyError as err:
+                message = "Species are not properly formatted or "
+                message += f"are referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return index
 
     def __create_stoich_species(self, stoich_species):
         species = {}
@@ -395,7 +532,6 @@ class StochSSNotebook(StochSSBase):
 
     def __create_well_mixed_species(self, nb_model, index):
         if len(self.s_model['species']) > 0:
-            print(json.dumps(self.settings, sort_keys=True, indent=4))
             pad = '    '
             args_tmp = "name='__NAME__', initial_value=__VALUE__, mode='__MODE__'"
             tmp = f"{pad}__NAME__ = gillespy2.Species({args_tmp})"
@@ -486,7 +622,7 @@ class StochSSNotebook(StochSSBase):
         if use_solver:
             settings_map['solver'] = "solver"
         elif settings['algorithm'] == "Hybrid-Tau-Leaping":
-            settings_map['algorithm'] = f"'Tau-Hybrid'"
+            settings_map['algorithm'] = "'Tau-Hybrid'"
         else:
             settings_map['algorithm'] = f"'{settings['algorithm']}'"
         return settings_map
@@ -498,6 +634,15 @@ class StochSSNotebook(StochSSBase):
             if d_type['typeID'] > 0:
                 type_map[d_type['typeID']] = f"model.{d_type['name'].upper()}"
         return type_map
+
+    @classmethod
+    def __get_presentation_links(cls, hostname, file):
+        query_str = f"?owner={hostname}&file={file}"
+        present_link = f"/stochss/present-notebook{query_str}"
+        dl_link_base = "/stochss/notebook/download_presentation"
+        download_link = os.path.join(dl_link_base, hostname, file)
+        open_link = f"https://open.stochss.org?open={download_link}"
+        return {"presentation": present_link, "download": download_link, "open": open_link}
 
     def __get_spatialpy_run_setting(self):
         settings = self.settings['simulationSettings']
@@ -513,7 +658,8 @@ class StochSSNotebook(StochSSBase):
         cells.insert(3, nbf.new_code_cell(f"model = {func_name}()"))
         if self.nb_type == self.SPATIAL_SIMULATION:
             cells.insert(1, nbf.new_code_cell("import spatialpy"))
-            cells.insert(3, self.__create_spatial_model_cell(func_name))
+            index = self.__create_spatial_boundary_condition_cells(cells)
+            cells.insert(index, self.__create_spatial_model_cell(func_name))
         else:
             cells.insert(1, nbf.new_code_cell("import gillespy2"))
             cells.insert(3, self.__create_well_mixed_model_cell(func_name))
@@ -544,21 +690,16 @@ class StochSSNotebook(StochSSBase):
         self.settings['solver'] = "Solver"
         if results is not None:
             cells.insert(1, nbf.new_code_cell("import os\nimport pickle"))
-        # run_str = "kwargs = configure_simulation()\nresults = model.run(**kwargs)"
-        # if self.s_model['species']:
-        #     species = self.s_model['species'][0]['name']
-        #     plot_str = f"results.plot_species('{species}', animated=True, width=None, height=None)"
-        # else:
-        #     plot_str = "results.plot_property('type', animated=True, width=None, height=None)"
-        # cells = [nbf.new_code_cell("%load_ext autoreload\n%autoreload 2")]
-        # cells.extend(self.create_common_cells())
-        # if 'boundaryConditions' in self.s_model.keys():
-        #     bc_cells = self.__create_boundary_condition_cells()
-        #     for i, bc_cell in enumerate(bc_cells):
-        #         cells.insert(2 + i, bc_cell)
-        # cells.extend([nbf.new_code_cell(run_str),
-        #               nbf.new_markdown_cell("# Visualization"),
-        #               nbf.new_code_cell(plot_str)])
+        run_header, run_code = self.__create_run(results)
+        vis_header = nbf.new_markdown_cell("***\n## Visualization\n***")
+        plt_args = "animated=True, width='auto', height='auto'"
+        if len(self.s_model['species']) > 0:
+            species = self.s_model['species'][0]['name']
+            plot_str = f"results.plot_species('{species}', {plt_args})"
+        else:
+            plot_str = f"results.plot_property('type', {plt_args})"
+        vis_code = nbf.new_code_cell(plot_str)
+        cells.extend([run_header, run_code, vis_header, vis_code])
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
@@ -585,172 +726,6 @@ class StochSSNotebook(StochSSBase):
             'Hybrid-Tau-Leaping': self.model.get_best_solver_algo("Tau-Hybrid").name
         }
         return algorithm_map[self.settings['simulationSettings']['algorithm']]
-
-
-
-
-
-
-
-
-
-
-    def __create_boundary_condition_cells(self):
-        pad = "    "
-        bc_cells = []
-        try:
-            for boundary_condition in self.s_model['boundaryConditions']:
-                bc_cell = [f'class {boundary_condition["name"]}(BoundaryCondition):',
-                           f'{pad}def expression(self):',
-                           f'{pad*2}return """{boundary_condition["expression"]}"""']
-                bc_cells.append(nbf.new_code_cell("\n".join(bc_cell)))
-            return bc_cells
-        except KeyError as err:
-            message = "Boundary conditions are not properly formatted or "
-            message += f"are referenced incorrectly for notebooks: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
-
-    def __create_boundary_condition_string(self, model, pad):
-        if self.s_model['boundaryConditions']:
-            bound_conds = ["", f"{pad}# Boundary Conditions"]
-            try:
-                for bound_cond in self.s_model['boundaryConditions']:
-                    bc_str = f"{pad}self.add_boundary_condition({bound_cond['name']}())"
-                    bound_conds.append(bc_str)
-                model.extend(bound_conds)
-            except KeyError as err:
-                message = "Boundary conditions are not properly formatted or "
-                message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
-
-
-
-    def __create_import_cell(self):
-        try:
-            is_automatic = self.settings['simulationSettings']['isAutomatic']
-            imports = ["import numpy as np"]
-            if self.s_model['is_spatial']:
-                imports.append("import spatialpy")
-                imports.append("from spatialpy import Model, Species, Parameter, Reaction,\\")
-                imports.append("                      Domain, PlaceInitialCondition, \\")
-                imports.append("                      UniformInitialCondition, \\")
-                imports.append("                      ScatterInitialCondition")
-                return nbf.new_code_cell("\n".join(imports))
-            imports.append("import gillespy2")
-            imports.append("from gillespy2 import Model, Species, Parameter, Reaction, Event, \\")
-            imports.append("                      EventTrigger, EventAssignment, RateRule, \\")
-            imports.append("                      AssignmentRule, FunctionDefinition, TimeSpan")
-            tau_leaping_solver = self.model.get_best_solver_algo("Tau-Leaping").name
-            tau_hybrid_solver = self.model.get_best_solver_algo("Tau-Hybrid").name
-            algorithm_map = {
-                'ODE': f'from gillespy2 import {self.model.get_best_solver_algo("ODE").name}',
-                'SSA': f'from gillespy2 import {self.model.get_best_solver_algo("SSA").name}',
-                'CLE': f'from gillespy2 import {self.model.get_best_solver_algo("CLE").name}',
-                'Tau-Leaping': f'from gillespy2 import {tau_leaping_solver}',
-                'Hybrid-Tau-Leaping': f'from gillespy2 import {tau_hybrid_solver}'
-            }
-            algorithm = self.settings['simulationSettings']['algorithm']
-            for name, alg_import in algorithm_map.items():
-                if not is_automatic and name == algorithm:
-                    imports.append(alg_import)
-                elif name == algorithm and self.nb_type > self.ENSEMBLE_SIMULATION and \
-                                                            "CSolver" in alg_import:
-                    imports.append(alg_import)
-                else:
-                    imports.append(f"# {alg_import}")
-            return nbf.new_code_cell("\n".join(imports))
-        except KeyError as err:
-            message = "Workflow settings are not properly formatted or "
-            message += f"are referenced incorrectly for notebooks: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
-
-    def __create_initial_condition_strings(self, model, pad, type_refs=None):
-        if self.s_model['initialConditions']:
-            ic_types = {"Place":"PlaceInitialCondition", "Scatter":"ScatterInitialCondition",
-                        "Distribute Uniformly per Voxel":"UniformInitialCondition"}
-            initial_conditions = ["", f"{pad}# Initial Conditions"]
-            try:
-                for init_cond in self.s_model['initialConditions']:
-                    ic_str = f'{pad}self.add_initial_condition({ic_types[init_cond["icType"]]}('
-                    ic_str += f'species="{init_cond["specie"]["name"]}", count={init_cond["count"]}'
-                    if init_cond["icType"] == "Place":
-                        place = f'{init_cond["x"]}, {init_cond["y"]}, {init_cond["z"]}'
-                        ic_str += f', location=[{place}]))'
-                    else:
-                        types = [type_refs[d_type] for d_type in init_cond["types"]]
-                        ic_str += f', types={types}))'
-                    initial_conditions.append(ic_str)
-                model.extend(initial_conditions)
-            except KeyError as err:
-                message = "Initial conditions are not properly formatted or "
-                message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
-
-    def __create_domain_string(self, model, pad):
-        domain = ["", f"{pad}# Domain",
-                  f"{pad}domain = Domain.read_stochss_domain('{self.s_model['path']}')",
-                  f"{pad}self.add_domain(domain)",
-                  "", f"{pad}self.staticDomain = {self.s_model['domain']['static']}"]
-        model.extend(domain)
-
-
-    def __create_species_strings(self, model, pad, type_refs=None):
-        if self.s_model['species']:
-            species = ["", f"{pad}# Variables"]
-            names = []
-            try:
-                for spec in self.s_model['species']:
-                    names.append(spec["name"])
-                    spec_str = f'{pad}{spec["name"]} = Species(name="{spec["name"]}", '
-                    if self.s_model['is_spatial']:
-                        types = [f"self.{type_refs[d_type].upper()}" for d_type in spec['types']]
-                        spec_str += f"diffusion_coefficient={spec['diffusionConst']}, "
-                        spec_str += f"restrict_to=[{', '.join(types)}])"
-                    else:
-                        spec_str += f'initial_value={spec["value"]}, mode="{spec["mode"]}")'
-                    species.append(spec_str)
-                species.append(f"{pad}self.add_species([{', '.join(names)}])")
-                model.extend(species)
-            except KeyError as err:
-                message = "Species are not properly formatted or "
-                message += f"are referenced incorrectly for notebooks: {str(err)}"
-                raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
-
-
-    def __create_tspan_string(self, model, pad):
-        end = self.s_model['modelSettings']['endSim']
-        output_freq = self.s_model['modelSettings']['timeStep']
-        tspan = ["", f"{pad}# Timespan"]
-        if self.s_model['is_spatial']:
-            step_size = self.s_model['modelSettings']['timestepSize']
-            ts_str = f'{pad}self.timespan(np.arange(0, {end + step_size}, {output_freq})'
-            ts_str += f", timestep_size={step_size})"
-            tspan.append(ts_str)
-        else:
-            tspan.append(f'{pad}tspan = TimeSpan(np.arange(0, {end + output_freq}, {output_freq}))')
-            tspan.append(f'{pad}self.timespan(tspan)')
-        model.extend(tspan)
-
-
-
-
-    @classmethod
-    def __get_presentation_links(cls, hostname, file):
-        query_str = f"?owner={hostname}&file={file}"
-        present_link = f"/stochss/present-notebook{query_str}"
-        dl_link_base = "/stochss/notebook/download_presentation"
-        download_link = os.path.join(dl_link_base, hostname, file)
-        open_link = f"https://open.stochss.org?open={download_link}"
-        return {"presentation": present_link, "download": download_link, "open": open_link}
-
-
-
-
 
     def load(self):
         '''Read the notebook file and return as a dict'''
