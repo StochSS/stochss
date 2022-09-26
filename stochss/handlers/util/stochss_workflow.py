@@ -62,13 +62,15 @@ class StochSSWorkflow(StochSSBase):
             settings = self.get_settings_template()
             if wkfl_type == "Parameter Sweep":
                 settings['simulationSettings']['realizations'] = 20
+            if wkfl_type == "Spatial Ensemble Simulation":
+                settings['simulationSettings']['realizations'] = 1
             if os.path.exists(mdl_path):
-                with open(mdl_path, "r") as mdl_file:
+                with open(mdl_path, "r", encoding="utf-8") as mdl_file:
                     timespan_settings = json.load(mdl_file)['modelSettings']
                     settings['timespanSettings'] = timespan_settings
             self.workflow['settings'] = {"settings": settings, "model": mdl_path, "type":wkfl_type}
             settings_path = os.path.join(self.get_path(full=True), "settings.json")
-            with open(settings_path, "w") as settings_file:
+            with open(settings_path, "w", encoding="utf-8") as settings_file:
                 json.dump(self.workflow['settings'], settings_file, indent=4, sort_keys=True)
         else:
             self.workflow['settings'] = None
@@ -100,7 +102,7 @@ class StochSSWorkflow(StochSSBase):
     def __load_annotation(self):
         path = os.path.join(self.get_path(full=True), "README.md")
         try:
-            with open(path, "r") as annotation_file:
+            with open(path, "r", encoding="utf-8") as annotation_file:
                 annotation = annotation_file.read()
         except FileNotFoundError:
             annotation = ""
@@ -128,7 +130,7 @@ class StochSSWorkflow(StochSSBase):
     def __load_settings(self):
         path = os.path.join(self.get_path(full=True), "settings.json")
         try:
-            with open(path, "r") as settings_file:
+            with open(path, "r", encoding="utf-8") as settings_file:
                 settings = json.load(settings_file)
                 self.workflow['model'] = settings['model']
                 self.workflow['settings'] = settings['settings']
@@ -172,9 +174,9 @@ class StochSSWorkflow(StochSSBase):
 
     @classmethod
     def __write_new_files(cls, settings, annotation):
-        with open("settings.json", "w") as settings_file:
+        with open("settings.json", "w", encoding="utf-8") as settings_file:
             json.dump(settings, settings_file, indent=4, sort_keys=True)
-        with open("README.md", "w") as rdme_file:
+        with open("README.md", "w", encoding="utf-8") as rdme_file:
             rdme_file.write(annotation)
 
 
@@ -219,7 +221,7 @@ class StochSSWorkflow(StochSSBase):
         resp = {"message": message, "mdlPath": self.workflow['model'],
                 "mdl_file": self.get_file(path=self.workflow['model'])}
         c_resp = self.check_for_external_model(path=self.workflow['model'])
-        if "error" in c_resp.keys():
+        if "error" in c_resp:
             resp['error'] = c_resp['error']
         return resp, kwargs
 
@@ -256,7 +258,8 @@ class StochSSWorkflow(StochSSBase):
         ----------
         '''
         try:
-            with open(os.path.join(self.path, "settings.json")) as settings_file:
+            settings_path = os.path.join(self.path, "settings.json")
+            with open(settings_path, "r", encoding="utf-8") as settings_file:
                 path = json.load(settings_file)['model']
             if ".proj" not in self.path:
                 return path
@@ -367,11 +370,11 @@ class StochSSWorkflow(StochSSBase):
         '''
         if self.check_workflow_format(path=self.path):
             path = os.path.join(self.get_path(full=True), "settings.json")
-            with open(path, "r") as settings_file:
+            with open(path, "r", encoding="utf-8") as settings_file:
                 settings = json.load(settings_file)
             settings['settings'] = new_settings
             settings['model'] = mdl_path
-            with open(path, "w") as settings_file:
+            with open(path, "w", encoding="utf-8") as settings_file:
                 json.dump(settings, settings_file, indent=4, sort_keys=True)
             return f"Successfully saved the workflow: {self.path}"
         job = StochSSJob(path=self.path)
@@ -385,7 +388,7 @@ class StochSSWorkflow(StochSSBase):
         annotation : str
             Annotation to be saved
         '''
-        with open(os.path.join(self.path, "README.md"), "w") as rdme_file:
+        with open(os.path.join(self.path, "README.md"), "w", encoding="utf-8") as rdme_file:
             rdme_file.write(annotation)
 
 
@@ -408,7 +411,7 @@ class StochSSWorkflow(StochSSBase):
             if data['wkfl'] != self.get_file():
                 self.rename(name=data['wkfl'])
         else:
-            with open("settings.json", "w") as settings_file:
+            with open("settings.json", "w", encoding="utf-8") as settings_file:
                 json.dump(data['settings']['settings'], settings_file, indent=4, sort_keys=True)
             self.rename(name=data['job'])
             path, _ = self.get_unique_path(name=data['wkfl'], dirname=self.get_dir_name(full=True))

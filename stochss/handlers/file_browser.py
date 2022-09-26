@@ -802,3 +802,26 @@ class PresentationListAPIHandler(APIHandler):
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
+
+class ImportFromLibrary(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting the list of examples from StochSS Example Library.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get the list of presentations.
+
+        Attributes
+        ----------
+        '''
+        home = "/hub/spawn" if str(self.request.path).startswith("/user") else "stochss/home"
+        try:
+            system = StochSSBase(path=".example-library.json")
+            examples = system.load_example_library(home)
+            self.write(examples)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()

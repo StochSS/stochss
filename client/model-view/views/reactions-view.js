@@ -24,6 +24,7 @@ let Tooltips = require('../../tooltips');
 let ReactionTypes = require('../../reaction-types');
 //views
 let View = require('ampersand-view');
+let InputView = require('../../views/input');
 let ReactionView = require('./reaction-view');
 //templates
 let template = require('../templates/reactionsView.pug');
@@ -40,7 +41,8 @@ module.exports = View.extend({
     'click [data-hook=four]' : 'handleAddReactionClick',
     'click [data-hook=custom-massaction]' : 'handleAddReactionClick',
     'click [data-hook=custom-propensity]' : 'handleAddReactionClick',
-    'click [data-hook=collapse]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'change [data-hook=reaction-filter]' : 'filterReactions'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -78,6 +80,19 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  filterReactions: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
+    if(!this.readOnly) {
+      this.renderEditReactionView({'key': key, 'attr': attr});
+    }
+    this.renderViewReactionView({'key': key, 'attr': attr});
   },
   getStoichArgsForReactionType: function(type) {
     return ReactionTypes[type];
@@ -120,14 +135,16 @@ module.exports = View.extend({
       reactionView.openReactionDetails();
     }
   },
-  renderEditReactionView: function () {
+  renderEditReactionView: function ({key=null, attr=null}={}) {
     if(this.editReactionView){
       this.editReactionView.remove();
     }
+    let options = {filter: (model) => { return model.contains(attr, key); }}
     this.editReactionView = this.renderCollection(
       this.collection,
       ReactionView,
-      this.queryByHook('edit-reaction-list')
+      this.queryByHook('edit-reaction-list'),
+      options
     );
     app.tooltipSetup();
   },
@@ -144,7 +161,7 @@ module.exports = View.extend({
     katex.render(ReactionTypes['split'].label, this.queryByHook('split-lb1'), options);
     katex.render(ReactionTypes['four'].label, this.queryByHook('four-lb1'), options);
   },
-  renderViewReactionView: function () {
+  renderViewReactionView: function ({key=null, attr=null}={}) {
     if(this.viewReactionView){
       this.viewReactionView.remove();
     }
@@ -157,7 +174,10 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook("reaction-annotation-header")).css("display", "block");
     }
-    let options = {viewOptions: {viewMode: true, hasAnnotations: this.containsMdlWithAnn}}
+    let options = {
+      viewOptions: {viewMode: true, hasAnnotations: this.containsMdlWithAnn},
+      filter: (model) => { return model.contains(attr, key); }
+    }
     this.viewReactionView = this.renderCollection(
       this.collection,
       ReactionView,
@@ -197,4 +217,18 @@ module.exports = View.extend({
     $(this.queryByHook('massaction-message')).prop('hidden', !disableTypes);
   },
   updateValid: function () {},
+  subviews: {
+    filter: {
+      hook: 'reaction-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string',
+          placeholder: 'filter'
+        });
+      }
+    }
+  }
 });

@@ -16,7 +16,9 @@ div#boundary-conditions.card
 
           a.nav-link.tab(data-hook="bc-view-tab" data-toggle="tab" href="#view-boundary-conditions") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-boundary-conditions", data-hook="collapse-bc") +
+    button.btn.btn-outline-collapse.inline(data-toggle="collapse", data-target="#collapse-boundary-conditions", data-hook="collapse-bc") +
+
+    div.inline(data-hook="boundary-condition-filter" style="float: right;")
 
   div.card-body
 

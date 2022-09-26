@@ -16,7 +16,9 @@ div#parameters-editor.card
 
           a.nav-link.tab(data-hook="parameters-view-tab" data-toggle="tab" href="#view-parameters") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-parameters" data-hook="collapse") +
+    button.btn.btn-outline-collapse.inline(data-toggle="collapse" data-target="#collapse-parameters" data-hook="collapse") +
+
+    div.inline(data-hook="parameter-filter" style="float: right;")
 
   div.card-body
     p.mb-0

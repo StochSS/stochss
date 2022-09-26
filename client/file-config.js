@@ -225,12 +225,7 @@ let getSpatialModelContext = (view, node) => {
   let downloadOptions = {dataType: "json", identifier: "file/json-data"};
   return {
     edit: view.getEditModelContext(node),
-    newWorkflow: view.buildContextWithSubmenus({
-      label: "New Workflow",
-      submenu: {
-        jupyterNotebook: view.getNotebookNewWorkflowContext(node)
-      }
-    }),
+    newWorkflow: view.getSpatialNewWorkflowContext(node),
     convert: view.getSmdlConvertContext(node, "spatial/to-model"),
     download: view.getDownloadContext(node, downloadOptions),
     rename: view.getRenameContext(node),

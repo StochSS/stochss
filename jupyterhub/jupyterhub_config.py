@@ -22,8 +22,8 @@ import os
 import os.path
 import sys
 import re
-import requests
 import json
+import requests
 
 
 sys.path.append('/srv/jupyterhub/') # pylint: disable=wrong-import-position
@@ -37,7 +37,7 @@ from job_presentation import (
 # Page handlers
 from handlers import (
     HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler,
-    MultiplePlotsHandler
+    MultiplePlotsHandler, MessageAPIHandler
 )
 
 ## Class for authenticating users.
@@ -92,6 +92,7 @@ c.JupyterHub.default_url = '/stochss'
 # StochSS request handlers
 c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
+        (r"/stochss/api/message\/?", MessageAPIHandler),
         (r"/stochss/present-job\/?", JobPresentationHandler),
         (r"/stochss/present-model\/?", ModelPresentationHandler),
         (r"/stochss/present-notebook\/?", NotebookPresentationHandler),
@@ -203,24 +204,29 @@ c.DockerSpawner.debug = True
 #---------------------------------------------------------------------------------------------------
 
 def update_users_sets():
+    """
+    Update the admin, power_users, and blacklist user sets.
+    """
     c.Authenticator.admin_users = admin = set([])
     c.StochSS.power_users = power_users = set([])
     c.StochSS.blacklist = blacklist = set([])
 
     pwd = "/srv/userlist"
-    with open(os.path.join(pwd, 'userlist')) as f:
-        lines = f.read().strip().split("\n")
-        for line in lines:
-            parts = line.split()
-            if len(parts) > 1:
-                name = parts[0]
-                if parts[1] == 'admin':
-                    admin.add(name)
-                    power_users.add(name)
-                elif parts[1] == 'power':
-                    power_users.add(name)
-                elif parts[1] == 'blacklist':
-                    blacklist.add(name)
+    path = os.path.join(pwd, 'userlist')
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as file_obj:
+            lines = file_obj.read().strip().split("\n")
+            for line in lines:
+                parts = line.split()
+                if len(parts) > 1:
+                    name = parts[0]
+                    if parts[1] == 'admin':
+                        admin.add(name)
+                        power_users.add(name)
+                    elif parts[1] == 'power':
+                        power_users.add(name)
+                    elif parts[1] == 'blacklist':
+                        blacklist.add(name)
 
 def get_user_cpu_count_or_fail():
     '''
@@ -269,17 +275,6 @@ def pre_spawn_hook(spawner):
         return
     user_type = None
     platform = "live" if "live" in os.environ['OAUTH_CALLBACK'] else "staging"
-    for elem in c.StochSS.blacklist:
-        if elem.startswith('@'):
-            log.info(f"Checking for domain affiliation: {elem}")
-            if elem in spawner.user.name:
-                post_message_to_slack(f'User {spawner.user.name} of banned domain {elem} attempted to log into {platform}', blocks = None)
-                raise Exception('User banned')
-        else:
-            log.info(f"Checking for user: {elem}")
-            if elem == spawner.user.name or re.search(elem, spawner.user.name) is not None:
-                post_message_to_slack(f'Banned user {spawner.user.name} attempted to log into {platform}', blocks = None)
-                raise Exception('User banned')
 
     if spawner.user.name in c.Authenticator.admin_users:
         log.info(f"Setting usertype for {spawner.user.name} to 'admin'")
@@ -287,7 +282,32 @@ def pre_spawn_hook(spawner):
     elif spawner.user.name in c.StochSS.power_users:
         log.info(f"Setting usertype for {spawner.user.name} to 'power'")
         user_type = 'power'
-    print(post_message_to_slack(f"New Login to {platform}: {spawner.user.name} user_type={user_type}"))
+    else:
+        for elem in c.StochSS.blacklist:
+            if elem.startswith('@'):
+                log.info(f"Checking for domain affiliation: {elem}")
+                if elem in spawner.user.name:
+                    name = spawner.user.name
+                    post_message_to_slack(
+                        f'User {name} of banned domain {elem} attempted to log into {platform}'
+                    )
+                    raise Exception('User banned')
+            else:
+                log.info(f"Checking for user: {elem}")
+                try:
+                    if elem == spawner.user.name or re.search(elem, spawner.user.name) is not None:
+                        post_message_to_slack(
+                            f'Banned user {spawner.user.name} attempted to log into {platform}'
+                        )
+                        raise Exception('User banned')
+                except re.error as err:
+                    post_message_to_slack(
+                        f'Blacklist entry {elem} on {platform} is an invalid regular expression.'
+                    )
+
+    print(post_message_to_slack(
+        f"New Login to {platform}: {spawner.user.name} user_type={user_type}")
+    )
     if user_type:
         spawner.mem_limit = None
         log.info(f'Skipping resource limitation for {user_type} user: {spawner.user.name}')
@@ -357,7 +377,6 @@ def post_stop_hook(spawner):
     except Exception as err:
         message = "Exception thrown due to cpuset_cpus not being set (power user)"
         log.error(f"{message}\n{err}")
-        pass
 
 c.Spawner.pre_spawn_hook = pre_spawn_hook
 c.Spawner.post_stop_hook = post_stop_hook
@@ -485,12 +504,22 @@ slack_channel = "#stochss-live"
 slack_icon_emoji = ':red_circle:'
 slack_token = None
 try:
-    with open(".slack_bot_token",'r') as fd:
-        slack_token = fd.readline().strip()
+    with open(".slack_bot_token", 'r', encoding="utf-8") as file_obj:
+        slack_token = file_obj.readline().strip()
 except:
     pass
 
 def post_message_to_slack(text, blocks = None):
+    """
+    Post messages to the StochSS Live! slack channel.
+
+    Attributes
+    ----------
+    text : str
+        Content of the message.
+    blocks : list
+        List of slack blocks
+    """
     global slack_token, slack_channel, slack_icon_emoji, slack_user_name
     if slack_token is None:
         return

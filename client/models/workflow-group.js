@@ -57,6 +57,15 @@ module.exports = State.extend({
         }
         return null
       }
+    },
+    type: {
+      deps: ["model"],
+      fn: function () {
+        if(this.model.is_spatial) {
+          return "Spatial";
+        }
+        return "Well-Mixed";
+      }
     }
   }
 });

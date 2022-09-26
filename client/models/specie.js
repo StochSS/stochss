@@ -42,6 +42,42 @@ module.exports = State.extend({
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
+  contains: function (attr, key) {
+    if(key === null) { return true; }
+
+    let types = []
+    if(this.types) {
+      this.types.forEach((typeID) => {
+        types.push(this.collection.parent.domain.types.get(typeID, "typeID").name);
+      });
+    }
+
+    let checks = {
+      'name': this.name.includes(key),
+      'value': this.value === Number(key),
+      'mode': this.mode === key,
+      'switchTol': this.isSwitchTol && this.switchTol === Number(key),
+      'switchMin': !this.isSwitchTol && this.switchMin === Number(key),
+      'diffusionConst': this.diffusionConst === Number(key),
+      'types': types.includes(key)
+    }
+
+    if(attr !== null) {
+      let otherAttrs = {
+        'initialcondition': 'value', 'initialvalue': 'value',
+        'switchingtolerance': 'switchTol', 'restrictto': 'types',
+        'minimumvalueforswitching': 'switchMin'
+      }
+      if(Object.keys(otherAttrs).includes(attr)) {
+        attr = otherAttrs[attr];
+      }
+      return checks[attr];
+    }
+    for(let attribute in checks) {
+      if(checks[attribute]) { return true; }
+    }
+    return false;
+  },
   validateComponent: function () {
     if(!this.name.trim() || this.name.match(/^\d/)) return false;
     if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;

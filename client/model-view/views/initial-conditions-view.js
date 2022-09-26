@@ -22,6 +22,7 @@ let app = require('../../app');
 let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
+let InputView = require('../../views/input');
 let InitialConditionView = require('./initial-condition-view');
 //templates
 let template = require('../templates/initialConditionsView.pug');
@@ -34,6 +35,7 @@ module.exports = View.extend({
     'click [data-hook=distribute-uniformly]' : 'addInitialCondition',
     'click [data-hook=initial-condition-button]' : 'changeCollapseButtonText',
     'click [data-hook=save-initial-conditions]' : 'switchToViewMode',
+    'change [data-hook=initial-condition-filter]' : 'filterInitialConditions'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -71,18 +73,33 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
-  renderEditInitialConditionsView: function () {
+  filterInitialConditions: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
+    if(!this.readOnly) {
+      this.renderEditInitialConditionsView({'key': key, 'attr': attr});
+    }
+    this.renderViewInitialConditionsView({'key': key, 'attr': attr});
+  },
+  renderEditInitialConditionsView: function ({key=null, attr=null}={}) {
     if(this.editInitialConditionView) {
       this.editInitialConditionView.remove();
     }
+    let options = {filter: (model) => { return model.contains(attr, key); }}
     this.editInitialConditionView = this.renderCollection(
       this.collection,
       InitialConditionView,
-      this.queryByHook('edit-initial-conditions-collection')
+      this.queryByHook('edit-initial-conditions-collection'),
+      options
     );
     app.tooltipSetup();
   },
-  renderViewInitialConditionsView: function () {
+  renderViewInitialConditionsView: function ({key=null, attr=null}={}) {
     if(this.viewInitialConditionView) {
       this.viewInitialConditionView.remove();
     }
@@ -92,7 +109,10 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook("initial-conditions-annotation-header")).css("display", "block");
     }
-    let options = {viewOptions: {viewMode: true}};
+    let options = {
+      viewOptions: {viewMode: true, hasAnnotations: this.containsMdlWithAnn},
+      filter: (model) => { return model.contains(attr, key); }
+    }
     this.viewInitialConditionView = this.renderCollection(
       this.collection,
       InitialConditionView,
@@ -102,5 +122,19 @@ module.exports = View.extend({
     app.tooltipSetup();
   },
   update: function () {},
-  updateValid: function () {}
+  updateValid: function () {},
+  subviews: {
+    filter: {
+      hook: 'initial-condition-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string',
+          placeholder: 'filter'
+        });
+      }
+    }
+  }
 });

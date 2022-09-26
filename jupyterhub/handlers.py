@@ -15,6 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+import os
+import json
 
 from jupyterhub.handlers.base import BaseHandler
 
@@ -103,3 +105,25 @@ class MultiplePlotsHandler(BaseHandler):
         '''
         html = self.render_template("multiple-plots-page.html")
         self.finish(html)
+
+class MessageAPIHandler(BaseHandler):
+    '''
+    ################################################################################################
+    Handler for retrieving user messages.
+    ################################################################################################
+    '''
+    async def get(self):
+        '''
+        Get the messages from the message file.
+
+        Attributes
+        ----------
+        '''
+        path = "/srv/userlist/messages.json"
+        if os.path.exists(path):
+            with open(path, "r", encoding="utf-8") as msg_file:
+                messages = json.load(msg_file)
+        else:
+            messages = []
+        self.write({"messages": messages})
+        self.finish()

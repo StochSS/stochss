@@ -36,6 +36,26 @@ module.exports = State.extend({
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
+  contains: function (attr, key) {
+    if(key === null) { return true; }
+
+    let checks = {
+      'name': this.name.includes(key),
+      'expression': this.expression === Number(key)
+    }
+
+    if(attr !== null) {
+      let otherAttrs = { 'value': 'expression' }
+      if(Object.keys(otherAttrs).includes(attr)) {
+        attr = otherAttrs[attr];
+      }
+      return checks[attr];
+    }
+    for(let attribute in checks) {
+      if(checks[attribute]) { return true; }
+    }
+    return false;
+  },
   validateComponent: function () {
     if(!this.name.trim() || this.name.match(/^\d/)) return false;
     if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;

@@ -167,21 +167,26 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   if(document.querySelector('#newWorkflowModal')) {
     document.querySelector('#newWorkflowModal').remove()
   }
+  let typeCodes = {
+    "Ensemble Simulation": "_ES",
+    "Spatial Ensemble Simulation": "_SES",
+    "Parameter Sweep": "_PS"
+  }
   let self = parent;
   let ext = isSpatial ? /.smdl/g : /.mdl/g
-  let typeCode = type === "Ensemble Simulation" ? "_ES" : "_PS";
+  let typeCode = typeCodes[type];
   let name = mdlPath.split('/').pop().replace(ext, typeCode)
   let modal = $(modals.createWorkflowHtml(name, type)).modal();
   let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
   let input = document.querySelector('#newWorkflowModal #workflowNameInput');
   okBtn.disabled = false;
-  input.addEventListener("keyup", function (event) {
+  input.addEventListener("keyup", (event) => {
     if(event.keyCode === 13){
       event.preventDefault();
       okBtn.click();
     }
   });
-  input.addEventListener("input", function (e) {
+  input.addEventListener("input", (e) => {
     let endErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputEndCharError')
     let charErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputSpecCharError')
     let error = validateName(input.value)
@@ -189,19 +194,19 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
     charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
     endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
   });
-  okBtn.addEventListener('click', function (e) {
+  okBtn.addEventListener('click', (e) => {
     modal.modal("hide");
-    let wkflFile = input.value.trim() + ".wkfl";
+    let wkflFile = `${input.value.trim()}.wkfl`;
     if(mdlPath.includes(".proj") && !mdlPath.includes(".wkgp")){
       var wkflPath = path.join(path.dirname(mdlPath), "WorkflowGroup1.wkgp", wkflFile);
     }else{
       var wkflPath = path.join(path.dirname(mdlPath), wkflFile);
     }
-    let queryString = "?path=" + wkflPath + "&model=" + mdlPath + "&type=" + type;
+    let queryString = `?path=${wkflPath}&model=${mdlPath}&type=${type}`;
     let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
     getXHR(endpoint, {
-      success: function (err, response, body) {
-        window.location.href = path.join(getBasePath(), "stochss/workflow/edit") + "?path=" + body.path;
+      success: (err, response, body) => {
+        window.location.href = `${path.join(getBasePath(), "stochss/workflow/edit")}?path=${body.path}`;
       }
     });
   });
@@ -246,6 +251,60 @@ let switchToEditTab = (view, section) => {
   }
 }
 
+let maintenance = (view) => {
+  getXHR("stochss/api/message", {
+    always: (err, response, body) => {
+      if(body.messages.length === 0) { console.log(null) }
+      var html = ``;
+      body.messages.forEach((data) => {
+        let styles = {
+          "primary": "background-color: rgba(0, 123, 255, 0.5) !important;",
+          "secondary": "background-color: rgba(108, 117, 125, 0.5) !important;",
+          "light": "background-color: rgba(248, 249, 250, 0.5) !important;",
+          "dark": "background-color: rgba(52, 58, 64, 0.5) !important;",
+          "success": "background-color: rgba(40, 167, 69, 0.5) !important;",
+          "info": "background-color: rgba(23, 162, 184, 0.5) !important;",
+          "warning": "background-color: rgba(255, 193, 7, 0.5) !important;",
+          "danger": "background-color: rgba(220, 53, 69, 0.5) !important;"
+        }
+        if(data.start) {
+          let s_date = new Date(data.start);
+          let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(s_date);
+          let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(s_date);
+          let s_day = `${day} ${mon} ${s_date.getDate()} ${s_date.getFullYear()}`;
+          data.message = data.message.replace("__DATE__", s_day);
+
+          let tz = s_date.toString().split('(').pop().split(')')[0];
+          var minutes = s_date.getMinutes() < 10 ? `0${s_date.getMinutes()}` : s_date.getMinutes();
+          let m_start = `${s_date.getHours()}:${minutes} ${tz}`;
+          data.message = data.message.replace("__START__", m_start);
+        }
+        if(data.end) {
+          let e_date = new Date(data.end);
+          let day = new Intl.DateTimeFormat('en-US', {weekday: 'short'}).format(e_date);
+          let mon = new Intl.DateTimeFormat('en-US', {month: 'short'}).format(e_date);
+          let e_day = `${day} ${mon} ${e_date.getDate()} ${e_date.getFullYear()}`;
+          data.message = data.message.replace("__DATE__", e_day);
+
+          let tz = e_date.toString().split('(').pop().split(')')[0];
+          var minutes = e_date.getMinutes() < 10 ? `0${e_date.getMinutes()}` : e_date.getMinutes();
+          let m_end = `${e_date.getHours()}:${minutes} ${tz}`;
+          data.message = data.message.replace("__END__", m_end);
+        }
+        if(!data.style) {
+          var style = styles.warning;
+        }else if(Object.keys(styles).includes(data.style)) {
+          var style = styles[data.style];
+        }else {
+          var style = data.style;
+        }
+        html += `<h4 class='display-5 mt-2' style='${style}'>${data.message}</h4>`;
+      });
+      $(view.queryByHook('message-to-users')).html(html);
+    }
+  });
+}
+
 module.exports = {
     routePrefix: routePrefix,
     getApiPath: getApiPath,
@@ -260,7 +319,8 @@ module.exports = {
     documentSetup: documentSetup,
     copyToClipboard: copyToClipboard,
     switchToEditTab: switchToEditTab,
-    validateName: validateName
+    validateName: validateName,
+    maintenance: maintenance
 };
 
 

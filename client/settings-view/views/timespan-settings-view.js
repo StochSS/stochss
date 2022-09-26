@@ -40,6 +40,7 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.modelSettings
+    this.isSpatial = attrs.isSpatial;
     let tssValues = {1e-5: 5, 1e-4: 4, 1e-3: 3, 1e-2: 2, 1e-1: 1, 1: 0}
     this.tssValue = tssValues[this.model.timestepSize]
   },

@@ -25,5 +25,25 @@ module.exports = State.extend({
     name: 'string',
     expression: 'string',
     annotation: 'string'
+  },
+  contains: function (attr, key) {
+    if(key === null) { return true; }
+
+    let checks = {
+      'name': this.name.includes(key),
+      'expression': this.expression.includes(key)
+    }
+
+    if(attr !== null) {
+      let otherAttrs = {}
+      if(Object.keys(otherAttrs).includes(attr)) {
+        attr = otherAttrs[attr];
+      }
+      return checks[attr];
+    }
+    for(let attribute in checks) {
+      if(checks[attribute]) { return true; }
+    }
+    return false;
   }
 });

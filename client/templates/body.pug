@@ -32,7 +32,7 @@ body
 
   div.container-fluid
     div.row
-      div.col-sm-12.col-md-2.col-xxl-1.side-navbar(data-hook="side-navbar")
+      div.col-sm-12.col-md-2.col-xxl-1(data-hook="side-navbar")
         nav.sidebar.d-md-block
           div.sidebar-sticky
             ul.nav.nav-flex-column
@@ -50,6 +50,9 @@ body
                 li.nav-item.ml-3
                   a.nav-link(href="stochss/files#file-browser-section" title="Explore your StochSS files") Files
 
+              li.nav_item
+                div: a.nav-link(href="stochss/example-library" title="Import Examples from Library") Example Library
+
               li.nav-item
                 div: a.nav-link(target="_blank" href="tree" title="Browse your files in a Jupyter interface") Jupyter Notebooks
 
@@ -58,15 +61,23 @@ body
 
             div.user-logs.card.card-body
 
-              div.head
+              div.align-items-baseline
 
                 h6.my-0.inline User Logs
 
-                button.my-0.btn.btn-outline-collapse.inline(data-hook="user-logs-collapse") +
+                button.btn.btn-outline-collapse.inline.my-0(data-hook="user-logs-collapse") +
 
-                button.my-0.btn.btn-light.inline(data-hook="clear-user-logs" style="float: right;") clear
+                button.btn.btn-light.inline.my-0(data-hook="close-user-logs" style="float: right;")
 
-              div.pl-1.overflow-auto(id="user-logs")
+                  svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-caret-down-fill" viewBox="0 0 16 16")
+
+                    path(d="M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z")
+
+              div#user-logs-body
+
+                div.pl-1.overflow-auto(id="user-logs")
+
+                button.btn.btn-light.mt-2(data-hook="clear-user-logs" style="width: 100%;") Clear Logs
 
       main.col-sm-12.col-md-10.col-xl-9.col-xxl-6.body(role="main" data-hook="page-main")
 

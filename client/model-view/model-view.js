@@ -327,14 +327,18 @@ module.exports = View.extend({
     this.toggleVolumeContainer();
   },
   setReadOnlyMode: function (component) {
-    $(this.queryByHook(component + '-edit-tab')).addClass("disabled");
-    $(".nav .disabled>a").on("click", (e) => {
-      e.preventDefault();
-      return false;
-    });
-    $(this.queryByHook(component + '-view-tab')).tab('show');
-    $(this.queryByHook('edit-' + component)).removeClass('active');
-    $(this.queryByHook('view-' + component)).addClass('active');
+    if(this.model.is_spatial && component === "system-volume") {
+      $(this.queryByHook("system-volume-container")).css("display", "none");
+    }else{
+      $(this.queryByHook(component + '-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", (e) => {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook(component + '-view-tab')).tab('show');
+      $(this.queryByHook('edit-' + component)).removeClass('active');
+      $(this.queryByHook('view-' + component)).addClass('active');
+    }
   },
   toggleVolumeContainer: function () {
     if(!this.model.is_spatial) {

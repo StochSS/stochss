@@ -23,6 +23,7 @@ let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
 let SpecieView = require('./specie-view');
+let InputView = require('../../views/input');
 //templates
 let speciesTemplate = require('../templates/speciesView.pug');
 let spatialSpeciesTemplate = require('../templates/spatialSpeciesView.pug');
@@ -30,7 +31,8 @@ let spatialSpeciesTemplate = require('../templates/spatialSpeciesView.pug');
 module.exports = View.extend({
   events: {
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
-    'click [data-hook=add-species]' : 'handleAddSpeciesClick'
+    'click [data-hook=add-species]' : 'handleAddSpeciesClick',
+    'change [data-hook=species-filter]' : 'filterSpecies'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -112,6 +114,19 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
+  filterSpecies: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
+    if(!this.readOnly) {
+      this.renderEditSpeciesView({'key': key, 'attr': attr});
+    }
+    this.renderViewSpeciesView({'key': key, 'attr': attr});
+  },
   handleAddSpeciesClick: function (e) {
     let self = this;
     let defaultMode = this.collection.parent.defaultMode;
@@ -129,19 +144,20 @@ module.exports = View.extend({
     }
     app.switchToEditTab(this, "species");
   },
-  renderEditSpeciesView: function () {
+  renderEditSpeciesView: function ({key=null, attr=null}={}) {
     if(this.editSpeciesView){
       this.editSpeciesView.remove();
     }
-    let options = {viewOptions: {parent: this}};
+    let options = {filter: (model) => { return model.contains(attr, key); }}
     this.editSpeciesView = this.renderCollection(
       this.collection,
       SpecieView,
-      this.queryByHook('edit-specie-list')
+      this.queryByHook('edit-specie-list'),
+      options
     );
     app.tooltipSetup();
   },
-  renderViewSpeciesView: function () {
+  renderViewSpeciesView: function ({key=null, attr=null}={}) {
     if(this.viewSpeciesView){
       this.viewSpeciesView.remove();
     }
@@ -156,7 +172,10 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook("species-annotation-header")).css("display", "block");
     }
-    let options = {viewOptions: {parent: this, viewMode: true}};
+    let options = {
+      viewOptions: {parent: this, viewMode: true},
+      filter: (model) => { return model.contains(attr, key); }
+    };
     this.viewSpeciesView = this.renderCollection(
       this.collection,
       SpecieView,
@@ -174,6 +193,22 @@ module.exports = View.extend({
     }else{
       errorMsg.addClass('component-valid');
       errorMsg.removeClass('component-invalid');
+    }
+  },
+  update: function () {},
+  updateValid: function () {},
+  subviews: {
+    filter: {
+      hook: 'species-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string',
+          placeholder: 'filter'
+        });
+      }
     }
   }
 });

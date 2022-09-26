@@ -1,0 +1,117 @@
+div#workflow-results.card
+
+  div.card-header.pb-0
+
+    h3.inline Results
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-results" data-hook="collapse-results-btn") -
+
+  div.collapse.show(id="collapse-results" data-hook="workflow-results")
+
+    div.card-body
+
+      div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
+
+        div.mr-3.inline
+
+          h6 <b>Title:</b>
+
+        div.inline(style="width: 80%")
+
+          div(id="title" data-hook="title")
+
+      div.inline.horizontal-space
+
+        span.inline(for="target-of-interest") Target of Interest:
+
+        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.spatialTarget) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        div.inline(id="target-of-interest" data-hook="target-of-interest-list")
+
+      div.inline.horizontal-space.hidden(data-hook="job-results-mode")
+
+        span.inline(for="target-of-interest") Mode:
+
+        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.mode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+        div.inline(id="target-mode" data-hook="target-mode-list")
+
+      div.card
+
+        div.card-header.pb-0
+
+          h5.inline Plot Trajectories
+
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-spatial"
+            id="collapse-spatial-btn"
+            data-hook="collapse-spatial-btn"
+            data-trigger="collapse-plot-container"
+            data-type="spatial"
+          ) -
+
+        div.collapse.show(id="collapse-spatial")
+
+          div.card-body
+
+            div(data-hook="spatial-plot")
+
+            div(data-hook="spatial-plot-loading-msg")
+              | Spatial results may take a while to load.  Load times are dependant on the number of outputs, number of variables, and the number of domain particles.
+
+            div.spinner-border.workflow-plot(data-hook="spatial-plot-spinner")
+
+            button.btn.btn-primary.box-shadow(data-hook="spatial-edit-plot" data-target="edit-plot" disabled) Edit Plot
+
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="spatial-download"
+              data-hook="spatial-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
+              disabled
+            ) Download <span class="caret"></span>
+
+            ul.dropdown-menu(aria-labelledby="#spatial-download")
+              li.dropdown-item(
+                data-hook="spatial-download-png-custom"
+                data-target="download-png-custom"
+                data-type="spatial"
+              ) Plot as .png
+              li.dropdown-item(
+                data-hook="spatial-download-json"
+                data-target="download-json"
+                data-type="spatial"
+              ) Plot as .json
+              li.dropdown-item(
+                data-hook="spatial-plot-csv"
+                data-target="download-plot-csv"
+                data-type="spatial"
+              ) Plot Results as .csv
+
+      div
+
+        button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
+
+        button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Full Results as .csv
+
+        button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation") Publish
+
+        div.saving-status(data-hook="job-action-start")
+
+          div.spinner-grow
+
+          span Publishing ...
+
+        div.saved-status(data-hook="job-action-end")
+
+          span Published
+
+        div.save-error-status(data-hook="job-action-err")
+
+          span Error
+
+      div.text-info(data-hook="update-format-message" style="display: none;")
+        | To publish you job the workflows format must be updated.

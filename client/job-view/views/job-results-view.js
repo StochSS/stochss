@@ -22,23 +22,26 @@ let path = require('path');
 let app = require('../../app');
 let modals = require('../../modals');
 let Tooltips = require('../../tooltips');
-let Plotly = require('../../lib/plotly');
+let Plotly = require('plotly.js-dist');
 //views
 let InputView = require('../../views/input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let SweepParametersView = require('./sweep-parameter-range-view');
 //templates
-let gillespyResultsTemplate = require('../templates/gillespyResultsView.pug');
-let gillespyResultsEnsembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
-let parameterSweepResultsTemplate = require('../templates/parameterSweepResultsView.pug');
-let parameterScanTemplate = require('../templates/parameterScanResultsView.pug');
+let wellMixedTemplate = require('../templates/gillespyResultsView.pug');
+let ensembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
+let sweepTemplate = require('../templates/parameterSweepResultsView.pug');
+let scanTemplate = require('../templates/parameterScanResultsView.pug');
+let spatialTemplate = require('../templates/spatialResultsView.pug');
 
 module.exports = View.extend({
   events: {
     'change [data-hook=title]' : 'setTitle',
     'change [data-hook=xaxis]' : 'setXAxis',
     'change [data-hook=yaxis]' : 'setYAxis',
+    'change [data-hook=target-of-interest-list]' : 'getPlotForTarget',
+    'change [data-hook=target-mode-list]' : 'getPlotForTargetMode',
     'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
@@ -59,19 +62,20 @@ module.exports = View.extend({
     this.readOnly = Boolean(attrs.readOnly) ? attrs.readOnly : false;
     this.wkflName = attrs.wkflName;
     this.titleType = attrs.titleType;
-    this.tooltips = Tooltips.parameterSweepResults;
+    this.tooltips = Tooltips.jobResults;
     this.plots = {};
     this.plotArgs = {};
   },
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
                      this.model.settings.simulationSettings.algorithm !== "ODE";
-    let isParameterScan = this.model.settings.parameterSweepSettings.parameters.length > 2
-    if(this.titleType === "Parameter Sweep"){
-      this.template = isParameterScan ? parameterScanTemplate : parameterSweepResultsTemplate;
-    }else{
-      this.template = isEnsemble ? gillespyResultsEnsembleTemplate : gillespyResultsTemplate;
+    let isParameterScan = this.model.settings.parameterSweepSettings.parameters.length > 2;
+    let templates = {
+      "Ensemble Simulation": isEnsemble ? ensembleTemplate : wellMixedTemplate,
+      "Parameter Sweep": isParameterScan ? scanTemplate : sweepTemplate,
+      "Spatial Ensemble Simulation": spatialTemplate
     }
+    this.template = templates[this.titleType];
     View.prototype.render.apply(this, arguments);
     if(this.readOnly) {
       $(this.queryByHook("job-presentation")).css("display", "none");
@@ -86,7 +90,7 @@ module.exports = View.extend({
     }
     if(this.titleType === "Ensemble Simulation") {
       var type = isEnsemble ? "stddevran" : "trajectories";
-    }else{
+    }else if(this.titleType === "Parameter Sweep") {
       this.tsPlotData = {"parameters":{}};
       this.fixedParameters = {};
       var type = "ts-psweep";
@@ -103,6 +107,13 @@ module.exports = View.extend({
       }
       this.getPlot("psweep");
       this.renderSweepParameterView();
+    }else{
+      var type = "spatial";
+      this.spatialTarget = "type";
+      this.targetIndex = null;
+      this.targetMode = "discrete";
+      this.renderTargetOfInterestView();
+      $(this.queryByHook("spatial-plot-csv")).css('display', 'none');
     }
     this.getPlot(type);
   },
@@ -126,48 +137,52 @@ module.exports = View.extend({
     }, 5000);
   },
   cleanupPlotContainer: function (type) {
-    let el = this.queryByHook(type + "-plot");
+    let el = this.queryByHook(`${type}-plot`);
     Plotly.purge(el);
     $(this.queryByHook(type + "-plot")).empty();
     if(type === "ts-psweep" || type === "psweep"){
-      $(this.queryByHook(type + "-download")).prop("disabled", true);
-      $(this.queryByHook(type + "-edit-plot")).prop("disabled", true);
+      $(this.queryByHook(`${type}-download`)).prop("disabled", true);
+      $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", true);
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
+    }else if(type === "spatial") {
+      $(this.queryByHook("spatial-plot-loading-msg")).css("display", "block");
     }
-    $(this.queryByHook(type + "-plot-spinner")).css("display", "block");
+    $(this.queryByHook(`${type}-plot-spinner`)).css("display", "block");
   },
   downloadCSV: function (csvType, data) {
-    var queryStr = "?path=" + this.model.directory + "&type=" + csvType;
+    var queryStr = `?path=${this.model.directory}&type=${csvType}`;
     if(data) {
-      queryStr += "&data=" + JSON.stringify(data);
+      queryStr += `&data=${JSON.stringify(data)}`;
     }
-    let endpoint = path.join(app.getApiPath(), "job/csv") + queryStr;
+    let endpoint = `${path.join(app.getApiPath(), "job/csv")}${queryStr}`;
     window.open(endpoint);
   },
   getPlot: function (type) {
-    let self = this;
     this.cleanupPlotContainer(type);
     let data = this.getPlotData(type);
     if(data === null) { return };
     let storageKey = JSON.stringify(data);
     data['plt_data'] = this.getPlotLayoutData();
     if(Boolean(this.plots[storageKey])) {
-      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt'];
+      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial'];
       if(renderTypes.includes(type)) {
         this.plotFigure(this.plots[storageKey], type);
       }
     }else{
-      let queryStr = "?path=" + this.model.directory + "&data=" + JSON.stringify(data);
-      let endpoint = path.join(app.getApiPath(), "workflow/plot-results") + queryStr;
+      let queryStr = `?path=${this.model.directory}&data=${JSON.stringify(data)}`;
+      let endpoint = `${path.join(app.getApiPath(), "workflow/plot-results")}${queryStr}`;
       app.getXHR(endpoint, {
-        success: function (err, response, body) {
-          self.plots[storageKey] = body;
-          self.plotFigure(body, type);
+        success: (err, response, body) => {
+          this.plots[storageKey] = body;
+          this.plotFigure(body, type);
         },
-        error: function (err, response, body) {
-          $(self.queryByHook(type + "-plot-spinner")).css("display", "none");
-          let message = "<p>" + body.Message + "</p><p><b>Please re-run this job to get this plot</b></p>";
-          $(self.queryByHook(type + "-plot")).html(message);
+        error: (err, response, body) => {
+          if(type === "spatial") {
+            $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
+          }
+          $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
+          let message = `<p>${body.Message}</p><p><b>Please re-run this job to get this plot</b></p>`;
+          $(this.queryByHook(`${type}-plot`)).html(message);
         }
       });
     }
@@ -200,6 +215,12 @@ module.exports = View.extend({
       data['sim_type'] = "GillesPy2_PS";
       data['data_keys'] = this.getDataKeys(true);
       data['plt_key'] = type === "ts-psweep-mp" ? "mltplplt" : this.tsPlotData.type;
+    }else if(type === "spatial") {
+      data['sim_type'] = "SpatialPy";
+      data['data_keys'] = {
+        target: this.spatialTarget, index: this.targetIndex, mode: this.targetMode
+      };
+      data['plt_key'] = type;
     }else {
       data['sim_type'] = "GillesPy2";
       data['data_keys'] = {};
@@ -227,6 +248,27 @@ module.exports = View.extend({
     })[0];
     this.model.settings.parameterSweepSettings.speciesOfInterest = species;
     this.getPlot('psweep')
+  },
+  getPlotForTarget: function (e) {
+    let value = e.target.value;
+    if(["0", "1", "2"].includes(value)) {
+      this.spatialTarget = "v";
+      this.targetIndex = number(value);
+    }else{
+      this.spatialTarget = value;
+      this.targetIndex = null;
+    }
+    if(!["type", "v", "nu", "rho", "mass"].includes(this.spatialTarget)) {
+      $(this.queryByHook('job-results-mode')).css('display', 'inline-block');
+      this.renderTargetModeView();
+    }else{
+      $(this.queryByHook('job-results-mode')).css('display', 'none');
+    }
+    this.getPlot("spatial");
+  },
+  getPlotForTargetMode: function (e) {
+    this.targetMode = e.target.value;
+    this.getPlot("spatial");
   },
   getPlotKey: function (type) {
     if(type === "psweep") {
@@ -274,18 +316,17 @@ module.exports = View.extend({
     this.getPlot(type);
   },
   handleConvertToNotebookClick: function (e) {
-    let self = this;
-    if(this.titleType === "Ensemble Simulation") {
-      var type = "gillespy";
-    }else if(this.titleType === "Parameter Sweep" && this.model.settings.parameterSweepSettings.parameters.length > 1) {
-      var type = "2d_parameter_sweep";
-    }else{
-      var type = "1d_parameter-sweep";
+    let is2D = this.model.settings.parameterSweepSettings.parameters.length > 1;
+    let types = {
+      "Ensemble Simulation": "gillespy",
+      "Spatial Ensemble Simulation": "spatialpy",
+      "Parameter Sweep": is2D ? "2d_parameter_sweep" : "1d_parameter-sweep"
     }
-    let queryStr = "?path=" + this.model.directory + "&type=" + type;
-    let endpoint = path.join(app.getApiPath(), "workflow/notebook") + queryStr;
+    let type = types[this.titleType];
+    let queryStr = `?path=${this.model.directory}&type=${type}`;
+    let endpoint = `${path.join(app.getApiPath(), "workflow/notebook")}${queryStr}`;
     app.getXHR(endpoint, {
-      success: function (err, response, body) {
+      success: (err, response, body) => {
         window.open(path.join(app.getBasePath(), "notebooks", body.FilePath));
       }
     });
@@ -369,13 +410,15 @@ module.exports = View.extend({
     });
   },
   plotFigure: function (figure, type) {
-    let self = this;
-    let hook = type + "-plot";
+    let hook = `${type}-plot`;
     let el = this.queryByHook(hook);
     Plotly.newPlot(el, figure);
-    $(this.queryByHook(type + "-plot-spinner")).css("display", "none");
-    $(this.queryByHook(type + "-edit-plot")).prop("disabled", false);
-    $(this.queryByHook(type + "-download")).prop("disabled", false);
+    if(type === "spatial") {
+      $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
+    }
+    $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
+    $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", false);
+    $(this.queryByHook(`${type}-download`)).prop("disabled", false);
     if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
       $(this.queryByHook("multiple-plots")).prop("disabled", false);
     }
@@ -463,6 +506,44 @@ module.exports = View.extend({
         options
       );
     }
+  },
+  renderTargetOfInterestView: function () {
+    let species = this.model.model.species.map((specie) => {
+      return [specie.name, specie.name];
+    });
+    let header = Boolean(species) ? "Variables" : "Variables (empty)";
+    let properties = [
+      ["type", "Type"], ["0", "X Velocity"], ["1", "Y Velocity"], ["2", "Z Velocity"],
+      ["rho", "Density"], ["mass", "Mass"], ["nu", "Viscosity"]
+    ];
+    let options = [
+      {groupName: "Properties", options: properties},
+      {groupName: header, options: species}
+    ];
+    let targetOfInterestView = new SelectView({
+      name: 'target',
+      required: true,
+      eagerValidate: true,
+      groupOptions: options,
+      value: this.spatialTarget
+    });
+    app.registerRenderSubview(this, targetOfInterestView, "target-of-interest-list");
+  },
+  renderTargetModeView: function () {
+    if(this.targetModeView) { return; }
+    let options = [
+      ["discrete", "Population (outputs: absolute value)"],
+      ["discrete-concentration", "Population (outputs: scaled by volume)"],
+      ["continuous", "Concentration"]
+    ];
+    this.targetModeView = new SelectView({
+      name: 'target-mode',
+      required: true,
+      eagerValidate: true,
+      options: options,
+      value: this.targetMode
+    });
+    app.registerRenderSubview(this, this.targetModeView, "target-mode-list");
   },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value

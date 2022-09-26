@@ -22,6 +22,7 @@ let app = require('../../app');
 let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
+let InputView = require('../../views/input');
 let EditParameterView = require('./parameter-view');
 //templates
 let template = require('../templates/parametersView.pug');
@@ -31,6 +32,7 @@ module.exports = View.extend({
   events: {
     'click [data-hook=add-parameter]' : 'addParameter',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'change [data-hook=parameter-filter]' : 'filterParameters'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -88,6 +90,19 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
+  filterParameters: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
+    if(!this.readOnly) {
+      this.renderEditParameter({'key': key, 'attr': attr});
+    }
+    this.renderViewParameter({'key': key, 'attr': attr});
+  },
   openSection: function () {
     if(!$(this.queryByHook("parameters-list-container")).hasClass("show")) {
       let paramCollapseBtn = $(this.queryByHook("collapse"));
@@ -96,17 +111,19 @@ module.exports = View.extend({
     }
     app.switchToEditTab(this, "parameters");
   },
-  renderEditParameter: function () {
+  renderEditParameter: function ({key=null, attr=null}={}) {
     if(this.editParameterView){
       this.editParameterView.remove();
     }
+    let options = {filter: (model) => { return model.contains(attr, key); }}
     this.editParameterView = this.renderCollection(
       this.collection,
       EditParameterView,
-      this.queryByHook('edit-parameter-list')
+      this.queryByHook('edit-parameter-list'),
+      options
     );
   },
-  renderViewParameter: function () {
+  renderViewParameter: function ({key=null, attr=null}={}) {
     if(this.viewParameterView) {
       this.viewParameterView.remove();
     }
@@ -116,7 +133,10 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook("parameters-annotation-header")).css("display", "block");
     }
-    let options = {viewOptions: {viewMode: true}};
+    let options = {
+      viewOptions: {viewMode: true, hasAnnotations: this.containsMdlWithAnn},
+      filter: (model) => { return model.contains(attr, key); }
+    }
     this.viewParameterView = this.renderCollection(
       this.collection,
       EditParameterView,
@@ -125,5 +145,19 @@ module.exports = View.extend({
     );
   },
   update: function () {},
-  updateValid: function () {}
+  updateValid: function () {},
+  subviews: {
+    filter: {
+      hook: 'parameter-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string',
+          placeholder: 'filter'
+        });
+      }
+    }
+  }
 });

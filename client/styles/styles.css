@@ -38,7 +38,7 @@ img.quickstart {
 }
 
 .side-navbar {
-  z-index: 0;
+  z-index: 1;
 }
 
 .user-logs {
@@ -46,7 +46,7 @@ img.quickstart {
   max-height: 250px;
   padding: 5px;
   margin-top: 10px;
-  width: auto;
+  width: 135%;
 }
 
 #user-logs {
@@ -55,10 +55,15 @@ img.quickstart {
   background-color: #000033;
   color: white;
   bottom: 0;
+  max-height: 225px;
 }
 
 #user-logs:not(.show) {
   height: 0px;
+}
+
+[data-hook="close-user-logs"] {
+  display: none;
 }
 
 [role="main"] {
@@ -91,6 +96,9 @@ img.quickstart {
     right: auto;
     width: 60%;
   }
+  [data-hook="close-user-logs"] {
+    display: inline-block;
+  }
 }
 
 @media (min-width: 1450px) {
@@ -103,6 +111,9 @@ img.quickstart {
     -ms-flex: 0 0 75%;
     flex: 0 0 75%;
     max-width: 75%;
+  }
+  .user-logs {
+    width: 100%;
   }
 }
 
@@ -609,6 +620,20 @@ span.checkbox {
 .dropbtn {
   border: none;
   background-color: inherit;
+}
+
+.nav-drop {
+  color: #007bff;
+  text-align: match-parent;
+}
+
+.nav-drop-content {
+  overflow-y: scroll;
+  max-height: 375px;
+}
+
+.nav-drop-item {
+  padding: 0px 8px 0px 8px;
 }
 
 .dropdown {

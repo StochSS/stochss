@@ -161,12 +161,17 @@ module.exports = {
     
     steps: "The number of steps used to determine the sweep values across the sweep range."
   },
-  parameterSweepResults: {
+  jobResults: {
     species: "The variables to view sweep data for",
 
     mapper: "The 'feature extractor' which calculates a single value from the variables population/concentration data of each simulated trajectory.",
     
-    reducer: "The statistical function applied to the ensemble of values extracted by the 'feature extractor' from each simulation trajectory."
+    reducer: "The statistical function applied to the ensemble of values extracted by the 'feature extractor' from each simulation trajectory.",
+
+    spatialTarget: "Variable or property to view results for.",
+
+    mode: "Concentration - Variables will only be represented using continuous (floating point) values."+
+          "<br>Population - Variables will only be represented using discrete (integer count) values."
   },
   workflowSelection: {
     ensembleSimulation: "Produce a time-series result for one or more simulation(s) of the model.",

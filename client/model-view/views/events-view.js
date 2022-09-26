@@ -22,6 +22,7 @@ let app = require('../../app');
 let Tooltips = require("../../tooltips");
 //views
 let View = require('ampersand-view');
+let InputView = require('../../views/input');
 let EventDetails = require('./event-details');
 let EventListings = require('./event-listing');
 let ViewSwitcher = require('ampersand-view-switcher');
@@ -32,7 +33,8 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=add-event]' : 'addEvent',
-    'click [data-hook=collapse]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'change [data-hook=event-filter]' : 'filterEvents'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -93,6 +95,19 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
+  filterEvents: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
+    if(!this.readOnly) {
+      this.renderEditEventListingsView({'key': key, 'attr': attr});
+    }
+    this.renderViewEventListingView({'key': key, 'attr': attr});
+  },
   newDetailsView: function (event) {
     let detailsView = new EventDetails({ model: event });
     detailsView.parent = this;
@@ -111,18 +126,20 @@ module.exports = View.extend({
     this.collection.trigger("select", event);
     event.detailsView.openAdvancedSection();
   },
-  renderEditEventListingsView: function () {
+  renderEditEventListingsView: function ({key=null, attr=null}={}) {
     if(this.editEventListingsView){
       this.editEventListingsView.remove();
     }
+    let options = {filter: (model) => { return model.contains(attr, key); }}
     this.editEventListingsView = this.renderCollection(
       this.collection,
       EventListings,
-      this.queryByHook('edit-event-listing-container')
+      this.queryByHook('edit-event-listing-container'),
+      options
     );
     app.tooltipSetup();
   },
-  renderViewEventListingView: function () {
+  renderViewEventListingView: function ({key=null, attr=null}={}) {
     if(this.viewEventListingsView) {
       this.viewEventListingsView.remove();
     }
@@ -132,7 +149,10 @@ module.exports = View.extend({
     }else{
       $(this.queryByHook("events-annotation-header")).css("display", "block");
     }
-    let options = {viewOptions: {parent: this, viewMode: true}};
+    let options = {
+      viewOptions: {parent: this, viewMode: true},
+      filter: (model) => { return model.contains(attr, key); }
+    };
     this.viewEventListingsView = this.renderCollection(
       this.collection,
       EventListings,
@@ -162,5 +182,19 @@ module.exports = View.extend({
     $(this.queryByHook('add-event')).prop('disabled', disabled);
   },
   update: function () {},
-  updateValid: function () {}
+  updateValid: function () {},
+  subviews: {
+    filter: {
+      hook: 'event-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string',
+          placeholder: 'filter'
+        });
+      }
+    }
+  }
 });

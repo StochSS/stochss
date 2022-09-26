@@ -70,7 +70,8 @@ module.exports = View.extend({
     document.querySelector("#" + this.model.elementID + "-annotation").focus();
   },
   handleEnsembleSimulationClick: function (e) {
-    this.newWorkflow("Ensemble Simulation")
+    let type = this.model.is_spatial ? "Spatial Ensemble Simulation" : "Ensemble Simulation";
+    this.newWorkflow(type);
   },
   handleParameterSweepClick: function (e) {
     this.newWorkflow("Parameter Sweep")
