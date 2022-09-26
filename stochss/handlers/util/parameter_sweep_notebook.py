@@ -36,6 +36,83 @@ class StochSSParamSweepNotebook(StochSSNotebook):
             Path to the notebook'''
         super().__init__(path=path, new=new, models=models, settings=settings)
 
+    def __create_header_cells(self, cells):
+        pos_pro_header = ["***", "", "***", "", ""]
+        cells.append(nbf.new_markdown_cell(
+            "\n## Post Processing\n***\nFeature extraction function\n"
+        ))
+
+    def __create_import_cells(self, cells):
+        cells.insert(1, nbf.new_code_cell("import numpy"))
+        cells.insert(2, nbf.new_markdown_cell(
+            "MatPlotLib and Plotly are used for creating custom visualizations"
+        ))
+        cells.insert(3, nbf.new_code_cell("from matplotlib import pyplot as plt"))
+        cells.insert(4, nbf.new_code_cell(
+            "from plotly.offline import iplot\nimport plotly.graph_objs as go"
+        ))
+
+    def create_1d_notebook(self, results=None):
+        '''Create a 1D parameter sweep jupiter notebook for a StochSS model/workflow'''
+        self.nb_type = self.PARAMETER_SWEEP_1D
+        cells = self.create_common_cells()
+        self.__create_import_cells(cells)
+        self.__create_header_cells(cells)
+
+        self.settings['solver'] = self.get_gillespy2_solver_name()
+        if results is not None:
+            cells.insert(1, nbf.new_code_cell("import os\nimport pickle"))
+        index = 13
+        # run_strs = ["kwargs = configure_simulation()", "ps = ParameterSweepConfig()",
+        #             "%time ps.run(kwargs)"]
+        # cells.extend(self.__create_post_process_cells())
+        # cells.extend([nbf.new_markdown_cell("# Parameter Sweep"),
+        #               self.__create_1d_class_cell(),
+        #               self.__create_1d_config_cell(),
+        #               nbf.new_code_cell("\n".join(run_strs)),
+        #               nbf.new_markdown_cell("# Visualization"),
+        #               nbf.new_code_cell("ps.plot()"),
+        #               nbf.new_code_cell("ps.plotplotly()")])
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
+    def create_2d_notebook(self, results=None):
+        '''Create a 2D parameter sweep jupiter notebook for a StochSS model/workflow'''
+        self.nb_type = self.PARAMETER_SWEEP_2D
+        cells = self.create_common_cells()
+        self.__create_import_cells(cells)
+        self.__create_header_cells(cells)
+
+        self.settings['solver'] = self.get_gillespy2_solver_name()
+        if results is not None:
+            cells.insert(1, nbf.new_code_cell("import os\nimport pickle"))
+        # run_strs = ["kwargs = configure_simulation()", "ps = ParameterSweepConfig()",
+        #             "%time ps.run(kwargs)"]
+        # cells.extend(self.__create_post_process_cells())
+        # cells.extend([nbf.new_markdown_cell("# Parameter Sweep"),
+        #               self.__create_2d_class_cell(),
+        #               self.__create_2d_config_cell(),
+        #               nbf.new_code_cell("\n".join(run_strs)),
+        #               nbf.new_markdown_cell("# Visualization"),
+        #               nbf.new_code_cell("ps.plot()"),
+        #               nbf.new_code_cell("ps.plotplotly()")])
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     def __create_1d_class_cell(self):
         pad = "    "
@@ -296,47 +373,3 @@ class StochSSParamSweepNotebook(StochSSNotebook):
         return cells
 
 
-    def create_1d_notebook(self):
-        '''Create a 1D parameter sweep jupiter notebook for a StochSS model/workflow
-
-        Attributes
-        ----------'''
-        self.nb_type = self.PARAMETER_SWEEP_1D
-        self.settings['solver'] = self.get_gillespy2_solver_name()
-        run_strs = ["kwargs = configure_simulation()", "ps = ParameterSweepConfig()",
-                    "%time ps.run(kwargs)"]
-        cells = self.create_common_cells()
-        cells.extend(self.__create_post_process_cells())
-        cells.extend([nbf.new_markdown_cell("# Parameter Sweep"),
-                      self.__create_1d_class_cell(),
-                      self.__create_1d_config_cell(),
-                      nbf.new_code_cell("\n".join(run_strs)),
-                      nbf.new_markdown_cell("# Visualization"),
-                      nbf.new_code_cell("ps.plot()"),
-                      nbf.new_code_cell("ps.plotplotly()")])
-
-        message = self.write_notebook_file(cells=cells)
-        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
-
-
-    def create_2d_notebook(self):
-        '''Create a 2D parameter sweep jupiter notebook for a StochSS model/workflow
-
-        Attributes
-        ----------'''
-        self.nb_type = self.PARAMETER_SWEEP_2D
-        self.settings['solver'] = self.get_gillespy2_solver_name()
-        run_strs = ["kwargs = configure_simulation()", "ps = ParameterSweepConfig()",
-                    "%time ps.run(kwargs)"]
-        cells = self.create_common_cells()
-        cells.extend(self.__create_post_process_cells())
-        cells.extend([nbf.new_markdown_cell("# Parameter Sweep"),
-                      self.__create_2d_class_cell(),
-                      self.__create_2d_config_cell(),
-                      nbf.new_code_cell("\n".join(run_strs)),
-                      nbf.new_markdown_cell("# Visualization"),
-                      nbf.new_code_cell("ps.plot()"),
-                      nbf.new_code_cell("ps.plotplotly()")])
-
-        message = self.write_notebook_file(cells=cells)
-        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
