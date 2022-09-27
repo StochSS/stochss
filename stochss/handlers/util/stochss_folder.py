@@ -99,12 +99,14 @@ class StochSSFolder(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc())
         return ext, file, body
 
-    def __get_rmt_upld_path(self, file):
+    def __get_rmt_upld_path(self, file, dirname=None):
         if not file.endswith(".zip"):
             return file
-        files = os.listdir(self.user_dir)
+        if dirname is None:
+            dirname = self.user_dir
+        files = os.listdir(dirname)
         files.remove(file)
-        paths = list(map(lambda file: os.path.join(self.user_dir, file), files))
+        paths = list(map(lambda file: os.path.join(self.user_dir, dirname, file), files))
         return max(paths, key=os.path.getctime)
 
 
@@ -598,7 +600,9 @@ class StochSSFolder(StochSSBase):
             file_types = {"mdl":"model", "smdl":"model", "sbml":"sbml"}
             file_type = file_types[ext] if ext in file_types else "file"
             _ = self.upload(file_type=file_type, file=file, body=body)
-            if "github.com/StochSS/StochSS_Example_Library/raw/" not in remote_path:
+            if "github.com/StochSS/StochSS_Example_Library/raw/" in remote_path:
+                new_path = self.__get_rmt_upld_path(file=file, dirname="Examples")
+            else:
                 new_path = self.__get_rmt_upld_path(file=file)
             message = f"Successfully uploaded the file {file} to {new_path}"
             return {"message":message, "file_path":new_path}
