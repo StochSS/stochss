@@ -327,7 +327,7 @@ module.exports = View.extend({
     this.toggleVolumeContainer();
   },
   setReadOnlyMode: function (component) {
-    if(this.model.is_spatial) {
+    if(this.model.is_spatial && component === "system-volume") {
       $(this.queryByHook("system-volume-container")).css("display", "none");
     }else{
       $(this.queryByHook(component + '-edit-tab')).addClass("disabled");

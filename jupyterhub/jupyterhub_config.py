@@ -37,7 +37,7 @@ from job_presentation import (
 # Page handlers
 from handlers import (
     HomeHandler, JobPresentationHandler, ModelPresentationHandler, NotebookPresentationHandler,
-    MultiplePlotsHandler
+    MultiplePlotsHandler, MessageAPIHandler
 )
 
 ## Class for authenticating users.
@@ -92,6 +92,7 @@ c.JupyterHub.default_url = '/stochss'
 # StochSS request handlers
 c.JupyterHub.extra_handlers = [
         (r"/stochss\/?", HomeHandler),
+        (r"/stochss/api/message\/?", MessageAPIHandler),
         (r"/stochss/present-job\/?", JobPresentationHandler),
         (r"/stochss/present-model\/?", ModelPresentationHandler),
         (r"/stochss/present-notebook\/?", NotebookPresentationHandler),
@@ -211,19 +212,21 @@ def update_users_sets():
     c.StochSS.blacklist = blacklist = set([])
 
     pwd = "/srv/userlist"
-    with open(os.path.join(pwd, 'userlist'), encoding="utf-8") as file_obj:
-        lines = file_obj.read().strip().split("\n")
-        for line in lines:
-            parts = line.split()
-            if len(parts) > 1:
-                name = parts[0]
-                if parts[1] == 'admin':
-                    admin.add(name)
-                    power_users.add(name)
-                elif parts[1] == 'power':
-                    power_users.add(name)
-                elif parts[1] == 'blacklist':
-                    blacklist.add(name)
+    path = os.path.join(pwd, 'userlist')
+    if os.path.exists(path):
+        with open(path, encoding="utf-8") as file_obj:
+            lines = file_obj.read().strip().split("\n")
+            for line in lines:
+                parts = line.split()
+                if len(parts) > 1:
+                    name = parts[0]
+                    if parts[1] == 'admin':
+                        admin.add(name)
+                        power_users.add(name)
+                    elif parts[1] == 'power':
+                        power_users.add(name)
+                    elif parts[1] == 'blacklist':
+                        blacklist.add(name)
 
 def get_user_cpu_count_or_fail():
     '''

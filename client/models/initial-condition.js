@@ -36,4 +36,40 @@ module.exports = State.extend({
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
   },
+  contains: function (attr, key) {
+    if(key === null) { return true; }
+
+    let location = `[${this.x}, ${this.y}, ${this.z}]`
+    let types = []
+    if(this.types) {
+      this.types.forEach((typeID) => {
+        types.push(this.collection.parent.domain.types.get(typeID, "typeID").name);
+      });
+    }
+
+    let checks = {
+      'ictype': this.icType === key,
+      'count': this.count === Boolean(key),
+      'types': this.icType !=='Place' && types.includes(key),
+      'x': this.icType ==='Place' && this.x === Number(key),
+      'y': this.icType ==='Place' && this.y === Number(key),
+      'z': this.icType ==='Place' && this.z === Number(key),
+      'location': this.icType ==='Place' && location === key,
+      'specie': this.specie.name === key
+    }
+    if(attr !== null) {
+      let otherAttrs = {
+        'type': 'ictype', 'variable': 'specie', 'species': 'specie',
+        'activeintypes': 'types', 'restrictto': 'types'
+      }
+      if(Object.keys(otherAttrs).includes(attr)) {
+        attr = otherAttrs[attr];
+      }
+      return checks[attr];
+    }
+    for(let attribute in checks) {
+      if(checks[attribute]) { return true; }
+    }
+    return false;
+  }
 });

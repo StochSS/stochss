@@ -47,18 +47,17 @@ let JobPresentationPage = PageView.extend({
     this.model = new Job({
       directory: file,
     });
-    let self = this;
-    let queryStr = "?file=" + file + "&owner=" + owner;
-    let endpoint = "api/job/load" + queryStr;
+    let endpoint = `api/job/load?file=${file}&owner=${owner}`;
     app.getXHR(endpoint, {
-      success: function (err, response, body) {
-        self.title = body.name;
-        self.titleType = body.titleType;
-        self.model.set(body);
-        self.renderSubviews(false);
+      success: (err, response, body) => {
+        this.title = body.job.name;
+        this.titleType = body.job.titleType;
+        this.model.set(body.job);
+        this.domainPlot = body.domainPlot ? body.domainPlot : null;
+        this.renderSubviews(false);
       },
-      error: function (err, response, body) {
-        self.renderSubviews(true);
+      error: (err, response, body) => {
+        this.renderSubviews(true);
       }
     });
     let downloadStart = "/stochss/job/download_presentation";
@@ -85,6 +84,7 @@ let JobPresentationPage = PageView.extend({
       model: this.model,
       wkflName: this.title,
       titleType: this.titleType,
+      domainPlot: this.domainPlot,
       newFormat: true,
       readOnly: true
     });

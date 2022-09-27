@@ -112,6 +112,23 @@ class QuickstartHandler(PageHandler):
         self.render("stochss-quickstart.html", server_path=self.get_server_path())
 
 
+class ExampleLibraryHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS Example Library Page Handler
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Render the StochSS example library page.
+
+        Attributes
+        ----------
+        '''
+        self.render("stochss-example-library.html", server_path=self.get_server_path())
+
+
 class ModelBrowserHandler(PageHandler):
     '''
     ################################################################################################
@@ -267,15 +284,15 @@ class UserLogsAPIHandler(APIHandler):
         path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
         try:
             if os.path.exists(f"{path}.bak"):
-                with open(path, "r") as log_file:
+                with open(path, "r", encoding="utf-8") as log_file:
                     logs = log_file.read().strip().split("\n")
             else:
                 logs = []
-            with open(path, "r") as log_file:
+            with open(path, "r", encoding="utf-8") as log_file:
                 logs.extend(log_file.read().strip().split("\n"))
                 logs = logs[int(log_num):]
         except FileNotFoundError:
-            open(path, "w").close()
+            open(path, "w", encoding="utf-8").close()
             logs = []
         self.write({"logs":logs})
         self.finish()
@@ -298,5 +315,5 @@ class ClearUserLogsAPIHandler(APIHandler):
         path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
         if os.path.exists(f'{path}.bak'):
             os.remove(f'{path}.bak')
-        open(path, "w").close()
+        open(path, "w", encoding="utf-8").close()
         self.finish()

@@ -68,7 +68,7 @@ def report_error(err):
     message = f"Job errors: {str(err)}\n{traceback.format_exc()}"
     gillespy2_log.error(message)
     log.error(message)
-    open('ERROR', 'w').close()
+    open('ERROR', 'w', encoding="utf-8").close()
 
 
 def setup_logger(log_path):
@@ -122,4 +122,4 @@ if __name__ == "__main__":
         job_handler.close()
         user_handler.close()
         # update status to complete
-        open('COMPLETE', 'w').close()
+        open('COMPLETE', 'w', encoding="utf-8").close()

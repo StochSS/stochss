@@ -48,6 +48,44 @@ module.exports = State.extend({
     this.eventAssignments.on('add change remove', this.updateValid, this)
     this.validateComponent()
   },
+  contains: function (attr, key) {
+    if(key === null) { return true; }
+
+    let assignmentVars = this.eventAssignments.map((assignment) => { return assignment.variable.name; });
+    let assignmentExps = this.eventAssignments.map((assignment) => { return assignment.expression.includes(key); });
+
+    let checks = {
+      'name': this.name.includes(key),
+      'delay': this.delay === key,
+      'priority': this.priority === key,
+      'triggerexpression': this.triggerExpression.includes(key),
+      'initialvalue': key === 'Initial Value' && this.initialValue,
+      'persistent': key === 'Persistent' && this.persistent,
+      'usevaluesfromtriggertime': key === 'Use Values From Trigger Time' && this.useValuesFromTriggerTime,
+      'usevaluesfromassignmenttime': key === 'Use Values From Assignment Time' && !this.useValuesFromTriggerTime,
+      'eventassignments': assignmentVars.includes(key) || assignmentExps.includes(true)
+    }
+
+    if(attr !== null) {
+      checks['assignmentvariable'] = assignmentVars.includes(key);
+      checks['assignmentexpression'] = assignmentExps.includes(true);
+      checks['initialvalue'] = this.initialValue === Boolean(key);
+      checks['persistent'] = this.persistent === Boolean(key);
+      checks['usevaluesfromtriggertime'] = this.useValuesFromTriggerTime === Boolean(key);
+      checks['usevaluesfromassignmenttime'] = this.useValuesFromTriggerTime === Boolean(key);
+      let otherAttrs = {
+        'trigger': 'triggerexpression', 'assignmenttarget': 'assignmentvariable'
+      }
+      if(Object.keys(otherAttrs).includes(attr)) {
+        attr = otherAttrs[attr];
+      }
+      return checks[attr];
+    }
+    for(let attribute in checks) {
+      if(checks[attribute]) { return true; }
+    }
+    return false;
+  },
   validateComponent: function () {
     advanced_error = false;
     if(!this.name.trim() || this.name.match(/^\d/)) return false;

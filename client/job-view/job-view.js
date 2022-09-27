@@ -42,6 +42,7 @@ module.exports = View.extend({
     this.newFormat = attrs.newFormat;
     this.settingsHeader = this.readOnly ? "Settings" : "Review Settings";
     this.modelHeader = (this.readOnly ? "Model: " : "Review Model: ") + this.model.model.name;
+    this.domainPlot = attrs.domainPlot;
   },
   render: function (attrs, options) {
   	View.prototype.render.apply(this, arguments);
@@ -66,6 +67,7 @@ module.exports = View.extend({
   renderModelView: function () {
     let modelView = new ModelView({
       model: this.model.model,
+      domainPlot: this.domainPlot,
       readOnly: true
     });
     app.registerRenderSubview(this, modelView, "model-viewer-container");
