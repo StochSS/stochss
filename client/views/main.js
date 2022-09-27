@@ -142,11 +142,13 @@ module.exports = View.extend({
       logs.removeClass("show");
       $(this.queryByHook(e.target.dataset.hook)).html("+");
       $(".user-logs").removeClass("expand-logs");
+      $(".side-navbar").css("z-index", 0);
     }else{
       logs.addClass("show");
       $(this.queryByHook(e.target.dataset.hook)).html("-");
       if($(".sidebar-sticky").css("position") === "fixed") {
         $(".user-logs").addClass("expand-logs");
+        $(".side-navbar").css("z-index", 1);
       }
     }
     let element = document.querySelector("#user-logs");
