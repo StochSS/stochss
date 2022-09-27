@@ -817,7 +817,12 @@ class ImportFromLibrary(APIHandler):
         Attributes
         ----------
         '''
-        home = "/hub/spawn" if str(self.request.path).startswith("/user") else "stochss/home"
+        if str(self.request.path).startswith("/user"):
+            home = self.request.path
+            home = home.replace('api/example-library','home')
+        else:
+            home = "stochss/home"
+
         try:
             system = StochSSBase(path=".example-library.json")
             examples = system.load_example_library(home)
