@@ -100,13 +100,13 @@ class StochSSNotebook(StochSSBase):
         ]
 
     def __create_configuration_cell(self):
+        use_solver = self.nb_type not in (self.ENSEMBLE_SIMULATION, self.SPATIAL_SIMULATION)
         if self.s_model['is_spatial']:
             settings = self.__get_spatialpy_run_setting()
         else:
-            settings = self.__get_gillespy2_run_settings()
+            settings = self.__get_gillespy2_run_settings(use_solver=use_solver)
         is_automatic = self.settings['simulationSettings']['isAutomatic']
         algorithm = self.settings['simulationSettings']['algorithm']
-        use_solver = self.nb_type not in (self.ENSEMBLE_SIMULATION, self.SPATIAL_SIMULATION)
         settings_lists = {
             "ODE": ["solver", "algorithm", "integrator_options"],
             "SSA": ["solver", "algorithm", "seed", "number_of_trajectories"],
@@ -125,7 +125,8 @@ class StochSSNotebook(StochSSBase):
                 nb_solver = "spatialpy.solver(model=model)"
             else:
                 solver = self.get_gillespy2_solver_name()
-                nb_solver = f"gillespy2.{solver}(model=model)"
+                del_dir = ", delete_directory=False" if "CSolver" in solver else ""
+                nb_solver = f"gillespy2.{solver}(model=model{del_dir})"
             config.append(f"{pad}solver = {nb_solver}")
 
         config.append(pad + "kwargs = {")
