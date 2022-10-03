@@ -131,7 +131,10 @@ class StochSSNotebook(StochSSBase):
 
         config.append(pad + "kwargs = {")
         for name, val in settings.items():
-            if is_automatic or name not in settings_lists[algorithm]:
+            if name == "solver" and \
+                self.nb_type not in (self.ENSEMBLE_SIMULATION, self.SPATIAL_SIMULATION):
+                config.append(f"{pad*2}'{name}': {val},")
+            elif is_automatic or name not in settings_lists[algorithm]:
                 config.append(f"{pad*2}# '{name}': {val},")
             else:
                 config.append(f"{pad*2}'{name}': {val},")
