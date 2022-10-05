@@ -36,6 +36,182 @@ class StochSSSciopeNotebook(StochSSNotebook):
             Path to the notebook'''
         super().__init__(path=path, new=new, models=models, settings=settings)
 
+    def __create_explore_cells(self, cells):
+        cell1 = [
+            "met.data.configurations['listOfParameters'] = list(model.listOfParameters.keys())",
+            "met.data.configurations['listOfSpecies'] = list(model.listOfSpecies.keys())",
+            "met.data.configurations['listOfSummaries'] = met.summaries.features",
+            "met.data.configurations['timepoints'] = model.tspan",
+        ]
+        cell3 = [
+            "data = met.dr_model.embedding_", "",
+            "model_lp = LPModel()", "# train using basinhopping",
+            "model_lp.train(data, met.data.user_labels, min_=0.01, max_=10, niter=50)"
+        ]
+        cell4 = [
+            "user_labels = numpy.copy(met.data.user_labels)",
+            "# takes the label corresponding to index 0",
+            "met.data.user_labels = model_lp.model.label_distributions_[:, 0]"
+        ]
+        cells.insert(21, nbf.new_code_cell("\n".join(cell1)))
+        cells.insert(23, nbf.new_code_cell("met.explore(dr_method='umap')"))
+        cells.insert(25, nbf.new_code_cell("\n".join(cell3)))
+        cells.insert(27, nbf.new_code_cell("\n".join(cell4)))
+        cells.insert(28, nbf.new_code_cell("met.explore(dr_method='umap')"))
+        cells.insert(29, nbf.new_code_cell("met.data.user_labels = user_labels"))
+
+    def __create_me_header_cells(self, cells):
+        header1 = "***\n## Model Exploration\n***\n" + \
+                    "### Define simulator function (using gillespy2 wrapper)"
+        header6 = "***\n## Explore the result\n***\n" + \
+                    "First lets add some appropiate information about the model and features"
+        header9 = "Just to vislualize the result we will map the " + \
+                    "label distribution to the user_labels " + \
+                    "(will enable us to see the LP model output when using method 'explore')"
+        cells.extend([
+            nbf.new_markdown_cell(header1),
+            nbf.new_markdown_cell("### Start local cluster using dask client"),
+            nbf.new_markdown_cell("### Define parameter sampler/design and summary statistics"),
+            nbf.new_markdown_cell("### Initiate StochMET"),
+            nbf.new_markdown_cell("***\n## Run parameter sweep\n***"),
+            nbf.new_markdown_cell(header6),
+            nbf.new_markdown_cell("Here we use UMAP for dimension reduction"),
+            nbf.new_markdown_cell("Here lets use the dimension reduction embedding as input data"),
+            nbf.new_markdown_cell(header9)
+        ])
+
+    def __create_mi_header_cells(self, cells):
+        header1 = "***\n## Model Inference\n***\n### Generate some fixed" + \
+                    "(observed) data based on default parameters of the model"
+        header6 = "Wrapper, simulator function to abc should " + \
+                    "should only take one argument (the parameter point)"
+        header7 = "### Define summary statistics and distance function" + \
+                    "\nFunction to generate summary statistics"
+        cells.extend([
+            nbf.new_markdown_cell(header1),
+            nbf.new_markdown_cell("Reshape the data and remove timepoints array"),
+            nbf.new_markdown_cell(
+                "### Define prior distribution\nTake default from mode 1 as reference"
+            ),
+            nbf.new_markdown_cell("### Define simulator"),
+            nbf.new_markdown_cell("Here we use the GillesPy2 Solver"),
+            nbf.new_markdown_cell(header6),
+            nbf.new_markdown_cell(header7),
+            nbf.new_markdown_cell("### Start local cluster using dask client"),
+            nbf.new_markdown_cell("***\n## Run the abc instance\n***"),
+            nbf.new_markdown_cell("First compute the fixed(observed) mean")
+        ])
+
+    def __create_import_cells(self, cells):
+        base_imports = ["import numpy", "from dask.distributed import Client"]
+        if self.nb_type == self.MODEL_INFERENCE:
+            base_imports.insert(
+                1, "from tsfresh.feature_extraction.settings import MinimalFCParameters"
+            )
+            base_imports.append("from sklearn.metrics import mean_absolute_error")
+            sciope_imports = [
+                "from sciope.utilities.priors import uniform_prior",
+                "from sciope.utilities.summarystats import auto_tsfresh",
+                "from sciope.utilities.distancefunctions import naive_squared",
+                "from sciope.inference.abc_inference import ABC"
+            ]
+        else:
+            sciope_imports = [
+                "from sciope.utilities.gillespy2 import wrapper",
+                "from sciope.designs import latin_hypercube_sampling",
+                "from sciope.utilities.summarystats.auto_tsfresh import SummariesTSFRESH",
+                "from sciope.stochmet.stochmet import StochMET",
+                "from sciope.models.label_propagation import LPModel"
+            ]
+        cells.insert(1, nbf.new_code_cell("\n".join(base_imports)))
+        cells.insert(3, nbf.new_code_cell("\n".join(sciope_imports)))
+
+    def __create_simulator_func(self):
+        nb_sim_func = [
+            "settings = configure_simulation()", "simulator = wrapper.get_simulator(",
+            "    gillespy_model=model, run_settings=settings, species_of_interest=['U', 'V']",
+            ")", "expression_array = wrapper.get_parameter_expression_array(model)"
+        ]
+        return nbf.new_code_cell("\n".join(nb_sim_func))
+
+    def __create_summary_stats(self):
+        nb_sum_stats = [
+            "lhc = latin_hypercube_sampling.LatinHypercube(",
+            "    xmin=expression_array, xmax=expression_array*3", ")",
+            "lhc.generate_array(1000) # creates a LHD of size 1000", "",
+            "# will use default minimal set of features", "summary_stats = SummariesTSFRESH()"
+        ]
+        return nbf.new_code_cell("\n".join(nb_sum_stats))
+
+    def create_me_notebook(self, results=None):
+        '''Create a model exploration jupiter notebook for a StochSS model/workflow.'''
+        self.nb_type = self.MODEL_EXPLORATION
+        cells = self.create_common_cells()
+        self.__create_import_cells(cells)
+        self.__create_me_header_cells(cells)
+
+        self.settings['solver'] = self.get_gillespy2_solver_name()
+        cells.insert(11, self.__create_simulator_func())
+        cells.insert(13, nbf.new_code_cell("c = Client()\nc"))
+        cells.insert(15, self.__create_summary_stats())
+        cells.insert(17, nbf.new_code_cell("met = StochMET(simulator, lhc, summary_stats)"))
+        cells.insert(19, nbf.new_code_cell("met.compute(n_points=500, chunk_size=10)"))
+        self.__create_explore_cells(cells)
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
+    def create_mi_notebook(self, results=None):
+        '''Create a model inference jupiter notebook for a StochSS model/workflow.'''
+        self.nb_type = self.MODEL_INFERENCE
+        cells = self.create_common_cells()
+        self.__create_import_cells(cells)
+        self.__create_mi_header_cells(cells)
+
+        self.settings['solver'] = self.get_gillespy2_solver_name()
+        # imports = "from tsfresh.feature_extraction.settings import MinimalFCParameters"
+        # fd_header = "## Generate some fixed(observed) data based on default parameters of the model"
+        # fd_str = "kwargs = configure_simulation()\nfixed_data = model.run(**kwargs)"
+        # rshp_strs = ["# Reshape the data and remove timepoints array",
+        #              "fixed_data = fixed_data.to_array()",
+        #              "fixed_data = np.asarray([x.T for x in fixed_data])",
+        #              "fixed_data = fixed_data[:, 1:, :]"]
+        # cells.extend([nbf.new_markdown_cell("# Model Inference"),
+        #               nbf.new_code_cell(imports), nbf.new_markdown_cell(fd_header),
+        #               nbf.new_code_cell(fd_str), nbf.new_code_cell("\n".join(rshp_strs))])
+        # cells.extend(self.__create_mi_setup_cells())
+        # # abc cell
+        # abc_str = "from sciope.inference.abc_inference import ABC\n\n"
+        # abc_str += "abc = ABC(fixed_data, sim=simulator2, prior_function=uni_prior, "
+        # abc_str += "summaries_function=summ_func.compute, distance_function=ns)"
+        # # compute fixed mean cell
+        # fm_str = "# First compute the fixed(observed) mean\nabc.compute_fixed_mean(chunk_size=2)"
+        # # run model inference cell
+        # rmi_str = "res = abc.infer(num_samples=100, batch_size=10, chunk_size=2)"
+        # # absolute error cell
+        # abse_str = "from sklearn.metrics import mean_absolute_error\n\n"
+        # abse_str += "mae_inference = mean_absolute_error(bound, abc.results['inferred_parameters'])"
+        # cells.extend([nbf.new_markdown_cell("## Start local cluster using dask client"),
+        #               nbf.new_code_cell("from dask.distributed import Client\n\nc = Client()"),
+        #               nbf.new_markdown_cell("## Start abc instance"),
+        #               nbf.new_code_cell(abc_str), nbf.new_code_cell(fm_str),
+        #               nbf.new_code_cell(rmi_str), nbf.new_code_cell(abse_str)])
+
+        message = self.write_notebook_file(cells=cells)
+        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @classmethod
     def __create_me_expres_cells(cls):
@@ -157,63 +333,3 @@ class StochSSSciopeNotebook(StochSSNotebook):
         simulator2 = [sim2_com, "def simulator2(x):", f"{pad}return simulator(x, model=model)"]
         sim_strs.extend(simulator2)
         return nbf.new_code_cell("\n".join(sim_strs))
-
-
-    def create_me_notebook(self):
-        '''Create a model exploration jupiter notebook for a StochSS model/workflow
-
-        Attributes
-        ----------'''
-        self.nb_type = self.MODEL_EXPLORATION
-        self.settings['solver'] = self.get_gillespy2_solver_name()
-        cells = [nbf.new_code_cell("%matplotlib notebook")]
-        cells.extend(self.create_common_cells())
-        cells.append(nbf.new_markdown_cell("# Model Exploration"))
-        cells.extend(self.__create_me_setup_cells())
-        cells.extend([nbf.new_markdown_cell("## Run parameter sweep"),
-                      nbf.new_code_cell("met.compute(n_points=500, chunk_size=10)")])
-        cells.extend(self.__create_me_expres_cells())
-
-        message = self.write_notebook_file(cells=cells)
-        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
-
-
-    def create_mi_notebook(self):
-        '''Create a model inference jupiter notebook for a StochSS model/workflow
-
-        Attributes
-        ----------'''
-        self.nb_type = self.MODEL_INFERENCE
-        self.settings['solver'] = self.get_gillespy2_solver_name()
-        cells = [nbf.new_code_cell("%load_ext autoreload\n%autoreload 2")]
-        cells.extend(self.create_common_cells())
-        imports = "from tsfresh.feature_extraction.settings import MinimalFCParameters"
-        fd_header = "## Generate some fixed(observed) data based on default parameters of the model"
-        fd_str = "kwargs = configure_simulation()\nfixed_data = model.run(**kwargs)"
-        rshp_strs = ["# Reshape the data and remove timepoints array",
-                     "fixed_data = fixed_data.to_array()",
-                     "fixed_data = np.asarray([x.T for x in fixed_data])",
-                     "fixed_data = fixed_data[:, 1:, :]"]
-        cells.extend([nbf.new_markdown_cell("# Model Inference"),
-                      nbf.new_code_cell(imports), nbf.new_markdown_cell(fd_header),
-                      nbf.new_code_cell(fd_str), nbf.new_code_cell("\n".join(rshp_strs))])
-        cells.extend(self.__create_mi_setup_cells())
-        # abc cell
-        abc_str = "from sciope.inference.abc_inference import ABC\n\n"
-        abc_str += "abc = ABC(fixed_data, sim=simulator2, prior_function=uni_prior, "
-        abc_str += "summaries_function=summ_func.compute, distance_function=ns)"
-        # compute fixed mean cell
-        fm_str = "# First compute the fixed(observed) mean\nabc.compute_fixed_mean(chunk_size=2)"
-        # run model inference cell
-        rmi_str = "res = abc.infer(num_samples=100, batch_size=10, chunk_size=2)"
-        # absolute error cell
-        abse_str = "from sklearn.metrics import mean_absolute_error\n\n"
-        abse_str += "mae_inference = mean_absolute_error(bound, abc.results['inferred_parameters'])"
-        cells.extend([nbf.new_markdown_cell("## Start local cluster using dask client"),
-                      nbf.new_code_cell("from dask.distributed import Client\n\nc = Client()"),
-                      nbf.new_markdown_cell("## Start abc instance"),
-                      nbf.new_code_cell(abc_str), nbf.new_code_cell(fm_str),
-                      nbf.new_code_cell(rmi_str), nbf.new_code_cell(abse_str)])
-
-        message = self.write_notebook_file(cells=cells)
-        return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
