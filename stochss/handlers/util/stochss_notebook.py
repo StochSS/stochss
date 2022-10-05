@@ -107,15 +107,14 @@ class StochSSNotebook(StochSSBase):
             settings = self.__get_gillespy2_run_settings(use_solver=use_solver)
         is_automatic = self.settings['simulationSettings']['isAutomatic']
         algorithm = self.settings['simulationSettings']['algorithm']
+        tau_leaping = self.model.get_best_solver_algo("Tau-Leaping").get_solver_settings()
+        tau_hybrid = self.model.get_best_solver_algo("Tau-Hybrid").get_solver_settings()
         settings_lists = {
-            "ODE": ["solver", "algorithm", "integrator_options"],
-            "SSA": ["solver", "algorithm", "seed", "number_of_trajectories"],
-            "CLE": ["solver", "algorithm", "seed", "number_of_trajectories", "tau_tol"],
-            "Tau-Leaping": ["solver", "algorithm", "seed", "number_of_trajectories", "tau_tol"],
-            "Hybrid-Tau-Leaping": [
-                "solver", "algorithm", "number_of_trajectories",
-                "seed", "tau_tol", "integrator_options"
-            ]
+            "ODE": self.model.get_best_solver_algo("ODE").get_solver_settings(),
+            "SSA": self.model.get_best_solver_algo("SSA").get_solver_settings(),
+            "CLE": self.model.get_best_solver_algo("CLE").get_solver_settings(),
+            "Tau-Leaping": tau_leaping,
+            "Hybrid-Tau-Leaping": tau_hybrid
         }
 
         pad = "    "
