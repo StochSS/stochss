@@ -38,7 +38,7 @@ img.quickstart {
 }
 
 .side-navbar {
-  z-index: 1;
+  z-index: 0;
 }
 
 .user-logs {
@@ -114,6 +114,9 @@ img.quickstart {
   }
   .user-logs {
     width: 100%;
+  }
+  .expand-logs {
+    width: 90%;
   }
 }
 
@@ -620,20 +623,6 @@ span.checkbox {
 .dropbtn {
   border: none;
   background-color: inherit;
-}
-
-.nav-drop {
-  color: #007bff;
-  text-align: match-parent;
-}
-
-.nav-drop-content {
-  overflow-y: scroll;
-  max-height: 375px;
-}
-
-.nav-drop-item {
-  padding: 0px 8px 0px 8px;
 }
 
 .dropdown {

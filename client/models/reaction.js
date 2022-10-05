@@ -78,7 +78,7 @@ module.exports = State.extend({
       let name = stoichSpecies.specie.name;
       if(stoichSpecies.ratio == 2) {
         odePropensity += ` * ${name} * ${name}`;
-        propensity = `0.5 * ${propensity} * ${name} * (${name} - 1) / vol`;
+        propensity = `${propensity} * ${name} * (${name} - 1) / vol`;
       }else{
         odePropensity += ` * ${name}`;
         propensity += ` * ${name}`;
