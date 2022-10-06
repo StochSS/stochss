@@ -143,6 +143,14 @@ module.exports = View.extend({
       attr = attrKey[0].toLowerCase().replace(/ /g, '');
       key = attrKey[1];
     }
+    this.renderSpeciesView({'key': key, 'attr': attr});
+    // this.renderInitialConditionsView({'key': key, 'attr': attr});
+    // this.renderParametersView({'key': key, 'attr': attr});
+    // this.renderReactionsView({'key': key, 'attr': attr});
+    // this.renderEventsView({'key': key, 'attr': attr});
+    // this.renderRulesView({'key': key, 'attr': attr});
+    // this.renderBoundaryConditionsView({'key': key, 'attr': attr});
+    // this.renderSbmlComponentView({'key': key, 'attr': attr});
   },
   openAdvancedSection: function () {
     if(!$(this.queryByHook("me-advanced-section")).hasClass("show")) {
@@ -272,7 +280,7 @@ module.exports = View.extend({
     let hook = "sbml-components-view-container";
     app.registerRenderSubview(this, this.sbmlComponentView, hook);
   },
-  renderSpeciesView: function () {
+  renderSpeciesView: function ({key=null, attr=null}={}) {
     if(this.speciesView) {
       this.speciesView.remove();
     }
@@ -280,7 +288,9 @@ module.exports = View.extend({
       collection: this.model.species,
       spatial: this.model.is_spatial,
       defaultMode: this.model.defaultMode,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "species-view-container";
     app.registerRenderSubview(this, this.speciesView, hook);
