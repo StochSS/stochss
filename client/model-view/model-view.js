@@ -43,6 +43,7 @@ let template = require('./modelView.pug');
 module.exports = View.extend({
   template: template,
   events: {
+    'change [data-hook=model-filter]' : 'filterModel',
     'change [data-hook=all-continuous]' : 'setDefaultMode',
     'change [data-hook=all-discrete]' : 'setDefaultMode',
     'change [data-hook=advanced]' : 'setDefaultMode',
@@ -133,6 +134,15 @@ module.exports = View.extend({
     dynamic.addEventListener('click', (e) => {
       this.setInitialDefaultMode(modal, "dynamic");
     });
+  },
+  filterModel: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
   },
   openAdvancedSection: function () {
     if(!$(this.queryByHook("me-advanced-section")).hasClass("show")) {
@@ -410,5 +420,18 @@ module.exports = View.extend({
   updateValid: function () {},
   updateVolumeViewer: function (e) {
     $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume);
+  },
+  subviews: {
+    filter: {
+      hook: 'model-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string'
+        });
+      }
+    }
   }
 });
