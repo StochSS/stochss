@@ -38,9 +38,10 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.parametersEditor;
-    let self = this;
-    this.collection.on('update-parameters', function (compID, parameter) {
-      self.collection.parent.reactions.map(function (reaction) {
+    this.filterAttr = attrs.attr;
+    this.filterKey = attrs.key;
+    this.collection.on('update-parameters', (compID, parameter) => {
+      this.collection.parent.reactions.map((reaction) => {
         if(reaction.rate && reaction.rate.compID === compID){
           reaction.rate = parameter;
           if(reaction.reactionType !== 'custom-propensity') {
@@ -48,8 +49,8 @@ module.exports = View.extend({
           }
         }
       });
-      self.collection.parent.eventsCollection.map(function (event) {
-        event.eventAssignments.map(function (assignment) {
+      this.collection.parent.eventsCollection.map((event) => {
+        event.eventAssignments.map((assignment) => {
           if(assignment.variable.compID === compID) {
             assignment.variable = parameter;
           }
@@ -57,13 +58,13 @@ module.exports = View.extend({
         if(event.selected)
           event.detailsView.renderEventAssignments();
       });
-      self.collection.parent.rules.map(function (rule) {
+      this.collection.parent.rules.map((rule) => {
         if(rule.variable.compID === compID) {
           rule.variable = parameter;
         }
       });
-      if(self.parent.rulesView) {
-        self.parent.rulesView.renderEditRules();
+      if(this.parent.rulesView) {
+        this.parent.rulesView.renderEditRules();
       }
     });
   },
@@ -79,9 +80,9 @@ module.exports = View.extend({
       $(this.queryByHook('edit-parameters')).removeClass('active');
       $(this.queryByHook('view-parameters')).addClass('active');
     }else{
-      this.renderEditParameter();
+      this.renderEditParameter({'key': this.filterKey, 'attr': this.filterAttr});
     }
-    this.renderViewParameter();
+    this.renderViewParameter({'key': this.filterKey, 'attr': this.filterAttr});
   },
   addParameter: function () {
     this.collection.addParameter();

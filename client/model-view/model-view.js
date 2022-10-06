@@ -145,7 +145,7 @@ module.exports = View.extend({
     }
     this.renderSpeciesView({'key': key, 'attr': attr});
     // this.renderInitialConditionsView({'key': key, 'attr': attr});
-    // this.renderParametersView({'key': key, 'attr': attr});
+    this.renderParametersView({'key': key, 'attr': attr});
     // this.renderReactionsView({'key': key, 'attr': attr});
     // this.renderEventsView({'key': key, 'attr': attr});
     // this.renderRulesView({'key': key, 'attr': attr});
@@ -234,13 +234,15 @@ module.exports = View.extend({
     let hook = "initial-conditions-view-container";
     app.registerRenderSubview(this, this.initialConditionsView, hook);
   },
-  renderParametersView: function () {
+  renderParametersView: function ({key=null, attr=null}={}) {
     if(this.parametersView) {
       this.parametersView.remove();
     }
     this.parametersView = new ParametersView({
       collection: this.model.parameters,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "parameters-view-container";
     app.registerRenderSubview(this, this.parametersView, hook);
