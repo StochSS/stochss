@@ -110,7 +110,9 @@ module.exports = View.extend({
       paramCollapseBtn.click();
       paramCollapseBtn.html('-');
     }
-    app.switchToEditTab(this, "parameters");
+    if(!this.readOnly) {
+      app.switchToEditTab(this, "parameters");
+    }
   },
   renderEditParameter: function ({key=null, attr=null}={}) {
     if(this.editParameterView){
