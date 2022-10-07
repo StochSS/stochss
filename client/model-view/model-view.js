@@ -150,7 +150,7 @@ module.exports = View.extend({
     this.renderEventsView({'key': key, 'attr': attr});
     this.renderRulesView({'key': key, 'attr': attr});
     // this.renderBoundaryConditionsView({'key': key, 'attr': attr});
-    // this.renderSbmlComponentView({'key': key, 'attr': attr});
+    this.renderSbmlComponentView({'key': key, 'attr': attr});
   },
   openAdvancedSection: function () {
     if(!$(this.queryByHook("me-advanced-section")).hasClass("show")) {
@@ -291,17 +291,23 @@ module.exports = View.extend({
       this.rulesView.openSection();
     }
   },
-  renderSbmlComponentView: function () {
+  renderSbmlComponentView: function ({key=null, attr=null}={}) {
     if(this.model.is_spatial || !this.model.functionDefinitions.length) { return };
+    let opened = $(this.queryByHook("function-definitions-list-container")).hasClass("show")
     if(this.sbmlComponentView) {
       this.sbmlComponentView.remove();
     }
     this.sbmlComponentView = new SBMLComponentsView({
       functionDefinitions: this.model.functionDefinitions,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "sbml-components-view-container";
     app.registerRenderSubview(this, this.sbmlComponentView, hook);
+    if(opened) {
+      this.sbmlComponentView.openSection();
+    }
   },
   renderSpeciesView: function ({key=null, attr=null}={}) {
     if(this.speciesView) {
