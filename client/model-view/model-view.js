@@ -235,6 +235,7 @@ module.exports = View.extend({
     app.registerRenderSubview(this, this.initialConditionsView, hook);
   },
   renderParametersView: function ({key=null, attr=null}={}) {
+    let opened = $(this.queryByHook("parameters-list-container")).hasClass("show");
     if(this.parametersView) {
       this.parametersView.remove();
     }
@@ -246,6 +247,9 @@ module.exports = View.extend({
     });
     let hook = "parameters-view-container";
     app.registerRenderSubview(this, this.parametersView, hook);
+    if(opened) {
+      this.parametersView.openSection();
+    }
   },
   renderReactionsView: function () {
     if(this.reactionsView) {
