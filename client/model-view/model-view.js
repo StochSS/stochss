@@ -148,7 +148,7 @@ module.exports = View.extend({
     this.renderParametersView({'key': key, 'attr': attr});
     this.renderReactionsView({'key': key, 'attr': attr});
     this.renderEventsView({'key': key, 'attr': attr});
-    // this.renderRulesView({'key': key, 'attr': attr});
+    this.renderRulesView({'key': key, 'attr': attr});
     // this.renderBoundaryConditionsView({'key': key, 'attr': attr});
     // this.renderSbmlComponentView({'key': key, 'attr': attr});
   },
@@ -273,17 +273,23 @@ module.exports = View.extend({
       this.reactionsView.openSection();
     }
   },
-  renderRulesView: function () {
+  renderRulesView: function ({key=null, attr=null}={}) {
     if(this.model.is_spatial) { return };
+    let opened = $(this.queryByHook("rules-list-container")).hasClass("show");
     if(this.rulesView) {
       this.rulesView.remove();
     }
     this.rulesView = new RulesView({
       collection: this.model.rules,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "rules-view-container";
     app.registerRenderSubview(this, this.rulesView, hook);
+    if(opened) {
+      this.rulesView.openSection();
+    }
   },
   renderSbmlComponentView: function () {
     if(this.model.is_spatial || !this.model.functionDefinitions.length) { return };

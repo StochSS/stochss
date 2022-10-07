@@ -128,7 +128,7 @@ module.exports = View.extend({
       reacCollapseBtn.click();
       reacCollapseBtn.html('-');
     }
-    if(this.readOnly) {
+    if(!this.readOnly) {
       app.switchToEditTab(this, "reactions");
     }
     if(error && error.type !== "process") {

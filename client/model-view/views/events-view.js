@@ -121,7 +121,7 @@ module.exports = View.extend({
       evtCollapseBtn.click();
       evtCollapseBtn.html('-');
     }
-    if(this.readOnly) {
+    if(!this.readOnly) {
       app.switchToEditTab(this, "events");
     }
     if(error) {
