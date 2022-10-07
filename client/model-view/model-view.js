@@ -146,7 +146,7 @@ module.exports = View.extend({
     this.renderSpeciesView({'key': key, 'attr': attr});
     // this.renderInitialConditionsView({'key': key, 'attr': attr});
     this.renderParametersView({'key': key, 'attr': attr});
-    // this.renderReactionsView({'key': key, 'attr': attr});
+    this.renderReactionsView({'key': key, 'attr': attr});
     // this.renderEventsView({'key': key, 'attr': attr});
     // this.renderRulesView({'key': key, 'attr': attr});
     // this.renderBoundaryConditionsView({'key': key, 'attr': attr});
@@ -251,16 +251,22 @@ module.exports = View.extend({
       this.parametersView.openSection();
     }
   },
-  renderReactionsView: function () {
+  renderReactionsView: function ({key=null, attr=null}={}) {
+    let opened = $(this.queryByHook("reactions-list-container")).hasClass("show");
     if(this.reactionsView) {
       this.reactionsView.remove();
     }
     this.reactionsView = new ReactionsView({
       collection: this.model.reactions,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "reactions-view-container";
     app.registerRenderSubview(this, this.reactionsView, hook);
+    if(opened) {
+      this.reactionsView.openSection();
+    }
   },
   renderRulesView: function () {
     if(this.model.is_spatial) { return };
