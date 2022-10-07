@@ -147,14 +147,13 @@ module.exports = View.extend({
     // this.renderInitialConditionsView({'key': key, 'attr': attr});
     this.renderParametersView({'key': key, 'attr': attr});
     this.renderReactionsView({'key': key, 'attr': attr});
-    // this.renderEventsView({'key': key, 'attr': attr});
+    this.renderEventsView({'key': key, 'attr': attr});
     // this.renderRulesView({'key': key, 'attr': attr});
     // this.renderBoundaryConditionsView({'key': key, 'attr': attr});
     // this.renderSbmlComponentView({'key': key, 'attr': attr});
   },
   openAdvancedSection: function () {
     if(!$(this.queryByHook("me-advanced-section")).hasClass("show")) {
-      console.log("opening advanced section")
       let advCollapseBtn = $(this.queryByHook("collapse-mv-advanced-section"));
       advCollapseBtn.click();
       advCollapseBtn.html('-');
@@ -210,17 +209,23 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
   },
-  renderEventsView: function () {
+  renderEventsView: function ({key=null, attr=null}={}) {
     if(this.model.is_spatial) { return };
+    let opened = $(this.queryByHook("events")).hasClass("show");
     if(this.eventsView) {
       this.eventsView.remove();
     }
     this.eventsView = new EventsView({
       collection: this.model.eventsCollection,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "events-view-container";
     app.registerRenderSubview(this, this.eventsView, hook);
+    if(opened) {
+      this.eventsView.openSection();
+    }
   },
   renderInitialConditionsView: function () {
     if(!this.model.is_spatial) { return };
