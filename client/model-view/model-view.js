@@ -144,7 +144,7 @@ module.exports = View.extend({
       key = attrKey[1];
     }
     this.renderSpeciesView({'key': key, 'attr': attr});
-    // this.renderInitialConditionsView({'key': key, 'attr': attr});
+    this.renderInitialConditionsView({'key': key, 'attr': attr});
     this.renderParametersView({'key': key, 'attr': attr});
     this.renderReactionsView({'key': key, 'attr': attr});
     this.renderEventsView({'key': key, 'attr': attr});
@@ -227,17 +227,23 @@ module.exports = View.extend({
       this.eventsView.openSection();
     }
   },
-  renderInitialConditionsView: function () {
+  renderInitialConditionsView: function ({key=null, attr=null}={}) {
     if(!this.model.is_spatial) { return };
+    let opened = $(this.queryByHook("initial-conditions")).hasClass("show")
     if(this.initialConditionsView) {
       this.initialConditionsView.remove();
     }
     this.initialConditionsView = new InitialConditionsView({
       collection: this.model.initialConditions,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "initial-conditions-view-container";
     app.registerRenderSubview(this, this.initialConditionsView, hook);
+    if(opened) {
+      this.initialConditionsView.openSection();
+    }
   },
   renderParametersView: function ({key=null, attr=null}={}) {
     let opened = $(this.queryByHook("parameters-list-container")).hasClass("show");
