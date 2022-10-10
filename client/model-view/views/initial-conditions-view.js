@@ -141,6 +141,7 @@ module.exports = View.extend({
           required: false,
           name: 'filter',
           valueType: 'string',
+          disabled: this.filterKey !== null,
           placeholder: 'filter'
         });
       }
