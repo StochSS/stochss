@@ -149,7 +149,7 @@ module.exports = View.extend({
     this.renderReactionsView({'key': key, 'attr': attr});
     this.renderEventsView({'key': key, 'attr': attr});
     this.renderRulesView({'key': key, 'attr': attr});
-    // this.renderBoundaryConditionsView({'key': key, 'attr': attr});
+    this.renderBoundaryConditionsView({'key': key, 'attr': attr});
     this.renderSbmlComponentView({'key': key, 'attr': attr});
   },
   openAdvancedSection: function () {
@@ -183,17 +183,23 @@ module.exports = View.extend({
       }
     }
   },
-  renderBoundaryConditionsView: function () {
+  renderBoundaryConditionsView: function ({key=null, attr=null}={}) {
     if(!this.model.is_spatial) { return };
+    let opened = $(this.queryByHook("boundary-conditions-container")).hasClass("show")
     if(this.boundaryConditionsView) {
       this.boundaryConditionsView.remove();
     }
     this.boundaryConditionsView = new BoundaryConditionsView({
       collection: this.model.boundaryConditions,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "boundary-conditions-view-container";
     app.registerRenderSubview(this, this.boundaryConditionsView, hook);
+    if(opened) {
+      this.boundaryConditionsView.openSection();
+    }
   },
   renderDomainViewer: function (domainPath=null) {
     if(!this.model.is_spatial) { return };
