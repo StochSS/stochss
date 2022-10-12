@@ -1,0 +1,127 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row.align-items-baseline
+
+    div.col-sm-1
+
+      div.pl-3: input(type="checkbox" data-hook="select" data-toggle="collapse" data-target="#collapse-event-details" + this.model.compID)
+
+    div.col-sm-7(data-hook="event-name-container")
+
+    div.col-sm-2
+
+      div.tooltip-icon-large(data-hook="annotation-tooltip" data-html="true" data-toggle="tooltip" title=this.model.annotation || "Click 'Add' to add an annotation") <svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="file-alt" class="svg-inline--fa fa-file-alt fa-w-12" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512"><path fill="currentColor" d="M224 136V0H24C10.7 0 0 10.7 0 24v464c0 13.3 10.7 24 24 24h336c13.3 0 24-10.7 24-24V160H248c-13.2 0-24-10.8-24-24zm64 236c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-64c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12v8zm0-72v8c0 6.6-5.4 12-12 12H108c-6.6 0-12-5.4-12-12v-8c0-6.6 5.4-12 12-12h168c6.6 0 12 5.4 12 12zm96-114.1v6.1H256V0h6.1c6.4 0 12.5 2.5 17 7l97.9 98c4.5 4.5 7 10.6 7 16.9z"></path></svg>
+
+      button.btn.btn-outline-secondary.btn-sm.box-shadow(data-hook="edit-annotation-btn") Edit
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X
+
+  div.mx-1.pl-2(data-hook="event-details")
+
+    div.collapse(id="collapse-event-details" + this.model.compID)
+
+      hr
+
+      div.mx-1.row.align-items-baseline
+
+        div.col-sm-6
+
+          div
+
+            h5.inline
+
+              span(for="trigger-input") Trigger Expression:
+
+            div.tooltip-icon(data-html="true" data-hook="rate-parameter-tooltip" data-toggle="tooltip" title=this.parent.tooltips.triggerExpression) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          div
+
+            div(id="event-trigger-expression" data-hook="event-trigger-expression")
+
+          div.my-1
+
+            h6.inline Advanced
+            button.btn.btn-outline-collapse(data-toggle='collapse' data-target='#advanced-events' + this.model.compID data-hook='advanced-event-button') +
+
+          div.collapse(id="advanced-events" + this.model.compID data-hook="advanced-event-section")
+
+            div.mr-2.inline
+
+              h5.inline
+
+                span(for="event-delay") Delay:
+
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.delay) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.inline(style="width: 80%")
+
+              div(id="event-delay" data-hook="event-delay")
+
+            div.mr-2.inline
+
+              h5.inline
+
+                span(for="event-trigger-expression") Priority:
+
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.priority) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.inline(style="width: 80%")
+
+              div(id="event-priority" data-hook="event-priority")
+
+            div.row
+
+              div.col-lg-6.col-md-12.verticle-space
+
+                div.mr-2.inline
+
+                  h5.inline
+
+                    span.checkbox(for="initial-value") Initial Value:
+
+                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.initialValue) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+                input(type="checkbox" id="initial-value" data-hook="event-trigger-init-value")
+
+              div.col-lg-6.col-md-12.verticle-space
+
+                div.mr-2.inline
+
+                  h5.inline
+
+                    span.checkbox(for="persistent") Persistent:
+
+                  div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.persistent) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+                input(type="checkbox" id="persistent", data-hook="event-trigger-persistent")
+
+            div.mr-2.inline
+
+              h5.inline
+
+                span.checkbox(for="use-values-from-trigger-time") Use Values From:
+
+              div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.parent.tooltips.useValuesFromTriggerTime) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+            div.row
+
+              div.col-lg-6.col-md-12.verticle-space
+
+                div.horizontal-space.inline
+
+                  input(type="radio", name="edit-use-values-from" data-hook="edit-trigger-time" data-name="trigger") 
+                  |  Trigger Time
+
+              div.col-lg-6.col-md-12.verticle-space
+
+                div.horizontal-space.inline
+
+                  input(type="radio", name="edit-use-values-from" data-hook="edit-assignment-time" data-name="assignment") 
+                  |  Assignment Time
+
+        div.col-sm-6(data-hook="assignments-container")

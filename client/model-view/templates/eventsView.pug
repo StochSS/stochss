@@ -29,37 +29,31 @@ div#events.card
 
       div.tab-pane.active(id="edit-events" data-hook="edit-events")
 
-        div.row.mb-3.align-items-baseline
+        hr
 
-          div.col-md-6.container-part
-            
-            hr
+        div.mx-1.row.head.align-items-baseline
 
-            div.mx-1.row.head.align-items-baseline
+          div.col-sm-2
 
-              div.col-md-2
+            h6 <b>Edit</b>
 
-                h6 <b>Edit</b>
+          div.col-sm-5
 
-              div.col-md-5
+            h6.inline <b>Name</b>
 
-                h6.inline <b>Name</b>
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+          div.col-sm-3
 
-              div.col-md-3
+            h6.inline <b>Annotation</b>
 
-                h6.inline <b>Annotation</b>
+            div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-                div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.annotation) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+          div.col-sm-2
 
-              div.col-md-2
+            h6 <b>Remove</b>
 
-                h6 <b>Remove</b>
-
-            div.mt-3(data-hook="edit-event-listing-container")
-
-          div.col-md-6.container-part(data-hook="event-details-container")
+        div.mt-3(data-hook="edit-event-container")
 
         button.btn.btn-outline-primary.box-shadow(data-hook="add-event") Add Event
 
@@ -89,4 +83,4 @@ div#events.card
 
             h6 <b>Annotation</b>
 
-        div.mt-3(data-hook="view-event-listing-container")
+        div.mt-3(data-hook="view-event-container")
