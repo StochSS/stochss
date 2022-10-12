@@ -26,6 +26,22 @@ div#domain-view
 
           li.nav-item
 
+            a.nav-link.tab(data-hook="geometry-tab" data-toggle="tab" href="#geometry-section") Geometries
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="lattice-tab" data-toggle="tab" href="#lattice-section") Lattices
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="transformation-tab" data-toggle="tab" href="#transformation-section") Transformations
+
+          li.nav-item
+
+            a.nav-link.tab(data-hook="domain-actions-tab" data-toggle="tab" href="#domain-actions-section") Actions
+
+          li.nav-item
+
             a.nav-link.tab(data-hook="particle-types-tab" data-toggle="tab" href="#set-particle-types") Set Types from File
 
           li.nav-item
@@ -92,6 +108,22 @@ div#domain-view
           div.mdl-edit-btn.saved-status.inline(data-hook="rsp-complete")
 
             span Particle Removed
+
+        div.tab-pane(id="geometry-section" data-hook="geometry-section")
+
+          h4 Geometry Classes
+
+        div.tab-pane(id="lattice-section" data-hook="lattice-section")
+
+          h4 Lattice Classes
+
+        div.tab-pane(id="transformation-section" data-hook="transformation-section")
+
+          h4 Transformation Classes
+
+        div.tab-pane(id="domain-actions-section" data-hook="domain-actions-section")
+
+          h4 Domain Actions
 
         div.tab-pane(id="set-particle-types" data-hook="set-particle-types-section")
 

@@ -484,33 +484,6 @@ class CreateNewBoundCondAPIHandler(APIHandler):
             report_error(self, log, err)
         self.finish()
 
-class ApplyGeometryAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler apply type and properties to particles.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def post(self):
-        '''
-        Apply type and properties to particles.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        data = json.loads(self.request.body.decode())
-        log.debug(f"Type used to apply geometry: {data['type']}")
-        try:
-            log.info("Applying type and properties to particles.")
-            resp = StochSSSpatialModel.apply_geometry(data['particles'], data['type'], data['center'])
-            log.info("Successfully applied type and properties to particles.")
-            log.debug(f"Response Message: {resp}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
 class FillGeometryAPIHandler(APIHandler):
     '''
     ################################################################################################

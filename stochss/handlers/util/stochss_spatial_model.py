@@ -432,40 +432,6 @@ class StochSSSpatialModel(StochSSBase):
                         particle['c'] = 10
             domain['template_version'] = self.TEMPLATE_VERSION
 
-
-    @classmethod
-    def apply_geometry(cls, particles, d_type, center):
-        '''
-        Set the properties of the particles found within the geometry.
-
-        Attributes
-        ----------
-        particles : list
-            List of existing particles.
-        d_type : str
-            StochSS domain type.
-        center : list
-            Vector representing the center of the geometry.
-        '''
-        def inside(point):
-            namespace = {
-                'cx': center[0], 'cy': center[1], 'cz': center[2],
-                'x': point[0], 'y': point[1], 'z': point[2]
-            }
-            return eval(d_type['geometry'], {}, namespace)
-        ids = []
-        try:
-            for particle in particles:
-                if inside(particle['point']):
-                    ids.append(particle['particle_id'])
-            return {'particles': ids}
-        except SyntaxError as err:
-            message = f"Failed to apply geometry. Reason given: {err}"
-            raise DomainGeometryError(message, traceback.format_exc()) from err
-        except NameError as err:
-            message = f"Failed to apply geometry. Reason given: {err}"
-            raise DomainGeometryError(message, traceback.format_exc()) from err
-
     def convert_to_model(self):
         '''
         Convert a spatial model to a non_spatial model

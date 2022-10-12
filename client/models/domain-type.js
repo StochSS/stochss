@@ -23,7 +23,6 @@ module.exports = State.extend({
   props: {
     c: 'number',
     fixed: 'boolean',
-    geometry: 'string',
     mass: 'number',
     name: 'string',
     nu: 'number',
