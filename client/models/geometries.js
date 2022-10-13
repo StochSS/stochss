@@ -21,25 +21,27 @@ let Geometry = require('./geometry');
 //collections
 let Collection = require('ampersand-collection');
 
-let defaults = {
-  'All': 'true',
-  'Interior': 'not on_boundary',
-  'Exterior': 'on_boundary'
-}
-
 module.exports = Collection.extend({
   model: Geometry,
   indexes: ['name'],
-  addGeometry: function (name, {formula=null}={}) {
-    if(formula === null && Object.keys(defaults).includes(name)) {
-      formula = defaults[name]
-    }
+  addGeometry: function () {
+    let name = this.getDefaultName();
     let geometry = new Geometry({
       name: name,
       formula: formula,
       namespace: null
     });
     this.add(geometry);
+    return name;
+  },
+  getDefaultName: function () {
+    var i = this.length + 1;
+    var name = 'geometry' + i;
+    var names = this.map(function (geometry) {return geometry.name; });
+    while(_.contains(names, name)) {
+      i += 1;
+      name = 'geometry' + i;
+    }
     return name;
   },
   removeGeometry: function (geometry) {
