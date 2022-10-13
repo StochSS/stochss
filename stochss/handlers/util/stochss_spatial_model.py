@@ -376,7 +376,7 @@ class StochSSSpatialModel(StochSSBase):
             if path.endswith(".domn"):
                 with open(path, "r", encoding="utf-8") as domain_file:
                     s_domain = json.load(domain_file)
-                    self.__update_domain(domain=s_domain)
+                    self.__update_domain_to_current(domain=s_domain)
                     return s_domain
             s_domain = Domain.read_xml_mesh(filename=path)
             return self.__build_stochss_domain(s_domain=s_domain)
@@ -403,34 +403,83 @@ class StochSSSpatialModel(StochSSBase):
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
 
-    def __update_domain(self, domain=None):
+    def __update_domain_to_v1(self, domain=None):
+        if domain['template_version'] == 1:
+            return
+
+        if "static" not in domain.keys():
+            domain['static'] = True
+        type_changes = {}
+        for i, d_type in enumerate(domain['types']):
+            if d_type['typeID'] != i:
+                type_changes[d_type['typeID']] = i
+                d_type['typeID'] = i
+            if "rho" not in d_type.keys():
+                d_type['rho'] = d_type['mass'] / d_type['volume']
+            if "c" not in d_type.keys():
+                d_type['c'] = 10
+            if "geometry" not in d_type.keys():
+                d_type['geometry'] = ""
+        if domain['particles']:
+            for particle in domain['particles']:
+                if particle['type'] in type_changes:
+                    particle['type'] = type_changes[particle['type']]
+                if "rho" not in particle.keys():
+                    particle['rho'] = particle['mass'] / particle['volume']
+                if "c" not in particle.keys():
+                    particle['c'] = 10
+
+    def __update_domain_to_current(self, domain=None):
         if domain is None:
             if "domain" not in self.model.keys() or len(self.model['domain'].keys()) < 6:
                 self.model['domain'] = self.get_model_template()['domain']
             domain = self.model['domain']
-        if "template_version" not in domain or domain['template_version'] != self.TEMPLATE_VERSION:
-            if "static" not in domain.keys():
-                domain['static'] = True
-            type_changes = {}
-            for i, d_type in enumerate(domain['types']):
-                if d_type['typeID'] != i:
-                    type_changes[d_type['typeID']] = i
-                    d_type['typeID'] = i
-                if "rho" not in d_type.keys():
-                    d_type['rho'] = d_type['mass'] / d_type['volume']
-                if "c" not in d_type.keys():
-                    d_type['c'] = 10
-                if "geometry" not in d_type.keys():
-                    d_type['geometry'] = ""
-            if domain['particles']:
-                for particle in domain['particles']:
-                    if particle['type'] in type_changes:
-                        particle['type'] = type_changes[particle['type']]
-                    if "rho" not in particle.keys():
-                        particle['rho'] = particle['mass'] / particle['volume']
-                    if "c" not in particle.keys():
-                        particle['c'] = 10
-            domain['template_version'] = self.TEMPLATE_VERSION
+
+        if domain['template_version'] == self.DOMAIN_TEMPLATE_VERSION:
+            return
+
+        self.__update_domain_to_v1(domain)
+
+        geometries = []
+        for d_type in domain['types']:
+            if 'geometry' in d_type and d_type['geometry']:
+                geometries.append({
+                    'name': f"geometry{len(geometries) + 1}",
+                    'formula': d_type['geometry'],
+                    'namespace': None
+                })
+        domain['geometries'] = geometries
+
+        domain['template_version'] = self.DOMAIN_TEMPLATE_VERSION
+
+    def __update_model_to_current(self):
+        if self.model['template_version'] == self.TEMPLATE_VERSION:
+            return
+
+        if not self.model['defaultMode']:
+            self.model['defaultMode'] = "discrete"
+        elif self.model['defaultMode'] == "dynamic":
+            self.model['defaultMode'] = "discrete-concentration"
+        if "timestepSize" not in self.model['modelSettings'].keys():
+            self.model['modelSettings']['timestepSize'] = 1e-5
+        if "boundaryConditions" not in self.model.keys():
+            self.model['boundaryConditions'] = []
+        for species in self.model['species']:
+            if "types" not in species.keys():
+                species['types'] = list(range(1, len(self.model['domain']['types'])))
+            if "diffusionConst" not in species.keys():
+                if "diffusionCoeff" not in species.keys():
+                    diff = 0.0
+                else:
+                    diff = species['diffusionCoeff']
+                species['diffusionConst'] = diff
+        for reaction in self.model['reactions']:
+            if "odePropensity" not in reaction.keys():
+                reaction['odePropensity'] = reaction['propensity']
+            if "types" not in reaction.keys():
+                reaction['types'] = list(range(1, len(self.model['domain']['types'])))
+
+        self.model['template_version'] = self.TEMPLATE_VERSION
 
     def convert_to_model(self):
         '''
@@ -761,35 +810,17 @@ class StochSSSpatialModel(StochSSBase):
         '''
         if self.model is None:
             self.__read_model_file()
-        self.model['name'] = self.get_name()
-        if "template_version" not in self.model or \
-                self.model['template_version'] != self.TEMPLATE_VERSION:
-            if not self.model['defaultMode']:
-                self.model['defaultMode'] = "discrete"
-            elif self.model['defaultMode'] == "dynamic":
-                self.model['defaultMode'] = "discrete-concentration"
-            if "timestepSize" not in self.model['modelSettings'].keys():
-                self.model['modelSettings']['timestepSize'] = 1e-5
-            self.__update_domain()
-            if "boundaryConditions" not in self.model.keys():
-                self.model['boundaryConditions'] = []
-            for species in self.model['species']:
-                if "types" not in species.keys():
-                    species['types'] = list(range(1, len(self.model['domain']['types'])))
-                if "diffusionConst" not in species.keys():
-                    if "diffusionCoeff" not in species.keys():
-                        diff = 0.0
-                    else:
-                        diff = species['diffusionCoeff']
-                    species['diffusionConst'] = diff
-            for reaction in self.model['reactions']:
-                if "odePropensity" not in reaction.keys():
-                    reaction['odePropensity'] = reaction['propensity']
-                if "types" not in reaction.keys():
-                    reaction['types'] = list(range(1, len(self.model['domain']['types'])))
-            self.model['template_version'] = self.TEMPLATE_VERSION
-        return self.model
 
+        self.model['name'] = self.get_name()
+        if "template_version" not in self.model:
+            self.model['template_version'] = 0
+        if "template_version" not in self.model['domain']:
+            self.model['domain']['template_version'] = 0
+
+        self.__update_model_to_current()
+        self.__update_domain_to_current()
+
+        return self.model
 
     def publish_presentation(self):
         '''
