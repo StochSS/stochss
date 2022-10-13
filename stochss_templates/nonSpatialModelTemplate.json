@@ -17,6 +17,7 @@
         "c_0": 10,
         "geometries": [],
         "gravity": [0, 0, 0],
+        "lattices": [],
         "p_0": 100.0,
         "particles": [],
         "rho_0": 1.0,
