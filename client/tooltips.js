@@ -190,6 +190,9 @@ module.exports = {
         "expression is evaluable within the a limited namespace, and only lower case variables (x, y, z), particles location in standard geometries, "+
         "or other geometry names, combinatory geometries, can be referenced in the expression."
   },
+  domainLattice: {
+    name: "Unique identifier for Lattice. Cannot share a name with other model components."
+  },
   boundaryConditionsEditor: {
     annotation: "An optional note about a boundary condition."
   }
