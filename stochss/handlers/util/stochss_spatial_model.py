@@ -445,8 +445,8 @@ class StochSSSpatialModel(StochSSBase):
             if 'geometry' in d_type and d_type['geometry']:
                 geometries.append({
                     'name': f"geometry{len(geometries) + 1}",
-                    'formula': d_type['geometry'],
-                    'namespace': None
+                    'type': 'Standard',
+                    'formula': d_type['geometry']
                 })
         domain['geometries'] = geometries
 
