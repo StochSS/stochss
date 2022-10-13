@@ -184,9 +184,11 @@ module.exports = {
     speed: "Approximate or artificial speed of sound"
   },
   domainGeometry: {
+    name: "Unique identifier for Geometry. Cannot share a name with other model components.",
+
     geometry: "The geometry formula can be any mathematical expression which evaluates to a boolean value in a python environment (i.e. x==5).  This "+
-        "expression is evaluable within the a limited namespace, and only lower case variables (x, y, z), particles location, "+
-        "can be referenced in the expression."
+        "expression is evaluable within the a limited namespace, and only lower case variables (x, y, z), particles location in standard geometries, "+
+        "or other geometry names, combinatory geometries, can be referenced in the expression."
   },
   boundaryConditionsEditor: {
     annotation: "An optional note about a boundary condition."
