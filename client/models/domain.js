@@ -40,7 +40,7 @@ module.exports = State.extend({
   collections: {
     types: Types,
     particles: Particles,
-    geometry: Geometries
+    geometries: Geometries
   },
   session: {
     def_particle_id: 'number',
