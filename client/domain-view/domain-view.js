@@ -29,6 +29,7 @@ let View = require('ampersand-view');
 let TypesView = require('./views/types-view');
 let LimitsView = require('./views/limits-view');
 let QuickviewType = require('./views/quickview-type');
+let GeometriesView = require('./views/geometries-view');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
@@ -63,6 +64,7 @@ module.exports = View.extend({
     this.renderPropertiesView();
     this.renderLimitsView();
     this.renderTypesView();
+    this.renderGeometriewView();
     if(this.readOnly) {
       $(this.queryByHook('domain-particles-editor')).css('display', 'none');
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
@@ -329,6 +331,17 @@ module.exports = View.extend({
     }
     this.fillGeometryView = new FillGeometryView();
     app.registerRenderSubview(this, this.fillGeometryView, 'fill-geometry-container');
+  },
+  renderGeometriewView: function () {
+    if(this.geometriesView) {
+      this.geometriesView.reomve();
+    }
+    this.geometriesView = new GeometriesView({
+      collection: this.model.geometries,
+      readOnly: this.readOnly
+    });
+    let hook = "domain-geometries-container";
+    app.registerRenderSubview(this, this.geometriesView, hook);
   },
   renderImportMeshView: function () {
     if(this.importMeshView) {

@@ -6,6 +6,8 @@ div#domain-view
 
   div(data-hook="domain-types-container")
 
+  div(data-hook="domain-geometries-container")
+
   div#domain-particles-editor.card(data-hook="domain-particles-editor")
 
     div.card-header.pb-0
@@ -23,10 +25,6 @@ div#domain-view
           li.nav-item
 
             a.nav-link.tab(data-hook="edit-particle-tab" data-toggle="tab" href="#edit-selected-particle") Edit Selected
-
-          li.nav-item
-
-            a.nav-link.tab(data-hook="geometry-tab" data-toggle="tab" href="#geometry-section") Geometries
 
           li.nav-item
 
@@ -108,10 +106,6 @@ div#domain-view
           div.mdl-edit-btn.saved-status.inline(data-hook="rsp-complete")
 
             span Particle Removed
-
-        div.tab-pane(id="geometry-section" data-hook="geometry-section")
-
-          h4 Geometry Classes
 
         div.tab-pane(id="lattice-section" data-hook="lattice-section")
 
