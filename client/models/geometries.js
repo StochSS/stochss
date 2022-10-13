@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let _ = require('underscore');
 //models
 let Geometry = require('./geometry');
 //collections
@@ -24,12 +25,12 @@ let Collection = require('ampersand-collection');
 module.exports = Collection.extend({
   model: Geometry,
   indexes: ['name'],
-  addGeometry: function () {
+  addGeometry: function (type) {
     let name = this.getDefaultName();
     let geometry = new Geometry({
       name: name,
-      formula: formula,
-      namespace: null
+      type: type,
+      formula: ""
     });
     this.add(geometry);
     return name;

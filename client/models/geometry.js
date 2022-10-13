@@ -22,11 +22,32 @@ let State = require('ampersand-state');
 module.exports = State.extend({
   props: {
     name: 'string',
-    formula: 'string',
-    namespace: 'object'
+    type: 'string',
+    formula: 'string'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
+  },
+  contains: function (attr, key) {
+    if(key === null) { return true; }
+
+    let checks = {
+      'name': this.name.includes(key),
+      'type': this.type === key,
+      'formula': this.formula.includes(key)
+    }
+
+    if(attr !== null) {
+      let otherAttrs = { 'expression': 'formula' }
+      if(Object.keys(otherAttrs).includes(attr)) {
+        attr = otherAttrs[attr];
+      }
+      return checks[attr];
+    }
+    for(let attribute in checks) {
+      if(checks[attribute]) { return true; }
+    }
+    return false;
   },
   validate: function () {
     if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
