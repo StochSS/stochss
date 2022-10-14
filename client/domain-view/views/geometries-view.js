@@ -87,5 +87,5 @@ module.exports = View.extend({
       this.queryByHook('view-geometries-list'),
       options
     );
-  },
+  }
 });

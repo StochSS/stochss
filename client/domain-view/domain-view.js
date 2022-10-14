@@ -64,7 +64,7 @@ module.exports = View.extend({
     this.renderPropertiesView();
     this.renderLimitsView();
     this.renderTypesView();
-    this.renderGeometriewView();
+    this.renderGeometriesView();
     if(this.readOnly) {
       $(this.queryByHook('domain-particles-editor')).css('display', 'none');
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
@@ -332,7 +332,7 @@ module.exports = View.extend({
     this.fillGeometryView = new FillGeometryView();
     app.registerRenderSubview(this, this.fillGeometryView, 'fill-geometry-container');
   },
-  renderGeometriewView: function () {
+  renderGeometriesView: function () {
     if(this.geometriesView) {
       this.geometriesView.reomve();
     }
