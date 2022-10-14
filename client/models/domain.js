@@ -22,6 +22,7 @@ let State = require('ampersand-state');
 let Types = require('./domain-types');
 let Particles = require('./particles');
 let Geometries = require('./geometries');
+let Lattices = require('./lattices');
 
 module.exports = State.extend({
   props: {
@@ -40,7 +41,8 @@ module.exports = State.extend({
   collections: {
     types: Types,
     particles: Particles,
-    geometries: Geometries
+    geometries: Geometries,
+    lattices: Lattices
   },
   session: {
     def_particle_id: 'number',
