@@ -369,65 +369,6 @@ class LoadLatticeFiles(APIHandler):
             report_error(self, log, err)
         self.finish()
 
-
-class Create3DDomainAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for creating a 3D domain.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def post(self):
-        '''
-        Create a 3D domain and return its particles.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        log.info("Loading particle data")
-        data = json.loads(self.request.body.decode())
-        log.debug("Data used to create the domain: {data}")
-        try:
-            log.info("Generating new particles")
-            model = StochSSSpatialModel(path="")
-            resp = model.get_particles_from_3d_domain(data=data)
-            log.debug(f"Number of Particles: {len(resp['particles'])}")
-            log.info("Successfully created new particles")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
-class GetParticlesTypesAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler getting particle types.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Get particle types from a text file.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path")
-        log.debug("Path to the file: {}", path)
-        try:
-            log.info(f"Loading particle types from {path.split('/').pop()}")
-            model = StochSSSpatialModel(path="")
-            resp = model.get_types_from_file(path=path)
-            log.debug(f"Number of Particles: {len(resp['types'])}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
 class ModelPresentationAPIHandler(APIHandler):
     '''
     ################################################################################################
@@ -489,34 +430,6 @@ class CreateNewBoundCondAPIHandler(APIHandler):
             model = StochSSSpatialModel(path=path)
             resp = model.create_boundary_condition(kwargs)
             log.info("Successfully created the new boundary condition")
-            log.debug(f"Response Message: {resp}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-class FillGeometryAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler fill geometry with particles.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def post(self):
-        '''
-        Fill a geomatry with particles.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        data = json.loads(self.request.body.decode())
-        log.debug(f"Agrs passed to Domain.fill_with_particles: {data['kwargs']}")
-        log.debug(f"Type used to fill geometry: {data['type']}")
-        try:
-            log.info("Creating particles within the geometry.")
-            resp = StochSSSpatialModel.fill_geometry(data['kwargs'], data['type'])
-            log.info("Successfully filled the geometry particles.")
             log.debug(f"Response Message: {resp}")
             self.write(resp)
         except StochSSAPIError as err:

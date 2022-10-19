@@ -34,10 +34,6 @@ let GeometriesView = require('./views/geometries-view');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
-let FillGeometryView = require('./views/fill-geometry-view');
-let ImportMeshView = require('./views/import-mesh-view');
-let Edit3DDomainView = require('./views/edit-3D-domain-view');
-let TypesDescriptionView = require('./views/types-description-view');
 //templates
 let template = require('./domainView.pug');
 
@@ -72,8 +68,7 @@ module.exports = View.extend({
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
       this.renderTypesQuickview();
     }else{
-      this.updateParticleViews({includeGeometry: true});
-      this.renderTypesDescriptionView();
+      this.updateParticleViews();
     }
     if(!this.elements) {
       this.elements = {
@@ -91,38 +86,6 @@ module.exports = View.extend({
         this.displayFigure();
       }});
     }
-  },
-  add3DDomain: function (limits, particles) {
-    let limitsChanged = this.changeDomainLimits(limits, false);
-    particles.forEach((particle) => {
-      particle = new Particle(particle);
-      this.model.particles.addParticle({particle: particle});
-      this.addParticle({particle: particle});
-    });
-    if(limitsChanged) {
-      this.renderLimitsView();
-    }
-    this.renderTypesView();
-    this.resetFigure();
-  },
-  addMeshDomain: function (limits, particles, types, reset) {
-    let limitsChanged = this.changeDomainLimits(limits, reset);
-    if(types) {
-      this.addMissingTypes(types);
-    }
-    particles.forEach((particle) => {
-      particle = new Particle(particle);
-      this.model.particles.addParticle({particle: particle});
-      this.addParticle({particle: particle});
-    });
-    if(limitsChanged) {
-      this.renderLimitsView();
-    }
-    this.renderTypesView();
-    if(types) {
-      this.updateParticleViews();
-    }
-    this.resetFigure();
   },
   addMissingTypes: function (typeIDs) {
     typeIDs.forEach((typeID) => {
@@ -247,7 +210,7 @@ module.exports = View.extend({
     this.model.realignTypes(type);
     this.plot.data.splice(type, 1);
     this.renderTypesView();
-    this.updateParticleViews({includeGeometry: true});
+    this.updateParticleViews();
     this.resetFigure();
   },
   displayFigure: function () {
@@ -304,13 +267,6 @@ module.exports = View.extend({
     this.plot.data[index].name = name;
     this.resetFigure();
   },
-  renderEdit3DDomainView: function () {
-    if(this.edit3DDomainView) {
-      this.edit3DDomainView.remove();
-    }
-    this.edit3DDomainView = new Edit3DDomainView();
-    app.registerRenderSubview(this, this.edit3DDomainView, "3d-domain-container");
-  },
   renderEditParticleView: function () {
     if(this.editParticleView) {
       this.editParticleView.remove();
@@ -327,13 +283,6 @@ module.exports = View.extend({
     $(this.queryByHook("save-selected-particle")).prop('disabled', disable);
     $(this.queryByHook("remove-selected-particle")).prop('disabled', disable);
   },
-  renderFillGeometryView: function () {
-    if(this.fillGeometryView) {
-      this.fillGeometryView.remove();
-    }
-    this.fillGeometryView = new FillGeometryView();
-    app.registerRenderSubview(this, this.fillGeometryView, 'fill-geometry-container');
-  },
   renderGeometriesView: function () {
     if(this.geometriesView) {
       this.geometriesView.reomve();
@@ -344,13 +293,6 @@ module.exports = View.extend({
     });
     let hook = "domain-geometries-container";
     app.registerRenderSubview(this, this.geometriesView, hook);
-  },
-  renderImportMeshView: function () {
-    if(this.importMeshView) {
-      this.importMeshView.remove();
-    }
-    this.importMeshView = new ImportMeshView();
-    app.registerRenderSubview(this, this.importMeshView, "import-particles-section");
   },
   renderLatticesView: function () {
     if(this.latticesView) {
@@ -393,13 +335,6 @@ module.exports = View.extend({
       readOnly: this.readOnly
     });
     app.registerRenderSubview(this, this.propertiesView, "domain-properties-container");
-  },
-  renderTypesDescriptionView: function () {
-    if(this.typesDescriptionView) {
-      this.typesDescriptionView.remove();
-    }
-    this.typesDescriptionView = new TypesDescriptionView();
-    app.registerRenderSubview(this, this.typesDescriptionView, "particle-types-container");
   },
   renderTypesQuickview: function () {
     if(this.typesQuickviewView) {
@@ -522,13 +457,8 @@ module.exports = View.extend({
       this.resetFigure();
     }
   },
-  updateParticleViews: function ({includeGeometry=false}={}) {
+  updateParticleViews: function () {
     this.renderNewParticleView();
     this.renderEditParticleView();
-    this.renderEdit3DDomainView();
-    this.renderImportMeshView();
-    if(includeGeometry) {
-      this.renderFillGeometryView();
-    }
   }
 });
