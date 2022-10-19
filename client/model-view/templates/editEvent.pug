@@ -114,14 +114,14 @@ div.mx-1
 
                 div.horizontal-space.inline
 
-                  input(type="radio", name="edit-use-values-from" data-hook="edit-trigger-time" data-name="trigger") 
+                  input(type="radio" name="edit-use-values-from" + this.model.compID data-hook="edit-trigger-time" data-name="trigger") 
                   |  Trigger Time
 
               div.col-lg-6.col-md-12.verticle-space
 
                 div.horizontal-space.inline
 
-                  input(type="radio", name="edit-use-values-from" data-hook="edit-assignment-time" data-name="assignment") 
+                  input(type="radio" name="edit-use-values-from" + this.model.compID data-hook="edit-assignment-time" data-name="assignment") 
                   |  Assignment Time
 
         div.col-sm-6(data-hook="assignments-container")
