@@ -32,7 +32,7 @@ let QuickviewType = require('./views/quickview-type');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
-let ImportMeshView = require('./views/import-mesh-view');
+// let ImportMeshView = require('./views/import-mesh-view');
 let Edit3DDomainView = require('./views/edit-3D-domain-view');
 let TypesDescriptionView = require('./views/types-description-view');
 //templates
@@ -86,25 +86,6 @@ module.exports = View.extend({
         this.displayFigure();
       }});
     }
-  },
-  addMeshDomain: function (limits, particles, types, reset) {
-    let limitsChanged = this.changeDomainLimits(limits, reset);
-    if(types) {
-      this.addMissingTypes(types);
-    }
-    particles.forEach((particle) => {
-      particle = new Particle(particle);
-      this.model.particles.addParticle({particle: particle});
-      this.addParticle({particle: particle});
-    });
-    if(limitsChanged) {
-      this.renderLimitsView();
-    }
-    this.renderTypesView();
-    if(types) {
-      this.updateParticleViews();
-    }
-    this.resetFigure();
   },
   addMissingTypes: function (typeIDs) {
     typeIDs.forEach((typeID) => {
@@ -309,13 +290,13 @@ module.exports = View.extend({
     $(this.queryByHook("save-selected-particle")).prop('disabled', disable);
     $(this.queryByHook("remove-selected-particle")).prop('disabled', disable);
   },
-  renderImportMeshView: function () {
-    if(this.importMeshView) {
-      this.importMeshView.remove();
-    }
-    this.importMeshView = new ImportMeshView();
-    app.registerRenderSubview(this, this.importMeshView, "import-particles-section");
-  },
+  // renderImportMeshView: function () {
+  //   if(this.importMeshView) {
+  //     this.importMeshView.remove();
+  //   }
+  //   this.importMeshView = new ImportMeshView();
+  //   app.registerRenderSubview(this, this.importMeshView, "import-particles-section");
+  // },
   renderLimitsView: function () {
     if(this.limitsView) {
       this.limitsView.remove();
@@ -479,6 +460,6 @@ module.exports = View.extend({
     this.renderNewParticleView();
     this.renderEditParticleView();
     this.renderEdit3DDomainView();
-    this.renderImportMeshView();
+    // this.renderImportMeshView();
   }
 });
