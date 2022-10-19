@@ -358,34 +358,6 @@ class LoadParticleTypesDescriptions(APIHandler):
             report_error(self, log, err)
         self.finish()
 
-class GetParticlesTypesAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler getting particle types.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Get particle types from a text file.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path")
-        log.debug("Path to the file: {}", path)
-        try:
-            log.info(f"Loading particle types from {path.split('/').pop()}")
-            model = StochSSSpatialModel(path="")
-            resp = model.get_types_from_file(path=path)
-            log.debug(f"Number of Particles: {len(resp['types'])}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
 class ModelPresentationAPIHandler(APIHandler):
     '''
     ################################################################################################

@@ -32,7 +32,6 @@ let QuickviewType = require('./views/quickview-type');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
-let TypesDescriptionView = require('./views/types-description-view');
 //templates
 let template = require('./domainView.pug');
 
@@ -66,7 +65,6 @@ module.exports = View.extend({
       this.renderTypesQuickview();
     }else{
       this.updateParticleViews();
-      this.renderTypesDescriptionView();
     }
     if(!this.elements) {
       this.elements = {
@@ -311,13 +309,6 @@ module.exports = View.extend({
       readOnly: this.readOnly
     });
     app.registerRenderSubview(this, this.propertiesView, "domain-properties-container");
-  },
-  renderTypesDescriptionView: function () {
-    if(this.typesDescriptionView) {
-      this.typesDescriptionView.remove();
-    }
-    this.typesDescriptionView = new TypesDescriptionView();
-    app.registerRenderSubview(this, this.typesDescriptionView, "particle-types-container");
   },
   renderTypesQuickview: function () {
     if(this.typesQuickviewView) {
