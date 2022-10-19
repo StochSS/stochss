@@ -427,7 +427,7 @@ class StochSSNotebook(StochSSBase):
                     triggers.append(nb_trigger)
                     a_names, nb_assignments = self.__create_well_mixed_event_assignments(s_event)
                     assignments.extend(nb_assignments)
-                    delay = "None" if s_event['delay'] is None else f"'{s_event['delay']}'"
+                    delay = "None" if s_event['delay'] in (None, "") else f"'{s_event['delay']}'"
 
                     n_len, n_names = self.__add_name(names, n_len, name)
                     if n_names is not None:
