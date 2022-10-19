@@ -21,18 +21,17 @@ import json
 import copy
 import string
 import hashlib
-import tempfile
 import traceback
 
 import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
-                      Geometry, ModelError, TimeSpan
+                      TimeSpan
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
-                            StochSSModelFormatError, StochSSPermissionsError, DomainGeometryError
+                            StochSSModelFormatError, StochSSPermissionsError
 
 class StochSSSpatialModel(StochSSBase):
     '''
