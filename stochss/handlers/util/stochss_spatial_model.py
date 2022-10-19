@@ -93,32 +93,6 @@ class StochSSSpatialModel(StochSSBase):
                 return boundary_condition['expression']
         return NewBC()
 
-
-    @classmethod
-    def __build_geometry(cls, d_type, center):
-        name = d_type['name'].title()
-        class NewG(Geometry): # pylint: disable=too-few-public-methods
-            '''
-            ########################################################################################
-            Custom SpatialPy Geometry
-            ########################################################################################
-            '''
-            __class__ = f"__main__.{name}"
-            def __init__(self, center):
-                self.center = center
-
-            def inside(self, point, on_boundary): # pylint: disable=no-self-use
-                '''
-                Custom inside for geometry
-                '''
-                namespace = {
-                    'cx': self.center[0], 'cy': self.center[1], 'cz': self.center[2],
-                    'x': point[0], 'y': point[1], 'z': point[2]
-                }
-                return eval(d_type['geometry'], {}, namespace)
-        return NewG(center)
-
-
     @classmethod
     def __build_stochss_domain(cls, s_domain, data=None):
         particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
@@ -495,53 +469,6 @@ class StochSSSpatialModel(StochSSBase):
         new_bc = BoundaryCondition(model=model, **kwargs)
         expression = new_bc.expression()
         return {"expression": expression}
-
-
-    @classmethod
-    def fill_geometry(cls, kwargs, d_type):
-        '''
-        Create particles of the given type with the given properties within the geometry.
-
-        Attributes
-        ----------
-        kwargs : dict
-            Arguments passed to Domain.fill_with_particles.
-        d_type : dict
-            StochSS type definition.
-        '''
-        center = [
-            (kwargs['xmax'] + kwargs['xmin']) / 2,
-            (kwargs['ymax'] + kwargs['ymin']) / 2,
-            (kwargs['zmax'] + kwargs['zmin']) / 2
-        ]
-        kwargs['geometry_ivar'] = cls.__build_geometry(d_type, center)
-        kwargs['type_id'] = d_type['name']
-        kwargs['mass'] = d_type['mass']
-        kwargs['vol'] = d_type['volume']
-        kwargs['rho'] = d_type['rho']
-        kwargs['nu'] = d_type['nu']
-        kwargs['c'] = d_type['c']
-        kwargs['fixed'] = d_type['fixed']
-        try:
-            domain = Domain(
-                0, (kwargs['xmin'],kwargs['xmax']),
-                (kwargs['ymin'],kwargs['ymax']), (kwargs['zmin'],kwargs['zmax'])
-            )
-            domain.fill_with_particles(**kwargs)
-            data = {'type': d_type, 'transformation': None}
-            particles = cls.__build_stochss_domain_particles(domain, data=data)
-            limits = {'x_lim': domain.xlim, 'y_lim': domain.ylim, 'z_lim': domain.zlim}
-            return {'particles': particles, 'limits': limits}
-        except SyntaxError as err:
-            message = f"Failed to fill geometry. Reason given: {err}"
-            raise DomainGeometryError(message, traceback.format_exc()) from err
-        except NameError as err:
-            message = f"Failed to fill geometry. Reason given: {err}"
-            raise DomainGeometryError(message, traceback.format_exc()) from err
-        except ModelError as err:
-            message = f"Failed to fill geometry. Reason given: {err}"
-            raise DomainGeometryError(message, traceback.format_exc()) from err
-
 
     def get_domain(self, path=None, new=False):
         '''
