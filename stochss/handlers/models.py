@@ -358,37 +358,6 @@ class LoadParticleTypesDescriptions(APIHandler):
             report_error(self, log, err)
         self.finish()
 
-
-class Create3DDomainAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for creating a 3D domain.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def post(self):
-        '''
-        Create a 3D domain and return its particles.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        log.info("Loading particle data")
-        data = json.loads(self.request.body.decode())
-        log.debug("Data used to create the domain: {data}")
-        try:
-            log.info("Generating new particles")
-            model = StochSSSpatialModel(path="")
-            resp = model.get_particles_from_3d_domain(data=data)
-            log.debug(f"Number of Particles: {len(resp['particles'])}")
-            log.info("Successfully created new particles")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
 class GetParticlesTypesAPIHandler(APIHandler):
     '''
     ################################################################################################
