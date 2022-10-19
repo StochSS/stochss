@@ -27,6 +27,10 @@ img.quickstart {
   margin: 2em auto;
 }
 
+svg {
+  pointer-events: none;
+}
+
 .page {
   padding-bottom: 150px;
 }
