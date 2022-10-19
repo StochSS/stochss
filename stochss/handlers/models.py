@@ -283,22 +283,27 @@ class ImportMeshAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        log.info(f"Loading the domain from {self.request.files['datafile'][0]['filename']}")
-        data = self.request.files['datafile'][0]['body'].decode()
+        dirname = os.path.dirname(self.request.body_arguments['path'][0].decode())
+        if dirname == '.':
+            dirname = ""
+        elif ".wkgp" in dirname:
+            dirname = os.path.dirname(dirname)
+        mesh_file = self.request.files['datafile'][0]
+        log.info(f"Importing mesh: {mesh_file['filename']}")
         if "typefile" in self.request.files.keys():
-            log.info(f"Loading the particle types from \
-                        {self.request.files['typefile'][0]['filename']}")
-            types = self.request.files['typefile'][0]['body'].decode().strip().split("\n")
+            types_file = self.request.files['typefile'][0]
+            log.info(f"Importing type descriptions: {type_file['filename']}")
         else:
-            types = None
-        log.info("Loading particle data")
-        particle_data = json.loads(self.request.body_arguments['particleData'][0].decode())
+            types_file = None
         try:
-            log.info("Generating new particles")
-            resp = StochSSSpatialModel.get_particles_from_remote(domain=data, data=particle_data,
-                                                                 types=types)
-            log.debug(f"Number of Particles: {len(resp['particles'])}")
-            log.info("Successfully created new particles")
+            folder = StochSSFolder(path=dirname)
+            mesh_resp = folder.upload('file', mesh_file['filename'], mesh_file['body'])
+            resp = {'meshPath': mesh_resp['path'], 'meshFile': mesh_resp['file']}
+            if types_file is not None:
+                types_resp = folder.upload('file', type_files['filename'], type_files['body'])
+                resp['typesPath'] = types_resp['path']
+                resp['typesFile'] = types_resp['file']
+            log.info("Successfully uploaded files")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
@@ -331,28 +336,34 @@ class LoadExternalDomains(APIHandler):
         self.finish()
 
 
-class LoadParticleTypesDescriptions(APIHandler):
+class LoadLatticeFiles(APIHandler):
     '''
     ################################################################################################
-    Handler for getting particle type description files.
+    Handler for getting mesh/domain and type description files.
     ################################################################################################
     '''
     @web.authenticated
     async def get(self):
         '''
-        Get text files on disc for particles type description selection.
+        Get mesh/domain and type description files on disc for file selections.
 
         Attributes
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
+        target_ext = self.get_query_argument(name="ext")
+        include_types = bool(self.get_query_argument(name="includeTypes", default=False))
         try:
             folder = StochSSFolder(path="")
             test = lambda ext, root, file: bool(
                 "trash" in root.split("/") or file.startswith('.') or 'wkfl' in root or root.startswith('.')
             )
-            resp = folder.get_file_list(ext=".txt", test=test)
-            log.debug("Response: {resp}")
+            mesh_files = folder.get_file_list(ext=target_ext, test=test)
+            resp = {'meshFiles': mesh_files}
+            if include_types:
+                type_files = folder.get_file_list(ext=".txt", test=test)
+                resp['typeFiles'] = type_files
+            log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
