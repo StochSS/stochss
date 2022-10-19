@@ -579,41 +579,6 @@ class StochSSSpatialModel(StochSSBase):
         self.model['path'] = self.get_file()
         return {"path":path, "new":True, "models":{"s_model":self.model, "model":s_model}}
 
-
-    def get_particles_from_3d_domain(self, data):
-        '''
-        Create a new 3D domain and return the particles
-
-        Attributes
-        ----------
-        data : dict
-            Data used to create the 3D domain
-        '''
-        if data['type']['type_id'] == "Un-Assigned":
-            data['type']['type_id'] = "UnAssigned"
-        if data['transformation'] is None:
-            xlim = data['xLim']
-            ylim = data['yLim']
-            zlim = data['zLim']
-        else:
-            xlim = [coord + data['transformation'][0] for coord in data['xLim']]
-            ylim = [coord + data['transformation'][1] for coord in data['yLim']]
-            zlim = [coord + data['transformation'][2] for coord in data['zLim']]
-        dimensions = bool(xlim[1] - xlim[0])
-        dimensions += bool(ylim[1] - ylim[0])
-        dimensions += bool(zlim[1] - zlim[0])
-        if dimensions > 2:
-            s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, numx=data['nx'],
-                                               numy=data['ny'], numz=data['nz'], **data['type'])
-        else:
-            s_domain = Domain.create_2D_domain(xlim=xlim, ylim=ylim,
-                                               numx=data['nx'], numy=data['ny'], **data['type'])
-        domain = self.__build_stochss_domain(s_domain=s_domain, data=data)
-        limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
-        resp = {"particles":domain['particles'], "limits":limits}
-        return resp
-
-
     @classmethod
     def get_particles_from_remote(cls, domain, data, types):
         '''
