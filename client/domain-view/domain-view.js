@@ -28,6 +28,7 @@ let Particle = require('../models/particle');
 let View = require('ampersand-view');
 let TypesView = require('./views/types-view');
 let LimitsView = require('./views/limits-view');
+let LatticesView = require('./views/lattices-view');
 let QuickviewType = require('./views/quickview-type');
 let GeometriesView = require('./views/geometries-view');
 let PropertiesView = require('./views/properties-view');
@@ -65,6 +66,7 @@ module.exports = View.extend({
     this.renderLimitsView();
     this.renderTypesView();
     this.renderGeometriesView();
+    this.renderLatticesView();
     if(this.readOnly) {
       $(this.queryByHook('domain-particles-editor')).css('display', 'none');
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
@@ -349,6 +351,17 @@ module.exports = View.extend({
     }
     this.importMeshView = new ImportMeshView();
     app.registerRenderSubview(this, this.importMeshView, "import-particles-section");
+  },
+  renderLatticesView: function () {
+    if(this.latticesView) {
+      this.latticesView.reomve();
+    }
+    this.latticesView = new LatticesView({
+      collection: this.model.lattices,
+      readOnly: this.readOnly
+    });
+    let hook = "domain-lattices-container";
+    app.registerRenderSubview(this, this.latticesView, hook);
   },
   renderLimitsView: function () {
     if(this.limitsView) {
