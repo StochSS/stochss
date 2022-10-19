@@ -21,18 +21,17 @@ import json
 import copy
 import string
 import hashlib
-import tempfile
 import traceback
 
 import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
-                      Geometry, ModelError, TimeSpan
+                      TimeSpan
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
-                            StochSSModelFormatError, StochSSPermissionsError, DomainGeometryError
+                            StochSSModelFormatError, StochSSPermissionsError
 
 class StochSSSpatialModel(StochSSBase):
     '''
@@ -92,32 +91,6 @@ class StochSSSpatialModel(StochSSBase):
                 '''
                 return boundary_condition['expression']
         return NewBC()
-
-
-    @classmethod
-    def __build_geometry(cls, d_type, center):
-        name = d_type['name'].title()
-        class NewG(Geometry): # pylint: disable=too-few-public-methods
-            '''
-            ########################################################################################
-            Custom SpatialPy Geometry
-            ########################################################################################
-            '''
-            __class__ = f"__main__.{name}"
-            def __init__(self, center):
-                self.center = center
-
-            def inside(self, point, on_boundary): # pylint: disable=no-self-use
-                '''
-                Custom inside for geometry
-                '''
-                namespace = {
-                    'cx': self.center[0], 'cy': self.center[1], 'cz': self.center[2],
-                    'x': point[0], 'y': point[1], 'z': point[2]
-                }
-                return eval(d_type['geometry'], {}, namespace)
-        return NewG(center)
-
 
     @classmethod
     def __build_stochss_domain(cls, s_domain, data=None):
@@ -545,53 +518,6 @@ class StochSSSpatialModel(StochSSBase):
         expression = new_bc.expression()
         return {"expression": expression}
 
-
-    @classmethod
-    def fill_geometry(cls, kwargs, d_type):
-        '''
-        Create particles of the given type with the given properties within the geometry.
-
-        Attributes
-        ----------
-        kwargs : dict
-            Arguments passed to Domain.fill_with_particles.
-        d_type : dict
-            StochSS type definition.
-        '''
-        center = [
-            (kwargs['xmax'] + kwargs['xmin']) / 2,
-            (kwargs['ymax'] + kwargs['ymin']) / 2,
-            (kwargs['zmax'] + kwargs['zmin']) / 2
-        ]
-        kwargs['geometry_ivar'] = cls.__build_geometry(d_type, center)
-        kwargs['type_id'] = d_type['name']
-        kwargs['mass'] = d_type['mass']
-        kwargs['vol'] = d_type['volume']
-        kwargs['rho'] = d_type['rho']
-        kwargs['nu'] = d_type['nu']
-        kwargs['c'] = d_type['c']
-        kwargs['fixed'] = d_type['fixed']
-        try:
-            domain = Domain(
-                0, (kwargs['xmin'],kwargs['xmax']),
-                (kwargs['ymin'],kwargs['ymax']), (kwargs['zmin'],kwargs['zmax'])
-            )
-            domain.fill_with_particles(**kwargs)
-            data = {'type': d_type, 'transformation': None}
-            particles = cls.__build_stochss_domain_particles(domain, data=data)
-            limits = {'x_lim': domain.xlim, 'y_lim': domain.ylim, 'z_lim': domain.zlim}
-            return {'particles': particles, 'limits': limits}
-        except SyntaxError as err:
-            message = f"Failed to fill geometry. Reason given: {err}"
-            raise DomainGeometryError(message, traceback.format_exc()) from err
-        except NameError as err:
-            message = f"Failed to fill geometry. Reason given: {err}"
-            raise DomainGeometryError(message, traceback.format_exc()) from err
-        except ModelError as err:
-            message = f"Failed to fill geometry. Reason given: {err}"
-            raise DomainGeometryError(message, traceback.format_exc()) from err
-
-
     def get_domain(self, path=None, new=False):
         '''
         Get a prospective domain
@@ -700,106 +626,6 @@ class StochSSSpatialModel(StochSSBase):
         s_model = self.convert_to_spatialpy()
         self.model['path'] = self.get_file()
         return {"path":path, "new":True, "models":{"s_model":self.model, "model":s_model}}
-
-
-    def get_particles_from_3d_domain(self, data):
-        '''
-        Create a new 3D domain and return the particles
-
-        Attributes
-        ----------
-        data : dict
-            Data used to create the 3D domain
-        '''
-        if data['type']['type_id'] == "Un-Assigned":
-            data['type']['type_id'] = "UnAssigned"
-        if data['transformation'] is None:
-            xlim = data['xLim']
-            ylim = data['yLim']
-            zlim = data['zLim']
-        else:
-            xlim = [coord + data['transformation'][0] for coord in data['xLim']]
-            ylim = [coord + data['transformation'][1] for coord in data['yLim']]
-            zlim = [coord + data['transformation'][2] for coord in data['zLim']]
-        dimensions = bool(xlim[1] - xlim[0])
-        dimensions += bool(ylim[1] - ylim[0])
-        dimensions += bool(zlim[1] - zlim[0])
-        if dimensions > 2:
-            s_domain = Domain.create_3D_domain(xlim=xlim, ylim=ylim, zlim=zlim, numx=data['nx'],
-                                               numy=data['ny'], numz=data['nz'], **data['type'])
-        else:
-            s_domain = Domain.create_2D_domain(xlim=xlim, ylim=ylim,
-                                               numx=data['nx'], numy=data['ny'], **data['type'])
-        domain = self.__build_stochss_domain(s_domain=s_domain, data=data)
-        limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
-        resp = {"particles":domain['particles'], "limits":limits}
-        return resp
-
-
-    @classmethod
-    def get_particles_from_remote(cls, domain, data, types):
-        '''
-        Get a list of stochss particles from a domain
-
-        Attributes
-        ----------
-        domain : str
-            Domain containing particle data
-        data : dict
-            Property and location data to be applied to each particle
-        types : list
-            List of type discriptions (lines from an uploaded file)
-        '''
-        with tempfile.NamedTemporaryFile() as file:
-            with open(file.name, "w", encoding="utf-8") as domain_file:
-                domain_file.write(domain)
-            s_domain = Domain.read_xml_mesh(filename=file.name)
-        domain = cls.__build_stochss_domain(s_domain=s_domain, data=data)
-        if types is not None:
-            type_data = cls.get_types_from_file(lines=types)
-            for t_data in type_data['types']:
-                if t_data['particle_id'] < len(domain['particles']):
-                    domain['particles'][t_data['particle_id']]['type'] = t_data['typeID']
-        limits = {"x_lim":domain['x_lim'], "y_lim":domain['y_lim'], "z_lim":domain['z_lim']}
-        resp = {"particles":domain['particles'], "limits":limits}
-        if types is not None:
-            resp['types'] = type_data['names']
-        return resp
-
-
-    @classmethod
-    def get_types_from_file(cls, path=None, lines=None):
-        '''
-        Get the type descriptions from the .txt file
-
-        Attributes
-        ----------
-        path : str
-            Path to the types description file
-        lines : list
-            Lines from an uploaded file
-        '''
-        if lines is None:
-            path = os.path.join(cls.user_dir, path)
-            with open(path, "r", encoding="utf-8") as types_file:
-                lines = types_file.readlines()
-        types = []
-        names = []
-        for line in lines:
-            if line.strip().replace(".0", "").replace(",", "", 1).isdigit():
-                part_id, type_id = line.strip().split(",")
-                if '.' in type_id:
-                    type_id = float(type_id)
-                type_id = int(type_id)
-                if type_id not in names:
-                    names.append(type_id)
-                types.append({"particle_id":int(part_id), "typeID":type_id})
-            else:
-                message = "The type descriptions are not in the proper format "
-                message += "(i.e. particle_id (int),type_id (int))"
-                raise DomainFormatError(message, traceback.format_exc())
-        return {"types":types, "names":sorted(names)}
-
 
     def load(self):
         '''
