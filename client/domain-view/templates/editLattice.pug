@@ -1,0 +1,263 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-1
+
+      div.pl-3
+
+        input(type="checkbox" data-hook="select-lattice" data-toggle="collapse" data-target="#collapse-lattice-details" + this.model.cid)
+
+    div.col-sm-2
+
+      div.pl-2(data-hook="input-name-container")
+
+    div.col-sm-2
+
+      div.pl-2(data-hook="select-type-container")
+
+    div.col-sm-5
+
+      span.inline (x:
+
+      div.inline(data-hook="center-x-container" style="width: 25%")
+
+      span.inline.mr-2 , y:
+
+      div.inline(data-hook="center-y-container" style="width: 25%")
+
+      span.inline.mr-2 , z:
+
+      div.inline(data-hook="center-z-container" style="width: 25%")
+
+      span.inline )
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X
+
+  div-mx-1.pl-2(data-hook="lattice-details")
+
+    div.collapse(id="collapse-lattice-details" + this.model.cid)
+
+      div.hidden(data-hook="cartesian-lattice-props")
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+          
+          div.col-sm-3
+
+            h6.inline <b>X-Axis</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Y-Axis</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Z-Axis</b>
+
+        div.mt-3.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Minimum</b>
+
+          div.col-sm-3
+
+            div(data-hook="x-min-container")
+
+          div.col-sm-3
+
+            div(data-hook="y-min-container")
+
+          div.col-sm-3
+
+            div(data-hook="z-min-container")
+
+        hr
+
+        div.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Maximum</b>
+
+          div.col-sm-3
+
+            div(data-hook="x-max-container")
+
+          div.col-sm-3
+
+            div(data-hook="y-max-container")
+
+          div.col-sm-3
+
+            div(data-hook="z-max-container")
+
+        hr
+
+        div.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Spacing</b>
+
+          div.col-sm-3
+
+            div(data-hook="delta-x-container")
+
+          div.col-sm-3
+
+            div(data-hook="delta-y-container")
+
+          div.col-sm-3
+
+            div(data-hook="delta-z-container")
+
+      div.hidden(data-hook="circular-lattice-props")
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+
+            h6.inline <b>Radius</b>
+          
+          div.col-sm-3.hidden(data-hook="cylinder-length-header")
+
+            h6.inline <b>length</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Surface Spacing</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Radial Spacing</b>
+
+        div.mt-3.mx-1.row
+
+          div.col-sm-3
+
+            div(data-hook="radius-container")
+
+          div.col-sm-3.hidden(data-hook="cylinder-length-feild")
+
+            div(data-hook="length-container")
+
+          div.col-sm-3
+
+            div(data-hook="delta-s-container")
+
+          div.col-sm-3
+
+            div(data-hook="delta-r-container")
+
+      div.accordion.hidden(id="fileLatticeProps" + this.model.cid data-hook="file-lattice-props")
+
+        div.card
+
+          div.card-header(id="importFilesHeader" + this.model.cid)
+
+            h3.mb-0.inline=`Import Files for ${this.model.name}`
+
+            button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseImportFiles" + this.model.cid data-hook="collapseImportFiles" aria-expanded="false" aria-controls="collapseImportFiles" style="float: right") 
+
+              div(data-hook="import-chevron")
+
+                svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512")
+
+                  path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
+
+          div.collapse(id="collapseImportFiles" + this.model.cid aria-labelledby="importFilesHeader" + this.model.cid data-parent="#fileLatticeProps" + this.model.cid)
+
+            div.card-body
+
+              div.my-3
+
+                span.inline(data-hook="meshfile-label" for="meshfile")=`Please specify a ${this.filetype} to import: `
+
+                input.ml-2(id="meshfile" data-hook="mesh-file" type="file" name="meshfile" size="30" accept=this.accept required)
+
+              div.mb-3
+
+                span.inline(for=typefile) Type descriptions (optional):
+
+                input.ml-2(id="typefile" data-hook="type-file" type="file" name="typefile" size="30" accept=".txt")
+
+              div.inline
+
+                button.btn.btn-outline-primary.box-shadow(data-hook="import-mesh-file" disabled style="text-transform: capitalize;")=`Import ${this.filetype}`
+
+              div.mdl-edit-btn.saving-status.inline(data-hook="imf-in-progress")
+
+                div.spinner-grow.mr-2
+
+                span Importing mesh ...
+
+              div.mdl-edit-btn.saved-status.inline(data-hook="imf-complete")
+
+                span
+
+              div.mdl-edit-btn.save-error-status(data-hook="imf-error")
+
+                span(data-hook="imf-action-error")
+
+        div.card
+
+          div.card-header(id="uploadedFilesHeader" + this.model.cid)
+
+            h3.mb-0.inline=`Uploaded Files for ${this.model.name}`
+
+            button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseUploadedFiles" + this.model.cid data-hook="collapseUploadedFiles" aria-expanded="false" aria-controls="collapseUploadedFiles" style="float: right")
+
+              div(data-hook="uploaded-chevron")
+
+                svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512")
+
+                  path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
+
+          div.collapse(id="collapseUploadedFiles" + this.model.cid aria-labelledby="uploadedFilesHeader" + this.model.cid data-parent="#fileLatticeProps" + this.model.cid)
+
+            div.card-body
+
+              div
+
+                div.hidden.text-info(data-hook="mesh-location-message")=`There are multiple ${this.filetype} files with that name, please select a location`
+
+                div
+
+                  div.inline.mr-3
+
+                    span.inline(data-hook="lattice-filename-label" for="lattice-filename-select")=`Please specify a ${this.filetype} to import: `
+
+                    div.inline(id="lattice-filename-select" data-hook="lattice-mesh-select")
+
+                  div.hidden.inline(data-hook="mesh-location-container")
+
+                    span.inline.mr-2(for="mesh-location-select") Location:
+
+                    div.inline(id="mesh-location-select" data-hook="mesh-location-select")
+
+              div.hidden(data-hook="type-descriptions-prop")
+
+                div.hidden.text-info(data-hook="types-location-message")
+                  | There are multiple type files with that name, please select a location
+
+                div
+
+                  div.inline.mr-3
+
+                    span.inline(for=lattice-types-types-select) Type descriptions (optional):
+
+                    div.inline(id="lattice-types-select" data-hook="lattice-type-select")
+
+                  div.hidden.inline(data-hook="types-location-container")
+
+                    span.inline.mr-2(for="file-location-select") Location:
+
+                    div.inline(id="types-location-select" data-hook="type-location-select")
