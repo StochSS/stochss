@@ -457,7 +457,7 @@ class StochSSNotebook(StochSSBase):
 
     def __create_well_mixed_event_assignments(self, s_event):
         pad = '    '
-        args = f"{pad*2}name='__NAME__', variable='__VAR__',\n{pad*2}expression='__EXPRESSION__'"
+        args = f"{pad*2}variable='__VAR__',\n{pad*2}expression='__EXPRESSION__'"
         tmp = f"{pad}__NAME__ = gillespy2.EventAssignment(\n{args}\n{pad})"
         names = []
         n_len = 8
