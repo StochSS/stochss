@@ -24,6 +24,7 @@ let Settings = require('../models/user-settings');
 // views
 let PageView = require('./base');
 let InputView = require('../views/input');
+let SelectView = require('ampersand-select-view');
 // templates
 let template = require('../templates/pages/userSettings.pug');
 
@@ -32,7 +33,9 @@ import initPage from './page.js';
 let userSettings = PageView.extend({
   template: template,
   events: {
-    'change [data-hook=user-logs]' : 'toggleUserLogs'
+    'change [data-hook=user-logs]' : 'toggleUserLogs',
+    'change [data-hook=aws-instancetype-container]' : 'handleSelectInstanceType',
+    'change [data-hook=aws-instancesize-container]' : 'handleSelectInstanceSize'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -41,11 +44,61 @@ let userSettings = PageView.extend({
       success: (err, response, body) => {
         this.model.set(body.settings);
         this.instances = body.instances;
+        if(this.model.headNode === "") {
+          this.awsType = "";
+          this.awsSize = "";
+        }else{
+          let data = this.model.headNode.split('.')
+          this.awsType = data[0];
+          this.awsSize = data[1];
+          this.renderAWSInstanceSizesView();
+        }
+        this.renderAWSInstanceTypesView();
       }
     });
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
+  },
+  handleSelectInstanceSize: function (e) {
+    this.awsSize = e.target.value;
+    this.model.headNode = `${this.awsType}.${this.awsSize}`;
+  },
+  handleSelectInstanceType: function (e) {
+    this.awsType = e.target.value;
+    this.renderAWSInstanceSizesView();
+  },
+  renderAWSInstanceSizesView: function () {
+    if(this.awsInstanceSizesView) {
+      this.awsInstanceSizesView.remove();
+    }
+    let options = this.instances[this.awsType];
+    this.awsInstanceSizesView = new SelectView({
+      name: 'aws-instance-size',
+      required: false,
+      idAttributes: 'cid',
+      options: options,
+      value: this.awsSize,
+      unselectedText: "-- Select Instance Size --"
+    });
+    let hook = "aws-instancesize-container";
+    app.registerRenderSubview(this, this.awsInstanceSizesView, hook);
+  },
+  renderAWSInstanceTypesView: function () {
+    if(this.awsInstanceTypesView) {
+      this.awsInstanceTypesView.remove();
+    }
+    let options = Object.keys(this.instances);
+    this.awsInstanceTypesView = new SelectView({
+      name: 'aws-instance-type',
+      required: false,
+      idAttributes: 'cid',
+      options: options,
+      value: this.awsType,
+      unselectedText: "-- Select Instance Type --"
+    });
+    let hook = "aws-instancetype-container";
+    app.registerRenderSubview(this, this.awsInstanceTypesView, hook);
   },
   toggleUserLogs: function (e) {
     this.model.userLogs = e.target.checked;
