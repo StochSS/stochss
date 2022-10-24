@@ -34,12 +34,15 @@ let userSettings = PageView.extend({
   template: template,
   events: {
     'change [data-hook=user-logs]' : 'toggleUserLogs',
+    'change [data-hook=aws-secretaccesskey-container]' : 'handleSetSecretKey',
     'change [data-hook=aws-instancetype-container]' : 'handleSelectInstanceType',
-    'change [data-hook=aws-instancesize-container]' : 'handleSelectInstanceSize'
+    'change [data-hook=aws-instancesize-container]' : 'handleSelectInstanceSize',
+    'click [data-hook=apply-user-settings]' : 'handleApplyUserSettings'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     this.model = new Settings();
+    this.secretKey = null;
     app.getXHR(this.model.url(), {
       success: (err, response, body) => {
         this.model.set(body.settings);
@@ -59,6 +62,13 @@ let userSettings = PageView.extend({
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
+    console.log(this.secretKey);
+  },
+  handleApplyUserSettings: function () {
+    let options = this.secretKey !== null ? {secretKey: this.secretKey} : {};
+    this.model.applySettings(() => {
+      location.reload();
+    }, options);
   },
   handleSelectInstanceSize: function (e) {
     this.awsSize = e.target.value;
@@ -67,6 +77,9 @@ let userSettings = PageView.extend({
   handleSelectInstanceType: function (e) {
     this.awsType = e.target.value;
     this.renderAWSInstanceSizesView();
+  },
+  handleSetSecretKey: function (e) {
+    this.secretKey = e.target.value;
   },
   renderAWSInstanceSizesView: function () {
     if(this.awsInstanceSizesView) {
@@ -102,7 +115,6 @@ let userSettings = PageView.extend({
   },
   toggleUserLogs: function (e) {
     this.model.userLogs = e.target.checked;
-    console.log(this.model)
   },
   update: function () {},
   updateValid: function () {},

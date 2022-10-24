@@ -31,5 +31,12 @@ module.exports = Model.extend({
     awsRegion: 'string',
     headNode: 'string',
     userLogs: 'boolean'
+  },
+  applySettings: function (cb, {secretKey=null}={}) {
+    let data = {
+      settings: this,
+      secret_key: secretKey
+    }
+    app.postXHR(this.url(), data.toJSON(), { success: cb });
   }
 });
