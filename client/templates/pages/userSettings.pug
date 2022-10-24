@@ -1,0 +1,93 @@
+section.page
+
+  div.no-gutters
+    
+    div
+
+      h2 Settings
+
+    div
+
+      hr
+
+      div.mx-1.row.head.align-items-baseline
+
+        h3 General
+
+      div.mt-3.row
+
+        div.col-md-3.col-lg-2
+
+          label.switch
+
+            input(data-hook="user-logs" type="checkbox" checked)
+
+            span.slider.round
+
+        div.col-md-9.col-lg-10
+
+          h5(style="verticle-align: middle;") User Logs
+
+    div
+
+      hr
+
+      div.mx-1.row.head.align-items-baseline
+
+        h3 AWS Credentials
+
+      div.my-3.mx-1.row.head.align-items-baseline
+
+        div.col-sm-3
+
+          h6 <b>Region</b>
+
+        div.col-sm-4
+
+          h6 <b>Access Key ID</b>
+
+        div.col-sm-4
+
+          h6 <b>Secret Access Key</b>
+
+      div.row.my-2
+
+        div.col-sm-3
+
+          div.pl-2(data-hook="aws-region-container")
+
+        div.col-sm-4
+
+          div(data-hook="aws-accesskeyid-container")
+
+        div.col-sm-4
+
+          div(data-hook="aws-secretaccesskey-container")
+
+    div
+
+      hr
+
+      div.mx-1.row.head.align-items-baseline
+
+        h3 Compute Node
+
+      div.my-3.mx-1.row.head.align-items-baseline
+
+        div.col-sm-4
+
+          h6 <b>Type</b>
+
+        div.col-sm-4
+
+          h6 <b>Size</b>
+
+      div.row.my-2
+
+        div.col-sm-4
+
+          div.inline(data-hook="aws-instancetype-container")
+
+        div.col-sm-4
+
+          div.inline(data-hook="aws-instancesize-container")

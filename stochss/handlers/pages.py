@@ -317,3 +317,20 @@ class ClearUserLogsAPIHandler(APIHandler):
             os.remove(f'{path}.bak')
         open(path, "w", encoding="utf-8").close()
         self.finish()
+
+
+class UserSettingsHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS User Settings Page Handler
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Render the StochSS user settings page.
+
+        Attributes
+        ----------
+        '''
+        self.render("stochss-user-settings.html", server_path=self.get_server_path())
