@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import json
 import logging
 from tornado import web
 from notebook.base.handlers import IPythonHandler, APIHandler
@@ -265,6 +266,23 @@ class MultiplePlotsHandler(PageHandler):
         self.render("multiple-plots-page.html", server_path=self.get_server_path())
 
 
+class UserSettingsHandler(PageHandler):
+    '''
+    ################################################################################################
+    StochSS User Settings Page Handler
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Render the StochSS user settings page.
+
+        Attributes
+        ----------
+        '''
+        self.render("stochss-user-settings.html", server_path=self.get_server_path())
+
+
 class UserLogsAPIHandler(APIHandler):
     '''
     ################################################################################################
@@ -319,18 +337,37 @@ class ClearUserLogsAPIHandler(APIHandler):
         self.finish()
 
 
-class UserSettingsHandler(PageHandler):
+class LoadUserSettings(APIHandler):
     '''
     ################################################################################################
-    StochSS User Settings Page Handler
+    StochSS handler for loading user settings
     ################################################################################################
     '''
     @web.authenticated
     async def get(self):
         '''
-        Render the StochSS user settings page.
+        Load the existing user settings.
 
         Attributes
         ----------
         '''
-        self.render("stochss-user-settings.html", server_path=self.get_server_path())
+        if os.path.exists('user-settings.json'):
+            path = "user-settings.json"
+        else:
+            path = "/stochss/stochss_templates/userSettingTemplate.json"
+        with open(path, "r", encoding="utf-8") as usrs_fd:
+            settings = json.load(usrs_fd)
+
+        i_path = "/stochss/stochss_templates/instance_types.txt"
+        with open(i_path, "r", encoding="utf-8") as itype_fd:
+            instance_types = itype_fd.read().strip().split('|')
+        instances = {}
+        for instance_type in instance_types:
+            (i_type, size) = instance_type.split('.')
+            if i_type in instances:
+                instances[i_type].append(size)
+            else:
+                instances[i_type] = [size]
+
+        self.write({"settings": settings, "instances": instances})
+        self.finish()
