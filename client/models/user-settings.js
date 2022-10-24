@@ -16,10 +16,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let path = require('path');
+//support files
+let app = require('../app');
 //models
-let State = require('ampersand-state');
+let Model = require('ampersand-model');
 
-module.exports = State.extend({
+module.exports = Model.extend({
+  url: function () {
+    return path.join(app.getApiPath(), "file/user-settings");
+  },
   props: {
     awsAccessKeyID: 'string',
     awsRegion: 'string',
