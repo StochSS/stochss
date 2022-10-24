@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 // support files
+let app = require('../app');
 let tests = require('../views/tests');
 // models
 let Settings = require('../models/user-settings');
@@ -39,6 +40,7 @@ let userSettings = PageView.extend({
     app.getXHR(this.model.url(), {
       success: (err, response, body) => {
         this.model.set(body.settings);
+        this.instances = body.instances;
       }
     });
   },
