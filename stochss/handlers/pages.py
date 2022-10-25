@@ -351,8 +351,8 @@ class LoadUserSettings(APIHandler):
         Attributes
         ----------
         '''
-        if os.path.exists('user-settings.json'):
-            path = "user-settings.json"
+        if os.path.exists('.user-settings.json'):
+            path = ".user-settings.json"
         else:
             path = "/stochss/stochss_templates/userSettingTemplate.json"
         with open(path, "r", encoding="utf-8") as usrs_fd:
@@ -369,5 +369,40 @@ class LoadUserSettings(APIHandler):
             else:
                 instances[i_type] = [size]
 
-        self.write({"settings": settings, "instances": instances})
+        s_key = "set" if os.path.exists(".awsec2.env") else None
+
+        self.write({"settings": settings, "instances": instances, 'awsSecretKey': s_key})
+        self.finish()
+
+    @web.authenticated
+    async def post(self):
+        '''
+        Save the user settings.
+
+        Attributes
+        ----------
+        '''
+        data = json.loads(self.request.body.decode())
+        log.debug(f"Settings data to be saved: {data}")
+
+        def check_env_data(data):
+            if data['settings']['awsRegion'] == "":
+                return False
+            if data['settings']['awsAccessKeyID'] == "":
+                return False
+            if data['secret_key'] is None:
+                return False
+            return True
+
+        if check_env_data(data):
+            with open(".awsec2.env", "w", encoding="utf-8") as env_fd:
+                contents = "\n".join([
+                    f"AWS_DEFAULT_REGION={data['settings']['awsRegion']}",
+                    f"AWS_ACCESS_KEY_ID={data['settings']['awsAccessKeyID']}",
+                    f"AWS_SECRET_ACCESS_KEY={data['secret_key']}"
+                ])
+                env_fd.write(contents)
+
+        with open(".user-settings.json", "w", encoding="utf-8") as usrs_fd:
+            json.dump(data['settings'], usrs_fd, indent=4, sort_keys=True)
         self.finish()
