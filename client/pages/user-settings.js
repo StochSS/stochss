@@ -81,6 +81,7 @@ let userSettings = PageView.extend({
   },
   handleSetSecretKey: function (e) {
     this.secretKey = e.target.value;
+    this.model.awsSecretKey = this.secretKey ? "set" : null;
     this.toggleAWSComputeNodeSection();
   },
   renderAWSInstanceSizesView: function () {
@@ -118,7 +119,7 @@ let userSettings = PageView.extend({
   toggleAWSComputeNodeSection: function () {
     let regionSet = this.model.awsRegion !== "";
     let accessKeySet = this.model.awsAccessKeyID !== "";
-    let secretKeySet = this.secretKey !== null;
+    let secretKeySet = this.model.awsSecretKey !== null;
     let display = regionSet && accessKeySet && secretKeySet ? "block" : "none";
     $(this.queryByHook('aws-compute-node-section')).css('display', display);
   },
