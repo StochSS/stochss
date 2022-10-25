@@ -48,6 +48,7 @@ let userSettings = PageView.extend({
     app.getXHR(this.model.url(), {
       success: (err, response, body) => {
         this.model.set(body.settings);
+        this.model.modelLoaded = true;
         this.instances = body.instances;
         if(this.model.headNode === "") {
           this.awsType = "";
@@ -56,10 +57,10 @@ let userSettings = PageView.extend({
           let data = this.model.headNode.split('.')
           this.awsType = data[0];
           this.awsSize = data[1];
-          this.toggleAWSComputeNodeSection();
           this.renderAWSInstanceSizesView();
         }
         $(this.queryByHook('user-logs')).prop('checked', this.model.userLogs);
+        this.toggleAWSComputeNodeSection();
         this.renderAWSInstanceTypesView();
       }
     });
@@ -75,10 +76,17 @@ let userSettings = PageView.extend({
   },
   handleSelectInstanceSize: function (e) {
     this.awsSize = e.target.value;
-    this.model.headNode = `${this.awsType}.${this.awsSize}`;
+    if(this.awsSize === "") {
+      this.model.headNode = "";
+    }else{
+      this.model.headNode = `${this.awsType}.${this.awsSize}`;
+    }
   },
   handleSelectInstanceType: function (e) {
     this.awsType = e.target.value;
+    if(!this.model.headNode.includes(`${this.awsType}.`)) {
+      this.model.headNode = "";
+    }
     this.renderAWSInstanceSizesView();
   },
   handleSetSecretKey: function (e) {
@@ -90,6 +98,7 @@ let userSettings = PageView.extend({
     if(this.awsInstanceSizesView) {
       this.awsInstanceSizesView.remove();
     }
+    if(this.awsType === "") { return }
     let options = this.instances[this.awsType];
     this.awsInstanceSizesView = new SelectView({
       name: 'aws-instance-size',
@@ -133,7 +142,7 @@ let userSettings = PageView.extend({
   subviews: {
     awsRegionInputView: {
       hook: 'aws-region-container',
-      waitFor: 'model.awsRegion',
+      waitFor: 'model.modelLoaded',
       prepareView: function (el) {
         return new InputView({
           parent: this,
@@ -147,7 +156,7 @@ let userSettings = PageView.extend({
     },
     awsAccessKeyID: {
       hook: 'aws-accesskeyid-container',
-      waitFor: 'model.awsAccessKeyID',
+      waitFor: 'model.modelLoaded',
       prepareView: function (el) {
         return new InputView({
           parent: this,

@@ -33,7 +33,8 @@ module.exports = Model.extend({
     userLogs: 'boolean'
   },
   session: {
-    awsSecretKey: "string"
+    awsSecretKey: 'string',
+    modelLoaded: 'boolean'
   },
   applySettings: function (cb, {secretKey=null}={}) {
     let data = {
