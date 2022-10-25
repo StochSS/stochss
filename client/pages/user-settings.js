@@ -56,6 +56,7 @@ let userSettings = PageView.extend({
           let data = this.model.headNode.split('.')
           this.awsType = data[0];
           this.awsSize = data[1];
+          this.toggleAWSComputeNodeSection();
           this.renderAWSInstanceSizesView();
         }
         this.renderAWSInstanceTypesView();
@@ -131,6 +132,7 @@ let userSettings = PageView.extend({
   subviews: {
     awsRegionInputView: {
       hook: 'aws-region-container',
+      waitFor: 'model.awsRegion',
       prepareView: function (el) {
         return new InputView({
           parent: this,
@@ -144,6 +146,7 @@ let userSettings = PageView.extend({
     },
     awsAccessKeyID: {
       hook: 'aws-accesskeyid-container',
+      waitFor: 'model.awsAccessKeyID',
       prepareView: function (el) {
         return new InputView({
           parent: this,
