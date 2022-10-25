@@ -357,6 +357,8 @@ class LoadUserSettings(APIHandler):
             path = "/stochss/stochss_templates/userSettingTemplate.json"
         with open(path, "r", encoding="utf-8") as usrs_fd:
             settings = json.load(usrs_fd)
+        s_key = "set" if os.path.exists(".awsec2.env") else None
+        settings['awsSecretKey'] = s_key
 
         i_path = "/stochss/stochss_templates/instance_types.txt"
         with open(i_path, "r", encoding="utf-8") as itype_fd:
@@ -369,9 +371,7 @@ class LoadUserSettings(APIHandler):
             else:
                 instances[i_type] = [size]
 
-        s_key = "set" if os.path.exists(".awsec2.env") else None
-
-        self.write({"settings": settings, "instances": instances, 'awsSecretKey': s_key})
+        self.write({"settings": settings, "instances": instances})
         self.finish()
 
     @web.authenticated
