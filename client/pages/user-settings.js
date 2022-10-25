@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery');
 // support files
 let app = require('../app');
 let tests = require('../views/tests');
@@ -34,6 +35,7 @@ let userSettings = PageView.extend({
   template: template,
   events: {
     'change [data-hook=user-logs]' : 'toggleUserLogs',
+    'change [data-target=aws-credentials]' : 'toggleAWSComputeNodeSection',
     'change [data-hook=aws-secretaccesskey-container]' : 'handleSetSecretKey',
     'change [data-hook=aws-instancetype-container]' : 'handleSelectInstanceType',
     'change [data-hook=aws-instancesize-container]' : 'handleSelectInstanceSize',
@@ -62,7 +64,6 @@ let userSettings = PageView.extend({
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
-    console.log(this.secretKey);
   },
   handleApplyUserSettings: function () {
     let options = this.secretKey !== null ? {secretKey: this.secretKey} : {};
@@ -80,6 +81,7 @@ let userSettings = PageView.extend({
   },
   handleSetSecretKey: function (e) {
     this.secretKey = e.target.value;
+    this.toggleAWSComputeNodeSection();
   },
   renderAWSInstanceSizesView: function () {
     if(this.awsInstanceSizesView) {
@@ -112,6 +114,13 @@ let userSettings = PageView.extend({
     });
     let hook = "aws-instancetype-container";
     app.registerRenderSubview(this, this.awsInstanceTypesView, hook);
+  },
+  toggleAWSComputeNodeSection: function () {
+    let regionSet = this.model.awsRegion !== "";
+    let accessKeySet = this.model.awsAccessKeyID !== "";
+    let secretKeySet = this.secretKey !== null;
+    let display = regionSet && accessKeySet && secretKeySet ? "block" : "none";
+    $(this.queryByHook('aws-compute-node-section')).css('display', display);
   },
   toggleUserLogs: function (e) {
     this.model.userLogs = e.target.checked;

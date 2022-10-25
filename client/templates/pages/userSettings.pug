@@ -4,15 +4,9 @@ section.page
     
     div
 
-      h2 Settings
+      div.mx-1.head.align-items-baseline
 
-    div
-
-      hr
-
-      div.mx-1.row.head.align-items-baseline
-
-        h3 General
+        h2 General
 
       div.mt-3.row
 
@@ -30,11 +24,13 @@ section.page
 
     div
 
-      hr
+      div.mt-5.mx-1.head.align-items-baseline
 
-      div.mx-1.row.head.align-items-baseline
+        h2 AWS
 
-        h3 AWS Credentials
+      div.mt-3.mx-1.head.align-items-baseline
+
+        h3 Credentials
 
       div.my-3.mx-1.row.head.align-items-baseline
 
@@ -54,17 +50,17 @@ section.page
 
         div.col-sm-3
 
-          div.pl-2(data-hook="aws-region-container")
+          div.pl-2(data-hook="aws-region-container" data-target="aws-credentials")
 
         div.col-sm-4
 
-          div(data-hook="aws-accesskeyid-container")
+          div(data-hook="aws-accesskeyid-container" data-target="aws-credentials")
 
         div.col-sm-4
 
           div(data-hook="aws-secretaccesskey-container")
 
-    div
+    div.hidden(data-hook="aws-compute-node-section")
 
       hr
 
