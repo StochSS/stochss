@@ -59,6 +59,7 @@ let userSettings = PageView.extend({
           this.toggleAWSComputeNodeSection();
           this.renderAWSInstanceSizesView();
         }
+        $(this.queryByHook('user-logs')).prop('checked', this.model.userLogs);
         this.renderAWSInstanceTypesView();
       }
     });
