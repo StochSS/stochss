@@ -41,6 +41,8 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.initialConditionsEditor;
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
+    this.filterAttr = attrs.attr;
+    this.filterKey = attrs.key;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -54,9 +56,9 @@ module.exports = View.extend({
       $(this.queryByHook('edit-initial-conditions')).removeClass('active');
       $(this.queryByHook('view-initial-conditions')).addClass('active');
     }else{
-      this.renderEditInitialConditionsView();
+      this.renderEditInitialConditionsView({'key': this.filterKey, 'attr': this.filterAttr});
     }
-    this.renderViewInitialConditionsView();
+    this.renderViewInitialConditionsView({'key': this.filterKey, 'attr': this.filterAttr});
   },
   addInitialCondition: function (e) {
     var initialConditionType = e.target.textContent;
@@ -85,6 +87,13 @@ module.exports = View.extend({
       this.renderEditInitialConditionsView({'key': key, 'attr': attr});
     }
     this.renderViewInitialConditionsView({'key': key, 'attr': attr});
+  },
+  openSection: function ({editMode=true}={}) {
+    if(!$(this.queryByHook("initial-conditions")).hasClass("show")) {
+      let initCondCollapseBtn = $(this.queryByHook("initial-condition-button"));
+      initCondCollapseBtn.click();
+      initCondCollapseBtn.html('-');
+    }
   },
   renderEditInitialConditionsView: function ({key=null, attr=null}={}) {
     if(this.editInitialConditionView) {
@@ -132,6 +141,7 @@ module.exports = View.extend({
           required: false,
           name: 'filter',
           valueType: 'string',
+          disabled: this.filterKey !== null,
           placeholder: 'filter'
         });
       }
