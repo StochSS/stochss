@@ -26,7 +26,7 @@ import pickle
 import logging
 import traceback
 
-from gillespy2 import TimeSpan
+import gillespy2
 from stochss_compute.cloud.ec2 import Cluster
 from stochss_compute import RemoteSimulation
 
@@ -95,7 +95,7 @@ class EnsembleSimulation(StochSSJob):
                 end = self.settings['timespanSettings']['endSim']
                 step_size = self.settings['timespanSettings']['timeStep']
                 self.g_model.timespan(
-                    TimeSpan.arange(step_size, t=end + step_size)
+                    gillespy2.TimeSpan.arange(step_size, t=end + step_size)
                 )
 
     def __run(self, run_func, preview=False, verbose=True):
@@ -131,28 +131,31 @@ class EnsembleSimulation(StochSSJob):
         if pkl_err:
             message = "An unexpected error occured with the result object"
             trace = str(pkl_err)
+            if self.cluster is not None:
+                self.cluster.clean_up()
             raise StochSSJobResultsError(message, trace)
         return None
 
     def __run_in_aws(self, verbose=False, **kwargs):
+        # Perserve original kwargs in case of AWS failure
         aws_kwargs = copy.deepcopy(kwargs)
+        # Ensure solver is not an instantiated object
         if 'solver' in kwargs:
             aws_kwargs['solver'] = kwargs['solver'].__class__
-
         if verbose:
             log.info("Running the ensemble simulation in AWS")
+        # Get the EC2 instantce from user settings
         us_path = os.path.join(self.user_dir, ".user-settings.json")
         with open(us_path, "r", encoding="utf-8") as usrs_fd:
             instance = json.load(usrs_fd)['headNode']
-
         if instance == "":
             if verbose:
                 log.info("Failed to run in AWS. Reason Given: No instanse provided.")
             return self.__run_local(**kwargs)
-
+        # Setup the AWS environment
         env_path = os.path.join(self.user_dir, ".awsec2.env")
         dotenv.load_dotenv(dotenv_path=env_path)
-
+        # Configure the AWS cluster
         self.cluster = Cluster()
         try:
             if verbose:
@@ -163,11 +166,19 @@ class EnsembleSimulation(StochSSJob):
                 log.info(f"Failed to run in AWS. Reason Given: {str(err)}")
             self.cluster.clean_up()
             return self.__run_local(**kwargs)
-
+        # Run the simulation
         if verbose:
             log.info("--> Running the simulation.")
         simulation = RemoteSimulation(self.g_model, server=self.cluster)
-        return simulation.run(**aws_kwargs)
+        aws_results = simulation.run(**aws_kwargs)
+        # Generate the GillesPy2 results from the AWS results
+        results_list = []
+        for aws_traj in aws_results.data:
+            traj = gillespy2.Trajectory(
+                data=aws_traj, model=self.g_model, solver_name=kwargs['solver'].name, rc=aws_results[0].rc
+            )
+            results_list.append(traj)
+        return gillespy2.Results(results_list)
 
     def __run_local(self, verbose=False, **kwargs):
         if verbose:
