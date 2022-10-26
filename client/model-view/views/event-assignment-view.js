@@ -29,7 +29,7 @@ let viewTemplate = require('../templates/viewEventAssignment.pug');
 
 module.exports = View.extend({
   events: {
-    'click [data-hook=remove]' : 'removeAssignment',
+    'click [data-hook=remove-assignment]' : 'removeAssignment',
     'change [data-hook=event-assignment-variable]' : 'selectAssignmentVariable',
     'change [data-hook=event-assignment-expression]' : 'updateViewer'
   },

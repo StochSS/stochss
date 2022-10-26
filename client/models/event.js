@@ -39,7 +39,7 @@ module.exports = State.extend({
   session: {
     selected: {
       type: 'boolean',
-      default: true,
+      default: false,
     },
     advanced_error: 'boolean'
   },

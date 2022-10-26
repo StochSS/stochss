@@ -22,17 +22,15 @@ let app = require('../../app');
 let Tooltips = require("../../tooltips");
 //views
 let View = require('ampersand-view');
+let EventView = require('./event-view');
 let InputView = require('../../views/input');
-let EventDetails = require('./event-details');
-let EventListings = require('./event-listing');
-let ViewSwitcher = require('ampersand-view-switcher');
 //templates
 let template = require('../templates/eventsView.pug');
 
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=add-event]' : 'addEvent',
+    'click [data-hook=add-event]' : 'handleAddEvent',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'change [data-hook=event-filter]' : 'filterEvents'
   },
@@ -42,26 +40,6 @@ module.exports = View.extend({
     this.tooltips = Tooltips.eventsEditor;
     this.filterAttr = attrs.attr;
     this.filterKey = attrs.key;
-    if(!this.readOnly) {
-      this.collection.on("select", function (event) {
-        this.setSelectedEvent(event);
-        this.setDetailsView(event);
-      }, this);
-      this.collection.on("remove", function (event) {
-        // Select the last event by default
-        // But only if there are other events other than the one we're removing
-        if (event.detailsView){
-          event.detailsView.remove();
-        }
-        this.collection.removeEvent(event);
-        if (this.collection.length) {
-          let selected = this.collection.at(this.collection.length-1);
-          this.collection.trigger("select", selected);
-        }
-      }, this);
-      this.collection.parent.species.on('add remove', this.toggleAddEventButton, this);
-      this.collection.parent.parameters.on('add remove', this.toggleAddEventButton, this);
-    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -75,24 +53,10 @@ module.exports = View.extend({
       $(this.queryByHook('edit-events')).removeClass('active');
       $(this.queryByHook('view-events')).addClass('active');
     }else {
-      this.renderEditEventListingsView({'key': this.filterKey, 'attr': this.filterAttr});
-      this.detailsContainer = this.queryByHook('event-details-container');
-      this.detailsViewSwitcher = new ViewSwitcher({
-        el: this.detailsContainer
-      });
-      if(this.collection.length) {
-        this.setSelectedEvent(this.collection.at(0));
-        this.collection.trigger("select", this.selectedEvent);
-      }
+      this.renderEditEventView({'key': this.filterKey, 'attr': this.filterAttr});
       this.toggleAddEventButton();
     }
-    this.renderViewEventListingView({'key': this.filterKey, 'attr': this.filterAttr});
-  },
-  addEvent: function () {
-    let event = this.collection.addEvent();
-    event.detailsView = this.newDetailsView(event);
-    this.collection.trigger("select", event);
-    app.tooltipSetup();
+    this.renderViewEventView({'key': this.filterKey, 'attr': this.filterAttr});
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -106,14 +70,20 @@ module.exports = View.extend({
       key = attrKey[1];
     }
     if(!this.readOnly) {
-      this.renderEditEventListingsView({'key': key, 'attr': attr});
+      this.renderEditEventView({'key': key, 'attr': attr});
     }
-    this.renderViewEventListingView({'key': key, 'attr': attr});
+    this.renderViewEventView({'key': key, 'attr': attr});
   },
-  newDetailsView: function (event) {
-    let detailsView = new EventDetails({ model: event });
-    detailsView.parent = this;
-    return detailsView;
+  handleAddEvent: function () {
+    let event = this.collection.addEvent();
+    app.tooltipSetup();
+  },
+  openAdvancedSection: function () {
+    if(this.model.advanced_error && !$(this.queryByHook("advanced-event-section")).hasClass('show')) {
+      let advCollapseBtn = $(this.queryByHook("advanced-event-button"));
+      advCollapseBtn.click();
+      advCollapseBtn.html('-');
+    }
   },
   openSection: function (error) {
     if(!$(this.queryByHook("events")).hasClass("show")) {
@@ -125,29 +95,30 @@ module.exports = View.extend({
       app.switchToEditTab(this, "events");
     }
     if(error) {
-      var event = this.collection.filter((e) => {
-        return e.compID === error.id;
+      let eventView = this.editEventView.views.filter((eventView) => {
+        return eventView.model.compID === error.id;
       })[0];
-      this.collection.trigger("select", event);
-      event.detailsView.openAdvancedSection();
+      eventView.model.selected = true;
+      eventView.openEventDetails();
+      eventView.openAdvancedSection();
     }
   },
-  renderEditEventListingsView: function ({key=null, attr=null}={}) {
-    if(this.editEventListingsView){
-      this.editEventListingsView.remove();
+  renderEditEventView: function ({key=null, attr=null}={}) {
+    if(this.editEventsView){
+      this.editEventsView.remove();
     }
     let options = {filter: (model) => { return model.contains(attr, key); }}
-    this.editEventListingsView = this.renderCollection(
+    this.editEventsView = this.renderCollection(
       this.collection,
-      EventListings,
-      this.queryByHook('edit-event-listing-container'),
+      EventView,
+      this.queryByHook('edit-event-container'),
       options
     );
     app.tooltipSetup();
   },
-  renderViewEventListingView: function ({key=null, attr=null}={}) {
-    if(this.viewEventListingsView) {
-      this.viewEventListingsView.remove();
+  renderViewEventView: function ({key=null, attr=null}={}) {
+    if(this.viewEventsView) {
+      this.viewEventsView.remove();
     }
     this.containsMdlWithAnn = this.collection.filter(function (model) {return model.annotation}).length > 0;
     if(!this.containsMdlWithAnn) {
@@ -159,29 +130,15 @@ module.exports = View.extend({
       viewOptions: {parent: this, viewMode: true},
       filter: (model) => { return model.contains(attr, key); }
     };
-    this.viewEventListingsView = this.renderCollection(
+    this.viewEventsView = this.renderCollection(
       this.collection,
-      EventListings,
-      this.queryByHook('view-event-listing-container'),
+      EventView,
+      this.queryByHook('view-event-container'),
       options
     );
     app.tooltipSetup();
   },
-  setDetailsView: function (event) {
-    event.detailsView = event.detailsView || this.newDetailsView(event);
-    this.detailsViewSwitcher.set(event.detailsView);
-  },
-  setSelectedEvent: function (event) {
-    this.collection.each(function (m) { m.selected = false; });
-    event.selected = true;
-    this.selectedEvent = event;
-  },
   toggleAddEventButton: function () {
-    this.collection.map(function (event) {
-      if(event.detailsView && event.selected){
-        event.detailsView.renderEventAssignments();
-      }
-    });
     let numSpecies = this.collection.parent.species.length;
     let numParameters = this.collection.parent.parameters.length;
     let disabled = numSpecies <= 0 && numParameters <= 0;
