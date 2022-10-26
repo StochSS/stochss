@@ -40,6 +40,8 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.eventsEditor;
+    this.filterAttr = attrs.attr;
+    this.filterKey = attrs.key;
     if(!this.readOnly) {
       this.collection.on("select", function (event) {
         this.setSelectedEvent(event);
@@ -73,7 +75,7 @@ module.exports = View.extend({
       $(this.queryByHook('edit-events')).removeClass('active');
       $(this.queryByHook('view-events')).addClass('active');
     }else {
-      this.renderEditEventListingsView();
+      this.renderEditEventListingsView({'key': this.filterKey, 'attr': this.filterAttr});
       this.detailsContainer = this.queryByHook('event-details-container');
       this.detailsViewSwitcher = new ViewSwitcher({
         el: this.detailsContainer
@@ -84,7 +86,7 @@ module.exports = View.extend({
       }
       this.toggleAddEventButton();
     }
-    this.renderViewEventListingView();
+    this.renderViewEventListingView({'key': this.filterKey, 'attr': this.filterAttr});
   },
   addEvent: function () {
     let event = this.collection.addEvent();
@@ -119,12 +121,16 @@ module.exports = View.extend({
       evtCollapseBtn.click();
       evtCollapseBtn.html('-');
     }
-    app.switchToEditTab(this, "events");
-    var event = this.collection.filter((e) => {
-      return e.compID === error.id;
-    })[0];
-    this.collection.trigger("select", event);
-    event.detailsView.openAdvancedSection();
+    if(!this.readOnly) {
+      app.switchToEditTab(this, "events");
+    }
+    if(error) {
+      var event = this.collection.filter((e) => {
+        return e.compID === error.id;
+      })[0];
+      this.collection.trigger("select", event);
+      event.detailsView.openAdvancedSection();
+    }
   },
   renderEditEventListingsView: function ({key=null, attr=null}={}) {
     if(this.editEventListingsView){
@@ -192,6 +198,7 @@ module.exports = View.extend({
           required: false,
           name: 'filter',
           valueType: 'string',
+          disabled: this.filterKey !== null,
           placeholder: 'filter'
         });
       }

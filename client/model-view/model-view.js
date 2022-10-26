@@ -43,6 +43,7 @@ let template = require('./modelView.pug');
 module.exports = View.extend({
   template: template,
   events: {
+    'change [data-hook=model-filter]' : 'filterModel',
     'change [data-hook=all-continuous]' : 'setDefaultMode',
     'change [data-hook=all-discrete]' : 'setDefaultMode',
     'change [data-hook=advanced]' : 'setDefaultMode',
@@ -134,9 +135,25 @@ module.exports = View.extend({
       this.setInitialDefaultMode(modal, "dynamic");
     });
   },
+  filterModel: function (e) {
+    var key = e.target.value === "" ? null : e.target.value;
+    var attr = null;
+    if(key && key.includes(':')) {
+      let attrKey = key.split(':');
+      attr = attrKey[0].toLowerCase().replace(/ /g, '');
+      key = attrKey[1];
+    }
+    this.renderSpeciesView({'key': key, 'attr': attr});
+    this.renderInitialConditionsView({'key': key, 'attr': attr});
+    this.renderParametersView({'key': key, 'attr': attr});
+    this.renderReactionsView({'key': key, 'attr': attr});
+    this.renderEventsView({'key': key, 'attr': attr});
+    this.renderRulesView({'key': key, 'attr': attr});
+    this.renderBoundaryConditionsView({'key': key, 'attr': attr});
+    this.renderSbmlComponentView({'key': key, 'attr': attr});
+  },
   openAdvancedSection: function () {
     if(!$(this.queryByHook("me-advanced-section")).hasClass("show")) {
-      console.log("opening advanced section")
       let advCollapseBtn = $(this.queryByHook("collapse-mv-advanced-section"));
       advCollapseBtn.click();
       advCollapseBtn.html('-');
@@ -166,17 +183,23 @@ module.exports = View.extend({
       }
     }
   },
-  renderBoundaryConditionsView: function () {
+  renderBoundaryConditionsView: function ({key=null, attr=null}={}) {
     if(!this.model.is_spatial) { return };
+    let opened = $(this.queryByHook("boundary-conditions-container")).hasClass("show")
     if(this.boundaryConditionsView) {
       this.boundaryConditionsView.remove();
     }
     this.boundaryConditionsView = new BoundaryConditionsView({
       collection: this.model.boundaryConditions,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "boundary-conditions-view-container";
     app.registerRenderSubview(this, this.boundaryConditionsView, hook);
+    if(opened) {
+      this.boundaryConditionsView.openSection();
+    }
   },
   renderDomainViewer: function (domainPath=null) {
     if(!this.model.is_spatial) { return };
@@ -192,77 +215,113 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.domainViewer, 'domain-viewer-container');
   },
-  renderEventsView: function () {
+  renderEventsView: function ({key=null, attr=null}={}) {
     if(this.model.is_spatial) { return };
+    let opened = $(this.queryByHook("events")).hasClass("show");
     if(this.eventsView) {
       this.eventsView.remove();
     }
     this.eventsView = new EventsView({
       collection: this.model.eventsCollection,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "events-view-container";
     app.registerRenderSubview(this, this.eventsView, hook);
+    if(opened) {
+      this.eventsView.openSection();
+    }
   },
-  renderInitialConditionsView: function () {
+  renderInitialConditionsView: function ({key=null, attr=null}={}) {
     if(!this.model.is_spatial) { return };
+    let opened = $(this.queryByHook("initial-conditions")).hasClass("show")
     if(this.initialConditionsView) {
       this.initialConditionsView.remove();
     }
     this.initialConditionsView = new InitialConditionsView({
       collection: this.model.initialConditions,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "initial-conditions-view-container";
     app.registerRenderSubview(this, this.initialConditionsView, hook);
+    if(opened) {
+      this.initialConditionsView.openSection();
+    }
   },
-  renderParametersView: function () {
+  renderParametersView: function ({key=null, attr=null}={}) {
+    let opened = $(this.queryByHook("parameters-list-container")).hasClass("show");
     if(this.parametersView) {
       this.parametersView.remove();
     }
     this.parametersView = new ParametersView({
       collection: this.model.parameters,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "parameters-view-container";
     app.registerRenderSubview(this, this.parametersView, hook);
+    if(opened) {
+      this.parametersView.openSection();
+    }
   },
-  renderReactionsView: function () {
+  renderReactionsView: function ({key=null, attr=null}={}) {
+    let opened = $(this.queryByHook("reactions-list-container")).hasClass("show");
     if(this.reactionsView) {
       this.reactionsView.remove();
     }
     this.reactionsView = new ReactionsView({
       collection: this.model.reactions,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "reactions-view-container";
     app.registerRenderSubview(this, this.reactionsView, hook);
+    if(opened) {
+      this.reactionsView.openSection();
+    }
   },
-  renderRulesView: function () {
+  renderRulesView: function ({key=null, attr=null}={}) {
     if(this.model.is_spatial) { return };
+    let opened = $(this.queryByHook("rules-list-container")).hasClass("show");
     if(this.rulesView) {
       this.rulesView.remove();
     }
     this.rulesView = new RulesView({
       collection: this.model.rules,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "rules-view-container";
     app.registerRenderSubview(this, this.rulesView, hook);
+    if(opened) {
+      this.rulesView.openSection();
+    }
   },
-  renderSbmlComponentView: function () {
+  renderSbmlComponentView: function ({key=null, attr=null}={}) {
     if(this.model.is_spatial || !this.model.functionDefinitions.length) { return };
+    let opened = $(this.queryByHook("function-definitions-list-container")).hasClass("show")
     if(this.sbmlComponentView) {
       this.sbmlComponentView.remove();
     }
     this.sbmlComponentView = new SBMLComponentsView({
       functionDefinitions: this.model.functionDefinitions,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "sbml-components-view-container";
     app.registerRenderSubview(this, this.sbmlComponentView, hook);
+    if(opened) {
+      this.sbmlComponentView.openSection();
+    }
   },
-  renderSpeciesView: function () {
+  renderSpeciesView: function ({key=null, attr=null}={}) {
     if(this.speciesView) {
       this.speciesView.remove();
     }
@@ -270,7 +329,9 @@ module.exports = View.extend({
       collection: this.model.species,
       spatial: this.model.is_spatial,
       defaultMode: this.model.defaultMode,
-      readOnly: this.readOnly
+      readOnly: this.readOnly,
+      attr: attr,
+      key: key
     });
     let hook = "species-view-container";
     app.registerRenderSubview(this, this.speciesView, hook);
@@ -410,5 +471,18 @@ module.exports = View.extend({
   updateValid: function () {},
   updateVolumeViewer: function (e) {
     $(this.queryByHook("view-volume")).html("Volume:  " + this.model.volume);
+  },
+  subviews: {
+    filter: {
+      hook: 'model-filter',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: false,
+          name: 'filter',
+          valueType: 'string'
+        });
+      }
+    }
   }
 });
