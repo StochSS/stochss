@@ -29,6 +29,7 @@ let View = require('ampersand-view');
 let TypesView = require('./views/types-view');
 let LimitsView = require('./views/limits-view');
 let QuickviewType = require('./views/quickview-type');
+let GeometriesView = require('./views/geometries-view');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
@@ -59,6 +60,7 @@ module.exports = View.extend({
     this.renderPropertiesView();
     this.renderLimitsView();
     this.renderTypesView();
+    this.renderGeometriesView();
     if(this.readOnly) {
       $(this.queryByHook('domain-particles-editor')).css('display', 'none');
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
@@ -278,6 +280,17 @@ module.exports = View.extend({
     $(this.queryByHook("edit-select-message")).css('display', disable ? 'block' : 'none');
     $(this.queryByHook("save-selected-particle")).prop('disabled', disable);
     $(this.queryByHook("remove-selected-particle")).prop('disabled', disable);
+  },
+  renderGeometriesView: function () {
+    if(this.geometriesView) {
+      this.geometriesView.reomve();
+    }
+    this.geometriesView = new GeometriesView({
+      collection: this.model.geometries,
+      readOnly: this.readOnly
+    });
+    let hook = "domain-geometries-container";
+    app.registerRenderSubview(this, this.geometriesView, hook);
   },
   renderLimitsView: function () {
     if(this.limitsView) {

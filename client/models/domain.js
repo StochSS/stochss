@@ -17,10 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //models
-var State = require('ampersand-state');
+let State = require('ampersand-state');
 //collections
 let Types = require('./domain-types');
 let Particles = require('./particles');
+let Geometries = require('./geometries');
 
 module.exports = State.extend({
   props: {
@@ -38,7 +39,8 @@ module.exports = State.extend({
   },
   collections: {
     types: Types,
-    particles: Particles
+    particles: Particles,
+    geometries: Geometries
   },
   session: {
     def_particle_id: 'number',
