@@ -1,0 +1,161 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-4
+
+      div.row
+
+        div.col-sm-6
+
+          div.pl-2=this.model.name
+
+        div.col-sm-6
+
+          div.pl-2=this.model.type
+
+      div.mt-3
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          h6.pl-2 <b>Center</b>:
+
+        div.mt-3
+
+          div.pl-2=`(${this.model.x}, ${this.model.y}, ${this.model.z})`
+
+    div.col-sm-8
+
+      div.hidden(data-hook="cartesian-lattice-props")
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+          
+          div.col-sm-3
+
+            h6.inline <b>X-Axis</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Y-Axis</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Z-Axis</b>
+
+        div.mt-3.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Minimum</b>
+
+          div.col-sm-3
+
+            div=this.model.xmin
+
+          div.col-sm-3
+
+            div=this.model.ymin
+
+          div.col-sm-3
+
+            div=this.model.zmin
+
+        hr
+
+        div.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Maximum</b>
+
+          div.col-sm-3
+
+            div=this.model.xmax
+
+          div.col-sm-3
+
+            div=this.model.ymax
+
+          div.col-sm-3
+
+            div=this.model.zmax
+
+        hr
+
+        div.mx-1.row
+
+          div.col-sm-3
+
+            h6.inline <b>Spacing</b>
+
+          div.col-sm-3
+
+            div=this.model.deltax
+
+          div.col-sm-3
+
+            div=this.model.deltay
+
+          div.col-sm-3
+
+            div=this.model.deltaz
+
+
+      div.hidden(data-hook="circular-lattice-props")
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+
+            h6.inline <b>Radius</b>
+          
+          div.col-sm-3.hidden(data-hook="cylinder-length-header")
+
+            h6.inline <b>length</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Surface Spacing</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Radial Spacing</b>
+
+        div.mt-3.mx-1.row
+
+          div.col-sm-3
+
+            div=this.model.radius
+
+          div.col-sm-3.hidden(data-hook="cylinder-length-feild")
+
+            div=this.model.length
+
+          div.col-sm-3
+
+            div=this.model.deltas
+
+          div.col-sm-3
+
+            div=this.model.deltar
+
+      div.hidden(data-hook="file-lattice-props")
+
+        div
+
+          h6.mr-2.inline <b>Filename</b>:
+
+          div.inline=`'${this.model.filename}'`
+
+        div.hidden(data-hook="type-descriptions-prop")
+
+          h6.mr-2.inline <b>Type Descriptions</b>:
+
+          div.inline=`'${this.model.filename}'`
