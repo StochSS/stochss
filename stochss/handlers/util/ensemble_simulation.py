@@ -138,8 +138,11 @@ class EnsembleSimulation(StochSSJob):
         if verbose:
             log.info("Running the ensemble simulation in AWS")
 
-        settings = self.load_user_settings(path='.user-settings.json')
+        settings = self.load_user_settings(
+            path=os.path.join(self.user_dir, '.user-settings.json')
+        )
         instance = settings['headNode']
+        status = settings['awsHeadNodeStatus']
         if instance == "":
             if verbose:
                 log.info("Failed to run in AWS. Reason Given: No instanse provided.")
