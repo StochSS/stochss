@@ -33,6 +33,7 @@ module.exports = Model.extend({
     userLogs: 'boolean'
   },
   session: {
+    awsHeadNodeStatus: 'string',
     awsSecretKey: 'string',
     modelLoaded: 'boolean'
   },

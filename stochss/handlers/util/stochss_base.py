@@ -20,10 +20,13 @@ import os
 import json
 import time
 import shutil
+import dotenv
 import datetime
 import traceback
 
 import requests
+
+from stochss_compute.cloud.ec2 import Cluster
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
                             FileNotJSONFormatError
@@ -218,6 +221,17 @@ class StochSSBase():
         with open(path, "w", encoding="utf-8") as names_file:
             json.dump(names, names_file)
 
+
+    def get_aws_cluster(self):
+        '''
+        Get the AWS cluster.
+        '''
+        # Setup the AWS environment
+        env_path = os.path.join(self.user_dir, ".awsec2.env")
+        dotenv.load_dotenv(dotenv_path=env_path)
+        # Configure the AWS cluster
+        cluster = Cluster()
+        return cluster
 
     @classmethod
     def get_new_path(cls, dst_path):
@@ -462,6 +476,23 @@ class StochSSBase():
             json.dump(exm_data, data_file, sort_keys=True, indent=4)
 
         return self.__build_example_html(exm_data, home)
+
+    def load_user_settings(self, path=None):
+        if path is None and os.path.exists(self.path):
+            path = self.path
+        elif path is None or not os.path.exists(path):
+            path = "/stochss/stochss_templates/userSettingTemplate.json"
+        with open(path, "r", encoding="utf-8") as usrs_fd:
+            settings = json.load(usrs_fd)
+        settings['awsHeadNodeStatus'] = "terminated"
+        if os.path.exists(".awsec2.env"):
+            settings['awsSecretKey'] = "set"
+            cluster = self.get_aws_cluster()
+            if cluster._server is not None:
+                settings['awsHeadNodeStatus'] = cluster._server.state
+        else:
+            settings['awsSecretKey'] = None
+        return settings
 
     def log(self, level, message):
         '''

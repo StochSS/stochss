@@ -70,24 +70,42 @@ section.page
 
       div.my-3.mx-1.row.head.align-items-baseline
 
-        div.col-sm-4
+        div.col-sm-3
 
           h6 <b>Type</b>
 
-        div.col-sm-4
+        div.col-sm-3
 
           h6 <b>Size</b>
 
+        div.col-sm-2
+
+          h6 <b>Status</b>
+
       div.row.my-2
 
-        div.col-sm-4
+        div.col-sm-3
 
-          div.inline(data-hook="aws-instancetype-container")
+          div(data-hook="aws-instancetype-container")
 
-        div.col-sm-4
+        div.col-sm-3
 
-          div.inline(data-hook="aws-instancesize-container")
+          div(data-hook="aws-instancesize-container")
 
-    div
+        div.col-sm-2
 
-      button.btn.btn-primary.box-shadow(data-hook="apply-user-settings" style="float: right;") Apply
+          div(data-hook="aws-headnode-status")
+
+        div.col-sm-2
+
+          button.btn.btn-outline-secondary.box-shadow(data-hook="launch-aws-cluster") Launch
+
+        div.col-sm-2
+
+          button.btn.btn-outline-secondary.box-shadow(data-hook="terminate-aws-cluster") Terminate
+
+    div(style="float: right;")
+
+      button.btn.btn-primary.box-shadow(data-hook="apply-user-settings") Apply
+
+      button.btn.btn-primary.box-shadow(data-hook="refresh-user-settings") Refresh

@@ -78,14 +78,18 @@ let userSettings = PageView.extend({
     this.awsSize = e.target.value;
     if(this.awsSize === "") {
       this.model.headNode = "";
+      $(this.queryByHook('aws-headnode-status')).text("unknown");
     }else{
       this.model.headNode = `${this.awsType}.${this.awsSize}`;
+      $(this.queryByHook('aws-headnode-status')).text(this.model.awsHeadNodeStatus);
     }
   },
   handleSelectInstanceType: function (e) {
     this.awsType = e.target.value;
     if(!this.model.headNode.includes(`${this.awsType}.`)) {
+      this.awsSize = "";
       this.model.headNode = "";
+      $(this.queryByHook('aws-headnode-status')).text("unknown");
     }
     this.renderAWSInstanceSizesView();
   },
@@ -133,6 +137,10 @@ let userSettings = PageView.extend({
     let secretKeySet = this.model.awsSecretKey !== null;
     let display = regionSet && accessKeySet && secretKeySet ? "block" : "none";
     $(this.queryByHook('aws-compute-node-section')).css('display', display);
+    if(display === "block") {
+      let awsStatus = this.model.headNode === "" ? "unknown" : this.model.awsHeadNodeStatus;
+      $(this.queryByHook('aws-headnode-status')).text(awsStatus);
+    }
   },
   toggleUserLogs: function (e) {
     this.model.userLogs = e.target.checked;

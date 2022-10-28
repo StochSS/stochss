@@ -26,6 +26,8 @@ from notebook.base.handlers import IPythonHandler, APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
+from .util import StochSSBase
+
 log = logging.getLogger('stochss')
 
 # pylint: disable=abstract-method
@@ -351,14 +353,8 @@ class LoadUserSettings(APIHandler):
         Attributes
         ----------
         '''
-        if os.path.exists('.user-settings.json'):
-            path = ".user-settings.json"
-        else:
-            path = "/stochss/stochss_templates/userSettingTemplate.json"
-        with open(path, "r", encoding="utf-8") as usrs_fd:
-            settings = json.load(usrs_fd)
-        s_key = "set" if os.path.exists(".awsec2.env") else None
-        settings['awsSecretKey'] = s_key
+        file = StochSSBase(path='.user-settings.json')
+        settings = file.load_user_settings()
 
         i_path = "/stochss/stochss_templates/instance_types.txt"
         with open(i_path, "r", encoding="utf-8") as itype_fd:
