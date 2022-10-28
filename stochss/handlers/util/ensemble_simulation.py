@@ -52,7 +52,6 @@ class EnsembleSimulation(StochSSJob):
             Path to the ensemble simulation job
         '''
         super().__init__(path=path)
-        self.cluster = None
         if not preview:
             try:
                 self.settings = self.load_settings()
@@ -129,8 +128,6 @@ class EnsembleSimulation(StochSSJob):
         if pkl_err:
             message = "An unexpected error occured with the result object"
             trace = str(pkl_err)
-            if self.cluster is not None:
-                self.cluster.clean_up()
             raise StochSSJobResultsError(message, trace)
         return None
 
@@ -152,20 +149,18 @@ class EnsembleSimulation(StochSSJob):
                 log.info("Failed to run in AWS. Reason Given: Instanse must be running.")
             return self.__run_local(**kwargs)
 
-        self.cluster = self.get_aws_cluster()
         try:
             if verbose:
-                log.info(f"--> Configuring the {instance} instance.")
-            self.cluster.launch_single_node_instance(instance)
+                log.info(f"--> Connecting to the {instance} instance.")
+            cluster = self.get_aws_cluster()
         except Exception as err:
             if verbose:
                 log.info(f"Failed to run in AWS. Reason Given: {str(err)}")
-            self.cluster.clean_up()
             return self.__run_local(**kwargs)
         # Run the simulation
         if verbose:
             log.info("--> Running the simulation.")
-        simulation = RemoteSimulation(self.g_model, server=self.cluster)
+        simulation = RemoteSimulation(self.g_model, server=cluster)
         aws_results = simulation.run(**aws_kwargs)
         return aws_results.get_gillespy2_results()
 
@@ -188,7 +183,5 @@ class EnsembleSimulation(StochSSJob):
         awsenv_path = os.path.join(self.user_dir, ".awsec2.env")
         if os.path.exists(awsenv_path):
             results = self.__run(self.__run_in_aws, preview=preview, verbose=verbose)
-            if self.cluster is not None:
-                self.cluster.clean_up()
             return results
         return self.__run(self.__run_local, preview=preview, verbose=verbose)
