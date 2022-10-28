@@ -39,7 +39,8 @@ let userSettings = PageView.extend({
     'change [data-hook=aws-secretaccesskey-container]' : 'handleSetSecretKey',
     'change [data-hook=aws-instancetype-container]' : 'handleSelectInstanceType',
     'change [data-hook=aws-instancesize-container]' : 'handleSelectInstanceSize',
-    'click [data-hook=apply-user-settings]' : 'handleApplyUserSettings'
+    'click [data-hook=apply-user-settings]' : 'handleApplyUserSettings',
+    'click [data-hook=refresh-user-settings]' : 'refresh'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
@@ -70,9 +71,7 @@ let userSettings = PageView.extend({
   },
   handleApplyUserSettings: function () {
     let options = this.secretKey !== null ? {secretKey: this.secretKey} : {};
-    this.model.applySettings(() => {
-      location.reload();
-    }, options);
+    this.model.applySettings(this.refresh, options);
   },
   handleSelectInstanceSize: function (e) {
     this.awsSize = e.target.value;
@@ -97,6 +96,9 @@ let userSettings = PageView.extend({
     this.secretKey = e.target.value;
     this.model.awsSecretKey = this.secretKey ? "set" : null;
     this.toggleAWSComputeNodeSection();
+  },
+  refresh: function () {
+    location.reload();
   },
   renderAWSInstanceSizesView: function () {
     if(this.awsInstanceSizesView) {
