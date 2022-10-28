@@ -171,14 +171,7 @@ class EnsembleSimulation(StochSSJob):
             log.info("--> Running the simulation.")
         simulation = RemoteSimulation(self.g_model, server=self.cluster)
         aws_results = simulation.run(**aws_kwargs)
-        # Generate the GillesPy2 results from the AWS results
-        results_list = []
-        for aws_traj in aws_results.data:
-            traj = gillespy2.Trajectory(
-                data=aws_traj, model=self.g_model, solver_name=kwargs['solver'].name, rc=aws_results[0].rc
-            )
-            results_list.append(traj)
-        return gillespy2.Results(results_list)
+        return aws_results.get_gillespy2_results()
 
     def __run_local(self, verbose=False, **kwargs):
         if verbose:
