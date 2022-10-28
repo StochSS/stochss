@@ -21,13 +21,11 @@ import os
 import copy
 import json
 import numpy
-import dotenv
 import pickle
 import logging
 import traceback
 
 import gillespy2
-from stochss_compute.cloud.ec2 import Cluster
 from stochss_compute import RemoteSimulation
 
 from .stochss_job import StochSSJob
@@ -137,26 +135,24 @@ class EnsembleSimulation(StochSSJob):
         return None
 
     def __run_in_aws(self, verbose=False, **kwargs):
-        # Perserve original kwargs in case of AWS failure
         aws_kwargs = copy.deepcopy(kwargs)
-        # Ensure solver is not an instantiated object
         if 'solver' in kwargs:
             aws_kwargs['solver'] = kwargs['solver'].__class__
         if verbose:
             log.info("Running the ensemble simulation in AWS")
-        # Get the EC2 instantce from user settings
-        us_path = os.path.join(self.user_dir, ".user-settings.json")
-        with open(us_path, "r", encoding="utf-8") as usrs_fd:
-            instance = json.load(usrs_fd)['headNode']
+
+        settings = self.load_user_settings(path='.user-settings.json')
+        instance = settings['headNode']
         if instance == "":
             if verbose:
                 log.info("Failed to run in AWS. Reason Given: No instanse provided.")
             return self.__run_local(**kwargs)
-        # Setup the AWS environment
-        env_path = os.path.join(self.user_dir, ".awsec2.env")
-        dotenv.load_dotenv(dotenv_path=env_path)
-        # Configure the AWS cluster
-        self.cluster = Cluster()
+        if status != "running":
+            if verbose:
+                log.info("Failed to run in AWS. Reason Given: Instanse must be running.")
+            return self.__run_local(**kwargs)
+
+        self.cluster = self.get_aws_cluster()
         try:
             if verbose:
                 log.info(f"--> Configuring the {instance} instance.")

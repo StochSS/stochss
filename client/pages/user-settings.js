@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 let $ = require('jquery');
+let path = require('path');
 // support files
 let app = require('../app');
 let tests = require('../views/tests');
@@ -39,11 +40,15 @@ let userSettings = PageView.extend({
     'change [data-hook=aws-secretaccesskey-container]' : 'handleSetSecretKey',
     'change [data-hook=aws-instancetype-container]' : 'handleSelectInstanceType',
     'change [data-hook=aws-instancesize-container]' : 'handleSelectInstanceSize',
+    'click [data-hook=launch-aws-cluster]' : 'handleLaunchAWSCluster',
+    'click [data-hook=terminate-aws-cluster]' : 'handleTerminateAWSCluster',
     'click [data-hook=apply-user-settings]' : 'handleApplyUserSettings',
     'click [data-hook=refresh-user-settings]' : 'refresh'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
+    let urlParams = new URLSearchParams(window.location.search);
+    this.path = urlParams.has('path') ? urlParams.get('path') : null;
     this.model = new Settings();
     this.secretKey = null;
     app.getXHR(this.model.url(), {
@@ -73,14 +78,27 @@ let userSettings = PageView.extend({
     let options = this.secretKey !== null ? {secretKey: this.secretKey} : {};
     this.model.applySettings(this.refresh, options);
   },
+  handleLaunchAWSCluster: function () {
+    this.model.awsHeadNodeStatus = "launching";
+    $(this.queryByHook('aws-headnode-status')).text(this.model.awsHeadNodeStatus);
+    this.renderAWSInstanceTypesView();
+    this.renderAWSInstanceSizesView();
+    $(this.queryByHook('launch-aws-cluster')).prop('disabled', true);
+    let endpoint = path.join(app.getApiPath(), 'aws/launch-cluster');
+    app.getXHR(endpoint, {
+      success: (err, response, body) => { this.refresh(); }
+    });
+  },
   handleSelectInstanceSize: function (e) {
     this.awsSize = e.target.value;
     if(this.awsSize === "") {
       this.model.headNode = "";
       $(this.queryByHook('aws-headnode-status')).text("unknown");
+      $(this.queryByHook('launch-aws-cluster')).prop('disabled', true);
     }else{
       this.model.headNode = `${this.awsType}.${this.awsSize}`;
       $(this.queryByHook('aws-headnode-status')).text(this.model.awsHeadNodeStatus);
+      $(this.queryByHook('launch-aws-cluster')).prop('disabled', false);
     }
   },
   handleSelectInstanceType: function (e) {
@@ -89,6 +107,7 @@ let userSettings = PageView.extend({
       this.awsSize = "";
       this.model.headNode = "";
       $(this.queryByHook('aws-headnode-status')).text("unknown");
+      $(this.queryByHook('launch-aws-cluster')).prop('disabled', true);
     }
     this.renderAWSInstanceSizesView();
   },
@@ -97,8 +116,30 @@ let userSettings = PageView.extend({
     this.model.awsSecretKey = this.secretKey ? "set" : null;
     this.toggleAWSComputeNodeSection();
   },
+  handleTerminateAWSCluster: function () {
+    this.model.awsHeadNodeStatus = "terminating";
+    $(this.queryByHook('aws-headnode-status')).text(this.model.awsHeadNodeStatus);
+    $(this.queryByHook('terminate-aws-cluster')).prop('disabled', true);
+    let endpoint = path.join(app.getApiPath(), 'aws/terminate-cluster');
+    app.getXHR(endpoint, {
+      success: (err, response, body) => { this.refresh(); }
+    });
+  },
   refresh: function () {
-    location.reload();
+    app.getXHR(this.model.url(), {
+      success: (err, response, body) => {
+        this.model.awsHeadNodeStatus = body.settings.awsHeadNodeStatus;
+        this.renderAWSInstanceTypesView();
+        this.renderAWSInstanceSizesView();
+        $(this.queryByHook('aws-headnode-status')).text(this.model.awsHeadNodeStatus);
+        $(this.queryByHook('launch-aws-cluster')).prop(
+          'disabled', this.model.awsHeadNodeStatus !== "terminated"
+        );
+        $(this.queryByHook('terminate-aws-cluster')).prop(
+          'disabled', this.model.awsHeadNodeStatus === "terminated"
+        );
+      }
+    });
   },
   renderAWSInstanceSizesView: function () {
     if(this.awsInstanceSizesView) {
@@ -116,6 +157,9 @@ let userSettings = PageView.extend({
     });
     let hook = "aws-instancesize-container";
     app.registerRenderSubview(this, this.awsInstanceSizesView, hook);
+    $(this.queryByHook('aws-instancesize-container').firstChild.children[1]).prop(
+      'disabled', !["unknown", "terminated"].includes(this.model.awsHeadNodeStatus)
+    );
   },
   renderAWSInstanceTypesView: function () {
     if(this.awsInstanceTypesView) {
@@ -132,6 +176,9 @@ let userSettings = PageView.extend({
     });
     let hook = "aws-instancetype-container";
     app.registerRenderSubview(this, this.awsInstanceTypesView, hook);
+    $(this.queryByHook('aws-instancetype-container').firstChild.children[1]).prop(
+      'disabled', !["unknown", "terminated"].includes(this.model.awsHeadNodeStatus)
+    );
   },
   toggleAWSComputeNodeSection: function () {
     let regionSet = this.model.awsRegion !== "";
@@ -140,8 +187,16 @@ let userSettings = PageView.extend({
     let display = regionSet && accessKeySet && secretKeySet ? "block" : "none";
     $(this.queryByHook('aws-compute-node-section')).css('display', display);
     if(display === "block") {
-      let awsStatus = this.model.headNode === "" ? "unknown" : this.model.awsHeadNodeStatus;
-      $(this.queryByHook('aws-headnode-status')).text(awsStatus);
+      if(this.model.headNode === "") {
+        this.model.awsHeadNodeStatus = "unknown";
+      }
+      $(this.queryByHook('aws-headnode-status')).text(this.model.awsHeadNodeStatus);
+      $(this.queryByHook('launch-aws-cluster')).prop(
+        'disabled', this.model.awsHeadNodeStatus !== "terminated"
+      );
+      $(this.queryByHook('terminate-aws-cluster')).prop(
+        'disabled', this.model.awsHeadNodeStatus === "terminated"
+      );
     }
   },
   toggleUserLogs: function (e) {

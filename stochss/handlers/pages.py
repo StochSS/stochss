@@ -26,7 +26,7 @@ from notebook.base.handlers import IPythonHandler, APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSBase
+from .util import StochSSBase, StochSSAPIError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -401,4 +401,46 @@ class LoadUserSettings(APIHandler):
 
         with open(".user-settings.json", "w", encoding="utf-8") as usrs_fd:
             json.dump(data['settings'], usrs_fd, indent=4, sort_keys=True)
+        self.finish()
+
+class LaunchAWSClusterHandler(APIHandler):
+    '''
+    ################################################################################################
+    StochSS handler for launching the AWS cluster
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Launch the AWS cluster.
+
+        Attributes
+        ----------
+        '''
+        try:
+            base = StochSSBase(path="")
+            base.launch_aws_cluster()
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        self.finish()
+
+class TerminateAWSClusterHandler(APIHandler):
+    '''
+    ################################################################################################
+    StochSS handler for terminating the AWS cluster
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Terminate the AWS cluster.
+
+        Attributes
+        ----------
+        '''
+        try:
+            base = StochSSBase(path="")
+            base.terminate_aws_cluster()
+        except StochSSAPIError as err:
+            report_error(self, log, err)
         self.finish()

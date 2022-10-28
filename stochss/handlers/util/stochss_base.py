@@ -29,7 +29,7 @@ import requests
 from stochss_compute.cloud.ec2 import Cluster
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
-                            FileNotJSONFormatError
+                            FileNotJSONFormatError, AWSLauncherError, AWSTerminatorError
 
 class StochSSBase():
     '''
@@ -454,6 +454,17 @@ class StochSSBase():
 
         return os.path.join(dirname, cp_file)
 
+    def launch_aws_cluster(self):
+        cluster = self.get_aws_cluster()
+        try:
+            settings = self.load_user_settings(path='.user-settings.json')
+            instance = settings['headNode']
+            cluster.launch_single_node_instance(instance)
+        except Exception as err:
+            cluster.clean_up()
+            msg = f'Failed to launch AWS cluster. Reason Given: {err}'
+            raise AWSLauncherError(msg, traceback.format_exc())
+
     def load_example_library(self, home):
         '''
         Load the example library dropdown list.
@@ -489,7 +500,7 @@ class StochSSBase():
             settings['awsSecretKey'] = "set"
             cluster = self.get_aws_cluster()
             if cluster._server is not None:
-                settings['awsHeadNodeStatus'] = cluster._server.state
+                settings['awsHeadNodeStatus'] = cluster._server.state['Name']
         else:
             settings['awsSecretKey'] = None
         return settings
@@ -563,5 +574,13 @@ class StochSSBase():
             message = f"Could not find the file or directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
-            message = f"You don not have permission to rename this file or directory: {str(err)}"
+            message = f"You do not have permission to rename this file or directory: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
+
+    def terminate_aws_cluster(self):
+        cluster = self.get_aws_cluster()
+        try:
+            cluster.clean_up()
+        except Exception as err:
+            msg = f'Failed to terminate AWS cluster. Reason Given: {err}'
+            raise AWSTerminatorError(msg, traceback.format_exc())
