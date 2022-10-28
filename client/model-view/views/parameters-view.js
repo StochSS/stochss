@@ -55,8 +55,9 @@ module.exports = View.extend({
             assignment.variable = parameter;
           }
         })
-        if(event.selected)
-          event.detailsView.renderEventAssignments();
+        if(event.selected) {
+          event.trigger('change-event');
+        }
       });
       this.collection.parent.rules.map((rule) => {
         if(rule.variable.compID === compID) {

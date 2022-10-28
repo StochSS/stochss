@@ -461,7 +461,8 @@ class StochSSJob(StochSSBase):
             wkfl_type = "2d_parameter_sweep"
         kwargs = {"path":path, "new":True, "settings":settings,
                   "models":{"s_model":s_model, "model":g_model}}
-        return {"kwargs":kwargs, "type":wkfl_type}
+        results_path = os.path.join(self.__get_results_path(), "results.p")
+        return {"kwargs":kwargs, "type":wkfl_type, "results": results_path}
 
 
     def get_plot_from_results(self, data_keys, plt_key, add_config=False):

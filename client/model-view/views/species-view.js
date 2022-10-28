@@ -69,7 +69,7 @@ module.exports = View.extend({
           }
         })
         if(isNameUpdate && event.selected) {
-          event.detailsView.renderEventAssignments();
+          event.trigger('change-event');
         }
       });
       this.collection.parent.rules.forEach((rule) => {

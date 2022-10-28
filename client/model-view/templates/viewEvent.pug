@@ -11,7 +11,7 @@ div.mx-1
 
     div.col-sm-2=this.model.triggerExpression
 
-    div.col-sm-4(data-hook="assignment-viewer")
+    div.col-sm-4(data-hook="assignments-container")
 
     div.col-sm-2
 
@@ -35,13 +35,13 @@ div.mx-1
 
       div
 
-        input(type="radio", id="trigger-time", name="view-use-values-from" data-hook="view-trigger-time" disabled)
+        input(type="radio" id="trigger-time" name="view-use-values-from" + this.model.compID data-hook="view-trigger-time" disabled)
 
         span.inline.horizontal-space(for="trigger-time") Trigger Time
 
       div
 
-        input(type="radio", id="assignment-time", name="view-use-values-from" data-hook="view-assignment-time" disabled)
+        input(type="radio" id="assignment-time" name="view-use-values-from" + this.model.compID data-hook="view-assignment-time" disabled)
 
         span.inline.horizontal-space(for="assignment-time") Assignment Time
 
