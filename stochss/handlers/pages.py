@@ -421,6 +421,10 @@ class LaunchAWSClusterHandler(APIHandler):
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-lv"]
         _ = subprocess.Popen(exec_cmd)
+
+        file = StochSSBase(path='.user-settings.json')
+        settings = file.load_user_settings()
+        self.write({"settings": settings})
         self.finish()
 
 class TerminateAWSClusterHandler(APIHandler):
@@ -440,4 +444,8 @@ class TerminateAWSClusterHandler(APIHandler):
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-tv"]
         _ = subprocess.Popen(exec_cmd)
+
+        file = StochSSBase(path='.user-settings.json')
+        settings = file.load_user_settings()
+        self.write({"settings": settings})
         self.finish()
