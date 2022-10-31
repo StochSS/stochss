@@ -29,7 +29,7 @@ import requests
 from stochss_compute.cloud.ec2 import Cluster
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
-                            FileNotJSONFormatError, AWSLauncherError, AWSTerminatorError
+                            FileNotJSONFormatError
 
 class StochSSBase():
     '''
@@ -468,7 +468,7 @@ class StochSSBase():
         try:
             cluster = self.get_aws_cluster()
             cluster.launch_single_node_instance(instance)
-        except Exception as err:
+        except Exception:
             cluster.clean_up()
             with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
                 aws_s_fd.write("launch error")
@@ -599,9 +599,16 @@ class StochSSBase():
         '''
         Terminate an AWS instance.
         '''
-        cluster = self.get_aws_cluster()
+        settings = self.load_user_settings(path='.user-settings.json')
+        instance = settings['headNode']
+
+        s_path = f".aws/{instance.replace('.', '-')}-status.txt"
+        with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
+            aws_s_fd.write("terminating")
+
         try:
+            cluster = self.get_aws_cluster()
             cluster.clean_up()
-        except Exception as err:
-            msg = f'Failed to terminate AWS cluster. Reason Given: {err}'
-            raise AWSTerminatorError(msg, traceback.format_exc()) from err
+        except Exception:
+            with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
+                aws_s_fd.write("termination error")
