@@ -417,11 +417,9 @@ class LaunchAWSClusterHandler(APIHandler):
         Attributes
         ----------
         '''
-        try:
-            base = StochSSBase(path="")
-            base.launch_aws_cluster()
-        except StochSSAPIError as err:
-            report_error(self, log, err)
+        script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
+        exec_cmd = [f"{script}", "-lv"]
+        job = subprocess.Popen(exec_cmd)
         self.finish()
 
 class TerminateAWSClusterHandler(APIHandler):
