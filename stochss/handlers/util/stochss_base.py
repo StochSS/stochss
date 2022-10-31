@@ -22,7 +22,9 @@ import time
 import shutil
 import datetime
 import traceback
+import subprocess
 
+import psutil
 import dotenv
 import requests
 
@@ -468,6 +470,7 @@ class StochSSBase():
         try:
             cluster = self.get_aws_cluster()
             cluster.launch_single_node_instance(instance)
+            self.update_aws_status(instance)
         except Exception:
             cluster.clean_up()
             with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
@@ -517,6 +520,7 @@ class StochSSBase():
             i_id = settings['headNode'].replace('.', '-')
             s_path = os.path.join(self.user_dir, f".aws/{i_id}-status.txt")
             if os.path.exists(s_path):
+                self.update_aws_status(instance)
                 with open(s_path, 'r', encoding="utf-8") as aws_s_fd:
                     settings['awsHeadNodeStatus'] = aws_s_fd.read().strip()
         else:
@@ -609,6 +613,32 @@ class StochSSBase():
         try:
             cluster = self.get_aws_cluster()
             cluster.clean_up()
+            self.update_aws_status(instance)
         except Exception:
             with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
                 aws_s_fd.write("termination error")
+
+    def update_aws_status(self, instance):
+        '''
+        Updated the status of the aws instance.
+
+        Attributes
+        ----------
+        instance : str
+            The AWS instance.
+        '''
+        s_path = f".aws/{instance.replace('.', '-')}-status.txt"
+        if not os.path.exists(s_path):
+            return
+
+        l_path = s_path.replace(".txt", ".lock")
+        if os.path.exists(l_path):
+            with open(l_path, "r", encoding="utf-8") as lock_fd:
+                if psutil.pid_exists(lock_fd.read().strip()):
+                    return
+
+        script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
+        exec_cmd = [f"{script}", "-sv"]
+        job = subprocess.Popen(exec_cmd)
+        with open(l_path, 'w', encoding='utf-8') as lock_fd:
+            lock_fd.write(job.pid)
