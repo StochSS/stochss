@@ -242,6 +242,7 @@ let userSettings = PageView.extend({
           required: false,
           name: 'aws-secret-access-key',
           valueType: 'string',
+          value: this.model.awsSecretKey
         });
       }
     }

@@ -497,7 +497,7 @@ class StochSSBase():
             settings = json.load(usrs_fd)
         settings['awsHeadNodeStatus'] = "terminated"
         if os.path.exists(os.path.join(self.user_dir, ".awsec2.env")):
-            settings['awsSecretKey'] = "set"
+            settings['awsSecretKey'] = "*"*20
             cluster = self.get_aws_cluster()
             if cluster._server is not None:
                 settings['awsHeadNodeStatus'] = cluster._server.state['Name']
