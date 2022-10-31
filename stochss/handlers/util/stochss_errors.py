@@ -358,7 +358,7 @@ class AWSLauncherError(StochSSAPIError):
         trace : str
             Error traceback for the error
         '''
-        super.__init__(403, "AWS Launch Error", msg, trace)
+        super().__init__(403, "AWS Launch Error", msg, trace)
 
 class AWSTerminatorError(StochSSAPIError):
     '''
@@ -378,4 +378,4 @@ class AWSTerminatorError(StochSSAPIError):
         trace : str
             Error traceback for the error
         '''
-        super.__init__(403, "AWS Terminate Error", msg, trace)
+        super().__init__(403, "AWS Terminate Error", msg, trace)

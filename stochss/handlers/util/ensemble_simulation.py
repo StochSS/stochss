@@ -19,8 +19,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import copy
-import json
-import numpy
 import pickle
 import logging
 import traceback
