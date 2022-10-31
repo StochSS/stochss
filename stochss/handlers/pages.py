@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import logging
+import subprocess
 from tornado import web
 from notebook.base.handlers import IPythonHandler, APIHandler
 # APIHandler documentation:
@@ -419,7 +420,7 @@ class LaunchAWSClusterHandler(APIHandler):
         '''
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-lv"]
-        job = subprocess.Popen(exec_cmd)
+        _ = subprocess.Popen(exec_cmd)
         self.finish()
 
 class TerminateAWSClusterHandler(APIHandler):
