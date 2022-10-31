@@ -20,10 +20,10 @@ import os
 import json
 import time
 import shutil
-import dotenv
 import datetime
 import traceback
 
+import dotenv
 import requests
 
 from stochss_compute.cloud.ec2 import Cluster
@@ -455,6 +455,9 @@ class StochSSBase():
         return os.path.join(dirname, cp_file)
 
     def launch_aws_cluster(self):
+        '''
+        Launch an AWS instance.
+        '''
         cluster = self.get_aws_cluster()
         try:
             settings = self.load_user_settings(path='.user-settings.json')
@@ -489,18 +492,28 @@ class StochSSBase():
         return self.__build_example_html(exm_data, home)
 
     def load_user_settings(self, path=None):
+        '''
+        Load the user settings from file.
+
+        Attributes
+        ----------
+        path : str
+            Absolute path to the user settings file.
+        '''
         if path is None and os.path.exists(self.path):
             path = self.path
         elif path is None or not os.path.exists(path):
             path = "/stochss/stochss_templates/userSettingTemplate.json"
         with open(path, "r", encoding="utf-8") as usrs_fd:
             settings = json.load(usrs_fd)
-        settings['awsHeadNodeStatus'] = "terminated"
+        settings['awsHeadNodeStatus'] = "not created"
         if os.path.exists(os.path.join(self.user_dir, ".aws/awsec2.env")):
             settings['awsSecretKey'] = "*"*20
-            cluster = self.get_aws_cluster()
-            if cluster._server is not None:
-                settings['awsHeadNodeStatus'] = cluster._server.state['Name']
+            i_id = settings['headNode'].replace('.', '-')
+            s_path = os.path.join(self.user_dir, f".aws/{i_id}-status.txt")
+            if os.path.exists(s_path):
+                with open(s_path, 'r', encoding="utf-8") as aws_s_fd:
+                    settings['awsHeadNodeStatus'] = aws_s_fd.read().strip()
         else:
             settings['awsSecretKey'] = None
         return settings
@@ -578,9 +591,12 @@ class StochSSBase():
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
 
     def terminate_aws_cluster(self):
+        '''
+        Terminate an AWS instance.
+        '''
         cluster = self.get_aws_cluster()
         try:
             cluster.clean_up()
         except Exception as err:
             msg = f'Failed to terminate AWS cluster. Reason Given: {err}'
-            raise AWSTerminatorError(msg, traceback.format_exc())
+            raise AWSTerminatorError(msg, traceback.format_exc()) from err
