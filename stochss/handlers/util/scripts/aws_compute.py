@@ -1,0 +1,90 @@
+#!/usr/bin/env python3
+
+'''
+StochSS is a platform for simulating biochemical systems
+Copyright (C) 2019-2022 StochSS developers.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <http://www.gnu.org/licenses/>.
+'''
+import sys
+import logging
+import argparse
+
+sys.path.append("/stochss/stochss/") # pylint: disable=wrong-import-position
+sys.path.append("/stochss/stochss/handlers/") # pylint: disable=wrong-import-position
+from util.stochss_base import StochSSBase
+from handlers.log import init_log
+
+init_log()
+log = logging.getLogger("stochss")
+
+def get_parsed_args():
+    '''
+    Initializes an argpaser to document this script and returns a dict of
+    the arguments that were passed to the script from the command line.
+
+    Attributes
+    ----------
+    '''
+    description = "Launch, terminate, or get the status of an AWS instance."
+    parser = argparse.ArgumentParser(description=description)
+    parser.add_argument('-l', '--launch', action="store_true", help="Launch an AWS instance.")
+    parser.add_argument(
+        '-s', '--status', action="store_true", help="Get the status of an AWS instance."
+    )
+    parser.add_argument(
+        '-v', '--verbose', action="store_true", help="Print results as they are stored."
+    )
+    parser.add_argument('-t', '--terminate', action="store_true", help="Terminate an AWS instance.")
+    return parser.parse_args()
+
+def launch_instance():
+    '''
+    Launch an AWS instance.
+    '''
+    base = StochSSBase(path="")
+    base.launch_aws_cluster()
+
+def update_status():
+    '''
+    Update the status of an AWS instance.
+    '''
+    base = StochSSBase(path="")
+    settings = base.load_user_settings(path='.user-settings.json')
+
+    instance = settings['headNode']
+    s_path = f".aws/{instance.replace('.', '-')}-status.txt"
+
+    cluster = base.get_aws_cluster()
+    if cluster._server is not None:
+        with open(s_path, "w", encoding="utf-8") as aws_s_fd:
+            aws_s_fd.write(cluster._server.state['Name'])
+
+def terminate_instance():
+    '''
+    Terminate an AWS instance.
+    '''
+    base = StochSSBase(path="")
+    base.terminate_aws_cluster()
+
+if __name__ == "__main__":
+    args = get_parsed_args()
+    if args.launch:
+        launch_instance()
+    elif args.status:
+        update_status()
+    elif args.terminate:
+        terminate_instance()
+    else:
+        raise Exception("No operation provided, please set -l, -s, or -t flags.")
