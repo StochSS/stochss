@@ -227,7 +227,7 @@ class StochSSBase():
         Get the AWS cluster.
         '''
         # Setup the AWS environment
-        env_path = os.path.join(self.user_dir, ".awsec2.env")
+        env_path = os.path.join(self.user_dir, ".aws/awsec2.env")
         dotenv.load_dotenv(dotenv_path=env_path)
         # Configure the AWS cluster
         cluster = Cluster()
@@ -496,7 +496,7 @@ class StochSSBase():
         with open(path, "r", encoding="utf-8") as usrs_fd:
             settings = json.load(usrs_fd)
         settings['awsHeadNodeStatus'] = "terminated"
-        if os.path.exists(os.path.join(self.user_dir, ".awsec2.env")):
+        if os.path.exists(os.path.join(self.user_dir, ".aws/awsec2.env")):
             settings['awsSecretKey'] = "*"*20
             cluster = self.get_aws_cluster()
             if cluster._server is not None:

@@ -183,7 +183,7 @@ class EnsembleSimulation(StochSSJob):
         verbose : bool
             Indicates whether or not to print debug statements
         '''
-        awsenv_path = os.path.join(self.user_dir, ".awsec2.env")
+        awsenv_path = os.path.join(self.user_dir, ".aws/awsec2.env")
         if os.path.exists(awsenv_path):
             results = self.__run(self.__run_in_aws, preview=preview, verbose=verbose)
             return results

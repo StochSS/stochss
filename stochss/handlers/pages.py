@@ -391,7 +391,7 @@ class LoadUserSettings(APIHandler):
             return True
 
         if check_env_data(data):
-            with open(".awsec2.env", "w", encoding="utf-8") as env_fd:
+            with open(".aws/awsec2.env", "w", encoding="utf-8") as env_fd:
                 contents = "\n".join([
                     f"AWS_DEFAULT_REGION={data['settings']['awsRegion']}",
                     f"AWS_ACCESS_KEY_ID={data['settings']['awsAccessKeyID']}",
