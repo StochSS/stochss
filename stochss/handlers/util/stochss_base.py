@@ -514,7 +514,7 @@ class StochSSBase():
             path = "/stochss/stochss_templates/userSettingTemplate.json"
         with open(path, "r", encoding="utf-8") as usrs_fd:
             settings = json.load(usrs_fd)
-        settings['awsHeadNodeStatus'] = "not created"
+        settings['awsHeadNodeStatus'] = "not launched"
         if os.path.exists(os.path.join(self.user_dir, ".aws/awsec2.env")):
             settings['awsSecretKey'] = "*"*20
             i_id = settings['headNode'].replace('.', '-')
