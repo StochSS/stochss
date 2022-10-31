@@ -458,15 +458,20 @@ class StochSSBase():
         '''
         Launch an AWS instance.
         '''
-        cluster = self.get_aws_cluster()
+        settings = self.load_user_settings(path='.user-settings.json')
+        instance = settings['headNode']
+
+        s_path = f".aws/{instance.replace('.', '-')}-status.txt"
+        with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
+            aws_s_fd.write("launching")
+
         try:
-            settings = self.load_user_settings(path='.user-settings.json')
-            instance = settings['headNode']
+            cluster = self.get_aws_cluster()
             cluster.launch_single_node_instance(instance)
         except Exception as err:
             cluster.clean_up()
-            msg = f'Failed to launch AWS cluster. Reason Given: {err}'
-            raise AWSLauncherError(msg, traceback.format_exc())
+            with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
+                aws_s_fd.write("launch error")
 
     def load_example_library(self, home):
         '''
