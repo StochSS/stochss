@@ -437,9 +437,7 @@ class TerminateAWSClusterHandler(APIHandler):
         Attributes
         ----------
         '''
-        try:
-            base = StochSSBase(path="")
-            base.terminate_aws_cluster()
-        except StochSSAPIError as err:
-            report_error(self, log, err)
+        script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
+        exec_cmd = [f"{script}", "-tv"]
+        _ = subprocess.Popen(exec_cmd)
         self.finish()
