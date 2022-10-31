@@ -613,7 +613,8 @@ class StochSSBase():
         try:
             cluster = self.get_aws_cluster()
             cluster.clean_up()
-            self.update_aws_status(instance)
+            with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
+                aws_s_fd.write("terminated")
         except Exception:
             with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
                 aws_s_fd.write("termination error")
