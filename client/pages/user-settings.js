@@ -198,7 +198,6 @@ let userSettings = PageView.extend({
   update: function () {},
   updateAWSStatus: function () {
     let awsStatus = this.model.headNode === "" ? "unknown" : this.model.awsHeadNodeStatus;
-    console.log(awsStatus);
     $(this.queryByHook('aws-instancesize-container').firstChild.children[1]).prop(
       'disabled', this.disables('instance', awsStatus)
     );
@@ -242,6 +241,7 @@ let userSettings = PageView.extend({
     },
     awsSecretAccessKey: {
       hook: 'aws-secretaccesskey-container',
+      waitFor: 'model.modelLoaded',
       prepareView: function (el) {
         return new InputView({
           parent: this,
