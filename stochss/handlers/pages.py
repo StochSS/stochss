@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import time
 import logging
 import subprocess
 from tornado import web
@@ -27,7 +28,7 @@ from notebook.base.handlers import IPythonHandler, APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSBase, StochSSAPIError, report_error
+from .util import StochSSBase
 
 log = logging.getLogger('stochss')
 
@@ -422,8 +423,10 @@ class LaunchAWSClusterHandler(APIHandler):
         exec_cmd = [f"{script}", "-lv"]
         _ = subprocess.Popen(exec_cmd)
 
+        time.sleep(0.1)
         file = StochSSBase(path='.user-settings.json')
         settings = file.load_user_settings()
+
         self.write({"settings": settings})
         self.finish()
 
@@ -445,7 +448,9 @@ class TerminateAWSClusterHandler(APIHandler):
         exec_cmd = [f"{script}", "-tv"]
         _ = subprocess.Popen(exec_cmd)
 
+        time.sleep(0.1)
         file = StochSSBase(path='.user-settings.json')
         settings = file.load_user_settings()
+
         self.write({"settings": settings})
         self.finish()
