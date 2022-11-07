@@ -24,6 +24,7 @@ import datetime
 import traceback
 import subprocess
 
+import psutil
 import dotenv
 import requests
 
@@ -459,7 +460,7 @@ class StochSSBase():
         '''
         Launch an AWS instance.
         '''
-        settings = self.load_user_settings(path='.user-settings.json')
+        settings = self.load_user_settings(path='.user-settings.json', aws_interact=True)
         instance = settings['headNode']
 
         s_path = f".aws/{instance.replace('.', '-')}-status.txt"
@@ -469,7 +470,8 @@ class StochSSBase():
         try:
             cluster = self.get_aws_cluster()
             cluster.launch_single_node_instance(instance)
-            self.update_aws_status(instance)
+            with open(s_path, "w", encoding="utf-8") as aws_s_fd:
+                aws_s_fd.write(cluster._server.state['Name'])
         except Exception:
             cluster.clean_up()
             with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
@@ -498,7 +500,7 @@ class StochSSBase():
 
         return self.__build_example_html(exm_data, home)
 
-    def load_user_settings(self, path=None):
+    def load_user_settings(self, path=None, aws_interact=False):
         '''
         Load the user settings from file.
 
@@ -519,7 +521,8 @@ class StochSSBase():
             i_id = settings['headNode'].replace('.', '-')
             s_path = os.path.join(self.user_dir, f".aws/{i_id}-status.txt")
             if os.path.exists(s_path):
-                self.update_aws_status(settings['headNode'])
+                if not aws_interact:
+                    self.update_aws_status(settings['headNode'])
                 with open(s_path, 'r', encoding="utf-8") as aws_s_fd:
                     settings['awsHeadNodeStatus'] = aws_s_fd.read().strip()
         else:
@@ -602,7 +605,7 @@ class StochSSBase():
         '''
         Terminate an AWS instance.
         '''
-        settings = self.load_user_settings(path='.user-settings.json')
+        settings = self.load_user_settings(path='.user-settings.json', aws_interact=True)
         instance = settings['headNode']
 
         s_path = f".aws/{instance.replace('.', '-')}-status.txt"
@@ -618,8 +621,7 @@ class StochSSBase():
             with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
                 aws_s_fd.write("termination error")
 
-    @classmethod
-    def update_aws_status(cls, instance):
+    def update_aws_status(self, instance):
         '''
         Updated the status of the aws instance.
 
@@ -628,10 +630,11 @@ class StochSSBase():
         instance : str
             The AWS instance.
         '''
-        s_path = f".aws/{instance.replace('.', '-')}-status.txt"
+        s_path = os.path.join(self.user_dir, f".aws/{instance.replace('.', '-')}-status.txt")
         if not os.path.exists(s_path):
             return
 
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-sv"]
-        _ = subprocess.Popen(exec_cmd)
+        with subprocess.Popen(exec_cmd) as job:
+            print("Updating the status of AWS")

@@ -32,13 +32,39 @@ from handlers.log import init_log
 init_log()
 log = logging.getLogger("stochss")
 
+class OpenAndLock:
+    '''
+    Wrapper for open that controls the file lock.
+    '''
+    def __init__(self, path, *args, **kwargs):
+        self.file = open(path,*args, **kwargs)
+        if self.file.writable():
+            fcntl.lockf(self.file, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            print(f"File is locked")
+            self.file.write(str(os.getpid()))
+
+    def __enter__(self, *args, **kwargs):
+        return self.file
+
+    def __exit__(self, exc_type=None, exc_value=None, traceback=None):        
+        self.file.flush()
+        os.fsync(self.file.fileno())
+        if self.file.writable():
+            fcntl.lockf(self.file, fcntl.LOCK_UN)
+            print("File is un-locked")
+        self.file.close()
+        return exc_type is None
+
+    def close(self, **kwargs):
+        '''
+        Un-lock and close the file.
+        '''
+        self.__exit__(**kwargs)
+
 def get_parsed_args():
     '''
     Initializes an argpaser to document this script and returns a dict of
     the arguments that were passed to the script from the command line.
-
-    Attributes
-    ----------
     '''
     description = "Launch, terminate, or get the status of an AWS instance."
     parser = argparse.ArgumentParser(description=description)
@@ -52,38 +78,32 @@ def get_parsed_args():
     parser.add_argument('-t', '--terminate', action="store_true", help="Terminate an AWS instance.")
     return parser.parse_args()
 
-def launch_instance():
+def interact(launch=False, status=False, terminate=False):
     '''
-    Launch an AWS instance.
-    '''
-    base = StochSSBase(path="")
-    if not is_file_locked(base.user_dir):
-        base.launch_aws_cluster()
-
-def is_file_locked(user_dir):
-    '''
-    Check if the aws lock file is already locked, if not lock it.
+    Interact with the aws instance.
 
     Attributes
     ----------
-    user_dir : str
-        The users home directory.
-    '''
-    l_path = os.path.join(user_dir, '.aws/awsec2.lock')
-    with open(l_path, 'w', encoding="utf-8") as lock_fd:
-        try:
-            fcntl.lockf(lock_fd, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            return False
-        except OSError:
-            return True
-
-def update_status():
-    '''
-    Update the status of an AWS instance.
+    launch : bool
+        Indicates a launch interaction.
+    status : bool
+        Indicates a status update interaction.
+    termimate : bool
+        Indicates a terminate interaction.
     '''
     base = StochSSBase(path="")
-    if not is_file_locked(base.user_dir):
-        settings = base.load_user_settings(path='.user-settings.json')
+    l_path = os.path.join(base.user_dir, '.aws/awsec2.lock')
+
+    try:
+        lock_fd = OpenAndLock(l_path, 'w', encoding="utf-8")
+    except BlockingIOError:
+        print("The file is already locked")
+        return
+
+    if launch:
+        base.launch_aws_cluster()
+    elif status:
+        settings = base.load_user_settings(path='.user-settings.json', aws_interact=True)
 
         instance = settings['headNode']
         s_path = f".aws/{instance.replace('.', '-')}-status.txt"
@@ -92,22 +112,16 @@ def update_status():
         if cluster._server is not None:
             with open(s_path, "w", encoding="utf-8") as aws_s_fd:
                 aws_s_fd.write(cluster._server.state['Name'])
-
-def terminate_instance():
-    '''
-    Terminate an AWS instance.
-    '''
-    base = StochSSBase(path="")
-    if not is_file_locked(base.user_dir):
+    elif terminate:
         base.terminate_aws_cluster()
-
-if __name__ == "__main__":
-    args = get_parsed_args()
-    if args.launch:
-        launch_instance()
-    elif args.status:
-        update_status()
-    elif args.terminate:
-        terminate_instance()
     else:
         raise Exception("No operation provided, please set -l, -s, or -t flags.")
+    lock_fd.close()
+
+if __name__ == "__main__":
+    pid = os.fork()
+    if pid > 0:
+        sys.exit()
+
+    args = get_parsed_args()
+    interact(launch=args.launch, status=args.status, terminate=args.terminate)

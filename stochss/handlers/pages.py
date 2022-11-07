@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import time
+import psutil
 import logging
 import subprocess
 from tornado import web
@@ -419,13 +420,14 @@ class LaunchAWSClusterHandler(APIHandler):
         Attributes
         ----------
         '''
+        file = StochSSBase(path='.user-settings.json')
+        
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-lv"]
-        _ = subprocess.Popen(exec_cmd)
+        with subprocess.Popen(exec_cmd) as job:
+            print("Launching AWS")
 
-        time.sleep(0.1)
-        file = StochSSBase(path='.user-settings.json')
-        settings = file.load_user_settings()
+        settings = file.load_user_settings(aws_interact=True)
 
         self.write({"settings": settings})
         self.finish()
@@ -444,13 +446,14 @@ class TerminateAWSClusterHandler(APIHandler):
         Attributes
         ----------
         '''
+        file = StochSSBase(path='.user-settings.json')
+        
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-tv"]
-        _ = subprocess.Popen(exec_cmd)
+        with subprocess.Popen(exec_cmd) as job:
+            print("Terminating AWS")
 
-        time.sleep(0.1)
-        file = StochSSBase(path='.user-settings.json')
-        settings = file.load_user_settings()
+        settings = file.load_user_settings(aws_interact=True)
 
         self.write({"settings": settings})
         self.finish()
