@@ -159,7 +159,7 @@ class EnsembleSimulation(StochSSJob):
             Indicates whether or not to print debug statements
         '''
         compute_env = self.load_info()['compute_env']
-        if compute_env == 'aws':
+        if compute_env == 'AWS':
             results = self.__run(self.__run_in_aws, preview=preview, verbose=verbose)
             return results
         return self.__run(self.__run_local, preview=preview, verbose=verbose)

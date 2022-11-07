@@ -109,7 +109,7 @@ let WorkflowManager = PageView.extend({
       let endpoint = path.join(app.getApiPath(), 'aws/job-config-check');
       app.getXHR(endpoint, {
         success: (err, response, body) => {
-          this.startJob({compute: "aws"});
+          this.startJob({compute: "AWS"});
         },
         error: (err, response, body) => {
           this.handleSaveWorkflow(() => {
@@ -339,7 +339,7 @@ let WorkflowManager = PageView.extend({
       this.renderSettingsView(options);
     }
   },
-  startJob: function ({compute="local"}={}) {
+  startJob: function ({compute="Local"}={}) {
     let types = {
       "Ensemble Simulation": "gillespy",
       "Parameter Sweep": "parameterSweep",

@@ -81,7 +81,7 @@ class StochSSJob(StochSSBase):
             )
 
 
-    def __create_new_job(self, mdl_path, settings=None, compute="local"):
+    def __create_new_job(self, mdl_path, settings=None, compute="Local"):
         path = self.get_path(full=True)
         try:
             os.mkdir(path)
@@ -703,10 +703,10 @@ class StochSSJob(StochSSBase):
             self.log("error", f"Exception information: {error}")
         finally:
             settings = self.load_settings(model=model)
+            info = self.load_info()
+            logs = f"Compute Environment: {info['compute_env']}"
             if os.path.exists(os.path.join(self.path, "logs.txt")):
-                logs = self.__get_run_logs()
-            else:
-                logs = ""
+                logs = f"{logs}\n{self.__get_run_logs()}"
             self.job = {"mdlPath":mdl_path, "model":model, "settings":settings,
                         "startTime":info['start_time'], "status":status,
                         "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
@@ -732,7 +732,7 @@ class StochSSJob(StochSSBase):
                 if "annotation" not in info:
                     info['annotation'] = ""
                 if "compute_env" not in info:
-                    info['compute_env'] = "local"
+                    info['compute_env'] = "Local"
                 return info
         except FileNotFoundError as err:
             message = f"Could not find the info file: {str(err)}"
