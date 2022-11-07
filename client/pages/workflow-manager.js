@@ -46,7 +46,7 @@ let WorkflowManager = PageView.extend({
     'click [data-hook=save-model]' : 'handleSaveWorkflow',
     'click [data-hook=collapse-settings]' : 'changeCollapseButtonText',
     'click [data-hook=save]' : 'clickSaveHandler',
-    'click [data-hook=start-job]'  : 'clickStartJobHandler',
+    'click [data-target=start-job]'  : 'clickStartJobHandler',
     'click [data-hook=edit-model]' : 'clickEditModelHandler',
     'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
     'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
@@ -91,7 +91,7 @@ let WorkflowManager = PageView.extend({
     app.changeCollapseButtonText(this, e);
   },
   clickEditModelHandler: function (e) {
-    this.handleSaveWorkflow(e, _.bind(function () {
+    this.handleSaveWorkflow(_.bind(function () {
       let queryStr = "?path=" + this.model.model;
       let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
       window.location.href = endpoint;
@@ -99,33 +99,28 @@ let WorkflowManager = PageView.extend({
   },
   clickSaveHandler: function (e) {
     this.saving();
-    this.handleSaveWorkflow(e, _.bind(this.saved, this));
+    this.handleSaveWorkflow(_.bind(this.saved, this));
   },
   clickStartJobHandler: function (e) {
     this.saving();
-    let types = {
-      "Ensemble Simulation": "gillespy",
-      "Parameter Sweep": "parameterSweep",
-      "Spatial Ensemble Simulation": "spatial"
-    };
-    let data = {
-      "settings": this.model.settings.toJSON(), "mdl_path": this.model.model,
-      "type": types[this.model.type], "time_stamp": this.getTimeStamp()
-    };
-    let queryStr = `?path=${this.model.directory}&data=${JSON.stringify(data)}`;
-    let initEndpoint = `${path.join(app.getApiPath(), "workflow/init-job")}${queryStr}`;
-    app.getXHR(initEndpoint, {
-      success: (err, response, body) => {
-        this.saved();
-        let runQuery = `?path=${body}&type=${data.type}`;
-        let runEndpoint = `${path.join(app.getApiPath(), "workflow/run-job")}${runQuery}`;
-        app.getXHR(runEndpoint, {
-          success: (err, response, body) => {
-            this.updateWorkflow(true);
-          }
-        });
-      }
-    });
+    if(e.target.dataset['compute-env'] === "local") {
+      this.startJob()
+    }else if(e.target.dataset['compute-env'] === "aws") {
+      let endpoint = path.join(app.getApiPath(), 'aws/job-config-check');
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          this.startJob({compute: "aws"});
+        },
+        error: (err, response, body) => {
+          this.handleSaveWorkflow(() => {
+            this.saved();
+            let contEndpoint = `${path.join(app.getBasePath(), 'stochss/workflow/edit')}${window.location.search}`;
+            let endpoint = `${path.join(app.getBasePath(), 'stochss/settings')}?continue=${contEndpoint}`;
+            window.location.href = endpoint;
+          });
+        }
+      });
+    }
   },
   getTimeStamp: function () {
     if(!this.model.newFormat) {
@@ -178,7 +173,7 @@ let WorkflowManager = PageView.extend({
   },
   handleReturnToProject: function (e) {
     if(this.model.activeJob.model.directory){
-      this.handleSaveWorkflow(e, _.bind(function () {
+      this.handleSaveWorkflow(_.bind(function () {
         let queryStr = "?path=" + this.projectPath;
         let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
         window.location.href = endpoint;
@@ -189,18 +184,16 @@ let WorkflowManager = PageView.extend({
       window.location.href = endpoint;
     }
   },
-  handleSaveWorkflow: function (e, cb) {
-    let self = this;
-    let endpoint = this.model.url();
-    app.postXHR(endpoint, this.model.toJSON(), {
-      success: function (err, response, body) {
+  handleSaveWorkflow: function (cb) {
+    app.postXHR(this.model.url(), this.model.toJSON(), {
+      success: (err, response, body) => {
         if(cb) {
           cb();
         }else{
-          $(self.queryByHook("src-model")).css("display", "none");
-          let oldFormRdyState = !self.model.newFormat && self.model.activeJob.status === "ready";
-          if(oldFormRdyState || self.model.newFormat) {
-            self.setupSettingsView();
+          $(this.queryByHook("src-model")).css("display", "none");
+          let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";
+          if(oldFormRdyState || this.model.newFormat) {
+            this.setupSettingsView();
           }
         }
       }
@@ -313,8 +306,9 @@ let WorkflowManager = PageView.extend({
     this.renderActiveJob();
   },
   setupSettingsView: function () {
-    if(this.model.newFormat) {
-      $(this.queryByHook("start-job")).text("Start New Job");
+    if(!this.model.newFormat) {
+      $(this.queryByHook("of-start-job")).css('display', 'inline-block');
+      $(this.queryByHook("nf-start-job")).css('display', 'none');
     }
     if(this.model.type === "Parameter Sweep"){
       if(this.model.settings.parameterSweepSettings.parameters.length < 1) {
@@ -344,6 +338,32 @@ let WorkflowManager = PageView.extend({
     }else {
       this.renderSettingsView(options);
     }
+  },
+  startJob: function ({compute="local"}={}) {
+    let types = {
+      "Ensemble Simulation": "gillespy",
+      "Parameter Sweep": "parameterSweep",
+      "Spatial Ensemble Simulation": "spatial"
+    };
+    let data = {
+      "settings": this.model.settings.toJSON(), "mdl_path": this.model.model,
+      "type": types[this.model.type], "time_stamp": this.getTimeStamp(),
+      "compute": compute
+    };
+    let queryStr = `?path=${this.model.directory}&data=${JSON.stringify(data)}`;
+    let initEndpoint = `${path.join(app.getApiPath(), "workflow/init-job")}${queryStr}`;
+    app.getXHR(initEndpoint, {
+      success: (err, response, body) => {
+        this.saved();
+        let runQuery = `?path=${body}&type=${data.type}`;
+        let runEndpoint = `${path.join(app.getApiPath(), "workflow/run-job")}${runQuery}`;
+        app.getXHR(runEndpoint, {
+          success: (err, response, body) => {
+            this.updateWorkflow(true);
+          }
+        });
+      }
+    });
   },
   updateWorkflow: function (newJob) {
     let self = this;

@@ -48,7 +48,7 @@ let userSettings = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
-    this.path = urlParams.has('path') ? urlParams.get('path') : null;
+    this.path = urlParams.has('continue') ? urlParams.get('continue') : null;
     this.model = new Settings();
     this.secretKey = null;
     app.getXHR(this.model.url(), {
@@ -85,8 +85,10 @@ let userSettings = PageView.extend({
   },
   handleApplyUserSettings: function ({cb=null}={}) {
     if(cb === null) {
-      cb = () => {
-        this.refreshAWSStatus();
+      if(this.path === null) {
+        cb = () => { this.refreshAWSStatus(); }
+      }else{
+        cb = () => { window.location.href = this.path }
       }
     }
     let options = this.secretKey !== null ? {secretKey: this.secretKey} : {};
