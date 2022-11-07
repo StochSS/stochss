@@ -29,7 +29,7 @@ from notebook.base.handlers import IPythonHandler, APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSBase
+from .util import StochSSBase, AWSConfigurationError, report_error
 
 log = logging.getLogger('stochss')
 
@@ -404,6 +404,29 @@ class LoadUserSettings(APIHandler):
 
         with open(".user-settings.json", "w", encoding="utf-8") as usrs_fd:
             json.dump(data['settings'], usrs_fd, indent=4, sort_keys=True)
+        self.finish()
+
+class ConfirmAWSConfigHandler(APIHandler):
+    '''
+    ################################################################################################
+    StochSS handler for comfirming AWS configuration
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Confirm that AWS is configured for running jobs..
+
+        Attributes
+        ----------
+        '''
+        file = StochSSBase(path='.user-settings.json')
+        settings = file.load_user_settings()
+        if settings['awsHeadNodeStatus'] != "running":
+            err = AWSConfigurationError("AWS is not properly configured for running jobs.")
+            report_error(this, log, err)
+
+        self.write({"configured": True})
         self.finish()
 
 class LaunchAWSClusterHandler(APIHandler):
