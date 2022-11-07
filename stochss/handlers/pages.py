@@ -18,8 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
-import time
-import psutil
 import logging
 import subprocess
 from tornado import web
@@ -29,7 +27,8 @@ from notebook.base.handlers import IPythonHandler, APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSBase, AWSConfigurationError, report_error
+from .util import StochSSBase, report_error
+from .util.stochss_errors import AWSConfigurationError
 
 log = logging.getLogger('stochss')
 
@@ -424,7 +423,7 @@ class ConfirmAWSConfigHandler(APIHandler):
         settings = file.load_user_settings()
         if settings['awsHeadNodeStatus'] != "running":
             err = AWSConfigurationError("AWS is not properly configured for running jobs.")
-            report_error(this, log, err)
+            report_error(self, log, err)
 
         self.write({"configured": True})
         self.finish()
@@ -444,10 +443,10 @@ class LaunchAWSClusterHandler(APIHandler):
         ----------
         '''
         file = StochSSBase(path='.user-settings.json')
-        
+
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-lv"]
-        with subprocess.Popen(exec_cmd) as job:
+        with subprocess.Popen(exec_cmd):
             print("Launching AWS")
 
         settings = file.load_user_settings(aws_interact=True)
@@ -470,10 +469,10 @@ class TerminateAWSClusterHandler(APIHandler):
         ----------
         '''
         file = StochSSBase(path='.user-settings.json')
-        
+
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-tv"]
-        with subprocess.Popen(exec_cmd) as job:
+        with subprocess.Popen(exec_cmd):
             print("Terminating AWS")
 
         settings = file.load_user_settings(aws_interact=True)

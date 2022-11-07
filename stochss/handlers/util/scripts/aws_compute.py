@@ -36,17 +36,17 @@ class OpenAndLock:
     '''
     Wrapper for open that controls the file lock.
     '''
-    def __init__(self, path, *args, **kwargs):
-        self.file = open(path,*args, **kwargs)
+    def __init__(self, path, *pargs, **kwargs):
+        self.file = open(path,*pargs, **kwargs)
         if self.file.writable():
             fcntl.lockf(self.file, fcntl.LOCK_EX | fcntl.LOCK_NB)
-            print(f"File is locked")
+            print("File is locked")
             self.file.write(str(os.getpid()))
 
-    def __enter__(self, *args, **kwargs):
+    def __enter__(self, *pargs, **kwargs):
         return self.file
 
-    def __exit__(self, exc_type=None, exc_value=None, traceback=None):        
+    def __exit__(self, exc_type=None, exc_value=None, traceback=None):
         self.file.flush()
         os.fsync(self.file.fileno())
         if self.file.writable():

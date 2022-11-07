@@ -24,7 +24,6 @@ import datetime
 import traceback
 import subprocess
 
-import psutil
 import dotenv
 import requests
 
@@ -636,5 +635,5 @@ class StochSSBase():
 
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-sv"]
-        with subprocess.Popen(exec_cmd) as job:
+        with subprocess.Popen(exec_cmd):
             print("Updating the status of AWS")
