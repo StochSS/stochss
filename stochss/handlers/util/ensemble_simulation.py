@@ -136,31 +136,8 @@ class EnsembleSimulation(StochSSJob):
         if verbose:
             log.info("Running the ensemble simulation in AWS")
 
-        settings = self.load_user_settings(
-            path=os.path.join(self.user_dir, '.user-settings.json')
-        )
-        instance = settings['headNode']
-        status = settings['awsHeadNodeStatus']
-        if instance == "":
-            if verbose:
-                log.info("Failed to run in AWS. Reason Given: No instanse provided.")
-            return self.__run_local(**kwargs)
-        if status != "running":
-            if verbose:
-                log.info("Failed to run in AWS. Reason Given: Instanse must be running.")
-            return self.__run_local(**kwargs)
-
-        try:
-            if verbose:
-                log.info(f"--> Connecting to the {instance} instance.")
-            cluster = self.get_aws_cluster()
-        except Exception as err:
-            if verbose:
-                log.info(f"Failed to run in AWS. Reason Given: {str(err)}")
-            return self.__run_local(**kwargs)
+        cluster = self.get_aws_cluster()
         # Run the simulation
-        if verbose:
-            log.info("--> Running the simulation.")
         simulation = RemoteSimulation(self.g_model, server=cluster)
         aws_results = simulation.run(**aws_kwargs)
         return aws_results.get_gillespy2_results()
@@ -181,8 +158,8 @@ class EnsembleSimulation(StochSSJob):
         verbose : bool
             Indicates whether or not to print debug statements
         '''
-        awsenv_path = os.path.join(self.user_dir, ".aws/awsec2.env")
-        if os.path.exists(awsenv_path):
+        compute_env = self.load_info()['compute_env']
+        if compute_env == 'aws':
             results = self.__run(self.__run_in_aws, preview=preview, verbose=verbose)
             return results
         return self.__run(self.__run_local, preview=preview, verbose=verbose)
