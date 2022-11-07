@@ -340,6 +340,26 @@ class StochSSJobResultsError(StochSSAPIError):
 # AWS Errors
 ####################################################################################################
 
+class AWSConfigurationError(StochSSAPIError):
+    '''
+    ################################################################################################
+    AWS Configuration Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that StochSS Compute configured to run jobs.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "AWS Configuration Error", msg, trace)
+
 class AWSLauncherError(StochSSAPIError):
     '''
     ################################################################################################
