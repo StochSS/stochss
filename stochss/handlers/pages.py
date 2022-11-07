@@ -355,8 +355,9 @@ class LoadUserSettings(APIHandler):
         Attributes
         ----------
         '''
+        load = self.get_query_argument('load', default='all')
         file = StochSSBase(path='.user-settings.json')
-        settings = file.load_user_settings()
+        settings = file.load_user_settings(update_aws_status=load in ("aws", "all"))
 
         i_path = "/stochss/stochss_templates/instance_types.txt"
         with open(i_path, "r", encoding="utf-8") as itype_fd:
@@ -449,7 +450,7 @@ class LaunchAWSClusterHandler(APIHandler):
         with subprocess.Popen(exec_cmd):
             print("Launching AWS")
 
-        settings = file.load_user_settings(aws_interact=True)
+        settings = file.load_user_settings(update_aws_status=False)
 
         self.write({"settings": settings})
         self.finish()
@@ -475,7 +476,7 @@ class TerminateAWSClusterHandler(APIHandler):
         with subprocess.Popen(exec_cmd):
             print("Terminating AWS")
 
-        settings = file.load_user_settings(aws_interact=True)
+        settings = file.load_user_settings(update_aws_status=False)
 
         self.write({"settings": settings})
         self.finish()

@@ -103,7 +103,7 @@ def interact(launch=False, status=False, terminate=False):
     if launch:
         base.launch_aws_cluster()
     elif status:
-        settings = base.load_user_settings(path='.user-settings.json', aws_interact=True)
+        settings = base.load_user_settings(path='.user-settings.json', update_aws_status=False)
 
         instance = settings['headNode']
         s_path = f".aws/{instance.replace('.', '-')}-status.txt"
