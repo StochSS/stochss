@@ -28,6 +28,14 @@ section.page
 
         h2 AWS
 
+      div.mt-3.pl-3.py-3.hidden(data-hook="aws-config-msg" style="background-color: rgba(220, 53, 69, 0.5) !important;")
+
+        div AWS has not been configured to run jobs.
+        ul.mb-0
+          li Check that your credentials have been entered correctly.
+          li Ensure you have a compute node <b>type</b> and <b>size</b> are selected.
+          li Launch the compute node and ensure the <b>status</b> is <i>running</i>.
+
       div.mt-3.mx-1.head.align-items-baseline
 
         h3 Credentials

@@ -73,6 +73,9 @@ let userSettings = PageView.extend({
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
+    if(this.path !== null) {
+      $(this.queryByHook('aws-config-msg')).css('display', 'block');
+    }
   },
   disables: function (btnType, status) {
     let disables = {
