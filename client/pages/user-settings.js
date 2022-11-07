@@ -68,6 +68,7 @@ let userSettings = PageView.extend({
         $(this.queryByHook('user-logs')).prop('checked', this.model.userLogs);
         this.renderAWSInstanceTypesView();
         this.toggleAWSComputeNodeSection();
+        this.refreshAWSStatus();
       }
     });
   },
@@ -103,7 +104,9 @@ let userSettings = PageView.extend({
     }});
   },
   handleRefreshAWSStatus: function () {
-    this.handleApplyUserSettings();
+    this.handleApplyUserSettings({cb: () => {
+      this.refreshAWSStatus();
+    }});
   },
   handleSelectInstanceSize: function (e) {
     this.awsSize = e.target.value;
@@ -138,7 +141,8 @@ let userSettings = PageView.extend({
   },
   refreshAWSStatus: function () {
     if(this.model.headNode === "") { return }
-    app.getXHR(this.model.url(), {
+    let endpoint = path.join(app.getApiPath(), 'aws/cluster-status');
+    app.getXHR(endpoint, {
       success: (err, response, body) => {
         this.model.awsHeadNodeStatus = body.settings.awsHeadNodeStatus;
         this.updateAWSStatus();

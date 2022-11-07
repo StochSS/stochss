@@ -60,6 +60,7 @@ def get_page_handlers(route_start):
         (r'/stochss/api/clear-user-logs\/?', ClearUserLogsAPIHandler),
         (r'/stochss/api/aws/job-config-check\/?', ConfirmAWSConfigHandler),
         (r'/stochss/api/aws/launch-cluster\/?', LaunchAWSClusterHandler),
+        (r'/stochss/api/aws/cluster-status\/?', AWSClusterStatusHandler),
         (r'/stochss/api/aws/terminate-cluster\/?', TerminateAWSClusterHandler),
         (r"/stochss/api/file/browser-list\/?", ModelBrowserFileList),
         (r"/stochss/api/file/upload\/?", UploadFileAPIHandler),

@@ -71,8 +71,7 @@ module.exports = View.extend({
     this.setupUserLogs();
     this.getExampleLibrary();
     let settings = new Settings();
-    let endpoint = `${settings.url()}?load=general`
-    app.getXHR(endpoint, {
+    app.getXHR(settings.url(), {
       success: (err, response, body) => {
         settings.set(body.settings);
         if(!settings.userLogs) {

@@ -355,9 +355,8 @@ class LoadUserSettings(APIHandler):
         Attributes
         ----------
         '''
-        load = self.get_query_argument('load', default='all')
         file = StochSSBase(path='.user-settings.json')
-        settings = file.load_user_settings(update_aws_status=load in ("aws", "all"))
+        settings = file.load_user_settings()
 
         i_path = "/stochss/stochss_templates/instance_types.txt"
         with open(i_path, "r", encoding="utf-8") as itype_fd:
@@ -423,6 +422,7 @@ class ConfirmAWSConfigHandler(APIHandler):
         file = StochSSBase(path='.user-settings.json')
         settings = file.load_user_settings()
         if settings['awsHeadNodeStatus'] != "running":
+            file.update_aws_status(settings['headNode'])
             err = AWSConfigurationError("AWS is not properly configured for running jobs.")
             report_error(self, log, err)
 
@@ -450,7 +450,30 @@ class LaunchAWSClusterHandler(APIHandler):
         with subprocess.Popen(exec_cmd):
             print("Launching AWS")
 
-        settings = file.load_user_settings(update_aws_status=False)
+        settings = file.load_user_settings()
+
+        self.write({"settings": settings})
+        self.finish()
+
+class AWSClusterStatusHandler(APIHandler):
+    '''
+    ################################################################################################
+    StochSS handler for updating the AWS cluster status
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Update the AWS cluster status.
+
+        Attributes
+        ----------
+        '''
+        file = StochSSBase(path='.user-settings.json')
+
+        settings = file.load_user_settings()
+
+        file.update_aws_status(settings['headNode'])
 
         self.write({"settings": settings})
         self.finish()
@@ -476,7 +499,7 @@ class TerminateAWSClusterHandler(APIHandler):
         with subprocess.Popen(exec_cmd):
             print("Terminating AWS")
 
-        settings = file.load_user_settings(update_aws_status=False)
+        settings = file.load_user_settings()
 
         self.write({"settings": settings})
         self.finish()

@@ -459,7 +459,7 @@ class StochSSBase():
         '''
         Launch an AWS instance.
         '''
-        settings = self.load_user_settings(path='.user-settings.json', update_aws_status=False)
+        settings = self.load_user_settings(path='.user-settings.json')
         instance = settings['headNode']
 
         s_path = f".aws/{instance.replace('.', '-')}-status.txt"
@@ -499,7 +499,7 @@ class StochSSBase():
 
         return self.__build_example_html(exm_data, home)
 
-    def load_user_settings(self, path=None, update_aws_status=True):
+    def load_user_settings(self, path=None):
         '''
         Load the user settings from file.
 
@@ -520,8 +520,6 @@ class StochSSBase():
             i_id = settings['headNode'].replace('.', '-')
             s_path = os.path.join(self.user_dir, f".aws/{i_id}-status.txt")
             if os.path.exists(s_path):
-                if update_aws_status:
-                    self.update_aws_status(settings['headNode'])
                 with open(s_path, 'r', encoding="utf-8") as aws_s_fd:
                     settings['awsHeadNodeStatus'] = aws_s_fd.read().strip()
         else:
@@ -604,7 +602,7 @@ class StochSSBase():
         '''
         Terminate an AWS instance.
         '''
-        settings = self.load_user_settings(path='.user-settings.json', update_aws_status=False)
+        settings = self.load_user_settings(path='.user-settings.json')
         instance = settings['headNode']
 
         s_path = f".aws/{instance.replace('.', '-')}-status.txt"
