@@ -76,15 +76,20 @@ class StochSSJob(StochSSBase):
         self.time_stamp = None
         if new:
             self.type = data['type']
-            self.__create_new_job(mdl_path=data['mdl_path'], settings=data['settings'])
+            self.__create_new_job(
+                mdl_path=data['mdl_path'], settings=data['settings'], compute=data['compute']
+            )
 
 
-    def __create_new_job(self, mdl_path, settings=None):
+    def __create_new_job(self, mdl_path, settings=None, compute="local"):
         path = self.get_path(full=True)
         try:
             os.mkdir(path)
             os.mkdir(self.__get_results_path(full=True))
-            info = {"source_model":mdl_path, "wkfl_model":None, "type":self.type, "start_time":None}
+            info = {
+                "source_model": mdl_path, "wkfl_model": None, "type": self.type,
+                "start_time": None, "compute": compute
+            }
             self.update_info(new_info=info, new=True)
             with open(os.path.join(path, "logs.txt"), "w", encoding="utf-8") as log_file:
                 log_file.close()
@@ -726,6 +731,8 @@ class StochSSJob(StochSSBase):
                 info = json.load(info_file)
                 if "annotation" not in info:
                     info['annotation'] = ""
+                if "compute_env" not in info:
+                    info['compute_env'] = "local"
                 return info
         except FileNotFoundError as err:
             message = f"Could not find the info file: {str(err)}"
@@ -909,16 +916,18 @@ class StochSSJob(StochSSBase):
             info = new_info
         else:
             info = self.load_info()
-            if "source_model" in new_info.keys():
+            if "source_model" in new_info:
                 info['source_model'] = new_info['source_model']
-            if "wkfl_model" in new_info.keys():
+            if "wkfl_model" in new_info:
                 info['wkfl_model'] = new_info['wkfl_model']
-            if "type" in new_info.keys():
+            if "type" in new_info:
                 info['type'] = new_info['type']
-            if "start_time" in new_info.keys():
+            if "start_time" in new_info:
                 info['start_time'] = new_info['start_time']
-            if "annotation" in new_info.keys():
+            if "annotation" in new_info:
                 info['annotation'] = new_info['annotation']
+            if "compute_env" in new_info:
+                info['compute_env'] = new_info['compute']
         self.log("debug", f"New info: {info}")
         with open(self.__get_info_path(full=True), "w", encoding="utf-8") as file:
             json.dump(info, file, indent=4, sort_keys=True)

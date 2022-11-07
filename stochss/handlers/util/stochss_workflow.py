@@ -273,7 +273,7 @@ class StochSSWorkflow(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
-    def initialize_job(self, settings, mdl_path, time_stamp, wkfl_type):
+    def initialize_job(self, settings, mdl_path, time_stamp, wkfl_type, compute):
         '''
         Initialize a new job for this workflow.
 
@@ -287,6 +287,8 @@ class StochSSWorkflow(StochSSBase):
             Datetime stamp for the new job
         wkfl_type : str
             Type of workflow
+        compute : str
+            The compute environment to use.
         '''
         self.log("info", f"Saving {self.get_file()}")
         self.save(new_settings=settings, mdl_path=mdl_path)
@@ -296,7 +298,9 @@ class StochSSWorkflow(StochSSBase):
         if self.check_workflow_format(path=self.path):
             self.log("info", f"Creating job{time_stamp} job")
             path = os.path.join(self.path, f"job{time_stamp}")
-            data = {"mdl_path": mdl_path, "settings": settings, "type":wkfl_type}
+            data = {
+                "mdl_path": mdl_path, "settings": settings, "type": wkfl_type, "compute": compute
+            }
             job = StochSSJob(path=path, new=True, data=data)
             self.log("info", f"Successfully created {job.get_file()} job")
         else:
