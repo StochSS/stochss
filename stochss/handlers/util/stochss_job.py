@@ -77,7 +77,7 @@ class StochSSJob(StochSSBase):
         if new:
             self.type = data['type']
             self.__create_new_job(
-                mdl_path=data['mdl_path'], settings=data['settings'], compute=data['compute']
+                mdl_path=data['mdl_path'], settings=data['settings'], compute=data['compute_env']
             )
 
 
@@ -88,7 +88,7 @@ class StochSSJob(StochSSBase):
             os.mkdir(self.__get_results_path(full=True))
             info = {
                 "source_model": mdl_path, "wkfl_model": None, "type": self.type,
-                "start_time": None, "compute": compute
+                "start_time": None, "compute_env": compute
             }
             self.update_info(new_info=info, new=True)
             with open(os.path.join(path, "logs.txt"), "w", encoding="utf-8") as log_file:
@@ -927,7 +927,7 @@ class StochSSJob(StochSSBase):
             if "annotation" in new_info:
                 info['annotation'] = new_info['annotation']
             if "compute_env" in new_info:
-                info['compute_env'] = new_info['compute']
+                info['compute_env'] = new_info['compute_env']
         self.log("debug", f"New info: {info}")
         with open(self.__get_info_path(full=True), "w", encoding="utf-8") as file:
             json.dump(info, file, indent=4, sort_keys=True)

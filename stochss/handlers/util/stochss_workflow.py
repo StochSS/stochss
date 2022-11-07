@@ -299,7 +299,8 @@ class StochSSWorkflow(StochSSBase):
             self.log("info", f"Creating job{time_stamp} job")
             path = os.path.join(self.path, f"job{time_stamp}")
             data = {
-                "mdl_path": mdl_path, "settings": settings, "type": wkfl_type, "compute": compute
+                "mdl_path": mdl_path, "settings": settings,
+                "type": wkfl_type, "compute_env": compute
             }
             job = StochSSJob(path=path, new=True, data=data)
             self.log("info", f"Successfully created {job.get_file()} job")
