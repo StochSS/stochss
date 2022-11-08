@@ -65,42 +65,6 @@ class ModelBrowserFileList(APIHandler):
         self.finish()
 
 
-class ModelToNotebookHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for handling conversions from model (.mdl) file to Jupyter Notebook
-    (.ipynb) file.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Runs the convert_to_notebook function from the convert_to_notebook script
-        to build a Jupyter Notebook version of the model and write it to a file.
-
-        Attributes
-        ----------
-        '''
-        path = self.get_query_argument(name="path")
-        log.debug(f"Path to the model file: {path}")
-        self.set_header('Content-Type', 'application/json')
-        try:
-            is_spatial = path.endswith(".smdl")
-            log.info(f"Getting data from {path.split('/').pop()}")
-            model = StochSSSpatialModel(path=path) if is_spatial else StochSSModel(path=path)
-            data = model.get_notebook_data()
-            log.debug(f"Notebook data: {data}")
-            log.info(f"Converting {path.split('/').pop()} to notebook")
-            notebook = StochSSNotebook(**data)
-            resp = notebook.create_ses_notebook() if is_spatial else notebook.create_es_notebook()
-            log.info(f"Successfully created the notebook for {path.split('/').pop()}")
-            log.debug(f"Notebook file path: {resp}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
 class EmptyTrashAPIHandler(APIHandler):
     '''
     ##############################################################################
