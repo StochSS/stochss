@@ -16,14 +16,38 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-let startChar = (text) => {
-  if (/^[0-9]+/.test(text)) {
-    return "Field cannot start with a number. Start with letter or underscore." 
+let optionalStartChar = (text) => {
+  return startChar(text, {optional: true});
+}
+
+let startChar = (text, {optional=false}={}) => {
+  var failed = false;
+  if(optional) {
+    if(text !== "" && /^[0-9]+/.test(text)) {
+      failed = true;
+    }
+  }else if(/^[0-9]+/.test(text)) {
+    failed = true;
+  }
+  if(failed) {
+    return "Field cannot start with a number. Start with letter or underscore."
   }
 }
 
-let invalidChar = (text) => {
-  if (!/^[a-zA-Z0-9_]+$/.test(text)) {
+let optionalInvalidChar = (text) => {
+  return invalidChar(text, {optional: true});
+}
+
+let invalidChar = (text, {optional=false}={}) => {
+  var failed = false;
+  if(optional) {
+    if(text !== "" && !/^[a-zA-Z0-9_]+$/.test(text)) {
+      failed = true;
+    }
+  }else if(!/^[a-zA-Z0-9_]+$/.test(text)) {
+    failed = true;
+  }
+  if(failed) {
     return "Invalid characters. Please only use letters, numbers, or underscores."
   }
 }
@@ -52,9 +76,13 @@ let negValue = (value) => {
 
 module.exports = {
   invalidChar: invalidChar,
+  optionalInvalidChar: optionalInvalidChar,
+  optionalNameTests: [optionalStartChar, optionalInvalidChar],
+  optionalStartChar: optionalStartChar,
   nameTests: [startChar, invalidChar],
   nanValue: nanValue,
   negValue: negValue,
   startChar: startChar,
+  intTest: nanValue,
   valueTests: [nanValue, negValue]
 }

@@ -56,6 +56,8 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.boundaryConditionsEditor;
+    this.filterAttr = attrs.attr;
+    this.filterKey = attrs.key;
     this.setDefaultBC();
   },
   render: function (attrs, options) {
@@ -70,10 +72,10 @@ module.exports = View.extend({
       $(this.queryByHook('edit-boundary-conditions')).removeClass('active');
       $(this.queryByHook('view-boundary-conditions')).addClass('active');
     }else{
-      this.renderEditBoundaryConditionView();
+      this.renderEditBoundaryConditionView({'key': this.filterKey, 'attr': this.filterAttr});
       this.toggleAddNewBCButton();
     }
-    this.renderViewBoundaryConditionView();
+    this.renderViewBoundaryConditionView({'key': this.filterKey, 'attr': this.filterAttr});
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -93,17 +95,16 @@ module.exports = View.extend({
   },
   handleAddBCClick: function (e) {
     let endpoint = path.join(app.getApiPath(), "model/new-bc");
-    let self = this;
-    if(this.newBC.property === "v") {
+    if(this.newBC.target === "v") {
       this.newBC.value = this.newBCVector;
     }
     let data = {model_path: this.collection.parent.directory,
                 kwargs: this.newBC};
     app.postXHR(endpoint, data, {
-      success: function (err, response, body) {
-        self.collection.addNewBoundaryCondition(self.newBCName, body.expression);
-        self.setDefaultBC();
-        self.resetNewBCViews();
+      success: (err, response, body) => {
+        this.collection.addNewBoundaryCondition(this.newBCName, body.expression);
+        this.setDefaultBC();
+        this.resetNewBCViews();
       }
     });
   },
@@ -121,15 +122,15 @@ module.exports = View.extend({
         $(this.queryByHook("new-bc-velocity-value")).css("display", "none");
         $(this.queryByHook("new-bc-other-value")).css("display", "block");
       }
-      this.newBC.property = target;
-      this.newBC.species = null;
+      this.newBC.target = target;
       $(this.queryByHook("new-bc-deterministic")).prop("disabled", true);
     }else{
-      let species = this.collection.parent.species.filter(function (specie) {
+      $(this.queryByHook("new-bc-velocity-value")).css("display", "none");
+      $(this.queryByHook("new-bc-other-value")).css("display", "block");
+      let species = this.collection.parent.species.filter((specie) => {
         return specie.compID === Number(target);
       })[0].name;
-      this.newBC.property = null;
-      this.newBC.species = species;
+      this.newBC.target = species;
       $(this.queryByHook("new-bc-deterministic")).prop("disabled", false);
     }
   },
@@ -143,17 +144,24 @@ module.exports = View.extend({
         this.newBC[key] = this.validateNewBCCondition(key, value);
       }else if(key === "value") {
         if(e.delegateTarget.dataset.hook.endsWith("x")) {
-          this.newBCVector[0] = value === "" ? 0 : value;
+          this.newBCVector[0] = value === "" ? 0 : Number(value);
         }else if(e.delegateTarget.dataset.hook.endsWith("y")) {
-          this.newBCVector[1] = value === "" ? 0 : value;
+          this.newBCVector[1] = value === "" ? 0 : Number(value);
         }else if(e.delegateTarget.dataset.hook.endsWith("z")) {
-          this.newBCVector[2] = value === "" ? 0 : value;
+          this.newBCVector[2] = value === "" ? 0 : Number(value);
         }else{
-          this.newBC[key] = value === "" ? null : value;
+          this.newBC[key] = value === "" ? null : Number(value);
         }
       }
     }
     this.toggleAddNewBCButton();
+  },
+  openSection: function ({editMode=true}={}) {
+    if(!$(this.queryByHook("boundary-conditions-container")).hasClass("show")) {
+      let boundCondCollapseBtn = $(this.queryByHook("collapse-bc"));
+      boundCondCollapseBtn.click();
+      boundCondCollapseBtn.html('-');
+    }
   },
   renderEditBoundaryConditionView: function ({key=null, attr=null}={}) {
     if(this.editBoundaryConditionView) {
@@ -193,7 +201,7 @@ module.exports = View.extend({
   resetNewBCViews: function () {
     $(this.queryByHook("new-bc-deterministic")).prop("checked", this.newBC.deterministic);
     $(this.queryByHook("new-bc-name")).find("input").val(this.newBCName);
-    $(this.queryByHook("new-bc-target")).find("select").val(this.newBC.property);
+    $(this.queryByHook("new-bc-target")).find("select").val(this.newBC.target);
     $(this.queryByHook("new-bc-type")).find("input").val(this.newBC.type_id);
     $(this.queryByHook("new-bc-value")).find("input").val(this.newBC.value);
     $(this.queryByHook("new-bc-x-min")).find("input").val(this.newBC.xmin);
@@ -207,14 +215,14 @@ module.exports = View.extend({
   },
   setDefaultBC: function () {
     this.newBCName = "";
-    this.newBC = {"species": null, "property": "v", "value": null, "deterministic": true, "type_id": null,
+    this.newBC = {"target": "v", "value": null, "deterministic": true, "type_id": null,
                   "xmin": null, "ymin": null, "zmin": null, "xmax": null, "ymax": null, "zmax": null};
     this.newBCVector = [0, 0, 0];
     this.setConditions = [];
   },
   toggleAddNewBCButton: function () {
     let invalidName = this.newBCName === "";
-    let invalidValue = this.newBC.property === "v" ? this.newBCVector === [0, 0, 0] : this.newBC.value === null;
+    let invalidValue = this.newBC.target === "v" ? this.newBCVector === [0, 0, 0] : this.newBC.value === null;
     let disabled = invalidName || invalidValue || !this.setConditions.length;
     $(this.queryByHook("add-new-bc")).prop("disabled", disabled);
   },
@@ -229,7 +237,7 @@ module.exports = View.extend({
     }else if(!this.setConditions.includes(key)){
       this.setConditions.push(key);
     }
-    return value;
+    return key === "type_id" ? value : Number(value);
   },
   subviews: {
     filter: {
@@ -240,6 +248,7 @@ module.exports = View.extend({
           required: false,
           name: 'filter',
           valueType: 'string',
+          disabled: this.filterKey !== null,
           placeholder: 'filter'
         });
       }
@@ -271,7 +280,7 @@ module.exports = View.extend({
           name: 'target',
           eagerValidate: true,
           groupOptions: options,
-          value: this.newBC.property
+          value: this.newBC.target
         });
       }
     },
@@ -333,7 +342,7 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'xmin',
-          tests: tests.valueTests,
+          tests: tests.intTests,
           valueType: 'number',
           value: this.newBC.xmin
         });
@@ -346,7 +355,7 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'ymin',
-          tests: tests.valueTests,
+          tests: tests.intTests,
           valueType: 'number',
           value: this.newBC.ymin
         });
@@ -359,7 +368,7 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'zmin',
-          tests: tests.valueTests,
+          tests: tests.intTests,
           valueType: 'number',
           value: this.newBC.zmin
         });
@@ -372,7 +381,7 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'xmax',
-          tests: tests.valueTests,
+          tests: tests.intTests,
           valueType: 'number',
           value: this.newBC.xmax
         });
@@ -385,7 +394,7 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'ymax',
-          tests: tests.valueTests,
+          tests: tests.intTests,
           valueType: 'number',
           value: this.newBC.ymax
         });
@@ -398,7 +407,7 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'zmax',
-          tests: tests.valueTests,
+          tests: tests.intTests,
           valueType: 'number',
           value: this.newBC.zmax
         });
@@ -411,8 +420,8 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'type',
-          tests: tests.valueTests,
-          valueType: 'number',
+          tests: tests.optionalNameTests,
+          valueType: 'string',
           value: this.newBC.type_id
         });
       }

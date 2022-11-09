@@ -73,11 +73,19 @@ module.exports = State.extend({
     if(this.reactionType === "custom-propensity") { return }
     var odePropensity = this.rate.name;
     var propensity = this.rate.name;
-    
+
+    let reactants = {}
     this.reactants.forEach((stoichSpecies) => {
-      let name = stoichSpecies.specie.name;
-      if(stoichSpecies.ratio == 2) {
-        odePropensity += ` * ${name} * ${name}`;
+      if(Object.keys(reactants).includes(stoichSpecies.specie.name)) {
+        reactants[stoichSpecies.specie.name] += stoichSpecies.ratio;
+      }else{
+        reactants[stoichSpecies.specie.name] = stoichSpecies.ratio;
+      }
+    });
+    
+    Object.keys(reactants).forEach((name) => {
+      if(reactants[name] == 2) {
+        odePropensity = `${propensity} * ${name} * ${name}`;
         propensity = `${propensity} * ${name} * (${name} - 1) / vol`;
       }else{
         odePropensity += ` * ${name}`;
@@ -85,7 +93,7 @@ module.exports = State.extend({
       }
     })
     
-    let order = this.reactants.length;
+    let order = reactants.length;
     if(order == 2) {
       propensity += " / vol";
     }else if(order == 0) {

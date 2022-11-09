@@ -37,6 +37,7 @@ module.exports = Collection.extend({
       initialValue: false,
       persistent: false,
       useValuesFromTriggerTime: false,
+      selected: true
     });
     event.eventAssignments.addEventAssignment()
     this.parent.updateValid()
