@@ -311,6 +311,7 @@ let WorkflowManager = PageView.extend({
       $(this.queryByHook("nf-start-job")).css('display', 'none');
     }
     if(this.model.type === "Parameter Sweep"){
+      $(this.queryByHook("aws-start-job")).addClass("disabled")
       if(this.model.settings.parameterSweepSettings.parameters.length < 1) {
         $(this.queryByHook("start-job")).prop("disabled", true);
       }
