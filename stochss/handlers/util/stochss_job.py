@@ -467,7 +467,9 @@ class StochSSJob(StochSSBase):
         kwargs = {"path":path, "new":True, "settings":settings,
                   "models":{"s_model":s_model, "model":g_model}}
         results_path = os.path.join(self.__get_results_path(), "results.p")
-        return {"kwargs":kwargs, "type":wkfl_type, "results": results_path}
+        return {
+            "kwargs":kwargs, "type":wkfl_type, "results": results_path, "compute_env": info['compute_env']
+        }
 
 
     def get_plot_from_results(self, data_keys, plt_key, add_config=False):

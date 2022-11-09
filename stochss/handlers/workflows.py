@@ -292,6 +292,7 @@ class WorkflowNotebookHandler(APIHandler):
                 wkfl_type = kwargs['type']
                 results = kwargs['results']
                 kwargs = kwargs['kwargs']
+                compute = kwargs['compute_env']
                 log.info(f"Converting {file_obj.get_file()} to notebook")
             else:
                 results = None
