@@ -24,6 +24,7 @@
         "size": null,
         "static": true,
         "template_version": 2,
+        "transformations": [],
         "types": [
             {
                 "c":10,

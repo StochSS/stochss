@@ -23,6 +23,7 @@ let Types = require('./domain-types');
 let Particles = require('./particles');
 let Geometries = require('./geometries');
 let Lattices = require('./lattices');
+let Transformations = require('./transformations');
 
 module.exports = State.extend({
   props: {
@@ -42,7 +43,8 @@ module.exports = State.extend({
     types: Types,
     particles: Particles,
     geometries: Geometries,
-    lattices: Lattices
+    lattices: Lattices,
+    transformations: Transformations
   },
   session: {
     def_particle_id: 'number',
