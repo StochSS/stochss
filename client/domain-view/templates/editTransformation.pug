@@ -1,0 +1,50 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-1
+
+      div.pl-3
+
+        input(type="checkbox" data-hook="select-transformation" data-toggle="collapse" data-target="#collapse-transformation-details" + this.model.cid)
+
+    div.col-sm-2
+
+      div.pl-2(data-hook="input-name-container")
+
+    div.col-sm-7
+
+      div.pl-2(data-hook="select-type-container")
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X
+
+  div-mx-1.pl-2(data-hook="transformation-details")
+
+    div.collapse(id="collapse-transformation-details" + this.model.cid)
+
+      div
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-4
+
+            h6.inline <b>Geometry</b>
+
+          div.col-sm-4
+
+            h6.inline <b>Lattice</b>
+
+          div.col-sm-4
+
+            h6.inline <b>Transformation</b>
+
+      div.hidden(data-hook="vector-transformation-props")
+
+      div.hidden(data-hook="reflect-transformation-props")
+
+      div.hidden(data-hook="scale-transformation-props")

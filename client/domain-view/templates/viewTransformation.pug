@@ -1,0 +1,32 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-2
+
+      div.pl-2=this.model.name
+
+    div.col-sm-3
+
+      div=this.model.type
+
+    div.col-sm-2
+
+      div=this.model.geometry
+
+    div.col-sm-2
+
+      div=this.model.lattice
+
+    div.col-sm-3
+
+      div=this.model.transformation
+
+  div.hidden(data-hook="vector-transformation-props")
+
+  div.hidden(data-hook="reflect-transformation-props")
+
+  div.hidden(data-hook="scale-transformation-props")
