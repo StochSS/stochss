@@ -42,6 +42,7 @@ module.exports = View.extend({
   events: {
     'change [data-hook=input-name-container]' : 'updateFileHeaders',
     'change [data-hook=select-type-container]' : 'selectLatticeType',
+    'change [data-target=lattice-center]' : 'handleSetCenter',
     'change [data-hook=mesh-file]' : 'setMeshFile',
     'change [data-hook=type-file]' : 'setTypeFile',
     'change [data-hook=lattice-mesh-select]' : 'selectMeshFile',
@@ -163,6 +164,11 @@ module.exports = View.extend({
         this.errorAction(body.Message);
       }
     }, false);
+  },
+  handleSetCenter: function (e) {
+    let key = e.target.dataset.name;
+    let value = Number(e.target.value);
+    this.model.center[key] = value;
   },
   hideDetails: function () {
     this.details[this.model.type].forEach((element) => {
@@ -425,9 +431,8 @@ module.exports = View.extend({
           parent: this,
           name: 'center-x',
           tests: [tests.nanValue],
-          modelKey: 'x',
           valueType: 'number',
-          value: this.model.x
+          value: this.model.center.x
         });
       }
     },
@@ -438,9 +443,8 @@ module.exports = View.extend({
           parent: this,
           name: 'center-y',
           tests: [tests.nanValue],
-          modelKey: 'y',
           valueType: 'number',
-          value: this.model.y
+          value: this.model.center.y
         });
       }
     },
@@ -451,9 +455,8 @@ module.exports = View.extend({
           parent: this,
           name: 'center-z',
           tests: [tests.nanValue],
-          modelKey: 'z',
           valueType: 'number',
-          value: this.model.z
+          value: this.model.center.z
         });
       }
     },

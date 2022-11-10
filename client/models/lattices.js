@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let _ = require('underscore');
 //models
+let Point = require('./point');
 let Lattice = require('./lattice');
 //collections
 let Collection = require('ampersand-collection');
@@ -39,17 +40,15 @@ module.exports = Collection.extend({
       radius: 0,
       subdomainFile: '',
       type: type,
-      x: 0,
       xmin: 0,
       xmax: 0,
-      y: 0,
       ymin: 0,
       ymax: 0,
-      z: 0,
       zmin: 0,
       zmax: 0
     });
     lattice.selected = true;
+    lattice.center = this.getNewPoint();
     this.add(lattice);
     return name;
   },
@@ -62,6 +61,9 @@ module.exports = Collection.extend({
       name = 'lattice' + i;
     }
     return name;
+  },
+  getNewPoint: function () {
+    return new Point({x: 0, y: 0, z: 0});
   },
   removeLattice: function (lattice) {
     this.remove(lattice);
