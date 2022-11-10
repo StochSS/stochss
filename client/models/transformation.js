@@ -51,21 +51,56 @@ module.exports = State.extend({
     if(key === null) { return true; }
 
     let checks = {
+      'angle': this.angle === Number(key),
+      'factor': this.factor === Number(key),
+      'geometry': this.geometry.includes(key),
+      'lattice': this.lattice.includes(key),
       'name': this.name.includes(key),
-      'type': this.type === key,
+      'transformation': this.transformation.includes(key),
+      'type': this.type === key
     }
 
     if(attr !== null) {
-      let otherAttrs = {}
+      let otherAttrs = {
+        'centerx': 'x', 'centery': 'y', 'centerz': 'z',
+        'normalx': 'x', 'normaly': 'y', 'normalz': 'z',
+        'point1x': 'x', 'point1y': 'y', 'point1z': 'z',
+        'point2x': 'x', 'point2y': 'y', 'point2z': 'z',
+        'point3x': 'x', 'point3y': 'y', 'point3z': 'z'
+      }
+      let pointCheck = this.setPointCheck(attr)
       if(Object.keys(otherAttrs).includes(attr)) {
         attr = otherAttrs[attr];
+      }
+      checks['center'] = this.center.contains(attr, key);
+      checks['normal'] = this.normal.contains(attr, key);
+      checks['point1'] = this.point1.contains(attr, key);
+      checks['point2'] = this.point2.contains(attr, key);
+      checks['point3'] = this.point3.contains(attr, key);
+      if(['x', 'y', 'z'].includes(attr)) {
+        if(pointCheck !== null) {
+          return checks[pointCheck]
+        }
+        let points = ['center', 'normal', 'point1', 'point2', 'point3'];
+        for(let attribute in points) {
+          if(checks[attribute]) { return true; }
+        }
+        return false;
       }
       return checks[attr];
     }
     for(let attribute in checks) {
       if(checks[attribute]) { return true; }
     }
-    return false
+    return false;
+  },
+  setPointCheck: function (attr) {
+    if(attr.includes('center')) { return "center"; }
+    if(attr.includes('normal')) { return "normal"; }
+    if(attr.includes('point1')) { return "point1"; }
+    if(attr.includes('point2')) { return "point2"; }
+    if(attr.includes('point3')) { return "point3"; }
+    return null;
   },
   validate: function () {
     if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
