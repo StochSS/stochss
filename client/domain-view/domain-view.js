@@ -34,6 +34,7 @@ let GeometriesView = require('./views/geometries-view');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
+let TransformationsView = require('./views/transformations-view');
 //templates
 let template = require('./domainView.pug');
 
@@ -63,6 +64,7 @@ module.exports = View.extend({
     this.renderTypesView();
     this.renderGeometriesView();
     this.renderLatticesView();
+    this.renderTransformationsView();
     if(this.readOnly) {
       $(this.queryByHook('domain-particles-editor')).css('display', 'none');
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
@@ -335,6 +337,17 @@ module.exports = View.extend({
       readOnly: this.readOnly
     });
     app.registerRenderSubview(this, this.propertiesView, "domain-properties-container");
+  },
+  renderTransformationsView: function () {
+    if(this.transformationsView) {
+      this.transformationsView.reomve();
+    }
+    this.transformationsView = new TransformationsView({
+      collection: this.model.transformations,
+      readOnly: this.readOnly
+    });
+    let hook = "domain-transformations-container";
+    app.registerRenderSubview(this, this.transformationsView, hook);
   },
   renderTypesQuickview: function () {
     if(this.typesQuickviewView) {
