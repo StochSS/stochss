@@ -31,6 +31,7 @@ let viewTemplate = require('../templates/viewGeometry.pug');
 module.exports = View.extend({
   events: {
     'change [data-hook=select-type-container]' : 'selectGeometryType',
+    'change [data-hook=input-name-container]' : 'updateTransformations',
     'click [data-hook=remove]' : 'removeGeometry'
   },
   initialize: function (attrs, options) {
@@ -68,6 +69,13 @@ module.exports = View.extend({
     this.renderFormulaInputView();
   },
   update: function () {},
+  updateTransformations: function (e) {
+    let name = this.model.name;
+    this.model.name = e.target.value;
+    this.model.collection.parent.transformations.trigger(
+      'update-geometry-options', {currName: name, newName: this.model.name}
+    );
+  },
   updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewGeometriesView();
@@ -81,7 +89,6 @@ module.exports = View.extend({
           required: true,
           name: 'name',
           tests: tests.nameTests,
-          modelKey: 'name',
           valueType: 'string',
           value: this.model.name
         });

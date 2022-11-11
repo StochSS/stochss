@@ -39,6 +39,7 @@ module.exports = View.extend({
     }
   },
   events: {
+    'change [data-hook=input-name-container]' : 'updateTransformations',
     'change [data-hook=select-type-container]' : 'selectTransformationType',
     'change [data-hook=geometry-select-container]' : 'selectNestedGeometry',
     'change [data-hook=lattice-select-container]' : 'selectNestedLattice',
@@ -65,9 +66,6 @@ module.exports = View.extend({
         setTimeout(_.bind(this.openDetails, this), 1);
       }
       this.model.on('change', _.bind(this.updateViewer, this));
-      // TODO: Need an event listener to update the geometry select when a geometry name is changed
-      // TODO: Need an event listener to update the lattice select when a lattice name is changed
-      // TODO: Need an event listener to update the transformation select when a transformation name is changed
       this.renderGeometrySelectView();
       this.renderLatticeSelectView();
       this.renderTransformationSelectView();
@@ -88,7 +86,10 @@ module.exports = View.extend({
     $("#collapse-transformation-details" + this.model.cid).collapse("show");
   },
   removeTransformation: function () {
-    this.model.collection.removeTransformation(this.model);
+    let name = this.model.name;
+    let collection = this.model.collection;
+    collection.removeTransformation(this.model);
+    collection.trigger('update-transformation-options', {currName: name});
   },
   renderGeometrySelectView: function () {
     if(this.geometrySelectView) {
@@ -164,6 +165,15 @@ module.exports = View.extend({
     this.model.type = e.target.value;
     this.displayDetails();
   },
+  update: function () {},
+  updateTransformations: function (e) {
+    let name = this.model.name;
+    this.model.name = e.target.value;
+    this.model.collection.parent.transformations.trigger(
+      'update-transformation-options', {currName: name, newName: this.model.name}
+    );
+  },
+  updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewTransformationsView();
   },
@@ -176,7 +186,6 @@ module.exports = View.extend({
           required: true,
           name: 'name',
           tests: tests.nameTests,
-          modelKey: 'name',
           valueType: 'string',
           value: this.model.name
         });

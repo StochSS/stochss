@@ -377,6 +377,7 @@ module.exports = View.extend({
   },
   update: function () {},
   updateFileHeaders: function (e) {
+    this.updateTransformations(e);
     let types = ['XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice'];
     if(!types.includes(this.model.type)) { return }
 
@@ -384,6 +385,13 @@ module.exports = View.extend({
     $($("#importFilesHeader" + this.model.cid).children()[0]).text(importHeader);
     let uploadHeader = `Uploaded Files for ${this.model.name}`;
     $($("#uploadedFilesHeader" + this.model.cid).children()[0]).text(uploadHeader);
+  },
+  updateTransformations: function (e) {
+    let name = this.model.name;
+    this.model.name = e.target.value;
+    this.model.collection.parent.transformations.trigger(
+      'update-lattice-options', {currName: name, newName: this.model.name}
+    );
   },
   updateValid: function () {},
   updateViewer: function () {
@@ -398,7 +406,6 @@ module.exports = View.extend({
           required: true,
           name: 'name',
           tests: tests.nameTests,
-          modelKey: 'name',
           valueType: 'string',
           value: this.model.name
         });

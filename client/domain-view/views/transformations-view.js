@@ -53,6 +53,9 @@ module.exports = View.extend({
       $(this.queryByHook('view-transformations')).addClass('active');
     }else{
       this.renderEditTransformationsView();
+      this.collection.on('update-geometry-options', this.updateGeometryOptions, this);
+      this.collection.on('update-lattice-options', this.updateLatticeOptions, this);
+      this.collection.on('update-transformation-options', this.updateTransformationOptions, this);
     }
     this.renderViewTransformationsView();
   },
@@ -61,7 +64,9 @@ module.exports = View.extend({
   },
   addTransformation: function (e) {
     let type = e.target.dataset.name;
-    this.collection.addTransformation(type);
+    let name = this.collection.addTransformation(type);
+    console.log(name)
+    this.collection.trigger('update-transformation-options', {currName: name});
   },
   renderEditTransformationsView: function ({key=null, attr=null}={}) {
     if(this.editTransformationsView) {
@@ -89,5 +94,34 @@ module.exports = View.extend({
       this.queryByHook('view-transformations-list'),
       options
     );
+  },
+  updateGeometryOptions: function ({currName=null, newName=null}={}) {
+    if(currName === null || newName === null) { return; }
+    this.editTransformationsView.views.forEach((view) => {
+      if(view.model.geometry === currName) {
+        view.model.geometry = newName
+      }
+      view.renderGeometrySelectView();
+    });
+  },
+  updateLatticeOptions: function ({currName=null, newName=null}={}) {
+    if(currName === null || newName === null) { return; }
+    this.editTransformationsView.views.forEach((view) => {
+      if(view.model.lattice === currName) {
+        view.model.lattice = newName
+      }
+      view.renderLatticeSelectView();
+    });
+  },
+  updateTransformationOptions: function ({currName=null, newName=null}={}) {
+    if(currName === null && newName === null) { return; }
+    this.editTransformationsView.views.forEach((view) => {
+      if(view.model.transformation === currName && newName !== null) {
+        view.model.transformation = newName
+      }
+      if((newName === null && view.model.name !== currName) || view.model.name !== newName) {
+        view.renderTransformationSelectView();
+      }
+    });
   }
 });
