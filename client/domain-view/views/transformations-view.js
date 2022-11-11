@@ -16,7 +16,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let $ = require('jquery');
 //support files
+let app = require('../../app');
 let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
@@ -27,6 +29,11 @@ let template = require('../templates/transformationsView.pug');
 module.exports = View.extend({
   template: template,
   events: {
+    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=translate-transformation]' : 'addTransformation',
+    'click [data-hook=rotate-transformation]' : 'addTransformation',
+    'click [data-hook=reflect-transformation]' : 'addTransformation',
+    'click [data-hook=scale-transformation]' : 'addTransformation'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -35,5 +42,52 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(this.readOnly) {
+      $(this.queryByHook('transformations-edit-tab')).addClass("disabled");
+      $(".nav .disabled>a").on("click", function(e) {
+        e.preventDefault();
+        return false;
+      });
+      $(this.queryByHook('transformations-view-tab')).tab('show');
+      $(this.queryByHook('edit-transformations')).removeClass('active');
+      $(this.queryByHook('view-transformations')).addClass('active');
+    }else{
+      this.renderEditTransformationsView();
+    }
+    this.renderViewTransformationsView();
+  },
+  changeCollapseButtonText: function (e) {
+    app.changeCollapseButtonText(this, e);
+  },
+  addTransformation: function (e) {
+    let type = e.target.dataset.name;
+    this.collection.addTransformation(type);
+  },
+  renderEditTransformationsView: function ({key=null, attr=null}={}) {
+    if(this.editTransformationsView) {
+      this.editTransformationsView.remove();
+    }
+    let options = {filter: (model) => { return model.contains(attr, key); }}
+    this.editTransformationsView = this.renderCollection(
+      this.collection,
+      EditTransformationView,
+      this.queryByHook('edit-transformations-list'),
+      options
+    );
+  },
+  renderViewTransformationsView: function ({key=null, attr=null}={}) {
+    if(this.viewTransformationsView) {
+      this.viewTransformationsView.remove();
+    }
+    let options = {
+      viewOptions: {viewMode: true},
+      filter: (model) => { return model.contains(attr, key); }
+    }
+    this.viewTransformationsView = this.renderCollection(
+      this.collection,
+      EditTransformationView,
+      this.queryByHook('view-transformations-list'),
+      options
+    );
   }
 });
