@@ -11,11 +11,11 @@ div.mx-1
 
         input(type="checkbox" data-hook="select-transformation" data-toggle="collapse" data-target="#collapse-transformation-details" + this.model.cid)
 
-    div.col-sm-2
+    div.col-sm-3
 
       div.pl-2(data-hook="input-name-container")
 
-    div.col-sm-7
+    div.col-sm-6
 
       div.pl-2(data-hook="select-type-container")
 
@@ -42,6 +42,20 @@ div.mx-1
           div.col-sm-4
 
             h6.inline <b>Transformation</b>
+
+        div.my-3.row
+
+          div.col-sm-4
+
+            div(data-hook="geometry-select-container")
+
+          div.col-sm-4
+
+            div(data-hook="lattice-select-container")
+
+          div.col-sm-4
+
+            div(data-hook="transformation-select-container")
 
       div.hidden(data-hook="vector-transformation-props")
 
