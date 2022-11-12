@@ -71,6 +71,7 @@ module.exports = View.extend({
       this.renderTypesQuickview();
     }else{
       this.updateParticleViews();
+      this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
     }
     if(!this.elements) {
       this.elements = {
@@ -469,6 +470,33 @@ module.exports = View.extend({
       this.renderTypesView();
       this.resetFigure();
     }
+  },
+  updateGeometryDeps: function () {
+    let deps = [];
+    let geomNames = [];
+    let combForms = [];
+    this.model.geometries.forEach((geometry) => {
+      geomNames.push(geometry.name);
+      if(geometry.type === "Combinatory Geometry") {
+        combForms.push(geometry.formula)
+      }
+    });
+    combForms.forEach((formula) => {
+      formula = formula.replace(/\(/g, ' ').replace(/\)/g, ' ');
+      let formDeps = formula.split(' ');
+      geomNames.forEach((name) => {
+        if(formDeps.includes(name) && !deps.includes(name)) {
+          deps.push(name);
+        }
+      });
+    });
+    this.model.transformations.forEach((transformation) => {
+      let geometry = transformation.geometry;
+      if(geomNames.includes(geometry) &&  !deps.includes(geometry)) {
+        deps.push(geometry);
+      }
+    });
+    this.model.geometries.trigger('update-inuse', {deps: deps});
   },
   updateParticleViews: function () {
     this.renderNewParticleView();

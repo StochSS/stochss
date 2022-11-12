@@ -25,8 +25,14 @@ module.exports = State.extend({
     type: 'string',
     formula: 'string'
   },
+  session: {
+    inUse: {
+      type: 'boolean',
+      default: false,
+    }
+  },
   initialize: function (attrs, options) {
-    State.prototype.initialize.apply(this, arguments)
+    State.prototype.initialize.apply(this, arguments);
   },
   contains: function (attr, key) {
     if(key === null) { return true; }

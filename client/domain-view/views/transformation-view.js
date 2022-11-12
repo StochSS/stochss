@@ -150,6 +150,7 @@ module.exports = View.extend({
   },
   selectNestedGeometry: function (e) {
     this.model.geometry = e.target.value;
+    this.model.collection.parent.trigger('update-geometry-deps');
   },
   selectNestedLattice: function (e) {
     this.model.lattice = e.target.value;
