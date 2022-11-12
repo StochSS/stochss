@@ -72,6 +72,7 @@ module.exports = View.extend({
     }else{
       this.updateParticleViews();
       this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
+      this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
     }
     if(!this.elements) {
       this.elements = {
@@ -497,6 +498,19 @@ module.exports = View.extend({
       }
     });
     this.model.geometries.trigger('update-inuse', {deps: deps});
+  },
+  updateLatticeDeps: function () {
+    let deps = [];
+    let lattNames = this.model.lattices.map((lattice) => {
+      return lattice.name;
+    });
+    this.model.transformations.forEach((transformation) => {
+      let lattice = transformation.lattice;
+      if(lattNames.includes(lattice) &&  !deps.includes(lattice)) {
+        deps.push(lattice);
+      }
+    });
+    this.model.lattices.trigger('update-inuse', {deps: deps});
   },
   updateParticleViews: function () {
     this.renderNewParticleView();

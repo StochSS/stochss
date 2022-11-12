@@ -154,6 +154,7 @@ module.exports = View.extend({
   },
   selectNestedLattice: function (e) {
     this.model.lattice = e.target.value;
+    this.model.collection.parent.trigger('update-lattice-deps');
   },
   selectNestedTransformation: function (e) {
     this.model.transformation = e.target.value;

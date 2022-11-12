@@ -47,6 +47,10 @@ module.exports = State.extend({
     selected: {
       type: 'boolean',
       default: false
+    },
+    inUse: {
+      type: 'boolean',
+      default: false,
     }
   },
   initialize: function (attrs, options) {

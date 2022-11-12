@@ -37,6 +37,11 @@ module.exports = View.extend({
         el.checked = value;
       },
       hook: 'select-lattice'
+    },
+    'model.inUse': {
+      hook: 'remove',
+      type: 'booleanAttribute',
+      name: 'disabled',
     }
   },
   events: {
