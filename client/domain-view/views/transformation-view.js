@@ -36,6 +36,11 @@ module.exports = View.extend({
         el.checked = value;
       },
       hook: 'select-transformation'
+    },
+    'model.inUse': {
+      hook: 'remove',
+      type: 'booleanAttribute',
+      name: 'disabled',
     }
   },
   events: {
@@ -158,6 +163,7 @@ module.exports = View.extend({
   },
   selectNestedTransformation: function (e) {
     this.model.transformation = e.target.value;
+    this.model.collection.parent.trigger('update-transformation-deps');
   },
   selectTransformation: function () {
     this.model.selected = !this.model.selected;

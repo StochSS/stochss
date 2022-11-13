@@ -56,7 +56,7 @@ module.exports = View.extend({
     }else{
       this.renderEditLatticesView();
       this.collection.on('update-inuse', this.updateInUse, this);
-      this.collection.parent.trigger('update-lattice-deps')
+      this.collection.parent.trigger('update-lattice-deps');
     }
     this.renderViewLatticesView();
   },

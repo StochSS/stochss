@@ -56,6 +56,8 @@ module.exports = View.extend({
       this.collection.on('update-geometry-options', this.updateGeometryOptions, this);
       this.collection.on('update-lattice-options', this.updateLatticeOptions, this);
       this.collection.on('update-transformation-options', this.updateTransformationOptions, this);
+      this.collection.on('update-inuse', this.updateInUse, this);
+      this.collection.parent.trigger('update-transformation-deps');
     }
     this.renderViewTransformationsView();
   },
@@ -65,7 +67,6 @@ module.exports = View.extend({
   addTransformation: function (e) {
     let type = e.target.dataset.name;
     let name = this.collection.addTransformation(type);
-    console.log(name)
     this.collection.trigger('update-transformation-options', {currName: name});
   },
   renderEditTransformationsView: function ({key=null, attr=null}={}) {
@@ -102,6 +103,12 @@ module.exports = View.extend({
         view.model.geometry = newName
       }
       view.renderGeometrySelectView();
+    });
+  },
+  updateInUse: function ({deps=null}={}) {
+    if(deps === null) { return; }
+    this.collection.forEach((transformation) => {
+      transformation.inUse = deps.includes(transformation.name);
     });
   },
   updateLatticeOptions: function ({currName=null, newName=null}={}) {

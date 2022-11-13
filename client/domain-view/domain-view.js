@@ -73,6 +73,7 @@ module.exports = View.extend({
       this.updateParticleViews();
       this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
       this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
+      this.model.on('update-transformation-deps', this.updateTransformationDeps, this);
     }
     if(!this.elements) {
       this.elements = {
@@ -511,6 +512,20 @@ module.exports = View.extend({
       }
     });
     this.model.lattices.trigger('update-inuse', {deps: deps});
+  },
+  updateTransformationDeps: function () {
+    let deps = [];
+    let transNames = this.model.transformations.map((transformation) => {
+      return transformation.name;
+    });
+    this.model.transformations.forEach((transformation) => {
+      let nestedTrans = transformation.transformation;
+      if(transNames.includes(nestedTrans) && !deps.includes(nestedTrans)) {
+        deps.push(nestedTrans);
+      }
+    });
+    console.log(deps)
+    this.model.transformations.trigger('update-inuse', {deps: deps});
   },
   updateParticleViews: function () {
     this.renderNewParticleView();
