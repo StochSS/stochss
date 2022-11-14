@@ -66,7 +66,8 @@ module.exports = View.extend({
         $(this.queryByHook('vector-transformation-props'))
       ],
       'Rotate Transformation': [
-        $(this.queryByHook('vector-transformation-props'))
+        $(this.queryByHook('vector-transformation-props')),
+        $(this.queryByHook('rotation-angle-prop'))
       ],
       'Reflect Transformation': [],
       'Scale Transformation': []
@@ -305,5 +306,18 @@ module.exports = View.extend({
         });
       }
     },
+    rotationAngleInputView: {
+      hook: 'rotation-angle-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'angle',
+          modelKey: 'angle',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.angle
+        });
+      }
+    }
   }
 });
