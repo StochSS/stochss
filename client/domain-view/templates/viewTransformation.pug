@@ -81,6 +81,100 @@ div.mx-1
 
   div.hidden(data-hook="reflect-transformation-props")
 
+    hr
+
+    div.mx-1.my-3.row.head.align-items-baseline
+
+      div.col-sm-4
+
+        h6 <b>Point 1</b>
+
+      div.col-sm-4.hidden(data-hook="view-normal-header")
+
+        h6 <b>Normal</b>
+
+      div.col-sm-4.hidden(data-hook="view-point2-header")
+
+        h6 <b>Point 2</b>
+
+      div.col-sm-4.hidden(data-hook="view-point3-header")
+
+        h6 <b>Point 3</b>
+
+    div.mx-1.my-3.row.align-items-baseline
+
+      div.col-sm-4
+
+        div
+
+          span.inline (x:
+
+          div.inline=this.model.point1.x
+
+          span.inline.mr-2 , y:
+
+          div.inline=this.model.point1.y
+
+          span.inline.mr-2 , z:
+
+          div.inline=this.model.point1.z
+
+          span.inline )
+
+      div.col-sm-4.hidden(data-hook="view-reflect-normal")
+
+        div
+
+          span.inline (x:
+
+          div.inline=this.model.normal.x
+
+          span.inline.mr-2 , y:
+
+          div.inline=this.model.normal.y
+
+          span.inline.mr-2 , z:
+
+          div.inline=this.model.normal.z
+
+          span.inline )
+
+      div.col-sm-4.hidden(data-hook="view-reflect-point2")
+
+        div
+
+          span.inline (x:
+
+          div.inline=this.model.point2.x
+
+          span.inline.mr-2 , y:
+
+          div.inline=this.model.point2.y
+
+          span.inline.mr-2 , z:
+
+          div.inline=this.model.point2.z
+
+          span.inline )
+
+      div.col-sm-4.hidden(data-hook="view-reflect-point3")
+
+        div
+
+          span.inline (x:
+
+          div.inline=this.model.point3.x
+
+          span.inline.mr-2 , y:
+
+          div.inline=this.model.point3.y
+
+          span.inline.mr-2 , z:
+
+          div.inline=this.model.point3.z
+
+          span.inline )
+
   div.hidden(data-hook="scale-transformation-props")
 
     div.mt-3

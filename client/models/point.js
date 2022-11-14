@@ -57,5 +57,19 @@ module.exports = State.extend({
   },
   validate: function () {
     return true;
+  },
+  derived: {
+    inUse: {
+      deps: ['x', 'y', 'z'],
+      fn: function () {
+        if(this.x !== 0) {
+          return true;
+        }
+        if(this.y !== 0) {
+          return true;
+        }
+        return this.z !== 0;
+      }
+    }
   }
 });

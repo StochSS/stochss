@@ -51,13 +51,31 @@ module.exports = View.extend({
     'change [data-hook=transformation-select-container]' : 'selectNestedTransformation',
     'change [data-target=vector-point1]' : 'setVectorPoint1',
     'change [data-target=vector-point2]' : 'setVectorPoint2',
+    'change [data-target=reflect-normal]' : 'setReflectNormal',
+    'change [data-target=reflect-point1]' : 'setReflectPoint1',
+    'change [data-target=reflect-point2]' : 'setReflectPoint2',
+    'change [data-target=reflect-point3]' : 'setReflectPoint3',
     'change [data-target=scale-center]' : 'setCenter',
     'click [data-hook=select-transformation]' : 'selectTransformation',
-    'click [data-hook=remove]' : 'removeTransformation'
+    'click [data-hook=remove]' : 'removeTransformation',
+    'click [data-hook=collapsePointNormal]' : 'togglePointNormal',
+    'click [data-hook=collapseThreePoint]' : 'toggleThreePoint'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    this.chevrons = {
+      hide: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512">
+          <path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/>
+        </svg>
+      `,
+      show: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512">
+          <path d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"/>
+        </svg>
+      `
+    }
   },
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
@@ -71,13 +89,25 @@ module.exports = View.extend({
         $(this.queryByHook('rotation-angle-header')),
         $(this.queryByHook('rotation-angle-prop'))
       ],
-      'Reflect Transformation': [],
+      'Reflect Transformation': [
+        $(this.queryByHook('reflect-transformation-props'))
+      ],
       'Scale Transformation': [
         $(this.queryByHook('scale-transformation-props'))
       ]
     }
     app.documentSetup();
-    if(!this.viewMode){
+    if(this.viewMode){
+      if(this.model.point2.inUse || this.model.point3.inUse) {
+        $(this.queryByHook('view-point2-header')).css('display', 'inline-block');
+        $(this.queryByHook('view-point3-header')).css('display', 'inline-block');
+        $(this.queryByHook('view-reflect-point2')).css('display', 'inline-block');
+        $(this.queryByHook('view-reflect-point3')).css('display', 'inline-block');
+      }else{
+        $(this.queryByHook('view-normal-header')).css('display', 'inline-block');
+        $(this.queryByHook('view-reflect-normal')).css('display', 'inline-block');
+      }
+    }else{
       if(this.model.selected) {
         setTimeout(_.bind(this.openDetails, this), 1);
       }
@@ -189,6 +219,26 @@ module.exports = View.extend({
     this.model.center[key] = Number(e.target.value);
     this.model.trigger('change');
   },
+  setReflectNormal: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.normal[key] = Number(e.target.value);
+    this.model.trigger('change');
+  },
+  setReflectPoint1: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.point1[key] = Number(e.target.value);
+    this.model.trigger('change');
+  },
+  setReflectPoint2: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.point2[key] = Number(e.target.value);
+    this.model.trigger('change');
+  },
+  setReflectPoint3: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.point3[key] = Number(e.target.value);
+    this.model.trigger('change');
+  },
   setVectorPoint1: function (e) {
     let key = e.target.parentElement.parentElement.dataset.name;
     this.model.vector[0][key] = Number(e.target.value);
@@ -198,6 +248,24 @@ module.exports = View.extend({
     let key = e.target.parentElement.parentElement.dataset.name;
     this.model.vector[1][key] = Number(e.target.value);
     this.model.trigger('change');
+  },
+  togglePointNormal: function () {
+    let classes = $(this.queryByHook('collapsePointNormal')).attr("class").split(/\s+/);
+    $(this.queryByHook('three-point-chevron')).html(this.chevrons.hide);
+    if(classes.includes('collapsed')) {
+      $(this.queryByHook('point-normal-chevron')).html(this.chevrons.show);
+    }else{
+      $(this.queryByHook('point-normal-chevron')).html(this.chevrons.hide);
+    }
+  },
+  toggleThreePoint: function () {
+    let classes = $(this.queryByHook('collapseThreePoint')).attr("class").split(/\s+/);
+    $(this.queryByHook('point-normal-chevron')).html(this.chevrons.hide);
+    if(classes.includes('collapsed')) {
+      $(this.queryByHook('three-point-chevron')).html(this.chevrons.show);
+    }else{
+      $(this.queryByHook('three-point-chevron')).html(this.chevrons.hide);
+    }
   },
   update: function () {},
   updateTransformations: function (e) {
@@ -374,6 +442,150 @@ module.exports = View.extend({
           tests: [tests.nanValue],
           valueType: 'number',
           value: this.model.center.z
+        });
+      }
+    },
+    normalXInputView: {
+      hook: 'normal-x-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'normal-x',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.normal.x
+        });
+      }
+    },
+    normalYInputView: {
+      hook: 'normal-y-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'normal-y',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.normal.y
+        });
+      }
+    },
+    normalZInputView: {
+      hook: 'normal-z-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'normal-z',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.normal.z
+        });
+      }
+    },
+    point1XInputView: {
+      hook: 'point1-x-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point1-x',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point1.x
+        });
+      }
+    },
+    point1YInputView: {
+      hook: 'point1-y-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point1-y',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point1.y
+        });
+      }
+    },
+    point1ZInputView: {
+      hook: 'point1-z-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point1-z',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point1.z
+        });
+      }
+    },
+    point2XInputView: {
+      hook: 'point2-x-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point2-x',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point2.x
+        });
+      }
+    },
+    point2YInputView: {
+      hook: 'point2-y-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point2-y',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point2.y
+        });
+      }
+    },
+    point2ZInputView: {
+      hook: 'point2-z-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point2-z',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point2.z
+        });
+      }
+    },
+    point3XInputView: {
+      hook: 'point3-x-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point3-x',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point3.x
+        });
+      }
+    },
+    point3YInputView: {
+      hook: 'point3-y-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point3-y',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point3.y
+        });
+      }
+    },
+    point3ZInputView: {
+      hook: 'point3-z-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'point3-z',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.point3.z
         });
       }
     }
