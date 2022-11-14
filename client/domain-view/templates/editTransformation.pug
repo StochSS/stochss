@@ -59,13 +59,23 @@ div.mx-1
 
       div.hidden(data-hook="vector-transformation-props")
 
-        div
+        hr
 
-          h6 <b>Vector</b>:
+        div.mx-1.row.head.align-items-baseline
 
-          div.row.mx-1
+          div.col-sm-9
 
-            div.col-md-12.col-lg-6.px-0
+            h6 <b>Vector</b>
+
+          div.col-sm-3.hidden(data-hook="rotation-angle-header")
+
+            h6 <b>Angle</b>
+
+        div.mx-1.mt-3.row
+
+          div.col-sm-9
+
+            div
 
               span.inline [(x:
 
@@ -81,7 +91,7 @@ div.mx-1
 
               span.inline ),
 
-            div.col-md-12.col-lg-6.pl-2.pr-0
+            div.pl-2
 
               span.inline (x:
 
@@ -97,12 +107,46 @@ div.mx-1
 
               span.inline )]
 
-        div.hidden(data-hook="rotation-angle-prop")
+          div.col-sm-3.hidden(data-hook="rotation-angle-prop")
 
-          h6.mr-2.inline <b>Angle</b>:
-
-          div.inline(data-hook="rotation-angle-container")
+            div(data-hook="rotation-angle-container")
 
       div.hidden(data-hook="reflect-transformation-props")
 
       div.hidden(data-hook="scale-transformation-props")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+
+            h6 <b>Factor</b>
+
+          div.col-sm-9
+
+            h6 <b>Center</b>
+
+        div.mx-1.mt-3.row
+
+          div.col-sm-3
+
+            div(data-hook="scale-factor-container")
+
+          div.col-sm-9
+
+            div
+
+              span.inline (x:
+
+              div.inline(data-hook="center-x-container" data-target="scale-center" data-name="x" style="width: 25%")
+
+              span.inline.mr-2 , y:
+
+              div.inline(data-hook="center-y-container" data-target="scale-center" data-name="y" style="width: 25%")
+
+              span.inline.mr-2 , z:
+
+              div.inline(data-hook="center-z-container" data-target="scale-center" data-name="z" style="width: 25%")
+
+              span.inline )

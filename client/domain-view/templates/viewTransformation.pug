@@ -27,11 +27,21 @@ div.mx-1
 
   div.hidden(data-hook="vector-transformation-props")
 
-    div.mt-3
+    hr
 
-      h6.mr-2.inline <b>Vector</b>:
+    div.mx-1.row.head.align-items-baseline
 
-      div.inline
+      div.col-sm-9
+
+        h6 <b>Vector</b>
+
+      div.col-sm-3.hidden(data-hook="rotation-angle-header")
+
+        h6 <b>Angle</b>
+
+    div.mx-1.mt-3.row
+
+      div.col-sm-9
 
         div.inline
 
@@ -49,7 +59,7 @@ div.mx-1
 
           span.inline ),
 
-        div.inline
+        div.pl-2.inline
 
           span.inline (x:
 
@@ -65,12 +75,46 @@ div.mx-1
 
           span.inline )]
 
-    div.hidden(data-hook="rotation-angle-prop")
+      div.col-sm-3.hidden(data-hook="rotation-angle-prop")
 
-      h6.mr-2.inline <b>Angle</b>:
-
-      div.inline=this.model.angle
+        div=this.model.angle
 
   div.hidden(data-hook="reflect-transformation-props")
 
   div.hidden(data-hook="scale-transformation-props")
+
+    div.mt-3
+
+      div.mx-1.row.head.align-items-baseline
+
+        div.col-sm-3
+
+          h6 <b>Factor</b>
+
+        div.col-sm-9
+
+          h6 <b>Center</b>
+
+      div.mx-1.mt-3.row
+
+        div.col-sm-3
+
+          div=this.model.factor
+
+        div.col-sm-9
+
+          div
+
+            span.inline (x:
+
+            div.ml-2.inline=this.model.center.x
+
+            span.inline.mr-2 , y:
+
+            div.ml-2.inline=this.model.center.y
+
+            span.inline.mr-2 , z:
+
+            div.ml-2.inline=this.model.center.z
+
+            span.inline )

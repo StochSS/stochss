@@ -51,6 +51,7 @@ module.exports = View.extend({
     'change [data-hook=transformation-select-container]' : 'selectNestedTransformation',
     'change [data-target=vector-point1]' : 'setVectorPoint1',
     'change [data-target=vector-point2]' : 'setVectorPoint2',
+    'change [data-target=scale-center]' : 'setCenter',
     'click [data-hook=select-transformation]' : 'selectTransformation',
     'click [data-hook=remove]' : 'removeTransformation'
   },
@@ -67,10 +68,13 @@ module.exports = View.extend({
       ],
       'Rotate Transformation': [
         $(this.queryByHook('vector-transformation-props')),
+        $(this.queryByHook('rotation-angle-header')),
         $(this.queryByHook('rotation-angle-prop'))
       ],
       'Reflect Transformation': [],
-      'Scale Transformation': []
+      'Scale Transformation': [
+        $(this.queryByHook('scale-transformation-props'))
+      ]
     }
     app.documentSetup();
     if(!this.viewMode){
@@ -179,6 +183,11 @@ module.exports = View.extend({
     this.hideDetails();
     this.model.type = e.target.value;
     this.displayDetails();
+  },
+  setCenter: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.center[key] = Number(e.target.value);
+    this.model.trigger('change');
   },
   setVectorPoint1: function (e) {
     let key = e.target.parentElement.parentElement.dataset.name;
@@ -316,6 +325,55 @@ module.exports = View.extend({
           tests: [tests.nanValue],
           valueType: 'number',
           value: this.model.angle
+        });
+      }
+    },
+    scalingFactorInputView: {
+      hook: 'scale-factor-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'factor',
+          modelKey: 'factor',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.factor
+        });
+      }
+    },
+    centerXInputView: {
+      hook: 'center-x-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'center-x',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.center.x
+        });
+      }
+    },
+    centerYInputView: {
+      hook: 'center-y-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'center-y',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.center.y
+        });
+      }
+    },
+    centerZInputView: {
+      hook: 'center-z-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'center-z',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.center.z
         });
       }
     }
