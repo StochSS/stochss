@@ -27,6 +27,44 @@ div.mx-1
 
   div.hidden(data-hook="vector-transformation-props")
 
+    div.mt-3
+
+      h6.mr-2.inline <b>Vector</b>:
+
+      div.inline
+
+        div.inline
+
+          span.inline [(x:
+
+          div.ml-2.inline=this.model.vector[0].x
+
+          span.inline.mr-2 , y:
+
+          div.ml-2.inline=this.model.vector[0].y
+
+          span.inline.mr-2 , z:
+
+          div.ml-2.inline=this.model.vector[0].z
+
+          span.inline ),
+
+        div.inline
+
+          span.inline (x:
+
+          div.ml-2.inline=this.model.vector[1].x
+
+          span.inline.mr-2 , y:
+
+          div.ml-2.inline=this.model.vector[1].y
+
+          span.inline.mr-2 , z:
+
+          div.ml-2.inline=this.model.vector[1].z
+
+          span.inline )]
+
   div.hidden(data-hook="reflect-transformation-props")
 
   div.hidden(data-hook="scale-transformation-props")

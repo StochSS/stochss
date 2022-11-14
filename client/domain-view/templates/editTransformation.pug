@@ -59,6 +59,44 @@ div.mx-1
 
       div.hidden(data-hook="vector-transformation-props")
 
+        div
+
+          h6 <b>Vector</b>:
+
+          div.row.mx-1
+
+            div.col-md-12.col-lg-6.px-0
+
+              span.inline [(x:
+
+              div.inline(data-hook="vector-point1-x-container" data-target="vector-point1" data-name="x" style="width: 25%")
+
+              span.inline.mr-2 , y:
+
+              div.inline(data-hook="vector-point1-y-container" data-target="vector-point1" data-name="y" style="width: 25%")
+
+              span.inline.mr-2 , z:
+
+              div.inline(data-hook="vector-point1-z-container" data-target="vector-point1" data-name="z" style="width: 25%")
+
+              span.inline ),
+
+            div.col-md-12.col-lg-6.pl-2.pr-0
+
+              span.inline (x:
+
+              div.inline(data-hook="vector-point2-x-container" data-target="vector-point2" data-name="x" style="width: 25%")
+
+              span.inline.mr-2 , y:
+
+              div.inline(data-hook="vector-point2-y-container" data-target="vector-point2" data-name="y" style="width: 25%")
+
+              span.inline.mr-2 , z:
+
+              div.inline(data-hook="vector-point2-z-container" data-target="vector-point2" data-name="z" style="width: 25%")
+
+              span.inline )]
+
       div.hidden(data-hook="reflect-transformation-props")
 
       div.hidden(data-hook="scale-transformation-props")

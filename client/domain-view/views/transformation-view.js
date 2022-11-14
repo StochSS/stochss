@@ -49,22 +49,28 @@ module.exports = View.extend({
     'change [data-hook=geometry-select-container]' : 'selectNestedGeometry',
     'change [data-hook=lattice-select-container]' : 'selectNestedLattice',
     'change [data-hook=transformation-select-container]' : 'selectNestedTransformation',
+    'change [data-target=vector-point1]' : 'setVectorPoint1',
+    'change [data-target=vector-point2]' : 'setVectorPoint2',
     'click [data-hook=select-transformation]' : 'selectTransformation',
     'click [data-hook=remove]' : 'removeTransformation'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
-    this.details = {
-      'Translate Transformation': [],
-      'Rotate Transformation': [],
-      'Reflect Transformation': [],
-      'Scale Transformation': []
-    }
   },
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
     View.prototype.render.apply(this, arguments);
+    this.details = {
+      'Translate Transformation': [
+        $(this.queryByHook('vector-transformation-props'))
+      ],
+      'Rotate Transformation': [
+        $(this.queryByHook('vector-transformation-props'))
+      ],
+      'Reflect Transformation': [],
+      'Scale Transformation': []
+    }
     app.documentSetup();
     if(!this.viewMode){
       if(this.model.selected) {
@@ -173,6 +179,16 @@ module.exports = View.extend({
     this.model.type = e.target.value;
     this.displayDetails();
   },
+  setVectorPoint1: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.vector[0][key] = Number(e.target.value);
+    this.model.trigger('change');
+  },
+  setVectorPoint2: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.vector[1][key] = Number(e.target.value);
+    this.model.trigger('change');
+  },
   update: function () {},
   updateTransformations: function (e) {
     let name = this.model.name;
@@ -216,6 +232,78 @@ module.exports = View.extend({
           value: this.model.type
         });
       }
-    }
+    },
+    vectorPoint1XInputView: {
+      hook: 'vector-point1-x-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'vector-point1-x',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.vector[0].x
+        });
+      }
+    },
+    vectorPoint1YInputView: {
+      hook: 'vector-point1-y-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'vector-point1-x',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.vector[0].y
+        });
+      }
+    },
+    vectorPoint1ZInputView: {
+      hook: 'vector-point1-z-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'vector-point1-z',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.vector[0].z
+        });
+      }
+    },
+    vectorPoint2XInputView: {
+      hook: 'vector-point2-x-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'vector-point2-x',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.vector[1].x
+        });
+      }
+    },
+    vectorPoint2YInputView: {
+      hook: 'vector-point2-y-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'vector-point2-y',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.vector[1].y
+        });
+      }
+    },
+    vectorPoint2ZInputView: {
+      hook: 'vector-point2-z-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          name: 'vector-point2-z',
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.vector[1].z
+        });
+      }
+    },
   }
 });
