@@ -171,9 +171,9 @@ module.exports = View.extend({
     }, false);
   },
   handleSetCenter: function (e) {
-    let key = e.target.dataset.name;
-    let value = Number(e.target.value);
-    this.model.center[key] = value;
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.center[key] = Number(e.target.value);
+    this.model.trigger('change');
   },
   hideDetails: function () {
     this.details[this.model.type].forEach((element) => {
