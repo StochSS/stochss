@@ -6,7 +6,7 @@ escapism==1.0.1
 gillespy2==1.7.1
 spatialpy==1.1.1
 git+https://github.com/StochSS/sciope.git@master
-git+https://github.com/StochSS/stochss-compute.git@develop
+git+https://github.com/StochSS/stochss-compute.git@mdip/ec2-status-file
 boto3==1.24.71
 paramiko==2.11.0
 python-dotenv==0.21.0

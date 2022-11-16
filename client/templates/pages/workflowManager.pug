@@ -62,7 +62,7 @@ section.page
 
           div.inline.hidden(data-hook="of-start-job")
 
-            button.btn.btn-primary.box-shadow(data-hook="start-job") Start Workflow
+            button.btn.btn-primary.box-shadow(data-target="start-job" data-compute-env="local") Start Workflow
 
           div.inline(data-hook="nf-start-job")
 
@@ -75,7 +75,7 @@ section.page
 
             ul.dropdown-menu(aria-labelledby="startNewJobBtn")
               li.dropdown-item(data-target="start-job" data-compute-env="local") StochSS
-              li.dropdown-item(data-target="start-job" data-compute-env="aws") AWS Cloud
+              li.dropdown-item(data-hook="aws-start-job" data-target="start-job" data-compute-env="aws") AWS Cloud
     
           button.btn.btn-primary.box-shadow.inline(data-hook="edit-model") Edit Model
 

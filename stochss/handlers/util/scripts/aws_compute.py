@@ -103,15 +103,7 @@ def interact(launch=False, status=False, terminate=False):
     if launch:
         base.launch_aws_cluster()
     elif status:
-        settings = base.load_user_settings(path='.user-settings.json')
-
-        instance = settings['headNode']
-        s_path = f".aws/{instance.replace('.', '-')}-status.txt"
-
-        cluster = base.get_aws_cluster()
-        if cluster._server is not None:
-            with open(s_path, "w", encoding="utf-8") as aws_s_fd:
-                aws_s_fd.write(cluster._server.state['Name'])
+        _ = base.get_aws_cluster()
     elif terminate:
         base.terminate_aws_cluster()
     else:

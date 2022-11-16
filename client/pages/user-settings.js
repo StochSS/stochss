@@ -117,8 +117,8 @@ let userSettings = PageView.extend({
     this.awsType = e.target.value;
     this.awsSize = "";
     this.model.headNode = "";
-    this.updateAWSStatus();
     this.renderAWSInstanceSizesView();
+    this.updateAWSStatus();
   },
   handleSetSecretKey: function (e) {
     this.secretKey = e.target.value;
@@ -207,12 +207,14 @@ let userSettings = PageView.extend({
   update: function () {},
   updateAWSStatus: function () {
     let awsStatus = this.model.headNode === "" ? "unknown" : this.model.awsHeadNodeStatus;
-    $(this.queryByHook('aws-instancesize-container').firstChild.children[1]).prop(
-      'disabled', this.disables('instance', awsStatus)
-    );
     $(this.queryByHook('aws-instancetype-container').firstChild.children[1]).prop(
       'disabled', this.disables('instance', awsStatus)
     );
+    if(this.awsType !== "") {
+      $(this.queryByHook('aws-instancesize-container').firstChild.children[1]).prop(
+        'disabled', this.disables('instance', awsStatus)
+      );
+    }
     $(this.queryByHook('refresh-user-settings')).prop('disabled', this.disables('refresh', awsStatus));
     $(this.queryByHook('aws-headnode-status')).text(awsStatus);
     $(this.queryByHook('launch-aws-cluster')).prop('disabled', this.disables('launch', awsStatus));
