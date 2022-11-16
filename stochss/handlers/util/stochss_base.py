@@ -27,7 +27,7 @@ import subprocess
 import dotenv
 import requests
 
-from stochss_compute.cloud.ec2 import Cluster
+from stochss_compute.cloud import EC2Cluster
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
                             FileNotJSONFormatError
@@ -223,15 +223,25 @@ class StochSSBase():
             json.dump(names, names_file)
 
 
-    def get_aws_cluster(self):
+    def get_aws_cluster(self, instance=None):
         '''
         Get the AWS cluster.
+
+        Attributes
+        ----------
+        instance : str
+            AWS EC2 instance.
         '''
+        if instance is None:
+            path = os.path.join(self.user_dir, ".user-settings.json")
+            settings = self.load_user_settings(path=path)
+            instance = settings['headNode']
+        s_path = os.path.join(self.user_dir, f".aws/{instance.replace('.', '-')}-status.txt")
         # Setup the AWS environment
         env_path = os.path.join(self.user_dir, ".aws/awsec2.env")
         dotenv.load_dotenv(dotenv_path=env_path)
         # Configure the AWS cluster
-        cluster = Cluster()
+        cluster = EC2Cluster(statusFile=s_path)
         return cluster
 
     @classmethod
@@ -462,19 +472,11 @@ class StochSSBase():
         settings = self.load_user_settings(path='.user-settings.json')
         instance = settings['headNode']
 
-        s_path = f".aws/{instance.replace('.', '-')}-status.txt"
-        with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
-            aws_s_fd.write("launching")
-
         try:
-            cluster = self.get_aws_cluster()
+            cluster = self.get_aws_cluster(instance=instance)
             cluster.launch_single_node_instance(instance)
-            with open(s_path, "w", encoding="utf-8") as aws_s_fd:
-                aws_s_fd.write(cluster._server.state['Name'])
         except Exception:
             cluster.clean_up()
-            with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
-                aws_s_fd.write("launch error")
 
     def load_example_library(self, home):
         '''
@@ -602,21 +604,8 @@ class StochSSBase():
         '''
         Terminate an AWS instance.
         '''
-        settings = self.load_user_settings(path='.user-settings.json')
-        instance = settings['headNode']
-
-        s_path = f".aws/{instance.replace('.', '-')}-status.txt"
-        with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
-            aws_s_fd.write("terminating")
-
-        try:
-            cluster = self.get_aws_cluster()
-            cluster.clean_up()
-            with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
-                aws_s_fd.write("terminated")
-        except Exception:
-            with open(s_path, 'w', encoding='utf-8') as aws_s_fd:
-                aws_s_fd.write("termination error")
+        cluster = self.get_aws_cluster()
+        cluster.clean_up()
 
     def update_aws_status(self, instance):
         '''

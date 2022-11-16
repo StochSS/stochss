@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 import os
 import json
+import time
 import logging
 import subprocess
 from tornado import web
@@ -450,6 +451,7 @@ class LaunchAWSClusterHandler(APIHandler):
         with subprocess.Popen(exec_cmd):
             print("Launching AWS")
 
+        time.sleep(1)
         settings = file.load_user_settings()
 
         self.write({"settings": settings})
@@ -499,6 +501,7 @@ class TerminateAWSClusterHandler(APIHandler):
         with subprocess.Popen(exec_cmd):
             print("Terminating AWS")
 
+        time.sleep(1)
         settings = file.load_user_settings()
 
         self.write({"settings": settings})
