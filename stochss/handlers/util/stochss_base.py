@@ -241,7 +241,7 @@ class StochSSBase():
         env_path = os.path.join(self.user_dir, ".aws/awsec2.env")
         dotenv.load_dotenv(dotenv_path=env_path)
         # Configure the AWS cluster
-        cluster = EC2Cluster(statusFile=s_path)
+        cluster = EC2Cluster(status_file=s_path)
         return cluster
 
     @classmethod
