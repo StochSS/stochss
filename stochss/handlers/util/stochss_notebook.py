@@ -107,32 +107,33 @@ class StochSSNotebook(StochSSBase):
         self.__create_compute_cleanup(cells, compute)
 
     def __create_compute_cleanup(self, cells, compute):
-        cells.append(nbf.new_code_cell("cluster.clean_up()"))
+        cells.append(nbf.new_code_cell("# cluster.clean_up()"))
 
     def __create_compute_credentials(self, cells, compute):
         cells.insert(5, nbf.new_code_cell(
-            f"_ = dotenv.load_dotenv(dotenv_path='{self.user_dir}/.aws/awsec2.env')"
+            f"_ = dotenv.load_dotenv(dotenv_path=os.path.join(os.environ.get('HOME'), '.aws/awsec2.env'))"
         ))
 
     def __create_compute_headers(self, cells, compute):
         cells.insert(2, nbf.new_markdown_cell(
-            "***\n## AWS Credentials\n***\nAWS Credentials can be set [here](/stochss/settings)"
+            "***\n## AWS Credentials\n***\nAWS Credentials for StochSS can be set [here](/stochss/settings)"
         ))
         cells.insert(3, nbf.new_markdown_cell("***\n## Launch AWS Cluster\n***"))
         cells.append(nbf.new_markdown_cell('***\n## Clean Up AWS Cluster\n***'))
 
     def __create_compute_imports(self, cells, compute):
-        cells.insert(1, nbf.new_code_cell("import dotenv"))
+        cells.insert(1, nbf.new_code_cell("import os\nimport dotenv"))
         cells.insert(3, nbf.new_code_cell(
-            "import stochss_compute\nfrom stochss_compute.cloud.ec2 import Cluster"
+            "import stochss_compute\nfrom stochss_compute.cloud import EC2Cluster"
         ))
 
     def __create_compute_launch(self, cells, compute):
         instance = self.load_user_settings(path='.user-settings.json')['headNode']
+        path = f'{instance.replace(".", "-")}-status.txt'
         nb_cluster = [
-            "cluster = Cluster()",
+            f"cluster = EC2Cluster(status_file=os.path.join(os.environ.get('HOME'), '{path}'))",
             "if cluster._server is None:",
-            f"    cluster.launch_single_node_instance('{instance}')"
+            f"    cluster.launch_single_node_instance('{instance}')", "cluster.status"
         ]
         cells.insert(7, nbf.new_code_cell("\n".join(nb_cluster)))
 
