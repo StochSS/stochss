@@ -80,10 +80,10 @@ let userSettings = PageView.extend({
   },
   disables: function (btnType, status) {
     let disables = {
-      instance: !['unknown', 'not launched', 'terminated'].includes(status),
+      instance: !['not configured', 'not launched', 'terminated'].includes(status),
       launch: !['not launched', 'terminated'].includes(status),
-      refresh: status === "unknown",
-      terminate: ['unknown', 'not launched', 'terminated'].includes(status)
+      refresh: status === "not configured",
+      terminate: ['not configured', 'not launched', 'terminated'].includes(status)
     }
     return disables[btnType];
   },
@@ -206,7 +206,7 @@ let userSettings = PageView.extend({
   },
   update: function () {},
   updateAWSStatus: function () {
-    let awsStatus = this.model.headNode === "" ? "unknown" : this.model.awsHeadNodeStatus;
+    let awsStatus = this.model.headNode === "" ? "not configured" : this.model.awsHeadNodeStatus;
     $(this.queryByHook('aws-instancetype-container').firstChild.children[1]).prop(
       'disabled', this.disables('instance', awsStatus)
     );
