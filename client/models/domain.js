@@ -19,10 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //models
 let State = require('ampersand-state');
 //collections
+let Actions = require('./actions');
+let Lattices = require('./lattices');
 let Types = require('./domain-types');
 let Particles = require('./particles');
 let Geometries = require('./geometries');
-let Lattices = require('./lattices');
 let Transformations = require('./transformations');
 
 module.exports = State.extend({
@@ -40,11 +41,12 @@ module.exports = State.extend({
     template_version: 'number'
   },
   collections: {
-    types: Types,
-    particles: Particles,
+    actions: Actions,
     geometries: Geometries,
     lattices: Lattices,
-    transformations: Transformations
+    particles: Particles,
+    transformations: Transformations,
+    types: Types
   },
   session: {
     def_particle_id: 'number',
