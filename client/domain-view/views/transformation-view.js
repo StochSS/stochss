@@ -44,7 +44,7 @@ module.exports = View.extend({
     }
   },
   events: {
-    'change [data-hook=input-name-container]' : 'updateTransformations',
+    'change [data-hook=input-name-container]' : 'updateDepsOptions',
     'change [data-hook=select-type-container]' : 'selectTransformationType',
     'change [data-hook=geometry-select-container]' : 'selectNestedGeometry',
     'change [data-hook=lattice-select-container]' : 'selectNestedLattice',
@@ -134,8 +134,10 @@ module.exports = View.extend({
   removeTransformation: function () {
     let name = this.model.name;
     let collection = this.model.collection;
+    let actions = this.model.collection.parent.actions;
     collection.removeTransformation(this.model);
     collection.trigger('update-transformation-options', {currName: name});
+    actions.trigger('update-transformation-options', {currName: name});
   },
   renderGeometrySelectView: function () {
     if(this.geometrySelectView) {
@@ -268,10 +270,13 @@ module.exports = View.extend({
     }
   },
   update: function () {},
-  updateTransformations: function (e) {
+  updateDepsOptions: function (e) {
     let name = this.model.name;
     this.model.name = e.target.value;
     this.model.collection.parent.transformations.trigger(
+      'update-transformation-options', {currName: name, newName: this.model.name}
+    );
+    this.model.collection.parent.actions.trigger(
       'update-transformation-options', {currName: name, newName: this.model.name}
     );
   },
