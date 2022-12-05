@@ -25,9 +25,7 @@ let Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: Action,
-  indexes: ['name'],
   addAction: function (type) {
-    let name = this.getDefaultName();
     let action = new Action({
       c: 10,
       enable: true,
@@ -35,26 +33,16 @@ module.exports = Collection.extend({
       geometry: '',
       lattice: '',
       mass: 1.0,
-      name: name,
       nu: 0.0,
+      priority: 1,
       rho: 1.0,
+      scope: 'Multi Particle',
       type: type,
       typeID: 0,
       vol: 1.0
     });
     action.selected = true;
     this.add(action);
-    return name;
-  },
-  getDefaultName: function () {
-    var i = this.length + 1;
-    var name = 'action' + i;
-    var names = this.map((action) => {return action.name; });
-    while(_.contains(names, name)) {
-      i += 1;
-      name = 'action' + i;
-    }
-    return name;
   },
   removeAction: function (action) {
     this.remove(action);

@@ -27,9 +27,10 @@ module.exports = State.extend({
     geometry: 'string',
     lattice: 'string',
     mass: 'number',
-    name: 'string',
     nu: 'number',
+    priority: 'number',
     rho: 'number',
+    scope: 'string',
     type: 'string',
     typeID: 'number',
     vol: 'number'
@@ -54,9 +55,10 @@ module.exports = State.extend({
       'geometry': this.geometry.includes(key),
       'lattice': this.lattice.includes(key),
       'mass': this.mass === key,
-      'name': this.name.includes(key),
       'nu': this.nu === key,
+      'priority': this.priority === key,
       'rho': this.rho === key,
+      'scope': this.scope === key,
       'type': this.type === key,
       'typeid': this.collection.parent.types.get(this.typeID, 'typeID').name === key,
       'vol': this.vol === key
@@ -78,7 +80,6 @@ module.exports = State.extend({
     return false;
   },
   validate: function () {
-    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
     return true;
   }
 });
