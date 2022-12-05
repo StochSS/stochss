@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //models
-let point = require('./point');
+let Point = require('./point');
 let State = require('ampersand-state');
 
 module.exports = State.extend({
