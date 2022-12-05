@@ -42,7 +42,11 @@ module.exports = Collection.extend({
       vol: 1.0
     });
     action.selected = true;
+    action.point = this.getNewPoint();
     this.add(action);
+  },
+  getNewPoint: function (action) {
+    return new Point({x: 0, y: 0, z: 0});
   },
   removeAction: function (action) {
     this.remove(action);

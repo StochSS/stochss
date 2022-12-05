@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //models
+let point = require('./point');
 let State = require('ampersand-state');
 
 module.exports = State.extend({
@@ -34,6 +35,9 @@ module.exports = State.extend({
     type: 'string',
     typeID: 'number',
     vol: 'number'
+  },
+  children: {
+    point: Point
   },
   session: {
     selected: {
