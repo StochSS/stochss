@@ -38,7 +38,7 @@ module.exports = View.extend({
   },
   events: {
     'change [data-hook=select-type-container]' : 'selectGeometryType',
-    'change [data-hook=input-name-container]' : 'updateTransformations',
+    'change [data-hook=input-name-container]' : 'updateDepsOptions',
     'change [data-hook=input-formula-container]' : 'updateGeometriesInUse',
     'click [data-hook=remove]' : 'removeGeometry'
   },
@@ -56,7 +56,10 @@ module.exports = View.extend({
     }
   },
   removeGeometry: function () {
+    let name = this.model.name;
+    let actions = this.model.collection.parent.actions;
     this.collection.removeGeometry(this.model);
+    actions.trigger('update-geometry-options', {currName: name});
   },
   renderFormulaInputView: function () {
     if(this.formulaInputView) {
@@ -82,10 +85,13 @@ module.exports = View.extend({
       this.model.collection.parent.trigger('update-geometry-deps');
     }
   },
-  updateTransformations: function (e) {
+  updateDepsOptions: function (e) {
     let name = this.model.name;
     this.model.name = e.target.value;
     this.model.collection.parent.transformations.trigger(
+      'update-geometry-options', {currName: name, newName: this.model.name}
+    );
+    this.model.collection.parent.actions.trigger(
       'update-geometry-options', {currName: name, newName: this.model.name}
     );
   },
