@@ -80,3 +80,59 @@ div.mx-1
           h5.inline.mr-2 Type:
 
           div.inline(data-hook="particle-type")
+
+        div
+
+          hr
+
+          div.mb-3.mx-1.row.head.align-items-baseline
+
+            div.col-sm-2
+
+              h6.inline <b>Mass</b>
+
+            div.col-sm-2
+
+              h6.inline <b>Volume<b>
+
+            div.col-sm-2
+
+              h6.inline <b>Density</b>
+
+            div.col-sm-2
+
+              h6.inline <b>Viscosity</b>
+
+            div.col-sm-2
+
+              h6.inline <b>Speed of Sound</b>
+
+            div.col-sm-2
+
+              h6.inline <b>Fixed</b>
+
+          div.row
+
+            div.col-sm-2
+
+              div.pl-2(data-hook="particle-mass" data-target="particle-property-containers")
+
+            div.col-sm-2
+
+              div(data-hook="particle-vol" data-target="particle-property-containers")
+
+            div.col-sm-2
+
+              div(data-hook="particle-rho" data-target="particle-property-containers")
+
+            div.col-sm-2
+
+              div(data-hook="particle-nu" data-target="particle-property-containers")
+
+            div.col-sm-2
+
+              div(data-hook="particle-c" data-target="particle-property-containers")
+
+            div.col-sm-2
+
+              input(type="checkbox" data-hook="particle-fixed" checked=this.model.fixed)

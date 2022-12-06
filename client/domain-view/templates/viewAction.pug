@@ -59,7 +59,7 @@ div.mx-1
 
   div.hidden(data-hook="particle-properties")
 
-    h5 Particle Properties
+    h4 Particle Properties
 
     div
 
@@ -67,3 +67,58 @@ div.mx-1
 
       div.inline=this.model.collection.parent.types.get(this.model.typeID, 'typeID').name
 
+    div
+
+      hr
+
+      div.mb-3.mx-1.row.head.align-items-baseline
+
+        div.col-sm-2
+
+          h6.inline <b>Mass</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Volume</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Density</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Viscosity</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Speed of Sound</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Fixed</b>
+
+      div.row
+
+        div.col-sm-2
+
+          div.pl-2=this.model.mass
+
+        div.col-sm-2
+
+          div=this.model.vol
+
+        div.col-sm-2
+
+          div=this.model.rho
+
+        div.col-sm-2
+
+          div=this.model.nu
+
+        div.col-sm-2
+
+          div=this.model.c
+
+        div.col-sm-2
+
+          input(type="checkbox" checked=this.model.fixed disabled)
