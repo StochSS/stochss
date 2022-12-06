@@ -19,54 +19,52 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let _ = require('underscore');
 //models
 let Point = require('./point');
-let Lattice = require('./lattice');
+let Transformation = require('./transformation');
 //collections
 let Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
-  model: Lattice,
+  model: Transformation,
   indexes: ['name'],
-  addLattice: function (type) {
+  addTransformation: function (type) {
     let name = this.getDefaultName();
-    let lattice = new Lattice({
+    let transformation = new Transformation({
+      angle: 0,
+      factor: 1,
+      geometry: "",
+      lattice: "",
       name: name,
-      deltar: 0,
-      deltas: 0,
-      deltax: 0,
-      deltay: 0,
-      deltaz: 0,
-      filename: '',
-      length: 0,
-      radius: 0,
-      subdomainFile: '',
+      transformation: "",
       type: type,
-      xmin: 0,
-      xmax: 0,
-      ymin: 0,
-      ymax: 0,
-      zmin: 0,
-      zmax: 0
     });
-    lattice.selected = true;
-    lattice.center = this.getNewPoint();
-    this.add(lattice);
+    transformation.selected = true;
+    transformation.vector = this.getNewVector();
+    transformation.center = this.getNewPoint();
+    transformation.normal = this.getNewPoint();
+    transformation.point1 = this.getNewPoint();
+    transformation.point2 = this.getNewPoint();
+    transformation.point3 = this.getNewPoint();
+    this.add(transformation);
     return name;
   },
   getDefaultName: function () {
     var i = this.length + 1;
-    var name = 'lattice' + i;
-    var names = this.map(function (lattice) {return lattice.name; });
+    var name = 'transformation' + i;
+    var names = this.map(function (transformation) {return transformation.name; });
     while(_.contains(names, name)) {
       i += 1;
-      name = 'lattice' + i;
+      name = 'transformation' + i;
     }
     return name;
   },
   getNewPoint: function () {
     return new Point({x: 0, y: 0, z: 0});
   },
-  removeLattice: function (lattice) {
-    this.remove(lattice);
+  getNewVector: function () {
+    return [this.getNewPoint(), this.getNewPoint()];
+  },
+  removeTransformation: function (transformation) {
+    this.remove(transformation);
   },
   validateCollection: function () {
     return true;

@@ -55,6 +55,8 @@ module.exports = View.extend({
       $(this.queryByHook('view-lattices')).addClass('active');
     }else{
       this.renderEditLatticesView();
+      this.collection.on('update-inuse', this.updateInUse, this);
+      this.collection.parent.trigger('update-lattice-deps');
     }
     this.renderViewLatticesView();
   },
@@ -91,5 +93,11 @@ module.exports = View.extend({
       this.queryByHook('view-lattices-list'),
       options
     );
+  },
+  updateInUse: function ({deps=null}={}) {
+    if(deps === null) { return; }
+    this.collection.forEach((lattice) => {
+      lattice.inUse = deps.includes(lattice.name);
+    });
   }
 });

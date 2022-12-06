@@ -423,6 +423,7 @@ class StochSSSpatialModel(StochSSBase):
                 })
         domain['geometries'] = geometries
         domain['lattices'] = []
+        domain['transformations'] = []
 
         domain['template_version'] = self.DOMAIN_TEMPLATE_VERSION
 
@@ -552,7 +553,7 @@ class StochSSSpatialModel(StochSSBase):
         '''
         if domains is None:
             if new:
-                path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+                path = '/stochss/stochss_templates/modelTemplate.json'
                 s_domain = StochSSSpatialModel(path).load()['domain']
             elif path is None:
                 path = self.path

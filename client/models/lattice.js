@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //models
+let Point = require('./point');
 let State = require('ampersand-state');
 
 module.exports = State.extend({
@@ -32,20 +33,24 @@ module.exports = State.extend({
     radius: 'number',
     subdomainFile: 'string',
     type: 'string',
-    x: 'number',
     xmin: 'number',
     xmax: 'number',
-    y: 'number',
     ymin: 'number',
     ymax: 'number',
-    z: 'number',
     zmin: 'number',
     zmax: 'number'
+  },
+  children: {
+    center: Point
   },
   session: {
     selected: {
       type: 'boolean',
       default: false
+    },
+    inUse: {
+      type: 'boolean',
+      default: false,
     }
   },
   initialize: function (attrs, options) {
@@ -57,7 +62,6 @@ module.exports = State.extend({
     let center = `[${this.x}, ${this.y}, ${this.z}]`
 
     let checks = {
-      'center': center,
       'name': this.name.includes(key),
       'deltar': ["Spherical Lattice", "Cylindrical Lattice"].includes(this.type) &&
                   this.deltar === key,
@@ -74,21 +78,22 @@ module.exports = State.extend({
       'subdomainFile': ["XML Mesh Lattice", "Mesh IO Lattice"].includes(this.type) &&
                           this.subdomainFile === key,
       'type': this.type === key,
-      'x': this.x === key,
       'xmin': this.type === "Cartesian Lattice" && this.xmin === key,
       'xmax': this.type === "Cartesian Lattice" && this.xmax === key,
-      'y': this.y === key,
       'ymin': this.type === "Cartesian Lattice" && this.ymin === key,
       'ymax': this.type === "Cartesian Lattice" && this.ymax === key,
-      'z': this.z === key,
       'zmin': this.type === "Cartesian Lattice" && this.zmin === key,
       'zmax': this.type === "Cartesian Lattice" && this.zmax === key
     }
 
     if(attr !== null) {
-      let otherAttrs = {}
+      let otherAttrs = {'centerx': 'x','centery': 'y','centerz': 'z'}
       if(Object.keys(otherAttrs).includes(attr)) {
         attr = otherAttrs[attr];
+      }
+      checks['center'] = this.center.contains(attr, key)
+      if(['x', 'y', 'z'].includes(attr)) {
+        return checks.center;
       }
       return checks[attr];
     }

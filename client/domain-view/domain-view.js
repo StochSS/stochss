@@ -34,6 +34,7 @@ let GeometriesView = require('./views/geometries-view');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
+let TransformationsView = require('./views/transformations-view');
 //templates
 let template = require('./domainView.pug');
 
@@ -63,12 +64,16 @@ module.exports = View.extend({
     this.renderTypesView();
     this.renderGeometriesView();
     this.renderLatticesView();
+    this.renderTransformationsView();
     if(this.readOnly) {
       $(this.queryByHook('domain-particles-editor')).css('display', 'none');
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
       this.renderTypesQuickview();
     }else{
       this.updateParticleViews();
+      this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
+      this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
+      this.model.on('update-transformation-deps', this.updateTransformationDeps, this);
     }
     if(!this.elements) {
       this.elements = {
@@ -336,6 +341,17 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.propertiesView, "domain-properties-container");
   },
+  renderTransformationsView: function () {
+    if(this.transformationsView) {
+      this.transformationsView.reomve();
+    }
+    this.transformationsView = new TransformationsView({
+      collection: this.model.transformations,
+      readOnly: this.readOnly
+    });
+    let hook = "domain-transformations-container";
+    app.registerRenderSubview(this, this.transformationsView, hook);
+  },
   renderTypesQuickview: function () {
     if(this.typesQuickviewView) {
       this.typesQuickviewView.remove();
@@ -456,6 +472,60 @@ module.exports = View.extend({
       this.renderTypesView();
       this.resetFigure();
     }
+  },
+  updateGeometryDeps: function () {
+    let deps = [];
+    let geomNames = [];
+    let combForms = [];
+    this.model.geometries.forEach((geometry) => {
+      geomNames.push(geometry.name);
+      if(geometry.type === "Combinatory Geometry") {
+        combForms.push(geometry.formula)
+      }
+    });
+    combForms.forEach((formula) => {
+      formula = formula.replace(/\(/g, ' ').replace(/\)/g, ' ');
+      let formDeps = formula.split(' ');
+      geomNames.forEach((name) => {
+        if(formDeps.includes(name) && !deps.includes(name)) {
+          deps.push(name);
+        }
+      });
+    });
+    this.model.transformations.forEach((transformation) => {
+      let geometry = transformation.geometry;
+      if(geomNames.includes(geometry) &&  !deps.includes(geometry)) {
+        deps.push(geometry);
+      }
+    });
+    this.model.geometries.trigger('update-inuse', {deps: deps});
+  },
+  updateLatticeDeps: function () {
+    let deps = [];
+    let lattNames = this.model.lattices.map((lattice) => {
+      return lattice.name;
+    });
+    this.model.transformations.forEach((transformation) => {
+      let lattice = transformation.lattice;
+      if(lattNames.includes(lattice) &&  !deps.includes(lattice)) {
+        deps.push(lattice);
+      }
+    });
+    this.model.lattices.trigger('update-inuse', {deps: deps});
+  },
+  updateTransformationDeps: function () {
+    let deps = [];
+    let transNames = this.model.transformations.map((transformation) => {
+      return transformation.name;
+    });
+    this.model.transformations.forEach((transformation) => {
+      let nestedTrans = transformation.transformation;
+      if(transNames.includes(nestedTrans) && !deps.includes(nestedTrans)) {
+        deps.push(nestedTrans);
+      }
+    });
+    console.log(deps)
+    this.model.transformations.trigger('update-inuse', {deps: deps});
   },
   updateParticleViews: function () {
     this.renderNewParticleView();

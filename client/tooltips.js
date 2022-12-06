@@ -193,6 +193,9 @@ module.exports = {
   domainLattice: {
     name: "Unique identifier for Lattice. Cannot share a name with other model components."
   },
+  domainTransformation: {
+    name: "Unique identifier for Transformation. Cannot share a name with other model components."
+  },
   boundaryConditionsEditor: {
     annotation: "An optional note about a boundary condition."
   }

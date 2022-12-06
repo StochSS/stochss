@@ -29,8 +29,17 @@ let editTemplate = require('../templates/editGeometry.pug');
 let viewTemplate = require('../templates/viewGeometry.pug');
 
 module.exports = View.extend({
+  bindings: {
+    'model.inUse': {
+      hook: 'remove',
+      type: 'booleanAttribute',
+      name: 'disabled',
+    }
+  },
   events: {
     'change [data-hook=select-type-container]' : 'selectGeometryType',
+    'change [data-hook=input-name-container]' : 'updateTransformations',
+    'change [data-hook=input-formula-container]' : 'updateGeometriesInUse',
     'click [data-hook=remove]' : 'removeGeometry'
   },
   initialize: function (attrs, options) {
@@ -68,6 +77,18 @@ module.exports = View.extend({
     this.renderFormulaInputView();
   },
   update: function () {},
+  updateGeometriesInUse: function () {
+    if(this.model.type === "Combinatory Geometry") {
+      this.model.collection.parent.trigger('update-geometry-deps');
+    }
+  },
+  updateTransformations: function (e) {
+    let name = this.model.name;
+    this.model.name = e.target.value;
+    this.model.collection.parent.transformations.trigger(
+      'update-geometry-options', {currName: name, newName: this.model.name}
+    );
+  },
   updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewGeometriesView();
@@ -81,7 +102,6 @@ module.exports = View.extend({
           required: true,
           name: 'name',
           tests: tests.nameTests,
-          modelKey: 'name',
           valueType: 'string',
           value: this.model.name
         });

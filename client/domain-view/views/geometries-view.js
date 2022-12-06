@@ -51,6 +51,8 @@ module.exports = View.extend({
       $(this.queryByHook('view-geometries')).addClass('active');
     }else{
       this.renderEditGeometriesView();
+      this.collection.on("update-inuse", this.updateInUse, this);
+      this.collection.parent.trigger('update-geometry-deps');
     }
     this.renderViewGeometriesView();
   },
@@ -87,5 +89,11 @@ module.exports = View.extend({
       this.queryByHook('view-geometries-list'),
       options
     );
+  },
+  updateInUse: function ({deps=null}={}) {
+    if(deps === null) { return; }
+    this.collection.forEach((geometry) => {
+      geometry.inUse = deps.includes(geometry.name);
+    });
   }
 });

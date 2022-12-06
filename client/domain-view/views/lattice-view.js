@@ -37,11 +37,17 @@ module.exports = View.extend({
         el.checked = value;
       },
       hook: 'select-lattice'
+    },
+    'model.inUse': {
+      hook: 'remove',
+      type: 'booleanAttribute',
+      name: 'disabled',
     }
   },
   events: {
     'change [data-hook=input-name-container]' : 'updateFileHeaders',
     'change [data-hook=select-type-container]' : 'selectLatticeType',
+    'change [data-target=lattice-center]' : 'handleSetCenter',
     'change [data-hook=mesh-file]' : 'setMeshFile',
     'change [data-hook=type-file]' : 'setTypeFile',
     'change [data-hook=lattice-mesh-select]' : 'selectMeshFile',
@@ -163,6 +169,11 @@ module.exports = View.extend({
         this.errorAction(body.Message);
       }
     }, false);
+  },
+  handleSetCenter: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    this.model.center[key] = Number(e.target.value);
+    this.model.trigger('change');
   },
   hideDetails: function () {
     this.details[this.model.type].forEach((element) => {
@@ -371,6 +382,7 @@ module.exports = View.extend({
   },
   update: function () {},
   updateFileHeaders: function (e) {
+    this.updateTransformations(e);
     let types = ['XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice'];
     if(!types.includes(this.model.type)) { return }
 
@@ -378,6 +390,13 @@ module.exports = View.extend({
     $($("#importFilesHeader" + this.model.cid).children()[0]).text(importHeader);
     let uploadHeader = `Uploaded Files for ${this.model.name}`;
     $($("#uploadedFilesHeader" + this.model.cid).children()[0]).text(uploadHeader);
+  },
+  updateTransformations: function (e) {
+    let name = this.model.name;
+    this.model.name = e.target.value;
+    this.model.collection.parent.transformations.trigger(
+      'update-lattice-options', {currName: name, newName: this.model.name}
+    );
   },
   updateValid: function () {},
   updateViewer: function () {
@@ -392,7 +411,6 @@ module.exports = View.extend({
           required: true,
           name: 'name',
           tests: tests.nameTests,
-          modelKey: 'name',
           valueType: 'string',
           value: this.model.name
         });
@@ -425,9 +443,8 @@ module.exports = View.extend({
           parent: this,
           name: 'center-x',
           tests: [tests.nanValue],
-          modelKey: 'x',
           valueType: 'number',
-          value: this.model.x
+          value: this.model.center.x
         });
       }
     },
@@ -438,9 +455,8 @@ module.exports = View.extend({
           parent: this,
           name: 'center-y',
           tests: [tests.nanValue],
-          modelKey: 'y',
           valueType: 'number',
-          value: this.model.y
+          value: this.model.center.y
         });
       }
     },
@@ -451,9 +467,8 @@ module.exports = View.extend({
           parent: this,
           name: 'center-z',
           tests: [tests.nanValue],
-          modelKey: 'z',
           valueType: 'number',
-          value: this.model.z
+          value: this.model.center.z
         });
       }
     },

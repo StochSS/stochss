@@ -21,15 +21,9 @@ let State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
-    name: 'string',
-    type: 'string',
-    formula: 'string'
-  },
-  session: {
-    inUse: {
-      type: 'boolean',
-      default: false,
-    }
+    x: 'number',
+    y: 'number',
+    z: 'number',
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
@@ -37,14 +31,20 @@ module.exports = State.extend({
   contains: function (attr, key) {
     if(key === null) { return true; }
 
+    let centers = [`[${this.x}, ${this.y}, ${this.z}]`, `[${this.x},${this.y},${this.z}]`];
+
     let checks = {
-      'name': this.name.includes(key),
-      'type': this.type === key,
-      'formula': this.formula.includes(key)
+      'center': centers.includes(key),
+      'x': this.x === key,
+      'y': this.y === key,
+      'z': this.z === key,
     }
 
     if(attr !== null) {
-      let otherAttrs = { 'expression': 'formula' }
+      let otherAttrs = {
+        'point': 'center', 'normal': 'center',
+        'point1': 'center','point2': 'center','point3': 'center'
+      }
       if(Object.keys(otherAttrs).includes(attr)) {
         attr = otherAttrs[attr];
       }
@@ -53,10 +53,23 @@ module.exports = State.extend({
     for(let attribute in checks) {
       if(checks[attribute]) { return true; }
     }
-    return false;
+    return false
   },
   validate: function () {
-    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
     return true;
+  },
+  derived: {
+    inUse: {
+      deps: ['x', 'y', 'z'],
+      fn: function () {
+        if(this.x !== 0) {
+          return true;
+        }
+        if(this.y !== 0) {
+          return true;
+        }
+        return this.z !== 0;
+      }
+    }
   }
 });

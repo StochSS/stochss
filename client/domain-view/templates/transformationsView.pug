@@ -1,0 +1,86 @@
+div#domain-transformation-editor.card
+
+  div.card-header.pb-0
+
+    h3.inline.mr-3 Transformations
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="transformations-selection-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="transformations-edit-tab" data-toggle="tab" href="#edit-transformations") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="transformations-view-tab" data-toggle="tab" href="#view-transformations") View
+
+    button.btn.btn-outline-collapse.inline(data-toggle="collapse" data-target="#collapse-transformations" data-hook="collapse") +
+
+  div.card-body
+
+    p.mb-0
+     | Transformations define a method of manipulation to be performed on a region within the domain defined by a <b>Geometry</b> or <b>Lattice</b>.
+
+    div.collapse.tab-content(id="collapse-transformations" data-hook="transformations-list-container")
+
+      div.tab-pane.active(id="edit-transformations" data-hook="edit-transformations")
+
+        hr
+
+        div.mb-3.mx-1.row.head.align-items-baseline
+
+          div.col-sm-1
+
+            h6.inline <b>Edit</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Name</b>
+
+            div.tooltip-icon.mr-3(data-html="true" data-toggle="tooltip" title=this.tooltips.name) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+
+          div.col-sm-6
+
+            h6.inline <b>Type</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Remove</b>
+
+        div.my-3(data-hook="edit-transformations-list")
+
+        div.dropdown
+
+          button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addLatticeBtn(
+            data-hook="add-transformation",
+            data-toggle="dropdown",
+            aria-haspopup="true",
+            aria-expanded="false",
+            type="button"
+          ) Add Transformation <span class="caret"></span>
+
+          ul.dropdown-menu(aria-labelledby="addLatticeBtn")
+            li.dropdown-item(data-hook="translate-transformation" data-name="Translate Transformation") Translate Transformation
+            li.dropdown-item(data-hook="rotate-transformation" data-name="Rotate Transformation") Rotate Transformation
+            li.dropdown-item(data-hook="reflect-transformation" data-name="Reflect Transformation") Reflect Transformation
+            li.dropdown-item(data-hook="scale-transformation" data-name="Scale Transformation") Scale Transformation
+
+      div.tab-pane(id="view-transformations" data-hook="view-transformations")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-2: h6 <b>Name</b>
+
+          div.col-sm-3: h6 <b>Type</b>
+
+          div.col-sm-2: h6 <b>Geometry</b>
+
+          div.col-sm-2: h6 <b>Lattice</b>
+
+          div.col-sm-3: h6 <b>Transformation</b>
+
+        div.mt-3(data-hook="view-transformations-list")

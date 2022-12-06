@@ -263,7 +263,7 @@ class StochSSBase():
         as_string : bool
             Indicates whether or not to return the template in string format
         '''
-        path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+        path = '/stochss/stochss_templates/modelTemplate.json'
         self.log("debug", f"Using model template at: {path}")
         try:
             with open(path, 'r', encoding="utf-8") as template:

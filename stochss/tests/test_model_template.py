@@ -32,7 +32,7 @@ class TestModelTemplate(unittest.TestCase):
         '''
         Get the model template prior to each test.
         '''
-        template_path = "stochss_templates/nonSpatialModelTemplate.json"
+        template_path = "stochss_templates/modelTemplate.json"
 
         with open(template_path, "r") as template_file:
             self.template = json.load(template_file)
