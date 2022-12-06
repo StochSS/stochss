@@ -31,6 +31,10 @@ module.exports = State.extend({
     volume: 'number'
   },
   session: {
+    inUse: {
+      type: 'boolean',
+      default: false,
+    },
     numParticles: 'number',
     selected: {
       type: 'boolean',
