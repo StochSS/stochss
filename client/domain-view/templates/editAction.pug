@@ -1,0 +1,82 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-1
+
+      div.pl-3
+
+        input(type="checkbox" data-hook="select-action" data-toggle="collapse" data-target="#collapse-action-details" + this.model.cid)
+
+    div.col-sm-2
+
+      div(data-hook="select-type-container")
+
+    div.col-sm-3
+
+      div(data-hook="select-scope-container")
+
+    div.col-sm-2
+
+      div.pl-2(data-hook="input-priority-container")
+
+    div.col-sm-2
+
+      input(type="checkbox" data-hook="enable-action")
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X
+
+  div-mx-1.pl-2(data-hook="action-details")
+
+    div.collapse(id="collapse-action-details" + this.model.cid)
+
+      hr
+
+      div.hidden(data-hook="multi-particle-scope")
+
+        div.mb-3.mx-1.row.align-items-baseline
+
+          div.col-sm-6.pl-0
+
+            h5.inline.mr-2 Geometry:
+
+            div.inline(data-hook="geometry-container")
+
+          div.col-sm-6.hidden(data-hook="fill-lattice")
+
+            h5.inline.mr-2 Lattice
+
+            div.inline(data-hook="fill-lattice-container")
+
+      div.hidden(data-hook="single-particle-scope")
+
+        h5.inline.mr-2 Location:
+
+        div.inline.mr-2 (x:
+
+        div.inline.ml-2(data-hook="point-x-container" data-target="point" data-name="x" style="width: 25%")
+
+        div.inline.mr-2 ,  y:
+
+        div.inline.ml-2(data-hook="point-y-container" data-target="point" data-name="y" style="width: 25%")
+
+        div.inline.mr-2 ,  z:
+
+        div.inline.ml-2(data-hook="point-z-container" data-target="point" data-name="z" style="width: 25%")
+
+        div.inline )
+
+      div.hidden(data-hook="particle-properties")
+
+        h4 Particle Properties
+
+        div
+
+          h5.inline.mr-2 Type:
+
+          div.inline(data-hook="particle-type")

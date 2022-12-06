@@ -1,0 +1,69 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-3
+
+      div.pl-2=this.model.type
+
+    div.col-sm-3
+
+      div=this.model.scope
+
+    div.col-sm-3
+
+      div.pl-2=this.model.priority
+
+    div.col-sm-3
+
+      input(type="checkbox" checked=this.model.enable disabled)
+
+  hr
+
+  div.hidden(data-hook="multi-particle-scope")
+
+    div.mb-3.mx-1.row.align-items-baseline
+
+      div.col-sm-6.pl-0
+
+        h5.inline.mr-2 Geometry:
+
+        div.inline=this.model.geometry ? this.model.geometry : 'None'
+
+      div.col-sm-6(data-hook="fill-lattice")
+
+        h5.inline.mr-2 Lattice
+
+        div.inline=this.model.lattice ? this.model.lattice : 'None'
+
+  div.hidden(data-hook="single-particle-scope")
+
+    h5.inline.mr-2 Location:
+
+    span.inline (x:
+
+    div.inline=this.model.point.x
+
+    span.inline.mr-2 , y:
+
+    div.inline=this.model.point.y
+
+    span.inline.mr-2 , z:
+
+    div.inline=this.model.point.z
+
+    span.inline )
+
+  div.hidden(data-hook="particle-properties")
+
+    h5 Particle Properties
+
+    div
+
+      h5.inline.mr-2 Type:
+
+      div.inline=this.model.collection.parent.types.get(this.model.typeID, 'typeID').name
+
