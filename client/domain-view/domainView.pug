@@ -30,17 +30,9 @@ div#domain-view
 
             a.nav-link.tab(data-hook="edit-particle-tab" data-toggle="tab" href="#edit-selected-particle") Edit Selected
 
-          li.nav-item
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-particles-section" data-hook="collapse-domain-particles") +
 
-            a.nav-link.tab(data-hook="transformation-tab" data-toggle="tab" href="#transformation-section") Transformations
-
-          li.nav-item
-
-            a.nav-link.tab(data-hook="domain-actions-tab" data-toggle="tab" href="#domain-actions-section") Actions
-
-      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-particles-section" data-hook="collapse-domain-particles") -
-
-    div.collapse.show(id="domain-particles-section" data-hook="domain-particles-section")
+    div.collapse(id="domain-particles-section" data-hook="domain-particles-section")
 
       div.card-body.tab-content
 
@@ -90,14 +82,6 @@ div#domain-view
           div.mdl-edit-btn.saved-status.inline(data-hook="rsp-complete")
 
             span Particle Removed
-
-        div.tab-pane(id="transformation-section" data-hook="transformation-section")
-
-          h4 Transformation Classes
-
-        div.tab-pane(id="domain-actions-section" data-hook="domain-actions-section")
-
-          h4 Domain Actions
 
   div#domain-figure-preview.card(data-hook="domain-figure-preview")
 
