@@ -211,11 +211,13 @@ module.exports = View.extend({
     this.model.geometry = e.target.value;
     this.model.collection.parent.trigger('update-geometry-deps');
     this.model.collection.parent.trigger('update-transformation-deps');
+    this.updateViewer();
   },
   selectLattice: function (e) {
     this.model.lattice = e.target.value;
     this.model.collection.parent.trigger('update-lattice-deps');
     this.model.collection.parent.trigger('update-transformation-deps');
+    this.updateViewer();
   },
   setParticleFixed: function (e) {
     this.model.fixed = !this.model.fixed;
@@ -223,6 +225,7 @@ module.exports = View.extend({
   },
   setParticleType: function (e) {
     this.model.typeID = Number(e.target.value);
+    this.model.collection.parent.trigger('update-type-deps');
     this.updateViewer();
   },
   setPoint: function (e) {
