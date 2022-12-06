@@ -45,7 +45,8 @@ module.exports = View.extend({
     'click [data-hook=add-new-particle]' : 'handleAddParticle',
     'click [data-hook=save-selected-particle]' : 'handleSaveParticle',
     'click [data-hook=remove-selected-particle]' : 'handleRemoveParticle',
-    'click [data-hook=collapse-domain-figure]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse-domain-figure]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-dv-advanced-section]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);

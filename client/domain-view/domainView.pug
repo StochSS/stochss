@@ -2,8 +2,6 @@ div#domain-view
 
   div(data-hook="domain-properties-container")
 
-  div(data-hook="domain-limits-container")
-
   div(data-hook="domain-types-container")
 
   div(data-hook="domain-geometries-container")
@@ -82,6 +80,20 @@ div#domain-view
           div.mdl-edit-btn.saved-status.inline(data-hook="rsp-complete")
 
             span Particle Removed
+
+  div.card(data-hook="domain-view-advanced-container")
+
+    div.card-header.pb-0
+
+      h3.inline Advanced
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#dv-advanced-section" data-hook="collapse-dv-advanced-section") +
+
+    div.collapse(id="dv-advanced-section" data-hook="dv-advanced-section")
+
+      div.card-body
+
+        div(data-hook="domain-limits-container")
 
   div#domain-figure-preview.card(data-hook="domain-figure-preview")
 
