@@ -58,7 +58,8 @@ module.exports = View.extend({
   },
   addGeometry: function (e) {
     let type = e.target.dataset.name;
-    this.collection.addGeometry(type);
+    let name = this.collection.addGeometry(type);
+    this.collection.parent.actions.trigger('update-geometry-options', {currName: name});
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);

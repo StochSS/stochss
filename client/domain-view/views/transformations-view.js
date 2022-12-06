@@ -68,6 +68,7 @@ module.exports = View.extend({
     let type = e.target.dataset.name;
     let name = this.collection.addTransformation(type);
     this.collection.trigger('update-transformation-options', {currName: name});
+    this.collection.parent.actions.trigger('update-transformation-options', {currName: name});
   },
   renderEditTransformationsView: function ({key=null, attr=null}={}) {
     if(this.editTransformationsView) {

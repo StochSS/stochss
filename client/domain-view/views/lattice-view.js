@@ -184,7 +184,10 @@ module.exports = View.extend({
     $("#collapse-lattice-details" + this.model.cid).collapse("show");
   },
   removeLattice: function () {
+    let name = this.model.name;
+    let actions = this.model.collection.parent.actions;
     this.collection.removeLattice(this.model);
+    actions.trigger('update-lattice-options', {currName: name});
   },
   renderLatticeFileSelects: function () {
     var queryStr = `?ext=${this.accept}`;
@@ -382,7 +385,7 @@ module.exports = View.extend({
   },
   update: function () {},
   updateFileHeaders: function (e) {
-    this.updateTransformations(e);
+    this.updateDepsOptions(e);
     let types = ['XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice'];
     if(!types.includes(this.model.type)) { return }
 
@@ -391,10 +394,13 @@ module.exports = View.extend({
     let uploadHeader = `Uploaded Files for ${this.model.name}`;
     $($("#uploadedFilesHeader" + this.model.cid).children()[0]).text(uploadHeader);
   },
-  updateTransformations: function (e) {
+  updateDepsOptions: function (e) {
     let name = this.model.name;
     this.model.name = e.target.value;
     this.model.collection.parent.transformations.trigger(
+      'update-lattice-options', {currName: name, newName: this.model.name}
+    );
+    this.model.collection.parent.actions.trigger(
       'update-lattice-options', {currName: name, newName: this.model.name}
     );
   },

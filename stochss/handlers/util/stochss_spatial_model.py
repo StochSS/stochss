@@ -424,6 +424,7 @@ class StochSSSpatialModel(StochSSBase):
         domain['geometries'] = geometries
         domain['lattices'] = []
         domain['transformations'] = []
+        domain['actions'] = []
 
         domain['template_version'] = self.DOMAIN_TEMPLATE_VERSION
 

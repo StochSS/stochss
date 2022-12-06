@@ -10,6 +10,7 @@
 		"timestepSize": 1e-5
 	},
 	"domain": {
+        "actions": [],
 		"boundary_condition": {
         	"reflect_x": true,
         	"reflect_y": true,

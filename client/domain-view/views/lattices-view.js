@@ -62,7 +62,8 @@ module.exports = View.extend({
   },
   addLattice: function (e) {
   	let type = e.target.dataset.name;
-  	this.collection.addLattice(type);
+  	let name = this.collection.addLattice(type);
+    this.collection.parent.actions.trigger('update-lattice-options', {currName: name});
   },
   changeCollapseButtonText: function (e) {
   	app.changeCollapseButtonText(this, e);
