@@ -28,6 +28,7 @@ let Particle = require('../models/particle');
 let View = require('ampersand-view');
 let TypesView = require('./views/types-view');
 let LimitsView = require('./views/limits-view');
+let ActionsView = require('./views/actions-view');
 let LatticesView = require('./views/lattices-view');
 let QuickviewType = require('./views/quickview-type');
 let GeometriesView = require('./views/geometries-view');
@@ -65,6 +66,7 @@ module.exports = View.extend({
     this.renderGeometriesView();
     this.renderLatticesView();
     this.renderTransformationsView();
+    this.renderActionsView();
     if(this.readOnly) {
       $(this.queryByHook('domain-particles-editor')).css('display', 'none');
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
@@ -271,6 +273,17 @@ module.exports = View.extend({
   renameType: function (index, name) {
     this.plot.data[index].name = name;
     this.resetFigure();
+  },
+  renderActionsView: function () {
+    if(this.actionsView) {
+      this.actionsView.remove();
+    }
+    this.actionsView = new ActionsView({
+      collection: this.model.actions,
+      readOnly: this.readOnly
+    });
+    let hook = "domain-actions-container";
+    app.registerRenderSubview(this, this.actionsView, hook);
   },
   renderEditParticleView: function () {
     if(this.editParticleView) {
@@ -494,7 +507,13 @@ module.exports = View.extend({
     });
     this.model.transformations.forEach((transformation) => {
       let geometry = transformation.geometry;
-      if(geomNames.includes(geometry) &&  !deps.includes(geometry)) {
+      if(geomNames.includes(geometry) && !deps.includes(geometry)) {
+        deps.push(geometry);
+      }
+    });
+    this.model.actions.forEach((action) => {
+      let geometry = action.geometry;
+      if(geomNames.includes(geometry) && !deps.includes(geometry)) {
         deps.push(geometry);
       }
     });
@@ -507,7 +526,13 @@ module.exports = View.extend({
     });
     this.model.transformations.forEach((transformation) => {
       let lattice = transformation.lattice;
-      if(lattNames.includes(lattice) &&  !deps.includes(lattice)) {
+      if(lattNames.includes(lattice) && !deps.includes(lattice)) {
+        deps.push(lattice);
+      }
+    });
+    this.model.actions.forEach((action) => {
+      let lattice = action.lattice
+      if(lattNames.includes(lattice) && !deps.includes(lattice)) {
         deps.push(lattice);
       }
     });
@@ -524,7 +549,16 @@ module.exports = View.extend({
         deps.push(nestedTrans);
       }
     });
-    console.log(deps)
+    this.model.actions.forEach((action) => {
+      let geometry = action.geometry;
+      let lattice = action.lattice;
+      if(transNames.includes(geometry) && !deps.includes(geometry)) {
+        deps.push(geometry);
+      }
+      if(transNames.includes(lattice) && !deps.includes(lattice)) {
+        deps.push(lattice);
+      }
+    });
     this.model.transformations.trigger('update-inuse', {deps: deps});
   },
   updateParticleViews: function () {
