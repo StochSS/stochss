@@ -41,13 +41,10 @@ module.exports = View.extend({
   },
   events: {
     'change [data-hook=type-name]' : 'handleRenameType',
-    'change [data-target=type-defaults]' : 'updateView',
+    'change [data-target=type-defaults]' : 'updateViewer',
     'change [data-hook=td-fixed]' : 'setTDFixed',
-    'change [data-hook=type-geometry]' : 'updateView',
     'click [data-hook=select]' : 'selectType',
-    'click [data-hook=unassign-all]' : 'handleUnassignParticles',
-    'click [data-hook=delete-type]' : 'handleDeleteType',
-    'click [data-hook=delete-all]' : 'handleDeleteTypeAndParticle',
+    'click [data-hook=remove]' : 'handleDeleteType',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -66,24 +63,10 @@ module.exports = View.extend({
     app.documentSetup();
   },
   handleDeleteType: function (e) {
-    let type = Number(e.target.dataset.type);
     this.model.collection.removeType(this.model);
-    this.parent.parent.deleteType(this.model.typeID);
-  },
-  handleDeleteTypeAndParticle: function (e) {
-    let type = Number(e.target.dataset.type);
-    this.model.collection.removeType(this.model);
-    this.parent.parent.deleteType(this.model.typeID, {unassign: false});
   },
   handleRenameType: function (e) {
-    this.updateView();
-    let type = Number(e.target.parentElement.parentElement.dataset.target);
-    let name = e.target.value;
-    this.parent.parent.renameType(type, name);
-  },
-  handleUnassignParticles: function () {
-    this.model.numParticles = 0;
-    this.parent.parent.unassignAllParticles(this.model.typeID);
+    this.updateViewer();
   },
   openTypeDetails: function () {
     $("#collapse-type-details" + this.model.typeID).collapse("show");
@@ -93,16 +76,15 @@ module.exports = View.extend({
   },
   setTDFixed: function (e) {
     this.model.fixed = e.target.checked;
-    this.updateView();
+    this.updateViewer();
   },
   update: function () {},
   updateValid: function () {},
-  updateView: function () {
+  updateViewer: function () {
     this.parent.renderViewTypeView();
-    this.parent.parent.updateParticleViews({includeGeometry: true});
   },
   subviews: {
-    inputTypeID: {
+    inputName: {
       hook: "type-name",
       prepareView: function (el) {
         return new InputView({
