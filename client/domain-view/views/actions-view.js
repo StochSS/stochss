@@ -55,6 +55,7 @@ module.exports = View.extend({
       this.collection.on('update-geometry-options', this.updateGeometryOptions, this);
       this.collection.on('update-lattice-options', this.updateLatticeOptions, this);
       this.collection.on('update-transformation-options', this.updateTransformationOptions, this);
+      this.collection.on('update-type-options', this.updateTypeOptions, this);
     }
     this.renderViewActionsView();
   },
@@ -121,6 +122,15 @@ module.exports = View.extend({
       }
       view.renderGeometrySelectView();
       view.renderLatticeSelectView();
+    });
+  },
+  updateTypeOptions: function ({currName=null, newName=null}={}) {
+    if(currName === null && newName === null) { return; }
+    this.editActionsView.views.forEach((view) => {
+      if(view.model.typeID === currName) {
+        view.model.typeID = newName;
+      }
+      view.renderTypeSelectView();
     });
   }
 });

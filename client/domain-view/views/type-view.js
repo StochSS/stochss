@@ -45,7 +45,7 @@ module.exports = View.extend({
     }
   },
   events: {
-    'change [data-hook=type-name]' : 'handleRenameType',
+    'change [data-hook=type-name]' : 'updateDepsOptions',
     'change [data-target=type-defaults]' : 'updateViewer',
     'change [data-hook=td-fixed]' : 'setTDFixed',
     'click [data-hook=select]' : 'selectType',
@@ -68,10 +68,10 @@ module.exports = View.extend({
     app.documentSetup();
   },
   handleDeleteType: function (e) {
+    let typeID = this.model.typeID;
+    let actions = this.model.collection.parent.actions;
     this.model.collection.removeType(this.model);
-  },
-  handleRenameType: function (e) {
-    this.updateViewer();
+    actions.trigger('update-type-options', {currName: typeID});
   },
   openTypeDetails: function () {
     $("#collapse-type-details" + this.model.typeID).collapse("show");
@@ -84,6 +84,13 @@ module.exports = View.extend({
     this.updateViewer();
   },
   update: function () {},
+  updateDepsOptions: function (e) {
+    let typeID = this.model.typeID;
+    this.model.name = e.target.value;
+    this.model.collection.parent.actions.trigger(
+      'update-type-options', {currName: typeID, newName: this.model.typeID}
+    );
+  },
   updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewTypeView();
@@ -96,7 +103,6 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'name',
-          modelKey: 'name',
           tests: [tests.invalidChar],
           valueType: 'string',
           value: this.model.name
