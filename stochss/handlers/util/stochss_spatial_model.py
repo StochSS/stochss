@@ -23,12 +23,15 @@ import string
 import hashlib
 import traceback
 
+import numpy
 import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
                       TimeSpan, Geometry, CombinatoryGeometry, CartesianLattice, SphericalLattice, \
-                      CylindricalLattice, XMLMeshLattice, MeshIOLattice, StochSSLattice
+                      CylindricalLattice, XMLMeshLattice, MeshIOLattice, StochSSLattice, \
+                      TranslationTransformation, RotationTransformation, ReflectionTransformation, \
+                      ScalingTransformation
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -173,6 +176,7 @@ class StochSSSpatialModel(StochSSBase):
                 gravity = None
             geometries = self.__convert_geometries(s_domain)
             lattices = self.__convert_lattices(s_domain)
+            transformations = self.__convert_transformations(s_domain, geometries, lattices)
             domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
             self.__convert_particles(domain=domain, type_ids=type_ids, s_domain=s_domain)
             if model is None:
@@ -390,6 +394,50 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
+    def __convert_transformations(self, s_domain, geometries, lattices):
+        try:
+            transformations = {}
+            nested_trans = {}
+            for s_transformation in s_domain['transformations']:
+                name = s_transformation['name']
+                vector = [
+                    [s_transformation['vector'][0]['x'], s_transformation['vector'][0]['y'], s_transformation['vector'][0]['z']],
+                    [s_transformation['vector'][1]['x'], s_transformation['vector'][1]['y'], s_transformation['vector'][1]['z']]
+                ]
+                geometry = geometries[s_transformation['geometry']] if s_transformation['geometry'] != "" else None
+                lattice = lattices[s_transformation['lattice']] if s_transformation['lattice'] != "" else None
+                if s_transformation['transformation'] != "":
+                    nested_trans[name] = s_transformation['transformation']
+                if s_transformation['type'] == "Translate Transformation":
+                    transformation = TranslationTransformation(vector, geometry=geometry, lattice=lattice)
+                elif s_transformation['type'] == "Rotate Transformation":
+                    transformation = RotationTransformation(vector, s_transformation['angle'], geometry=geometry, lattice=lattice)
+                elif s_transformation['type'] == "Reflect Transformation":
+                    normal = numpy.array([s_transformation['normal']['x'], s_transformation['normal']['y'], s_transformation['normal']['z']])
+                    point1 = numpy.array([s_transformation['point1']['x'], s_transformation['point1']['y'], s_transformation['point1']['z']])
+                    point2 = numpy.array([s_transformation['point2']['x'], s_transformation['point2']['y'], s_transformation['point2']['z']])
+                    point3 = numpy.array([s_transformation['point3']['x'], s_transformation['point3']['y'], s_transformation['point3']['z']])
+                    if numpy.count_nonzero(point3 - point1) <= 0 or numpy.count_nonzero(point2 - point1) <= 0:
+                        point2 = None
+                        point3 = None
+                    else:
+                        normal = None
+                    transformation = ReflectionTransformation(
+                        point1, normal=normal, point2=point2, point3=point3, geometry=geometry, lattice=lattice
+                    )
+                else:
+                    center = numpy.array([s_transformation['center']['x'], s_transformation['center']['y'], s_transformation['center']['z']])
+                    transformation = ScalingTransformation(
+                        s_transformation['factor'], center=center, geometry=geometry, lattice=lattice
+                    )
+                transformations[name] = transformation
+            for trans, nested_tran in nested_trans.items():
+                transformations[trans].transformation = transformations[nested_tran]
+            return transformations
+        except KeyError as err:
+            message = "Spatial transformations are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     @classmethod
     def __get_trace_data(cls, particles, name="", index=None):
