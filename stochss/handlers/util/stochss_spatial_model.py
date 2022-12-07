@@ -27,7 +27,8 @@ import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
-                      TimeSpan, Geometry, CombinatoryGeometry
+                      TimeSpan, Geometry, CombinatoryGeometry, CartesianLattice, SphericalLattice, \
+                      CylindricalLattice, XMLMeshLattice, MeshIOLattice, StochSSLattice
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -171,6 +172,7 @@ class StochSSSpatialModel(StochSSBase):
             if gravity == [0, 0, 0]:
                 gravity = None
             geometries = self.__convert_geometries(s_domain)
+            lattices = self.__convert_lattices(s_domain)
             domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
             self.__convert_particles(domain=domain, type_ids=type_ids, s_domain=s_domain)
             if model is None:
@@ -206,7 +208,7 @@ class StochSSSpatialModel(StochSSBase):
                 geometries[name].geo_namespace = geometries
             return geometries
         except KeyError as err:
-            message = "Spatial geometries are not properly formatted of "
+            message = "Spatial geometries are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
     
@@ -233,7 +235,46 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-
+    def __convert_lattices(self, s_domain):
+        try:
+            lattices = {}
+            for s_lattice in s_domain['lattices']:
+                name = s_lattice['name']
+                center = [
+                    s_lattice['center']['x'], s_lattice['center']['y'], s_lattice['center']['z']
+                ]
+                if s_lattice['type'] == "Cartesian Lattice":
+                    lattice = CartesianLattice(
+                        s_lattice['xmin'], s_lattice['xmax'], s_lattice['deltax'], center=center,
+                        ymin=s_lattice['ymin'], ymax=s_lattice['ymax'], deltay=s_lattice['deltay'],
+                        zmin=s_lattice['zmin'], zmax=s_lattice['zmax'], deltaz=s_lattice['deltaz']
+                    )
+                elif s_lattice['type'] == "Spherical Lattice":
+                    lattice = SphericalLattice(
+                        s_lattice['radius'], s_lattice['deltas'], center=center, deltar=s_lattice['deltar']
+                    )
+                elif s_lattice['type'] == "Cylindrical Lattice":
+                    lattice = CylindricalLattice(
+                        s_lattice['radius'], s_lattice['length'], s_lattice['deltas'],
+                        center=center, deltar=s_lattice['deltar']
+                    )
+                elif s_lattice['type'] == "XML Mesh Lattice":
+                    lattice = XMLMeshLattice(
+                        s_lattice['filename'], center=center, subdomain_file=s_lattice['subdomainFile']
+                    )
+                elif s_lattice['type'] == "Mesh IO Lattice":
+                    lattice = MeshIOLattice(
+                        s_lattice['filename'], center=center, subdomain_file=s_lattice['subdomainFile']
+                    )
+                else:
+                    lattice = StochSSLattice(s_lattice['filename'], center=center)
+                lattices[name] = lattice
+            return lattices
+        except KeyError as err:
+            message = "Spatial lattices are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
+    
     def __convert_model_settings(self, model):
         try:
             end = self.model['modelSettings']['endSim']
