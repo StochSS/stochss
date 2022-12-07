@@ -55,7 +55,7 @@ module.exports = View.extend({
     this.plot = attrs.plot ? attrs.plot : null;
     this.elements = attrs.elements ? attrs.elements : null;
     this.queryStr = attrs.queryStr;
-    this.newPart = this.createNewParticle();
+    // this.newPart = this.createNewParticle();
     this.actPart = {"part":null, "tn":0, "pn":0};
     this.model.updateValid();
   },
@@ -73,7 +73,7 @@ module.exports = View.extend({
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
       this.renderTypesQuickview();
     }else{
-      this.updateParticleViews();
+      // this.updateParticleViews();
       this.model.on('update-type-deps', this.updateTypeDeps, this);
       this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
       this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
@@ -85,108 +85,104 @@ module.exports = View.extend({
         figureEmpty: this.queryByHook('domain-figure-empty')
       }
     }
-    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
+    this.model.on('update-plot-preview', this.updatePlotPreview, this);
     if(this.plot) {
       this.displayFigure();
     }else{
-      app.getXHR(endpoint, {success: (err, response, body) => {
-        this.plot = body.fig;
-        this.traceTemp = body.trace_temp;
-        this.displayFigure();
-      }});
+      this.model.trigger('update-plot-preview', {resetFigure: false});
     }
   },
-  addMissingTypes: function (typeIDs) {
-    typeIDs.forEach((typeID) => {
-      if(!this.model.types.get(typeID, 'typeID')) {
-        let name = this.model.types.addType();
-        this.addType(name, {update: false});
-      }
-    });
-  },
-  addParticle: function ({particle=this.newPart}={}) {
-    this.plot.data[particle.type].ids.push(particle.particle_id);
-    this.plot.data[particle.type].x.push(particle.point[0]);
-    this.plot.data[particle.type].y.push(particle.point[1]);
-    this.plot.data[particle.type].z.push(particle.point[2]);
-  },
-  addType: function (name, {update=true}={}) {
-    let newTrace = JSON.parse(JSON.stringify(this.traceTemp));
-    newTrace.name = name;
-    this.plot.data.push(newTrace);
-    if(update) {
-      this.updateParticleViews();
-    }
-  },
+  // addMissingTypes: function (typeIDs) {
+  //   typeIDs.forEach((typeID) => {
+  //     if(!this.model.types.get(typeID, 'typeID')) {
+  //       let name = this.model.types.addType();
+  //       this.addType(name, {update: false});
+  //     }
+  //   });
+  // },
+  // addParticle: function ({particle=this.newPart}={}) {
+  //   this.plot.data[particle.type].ids.push(particle.particle_id);
+  //   this.plot.data[particle.type].x.push(particle.point[0]);
+  //   this.plot.data[particle.type].y.push(particle.point[1]);
+  //   this.plot.data[particle.type].z.push(particle.point[2]);
+  // },
+  // addType: function (name, {update=true}={}) {
+  //   let newTrace = JSON.parse(JSON.stringify(this.traceTemp));
+  //   newTrace.name = name;
+  //   this.plot.data.push(newTrace);
+  //   if(update) {
+  //     this.updateParticleViews();
+  //   }
+  // },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e)
   },
-  changeDomainLimits: function (limits, reset) {
-    var limitsChanged = false;
-    if(reset) {
-      this.model.x_lim = limits.x_lim;
-      this.model.y_lim = limits.y_lim;
-      this.model.y_lim = limits.y_lim;
-      limitsChanged = true;
-    }else{
-      if(this.model.x_lim[0] > limits.x_lim[0]) {
-        this.model.x_lim[0] = limits.x_lim[0];
-        limitsChanged = true;
-      }
-      if(this.model.y_lim[0] > limits.y_lim[0]) {
-        this.model.y_lim[0] = limits.y_lim[0];
-        limitsChanged = true;
-      }
-      if(this.model.z_lim[0] > limits.z_lim[0]) {
-        this.model.z_lim[0] = limits.z_lim[0];
-        limitsChanged = true;
-      }
-      if(this.model.x_lim[1] < limits.x_lim[1]) {
-        this.model.x_lim[1] = limits.x_lim[1];
-        limitsChanged = true;
-      }
-      if(this.model.y_lim[1] < limits.y_lim[1]) {
-        this.model.y_lim[1] = limits.y_lim[1];
-        limitsChanged = true;
-      }
-      if(this.model.z_lim[1] < limits.z_lim[1]) {
-        this.model.z_lim[1] = limits.z_lim[1];
-        limitsChanged = true;
-      }
-    }
-    return limitsChanged;
-  },
-  changeParticleLocation: function () {
-    this.plot.data[this.actPart.tn].x[this.actPart.pn] = this.actPart.part.point[0];
-    this.plot.data[this.actPart.tn].y[this.actPart.pn] = this.actPart.part.point[1];
-    this.plot.data[this.actPart.tn].z[this.actPart.pn] = this.actPart.part.point[2];
-  },
-  changeParticleType: function (type, {update=true}={}) {
-    let id = this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1)[0];
-    let x = this.plot.data[this.actPart.tn].x.splice(this.actPart.pn, 1)[0];
-    let y = this.plot.data[this.actPart.tn].y.splice(this.actPart.pn, 1)[0];
-    let z = this.plot.data[this.actPart.tn].z.splice(this.actPart.pn, 1)[0];
-    this.plot.data[type].ids.push(id);
-    this.plot.data[type].x.push(x);
-    this.plot.data[type].y.push(y);
-    this.plot.data[type].z.push(z);
-    if(update) {
-      this.resetFigure();
-    }
-  },
-  createNewParticle: function () {
-    let type = this.model.types.get(0, 'typeID');
-    return new Particle({
-      c: type.c,
-      fixed: type.fixed,
-      mass: type.mass,
-      nu: type.nu,
-      point: [0, 0, 0],
-      rho: type.rho,
-      type: type.typeID,
-      volume: type.volume
-    });
-  },
+  // changeDomainLimits: function (limits, reset) {
+  //   var limitsChanged = false;
+  //   if(reset) {
+  //     this.model.x_lim = limits.x_lim;
+  //     this.model.y_lim = limits.y_lim;
+  //     this.model.y_lim = limits.y_lim;
+  //     limitsChanged = true;
+  //   }else{
+  //     if(this.model.x_lim[0] > limits.x_lim[0]) {
+  //       this.model.x_lim[0] = limits.x_lim[0];
+  //       limitsChanged = true;
+  //     }
+  //     if(this.model.y_lim[0] > limits.y_lim[0]) {
+  //       this.model.y_lim[0] = limits.y_lim[0];
+  //       limitsChanged = true;
+  //     }
+  //     if(this.model.z_lim[0] > limits.z_lim[0]) {
+  //       this.model.z_lim[0] = limits.z_lim[0];
+  //       limitsChanged = true;
+  //     }
+  //     if(this.model.x_lim[1] < limits.x_lim[1]) {
+  //       this.model.x_lim[1] = limits.x_lim[1];
+  //       limitsChanged = true;
+  //     }
+  //     if(this.model.y_lim[1] < limits.y_lim[1]) {
+  //       this.model.y_lim[1] = limits.y_lim[1];
+  //       limitsChanged = true;
+  //     }
+  //     if(this.model.z_lim[1] < limits.z_lim[1]) {
+  //       this.model.z_lim[1] = limits.z_lim[1];
+  //       limitsChanged = true;
+  //     }
+  //   }
+  //   return limitsChanged;
+  // },
+  // changeParticleLocation: function () {
+  //   this.plot.data[this.actPart.tn].x[this.actPart.pn] = this.actPart.part.point[0];
+  //   this.plot.data[this.actPart.tn].y[this.actPart.pn] = this.actPart.part.point[1];
+  //   this.plot.data[this.actPart.tn].z[this.actPart.pn] = this.actPart.part.point[2];
+  // },
+  // changeParticleType: function (type, {update=true}={}) {
+  //   let id = this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1)[0];
+  //   let x = this.plot.data[this.actPart.tn].x.splice(this.actPart.pn, 1)[0];
+  //   let y = this.plot.data[this.actPart.tn].y.splice(this.actPart.pn, 1)[0];
+  //   let z = this.plot.data[this.actPart.tn].z.splice(this.actPart.pn, 1)[0];
+  //   this.plot.data[type].ids.push(id);
+  //   this.plot.data[type].x.push(x);
+  //   this.plot.data[type].y.push(y);
+  //   this.plot.data[type].z.push(z);
+  //   if(update) {
+  //     this.resetFigure();
+  //   }
+  // },
+  // createNewParticle: function () {
+  //   let type = this.model.types.get(0, 'typeID');
+  //   return new Particle({
+  //     c: type.c,
+  //     fixed: type.fixed,
+  //     mass: type.mass,
+  //     nu: type.nu,
+  //     point: [0, 0, 0],
+  //     rho: type.rho,
+  //     type: type.typeID,
+  //     volume: type.volume
+  //   });
+  // },
   completeAction: function (prefix) {
     $(this.queryByHook(`${prefix}-in-progress`)).css("display", "none");
     $(this.queryByHook(`${prefix}-complete`)).css("display", "inline-block");
@@ -194,34 +190,34 @@ module.exports = View.extend({
       $(this.queryByHook(`${prefix}-complete`)).css('display', 'none');
     }, 5000);
   },
-  deleteParticle: function () {
-    this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1);
-    this.plot.data[this.actPart.tn].x.splice(this.actPart.pn, 1);
-    this.plot.data[this.actPart.tn].y.splice(this.actPart.pn, 1);
-    this.plot.data[this.actPart.tn].z.splice(this.actPart.pn, 1);
-    this.resetFigure();
-  },
-  deleteType: function (type, {unassign=true}={}) {
-    if(unassign) {
-      this.unassignAllParticles(type, {update: false});
-    }else{
-      if(this.actPart.part && this.actPart.part.type === type) {
-        this.actPart = {"part":null, "tn":0, "pn":0};
-      }
-      if(this.newPart && this.newPart.type === type) {
-        this.newPart.type = 0
-      }
-      let particles = this.model.particles.filter((particle) => {
-        return particle.type === type;
-      });
-      this.model.particles.removeParticles(particles);
-    }
-    this.model.realignTypes(type);
-    this.plot.data.splice(type, 1);
-    this.renderTypesView();
-    this.updateParticleViews();
-    this.resetFigure();
-  },
+  // deleteParticle: function () {
+  //   this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1);
+  //   this.plot.data[this.actPart.tn].x.splice(this.actPart.pn, 1);
+  //   this.plot.data[this.actPart.tn].y.splice(this.actPart.pn, 1);
+  //   this.plot.data[this.actPart.tn].z.splice(this.actPart.pn, 1);
+  //   this.resetFigure();
+  // },
+  // deleteType: function (type, {unassign=true}={}) {
+  //   if(unassign) {
+  //     this.unassignAllParticles(type, {update: false});
+  //   }else{
+  //     if(this.actPart.part && this.actPart.part.type === type) {
+  //       this.actPart = {"part":null, "tn":0, "pn":0};
+  //     }
+  //     if(this.newPart && this.newPart.type === type) {
+  //       this.newPart.type = 0
+  //     }
+  //     let particles = this.model.particles.filter((particle) => {
+  //       return particle.type === type;
+  //     });
+  //     this.model.particles.removeParticles(particles);
+  //   }
+  //   this.model.realignTypes(type);
+  //   this.plot.data.splice(type, 1);
+  //   this.renderTypesView();
+  //   this.updateParticleViews();
+  //   this.resetFigure();
+  // },
   displayFigure: function () {
     if(this.model.particles.length > 0) {
       $(this.elements.figureEmpty).css('display', 'none');
@@ -233,37 +229,37 @@ module.exports = View.extend({
       $(this.elements.figure).css('display', 'none');
     }
   },
-  handleAddParticle: function () {
-    this.startAction("anp")
-    this.model.particles.addParticle({particle: this.newPart});
-    this.addParticle();
-    this.resetFigure();
-    this.renderTypesView();
-    this.newPart = this.createNewParticle();
-    this.renderNewParticleView();
-    this.completeAction("anp");
-  },
-  handleRemoveParticle: function () {
-    this.startAction("rsp")
-    this.model.particles.removeParticle(this.actPart.part);
-    this.deleteParticle();
-    this.actPart = {"part":null, "tn":0, "pn":0};
-    this.renderTypesView();
-    this.renderEditParticleView();
-    this.completeAction("rsp")
-  },
-  handleSaveParticle: function () {
-    this.startAction("esp");
-    if(this.editParticleView.origType !== this.actPart.part.type) {
-      this.changeParticleType(this.actPart.part.type, {update: false});
-      this.renderTypesView();
-    }
-    if(!this.actPart.part.comparePoint(this.editParticleView.origPoint)) {
-      this.changeParticleLocation();
-    }
-    this.resetFigure();
-    this.completeAction("esp");
-  },
+  // handleAddParticle: function () {
+  //   this.startAction("anp")
+  //   this.model.particles.addParticle({particle: this.newPart});
+  //   this.addParticle();
+  //   this.resetFigure();
+  //   this.renderTypesView();
+  //   this.newPart = this.createNewParticle();
+  //   this.renderNewParticleView();
+  //   this.completeAction("anp");
+  // },
+  // handleRemoveParticle: function () {
+  //   this.startAction("rsp")
+  //   this.model.particles.removeParticle(this.actPart.part);
+  //   this.deleteParticle();
+  //   this.actPart = {"part":null, "tn":0, "pn":0};
+  //   this.renderTypesView();
+  //   this.renderEditParticleView();
+  //   this.completeAction("rsp")
+  // },
+  // handleSaveParticle: function () {
+  //   this.startAction("esp");
+  //   if(this.editParticleView.origType !== this.actPart.part.type) {
+  //     this.changeParticleType(this.actPart.part.type, {update: false});
+  //     this.renderTypesView();
+  //   }
+  //   if(!this.actPart.part.comparePoint(this.editParticleView.origPoint)) {
+  //     this.changeParticleLocation();
+  //   }
+  //   this.resetFigure();
+  //   this.completeAction("esp");
+  // },
   removeFigure: function () {
     try {
       this.elements.figure.removeListener('plotly_click', this.selectParticle);
@@ -272,10 +268,10 @@ module.exports = View.extend({
       return
     }
   },
-  renameType: function (index, name) {
-    this.plot.data[index].name = name;
-    this.resetFigure();
-  },
+  // renameType: function (index, name) {
+  //   this.plot.data[index].name = name;
+  //   this.resetFigure();
+  // },
   renderActionsView: function () {
     if(this.actionsView) {
       this.actionsView.remove();
@@ -428,66 +424,66 @@ module.exports = View.extend({
       this.renderEditParticleView();
     }
   },
-  setParticleTypes: function (typeIDs, types) {
-    this.addMissingTypes(typeIDs);
-    let actPart = JSON.parse(JSON.stringify(this.actPart));
-    types.forEach((type) => {
-      let particle = this.model.particles.get(type.particle_id, 'particle_id');
-      this.actPart = {
-        part: particle,
-        tn: particle.type,
-        pn: this.plot.data[particle.type].ids.indexOf(particle.particle_id)
-      }
-      this.changeParticleType(type.typeID, {update: false});
-      particle.type = type.typeID;
-    });
-    if(actPart.part && actPart.part.type === type) {
-      this.actPart = {
-        part: this.model.particles.get(actPart.part.particle_id, "particle_id"),
-        tn: 0,
-        pn: this.plot.data[0].ids.indexOf(actPart.part.particle_id)
-      }
-      this.renderEditParticleView();
-    }else{
-      this.actPart = actPart
-    }
-    this.resetFigure();
-    this.updateParticleViews();
-  },
+  // setParticleTypes: function (typeIDs, types) {
+  //   this.addMissingTypes(typeIDs);
+  //   let actPart = JSON.parse(JSON.stringify(this.actPart));
+  //   types.forEach((type) => {
+  //     let particle = this.model.particles.get(type.particle_id, 'particle_id');
+  //     this.actPart = {
+  //       part: particle,
+  //       tn: particle.type,
+  //       pn: this.plot.data[particle.type].ids.indexOf(particle.particle_id)
+  //     }
+  //     this.changeParticleType(type.typeID, {update: false});
+  //     particle.type = type.typeID;
+  //   });
+  //   if(actPart.part && actPart.part.type === type) {
+  //     this.actPart = {
+  //       part: this.model.particles.get(actPart.part.particle_id, "particle_id"),
+  //       tn: 0,
+  //       pn: this.plot.data[0].ids.indexOf(actPart.part.particle_id)
+  //     }
+  //     this.renderEditParticleView();
+  //   }else{
+  //     this.actPart = actPart
+  //   }
+  //   this.resetFigure();
+  //   this.updateParticleViews();
+  // },
   startAction: function (prefix) {
     $(this.queryByHook(`${prefix}-complete`)).css('display', 'none');
     $(this.queryByHook(`${prefix}-in-progress`)).css("display", "inline-block");
   },
-  unassignAllParticles: function (type, {update=true}={}) {
-    let actPart = JSON.parse(JSON.stringify(this.actPart));
-    this.model.particles.forEach((particle) => {
-      if(particle.type === type) {
-        this.actPart = {
-          part: particle,
-          tn: type,
-          pn: this.plot.data[type].ids.indexOf(particle.particle_id)
-        }
-        this.changeParticleType(0, {update: false});
-        particle.type = 0;
-      }
-    });
-    if(actPart.part) {
-      this.actPart = {
-        part: this.model.particles.get(actPart.part.particle_id, "particle_id"),
-        tn: 0,
-        pn: this.plot.data[0].ids.indexOf(actPart.part.particle_id)
-      }
-      if(actPart.part.type === type) {
-        this.renderEditParticleView();
-      }
-    }else{
-      this.actPart = actPart
-    }
-    if(update) {
-      this.renderTypesView();
-      this.resetFigure();
-    }
-  },
+  // unassignAllParticles: function (type, {update=true}={}) {
+  //   let actPart = JSON.parse(JSON.stringify(this.actPart));
+  //   this.model.particles.forEach((particle) => {
+  //     if(particle.type === type) {
+  //       this.actPart = {
+  //         part: particle,
+  //         tn: type,
+  //         pn: this.plot.data[type].ids.indexOf(particle.particle_id)
+  //       }
+  //       this.changeParticleType(0, {update: false});
+  //       particle.type = 0;
+  //     }
+  //   });
+  //   if(actPart.part) {
+  //     this.actPart = {
+  //       part: this.model.particles.get(actPart.part.particle_id, "particle_id"),
+  //       tn: 0,
+  //       pn: this.plot.data[0].ids.indexOf(actPart.part.particle_id)
+  //     }
+  //     if(actPart.part.type === type) {
+  //       this.renderEditParticleView();
+  //     }
+  //   }else{
+  //     this.actPart = actPart
+  //   }
+  //   if(update) {
+  //     this.renderTypesView();
+  //     this.resetFigure();
+  //   }
+  // },
   updateGeometryDeps: function () {
     let deps = [];
     let geomNames = [];
@@ -540,6 +536,19 @@ module.exports = View.extend({
     });
     this.model.lattices.trigger('update-inuse', {deps: deps});
   },
+  updatePlotPreview: function ({resetFigure=true}={}) {
+    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
+    let domain = JSON.stringify(this.model);
+    app.postXHR(endpoint, domain, {success: (err, response, body) => {
+      this.plot = body.fig;
+      this.traceTemp = body.trace_temp;
+      if(resetFigure) {
+        this.resetFigure();
+      }else{
+        this.displayFigure();
+      }
+    }});
+  },
   updateTransformationDeps: function () {
     let deps = [];
     let transNames = this.model.transformations.map((transformation) => {
@@ -576,8 +585,8 @@ module.exports = View.extend({
     });
     this.model.types.trigger('update-inuse', {deps: deps});
   },
-  updateParticleViews: function () {
-    this.renderNewParticleView();
-    this.renderEditParticleView();
-  }
+  // updateParticleViews: function () {
+  //   this.renderNewParticleView();
+  //   this.renderEditParticleView();
+  // }
 });
