@@ -11,31 +11,17 @@ div.mx-1
 
         input(type="checkbox" data-hook="select" data-toggle="collapse" data-target="#collapse-type-details" + this.model.typeID)
 
-    div.col-sm-3
+    div.col-sm-5
 
       div(data-hook="type-name" data-target=this.model.typeID)
 
-    div.col-sm-3
+    div.col-sm-4
 
       div=this.model.numParticles
 
-    div.col-sm-3
-
-      button.btn.btn-outline-secondary.box-shadow(data-type=this.model.typeID data-hook='unassign-all') Un-Assign Particles
-
     div.col-sm-2
 
-      button.btn.btn-outline-secondary.box-shadow.dropdown-toggle(
-        id="delete-domain-type",
-        data-toggle="dropdown",
-        aria-haspopup="true",
-        aria-expanded="false",
-        type="button"
-      ) Delete <span class="caret"></span>
-
-      ul.dropdown-menu(aria-labelledby="delete-domain-type")
-        li.dropdown-item(data-hook="delete-type" data-type=this.model.typeID) Type
-        li.dropdown-item(data-hook="delete-all" data-type=this.model.typeID) Type and Particles
+      button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X
 
   div-mx-1.pl-2(data-hook="type-details")
 

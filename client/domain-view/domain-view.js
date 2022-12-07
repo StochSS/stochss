@@ -74,6 +74,7 @@ module.exports = View.extend({
       this.renderTypesQuickview();
     }else{
       this.updateParticleViews();
+      this.model.on('update-type-deps', this.updateTypeDeps, this);
       this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
       this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
       this.model.on('update-transformation-deps', this.updateTransformationDeps, this);
@@ -561,6 +562,19 @@ module.exports = View.extend({
       }
     });
     this.model.transformations.trigger('update-inuse', {deps: deps});
+  },
+  updateTypeDeps: function () {
+    let deps = [];
+    let typeNames = this.model.types.map((type) => {
+      return type.name;
+    });
+    this.model.actions.forEach((action) => {
+      let type = this.model.types.get(action.typeID, 'typeID').name;
+      if(typeNames.includes(type) && !deps.includes(type)) {
+        deps.push(type);
+      }
+    });
+    this.model.types.trigger('update-inuse', {deps: deps});
   },
   updateParticleViews: function () {
     this.renderNewParticleView();

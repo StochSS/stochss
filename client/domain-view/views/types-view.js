@@ -48,6 +48,8 @@ module.exports = View.extend({
       $(this.queryByHook('view-domain-types')).addClass('active');
     }else{
       this.renderEditTypeView();
+      this.collection.on("update-inuse", this.updateInUse, this);
+      this.collection.parent.trigger('update-type-deps');
     }
     this.toggleDomainError();
     this.renderViewTypeView();
@@ -57,6 +59,7 @@ module.exports = View.extend({
   },
   handleAddDomainType: function () {
     let name = this.collection.addType();
+    this.collection.parent.actions.trigger('update-type-options', {currName: name});
     this.parent.addType(name);
   },
   renderEditTypeView: function () {
@@ -101,5 +104,11 @@ module.exports = View.extend({
       errorMsg.addClass('component-valid');
       errorMsg.removeClass('component-invalid');
     }
+  },
+  updateInUse: function ({deps=null}={}) {
+    if(deps === null) { return; }
+    this.collection.forEach((type) => {
+      type.inUse = deps.includes(type.name);
+    });
   }
 });
