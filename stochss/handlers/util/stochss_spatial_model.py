@@ -27,7 +27,7 @@ import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
-                      TimeSpan
+                      TimeSpan, Geometry, CombinatoryGeometry
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -157,19 +157,24 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_domain(self, model, type_ids):
+    def __convert_domain(self, type_ids, model=None, s_domain=None):
         try:
-            xlim = tuple(self.model['domain']['x_lim'])
-            ylim = tuple(self.model['domain']['y_lim'])
-            zlim = tuple(self.model['domain']['z_lim'])
-            rho0 = self.model['domain']['rho_0']
-            c_0 = self.model['domain']['c_0']
-            p_0 = self.model['domain']['p_0']
-            gravity = self.model['domain']['gravity']
+            if s_domain is None:
+                s_domain = self.model['domain']
+            xlim = tuple(s_domain['x_lim'])
+            ylim = tuple(s_domain['y_lim'])
+            zlim = tuple(s_domain['z_lim'])
+            rho0 = s_domain['rho_0']
+            c_0 = s_domain['c_0']
+            p_0 = s_domain['p_0']
+            gravity = s_domain['gravity']
             if gravity == [0, 0, 0]:
                 gravity = None
+            geometries = self.__convert_geometries(s_domain)
             domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
-            self.__convert_particles(domain=domain, type_ids=type_ids)
+            self.__convert_particles(domain=domain, type_ids=type_ids, s_domain=s_domain)
+            if model is None:
+                return domain
             model.add_domain(domain)
             model.staticDomain = self.model['domain']['static']
         except KeyError as err:
@@ -177,7 +182,34 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
+    def __convert_geometries(self, s_domain):
+        try:
+            geometries = {}
+            comb_geoms = []
+            for s_geometry in s_domain['geometries']:
+                if s_geometry['type'] == "Standard Geometry":
+                    class NewGeometry(Geometry):
+                        def __init__(self):
+                            pass
 
+                        def inside(self, point, on_boundary):
+                            namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+                            return eval(s_geometry['formula'], {}, namespace)
+                    geometries[s_geometry['name']] = NewGeometry()
+                else:
+                    name = s_geometry['name']
+                    geometry = CombinatoryGeometry("", {})
+                    geometry.formula = s_geometry['formula']
+                    geometries[name] = geometry
+                    comb_geoms.append(name)
+            for name in comb_geoms:
+                geometries[name].geo_namespace = geometries
+            return geometries
+        except KeyError as err:
+            message = "Spatial geometries are not properly formatted of "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
+    
     def __convert_initial_conditions(self, model, type_ids):
         try:
             s_species = model.get_all_species()
@@ -226,9 +258,11 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
 
-    def __convert_particles(self, domain, type_ids):
+    def __convert_particles(self, domain, type_ids, s_domain=None):
         try:
-            for particle in self.model['domain']['particles']:
+            if s_domain is None:
+                s_domain = self.model['domain']
+            for particle in s_domain['particles']:
                 domain.add_point(
                     particle['point'], particle['volume'], particle['mass'],
                     type_ids[particle['type']], particle['nu'], particle['fixed'],
@@ -650,6 +684,11 @@ class StochSSSpatialModel(StochSSBase):
         self.__update_domain_to_current()
 
         return self.model
+
+    def load_action_preview(self, domain):
+        types = sorted(domain['types'], key=lambda d_type: d_type['typeID'])
+        type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
+        self.__convert_domain(type_ids, s_domain=domain)
 
     def publish_presentation(self):
         '''
