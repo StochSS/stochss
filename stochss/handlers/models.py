@@ -156,7 +156,7 @@ class LoadDomainAPIHandler(APIHandler):
     ################################################################################################
     '''
     @web.authenticated
-    async def get(self):
+    async def post(self):
         '''
         Load and return the domain plot.
 
@@ -164,23 +164,19 @@ class LoadDomainAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path", default=None)
-        log.debug(f"Path to the spatial model: {path}")
-        d_path = self.get_query_argument(name="domain_path", default=None)
-        if d_path is not None:
-            log.debug(f"Path to the domain file: {d_path}")
-        new = self.get_query_argument(name="new", default=False)
-        log.debug(f"The domain is new: {new}")
+        domain = json.loads(self.request.body.decode())
         log.info("Generating the domain plot")
         try:
-            model = StochSSSpatialModel(path=path)
-            fig, trace_temp = model.get_domain_plot(path=d_path, new=new)
-            log.info("Loading the domain plot")
-            if isinstance(fig, str):
-                fig = json.loads(fig)
-            resp = {"fig":fig, "trace_temp": trace_temp}
-            log.debug(f"Response: {resp}")
-            self.write(resp)
+            print(domain)
+            model = StochSSSpatialModel(path="")
+            model.load_action_preview(domain)
+            # fig, trace_temp = model.get_domain_plot(path=d_path, new=new)
+            # log.info("Loading the domain plot")
+            # if isinstance(fig, str):
+            #     fig = json.loads(fig)
+            # resp = {"fig":fig, "trace_temp": trace_temp}
+            # log.debug(f"Response: {resp}")
+            # self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()

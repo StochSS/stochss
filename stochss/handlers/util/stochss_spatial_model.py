@@ -149,7 +149,63 @@ class StochSSSpatialModel(StochSSBase):
             particles.append(particle)
         return particles
 
+    def __convert_actions(self, domain, s_domain):
+        geometries = self.__convert_geometries(s_domain)
+        lattices = self.__convert_lattices(s_domain)
+        transformations = self.__convert_transformations(s_domain, geometries, lattices)
+        try:
+            actions = sorted(s_domain['actions'], key=lambda action: action['priority'])
+            for action in actions:
+                # Handle unset geometry
+                if action['geometry'] == "":
+                    action['geometry'] = None
+                # Build props arg
+                if action['type'] in ('Fill Action', 'Set Action'):
+                    kwargs = {
+                        'type_id': action['typeID'], 'mass': action['mass'], 'vol': action['vol'],
+                        'rho': action['rho'], 'nu': action['nu'], 'c': action['c'], 'fixed': action['fixed']
+                    }
+                else:
+                    kwargs = {}
+                # Apply actions
+                if action['type'] == "Fill Action":
+                    if scope == 'Multi Particle':
+                        domain.add_fill_action(
+                            lattice=lattices[action['lattice']], geometry=geometries[action['geometry']],
+                            enable=action['enable'], apply_action=action['enable'], **kwargs
+                        )
+                    else:
+                        point = [action['point']['x'], action['point']['y'], action['point']['z']]
+                        domain.add_point(point, **kwargs)
+                else:
+                    # Get proper geometry for scope
+                    # 'Multi Particle' scope uses geometry from action
+                    if scope == 'Multi Particle':
+                        geometry = geometries[action['geometry']]
+                    # 'Single Particle' scope creates a geometry using actions point.
+                    else:
+                        formula = f"x == {action['point']['x']} and y == {action['point']['y']} and z == {action['point']['z']}"
+                        class NewGeometry(Geometry):
+                            def __init__(self):
+                                pass
 
+                            def inside(self, point, on_boundary):
+                                namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+                                return eval(formula, {}, namespace)
+                        geometry = NewGeometry()
+                    if action['type'] == "Set Action":
+                        domain.add_set_action(
+                            geometry=geometry, enable=action['enable'], apply_action=action['enable'], **kwargs
+                        )
+                    else:
+                        domain.add_remove_action(
+                            geometry=geometry, enable=action['enable'], apply_action=action['enable']
+                        )
+        except KeyError as err:
+            message = "Spatial actions are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
+    
     def __convert_boundary_conditions(self, model):
         try:
             for boundary_condition in self.model['boundaryConditions']:
@@ -174,10 +230,8 @@ class StochSSSpatialModel(StochSSBase):
             gravity = s_domain['gravity']
             if gravity == [0, 0, 0]:
                 gravity = None
-            geometries = self.__convert_geometries(s_domain)
-            lattices = self.__convert_lattices(s_domain)
-            transformations = self.__convert_transformations(s_domain, geometries, lattices)
             domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
+            self.__convert_actions(domain, s_domain)
             self.__convert_particles(domain=domain, type_ids=type_ids, s_domain=s_domain)
             if model is None:
                 return domain
