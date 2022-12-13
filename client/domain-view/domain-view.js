@@ -537,9 +537,8 @@ module.exports = View.extend({
     this.model.lattices.trigger('update-inuse', {deps: deps});
   },
   updatePlotPreview: function ({resetFigure=true}={}) {
-    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot") + this.queryStr;
-    let domain = JSON.stringify(this.model);
-    app.postXHR(endpoint, domain, {success: (err, response, body) => {
+    let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot");
+    app.postXHR(endpoint, this.model, {success: (err, response, body) => {
       this.plot = body.fig;
       this.traceTemp = body.trace_temp;
       if(resetFigure) {
