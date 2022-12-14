@@ -244,6 +244,7 @@ class StochSSBase():
         # Configure the AWS cluster
         local_config = EC2LocalConfig(key_dir=key_dir, status_file=s_path)
         cluster = EC2Cluster(local_config=local_config)
+        # cluster = EC2Cluster(status_file=s_path)
         return cluster
 
     @classmethod
