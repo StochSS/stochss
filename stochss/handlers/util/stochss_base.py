@@ -27,7 +27,7 @@ import subprocess
 import dotenv
 import requests
 
-from stochss_compute.cloud import EC2Cluster, EC2LocalConfig
+from stochss_compute.cloud import EC2Cluster# , EC2LocalConfig
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
                             FileNotJSONFormatError
@@ -242,9 +242,9 @@ class StochSSBase():
         env_path = os.path.join(key_dir, "awsec2.env")
         dotenv.load_dotenv(dotenv_path=env_path)
         # Configure the AWS cluster
-        local_config = EC2LocalConfig(key_dir=key_dir, status_file=s_path)
-        cluster = EC2Cluster(local_config=local_config)
-        # cluster = EC2Cluster(status_file=s_path)
+        # local_config = EC2LocalConfig(key_dir=key_dir, status_file=s_path)
+        # cluster = EC2Cluster(local_config=local_config)
+        cluster = EC2Cluster(status_file=s_path)
         return cluster
 
     @classmethod

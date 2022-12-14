@@ -110,9 +110,11 @@ class StochSSNotebook(StochSSBase):
         cells.append(nbf.new_code_cell("# cluster.clean_up()"))
 
     def __create_compute_credentials(self, cells, compute):
-        cells.insert(5, nbf.new_code_cell(
-            f"_ = dotenv.load_dotenv(dotenv_path=os.path.join(os.environ.get('HOME'), '.aws/awsec2.env'))"
-        ))
+        nb_creds = [
+            "key_dir = os.path.join(os.environ.get('HOME'), '.aws')",
+            "_ = dotenv.load_dotenv(dotenv_path=os.path.join(key_dir, 'awsec2.env'))"
+        ]
+        cells.insert(5, nbf.new_code_cell("\n".join(nb_creds)))
 
     def __create_compute_headers(self, cells, compute):
         cells.insert(2, nbf.new_markdown_cell(
@@ -124,14 +126,17 @@ class StochSSNotebook(StochSSBase):
     def __create_compute_imports(self, cells, compute):
         cells.insert(1, nbf.new_code_cell("import os\nimport dotenv"))
         cells.insert(3, nbf.new_code_cell(
-            "import stochss_compute\nfrom stochss_compute.cloud import EC2Cluster"
+            "import stochss_compute\nfrom stochss_compute.cloud import EC2Cluster# , EC2LocalConfig"
         ))
 
     def __create_compute_launch(self, cells, compute):
         instance = self.load_user_settings(path='.user-settings.json')['headNode']
         path = f'{instance.replace(".", "-")}-status.txt'
         nb_cluster = [
-            f"cluster = EC2Cluster(status_file=os.path.join(os.environ.get('HOME'), '{path}'))",
+            "# local_config = EC2LocalConfig(",
+            f"#     key_dir=key_dir, status_file=os.path.join(key_dir, '{path}')", "# )",
+            "# cluster = EC2Cluster(local_config=local_config)",
+            f"cluster = EC2Cluster(status_file=os.path.join(key_dir, '{path}'))",
             "if cluster._server is None:",
             f"    cluster.launch_single_node_instance('{instance}')", "cluster.status"
         ]
