@@ -150,15 +150,27 @@ class StochSSSpatialModel(StochSSBase):
         return particles
 
     def __convert_actions(self, domain, s_domain):
+        print("Converting domain geometries")
         geometries = self.__convert_geometries(s_domain)
+        print("Finished converting geometries")
+        print("Converting domain lattices")
         lattices = self.__convert_lattices(s_domain)
+        print("Finished converting lattices")
+        print("Converting domain transformations")
         transformations = self.__convert_transformations(s_domain, geometries, lattices)
+        print("Finished converting transformations")
+        print("Converting domain actions")
         try:
             actions = sorted(s_domain['actions'], key=lambda action: action['priority'])
             for action in actions:
-                # Handle unset geometry
+                print("--> Action:", action)
+                # Get geometry. 'Multi Particle' scope uses geometry from action
                 if action['geometry'] == "":
-                    action['geometry'] = None
+                    geometry = None
+                elif action['geometry'] in geometries:
+                    geometry = geometries[action['geometry']]
+                else:
+                    geometry = transformations[action['geometry']]
                 # Build props arg
                 if action['type'] in ('Fill Action', 'Set Action'):
                     kwargs = {
@@ -169,21 +181,18 @@ class StochSSSpatialModel(StochSSBase):
                     kwargs = {}
                 # Apply actions
                 if action['type'] == "Fill Action":
-                    if scope == 'Multi Particle':
+                    if action['scope'] == 'Multi Particle':
+                        lattice = lattices[action['lattice']] if action['lattice'] in lattices else transformations[action['lattice']]
                         domain.add_fill_action(
-                            lattice=lattices[action['lattice']], geometry=geometries[action['geometry']],
-                            enable=action['enable'], apply_action=action['enable'], **kwargs
+                            lattice=lattice, geometry=geometry, enable=action['enable'], apply_action=action['enable'], **kwargs
                         )
                     else:
                         point = [action['point']['x'], action['point']['y'], action['point']['z']]
                         domain.add_point(point, **kwargs)
                 else:
                     # Get proper geometry for scope
-                    # 'Multi Particle' scope uses geometry from action
-                    if scope == 'Multi Particle':
-                        geometry = geometries[action['geometry']]
                     # 'Single Particle' scope creates a geometry using actions point.
-                    else:
+                    if action['scope'] == 'Single Particle':
                         formula = f"x == {action['point']['x']} and y == {action['point']['y']} and z == {action['point']['z']}"
                         class NewGeometry(Geometry):
                             def __init__(self):
@@ -205,6 +214,7 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial actions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        print("Finished converting actions")
     
     def __convert_boundary_conditions(self, model):
         try:
@@ -247,6 +257,7 @@ class StochSSSpatialModel(StochSSBase):
             geometries = {}
             comb_geoms = []
             for s_geometry in s_domain['geometries']:
+                print("--> Geometry:", s_geometry)
                 if s_geometry['type'] == "Standard Geometry":
                     class NewGeometry(Geometry):
                         def __init__(self):
@@ -297,6 +308,7 @@ class StochSSSpatialModel(StochSSBase):
         try:
             lattices = {}
             for s_lattice in s_domain['lattices']:
+                print("--> Lattice:", s_lattice)
                 name = s_lattice['name']
                 center = [
                     s_lattice['center']['x'], s_lattice['center']['y'], s_lattice['center']['z']
@@ -453,6 +465,7 @@ class StochSSSpatialModel(StochSSBase):
             transformations = {}
             nested_trans = {}
             for s_transformation in s_domain['transformations']:
+                print("--> Transformation:", s_transformation)
                 name = s_transformation['name']
                 vector = [
                     [s_transformation['vector'][0]['x'], s_transformation['vector'][0]['y'], s_transformation['vector'][0]['z']],
