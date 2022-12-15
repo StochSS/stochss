@@ -149,21 +149,13 @@ class StochSSSpatialModel(StochSSBase):
             particles.append(particle)
         return particles
 
-    def __convert_actions(self, domain, s_domain):
-        print("Converting domain geometries")
+    def __convert_actions(self, domain, s_domain, type_ids):
         geometries = self.__convert_geometries(s_domain)
-        print("Finished converting geometries")
-        print("Converting domain lattices")
         lattices = self.__convert_lattices(s_domain)
-        print("Finished converting lattices")
-        print("Converting domain transformations")
         transformations = self.__convert_transformations(s_domain, geometries, lattices)
-        print("Finished converting transformations")
-        print("Converting domain actions")
         try:
             actions = sorted(s_domain['actions'], key=lambda action: action['priority'])
             for action in actions:
-                print("--> Action:", action)
                 # Get geometry. 'Multi Particle' scope uses geometry from action
                 if action['geometry'] == "":
                     geometry = None
@@ -174,7 +166,7 @@ class StochSSSpatialModel(StochSSBase):
                 # Build props arg
                 if action['type'] in ('Fill Action', 'Set Action'):
                     kwargs = {
-                        'type_id': action['typeID'], 'mass': action['mass'], 'vol': action['vol'],
+                        'type_id': type_ids[action['typeID']], 'mass': action['mass'], 'vol': action['vol'],
                         'rho': action['rho'], 'nu': action['nu'], 'c': action['c'], 'fixed': action['fixed']
                     }
                 else:
@@ -206,6 +198,14 @@ class StochSSSpatialModel(StochSSBase):
                         domain.add_set_action(
                             geometry=geometry, enable=action['enable'], apply_action=action['enable'], **kwargs
                         )
+                        if action['scope'] == "Single Particle":
+                            curr_pnt = numpy.array([action['point']['x'], action['point']['y'], action['point']['z']])
+                            new_pnt = numpy.array([action['newPoint']['x'], action['newPoint']['y'], action['newPoint']['z']])
+                            if numpy.count_nonzero(curr_pnt - new_pnt) > 0:
+                                for i, vertex in enumerate(domain.vertices):
+                                    if numpy.count_nonzero(curr_pnt - vertex) <= 0:
+                                        domain.vertices[i] = new_pnt
+                                        break
                     else:
                         domain.add_remove_action(
                             geometry=geometry, enable=action['enable'], apply_action=action['enable']
@@ -214,7 +214,6 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial actions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-        print("Finished converting actions")
     
     def __convert_boundary_conditions(self, model):
         try:
@@ -241,8 +240,7 @@ class StochSSSpatialModel(StochSSBase):
             if gravity == [0, 0, 0]:
                 gravity = None
             domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
-            self.__convert_actions(domain, s_domain)
-            self.__convert_particles(domain=domain, type_ids=type_ids, s_domain=s_domain)
+            self.__convert_actions(domain, s_domain, type_ids)
             if model is None:
                 return domain
             model.add_domain(domain)
@@ -257,7 +255,6 @@ class StochSSSpatialModel(StochSSBase):
             geometries = {}
             comb_geoms = []
             for s_geometry in s_domain['geometries']:
-                print("--> Geometry:", s_geometry)
                 if s_geometry['type'] == "Standard Geometry":
                     class NewGeometry(Geometry):
                         def __init__(self):
@@ -308,7 +305,6 @@ class StochSSSpatialModel(StochSSBase):
         try:
             lattices = {}
             for s_lattice in s_domain['lattices']:
-                print("--> Lattice:", s_lattice)
                 name = s_lattice['name']
                 center = [
                     s_lattice['center']['x'], s_lattice['center']['y'], s_lattice['center']['z']
@@ -365,22 +361,6 @@ class StochSSSpatialModel(StochSSBase):
                 model.add_parameter(s_param)
         except KeyError as err:
             message = "Spatial model parameters are not properly formatted or "
-            message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
-
-    def __convert_particles(self, domain, type_ids, s_domain=None):
-        try:
-            if s_domain is None:
-                s_domain = self.model['domain']
-            for particle in s_domain['particles']:
-                domain.add_point(
-                    particle['point'], particle['volume'], particle['mass'],
-                    type_ids[particle['type']], particle['nu'], particle['fixed'],
-                    particle['rho'], particle['c']
-                )
-        except KeyError as err:
-            message = "Spatial model domain particle properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
@@ -465,7 +445,6 @@ class StochSSSpatialModel(StochSSBase):
             transformations = {}
             nested_trans = {}
             for s_transformation in s_domain['transformations']:
-                print("--> Transformation:", s_transformation)
                 name = s_transformation['name']
                 vector = [
                     [s_transformation['vector'][0]['x'], s_transformation['vector'][0]['y'], s_transformation['vector'][0]['z']],
@@ -611,10 +590,12 @@ class StochSSSpatialModel(StochSSBase):
                     'type': 'Standard Geometry',
                     'formula': d_type['geometry']
                 })
+        domain['actions'] = []
         domain['geometries'] = geometries
         domain['lattices'] = []
+        # TODO: Add backward compatability for existing domains.
+        # TEST: Loading the 3D Cylinder should load the original domain as a lattice
         domain['transformations'] = []
-        domain['actions'] = []
 
         domain['template_version'] = self.DOMAIN_TEMPLATE_VERSION
 
@@ -804,7 +785,7 @@ class StochSSSpatialModel(StochSSBase):
         fig['layout']['height'] = None
         fig['layout']['autosize'] = True
         fig['config'] = {"responsive":True}
-        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder), trace_temp
+        return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
 
     def get_notebook_data(self):
@@ -841,10 +822,13 @@ class StochSSSpatialModel(StochSSBase):
 
         return self.model
 
-    def load_action_preview(self, domain):
-        types = sorted(domain['types'], key=lambda d_type: d_type['typeID'])
+    def load_action_preview(self, s_domain):
+        types = sorted(s_domain['types'], key=lambda d_type: d_type['typeID'])
         type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
-        self.__convert_domain(type_ids, s_domain=domain)
+        domain = self.__convert_domain(type_ids, s_domain=s_domain)
+        domain.compile_prep()
+        s_domain['particles'] = self.__build_stochss_domain_particles(domain)
+        return self.get_domain_plot(domains=(domain, s_domain))
 
     def publish_presentation(self):
         '''

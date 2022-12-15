@@ -22,6 +22,8 @@ let _ = require('underscore');
 //support files
 let app = require('../app');
 let Plotly = require('plotly.js-dist');
+//collections
+let Particles = require('../models/particles');
 //models
 let Particle = require('../models/particle');
 //views
@@ -170,19 +172,19 @@ module.exports = View.extend({
   //     this.resetFigure();
   //   }
   // },
-  // createNewParticle: function () {
-  //   let type = this.model.types.get(0, 'typeID');
-  //   return new Particle({
-  //     c: type.c,
-  //     fixed: type.fixed,
-  //     mass: type.mass,
-  //     nu: type.nu,
-  //     point: [0, 0, 0],
-  //     rho: type.rho,
-  //     type: type.typeID,
-  //     volume: type.volume
-  //   });
-  // },
+  createNewParticle: function () {
+    let type = this.model.types.get(0, 'typeID');
+    return new Particle({
+      c: type.c,
+      fixed: type.fixed,
+      mass: type.mass,
+      nu: type.nu,
+      point: [0, 0, 0],
+      rho: type.rho,
+      type: type.typeID,
+      volume: type.volume
+    });
+  },
   completeAction: function (prefix) {
     $(this.queryByHook(`${prefix}-in-progress`)).css("display", "none");
     $(this.queryByHook(`${prefix}-complete`)).css("display", "inline-block");
@@ -540,7 +542,7 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot");
     app.postXHR(endpoint, this.model, {success: (err, response, body) => {
       this.plot = body.fig;
-      this.traceTemp = body.trace_temp;
+      this.model.particles = new Particles(body.particles)
       if(resetFigure) {
         this.resetFigure();
       }else{

@@ -167,16 +167,14 @@ class LoadDomainAPIHandler(APIHandler):
         domain = json.loads(self.request.body.decode())
         log.info("Generating the domain plot")
         try:
-            print(domain)
             model = StochSSSpatialModel(path="")
-            model.load_action_preview(domain)
-            # fig, trace_temp = model.get_domain_plot(path=d_path, new=new)
-            # log.info("Loading the domain plot")
-            # if isinstance(fig, str):
-            #     fig = json.loads(fig)
-            # resp = {"fig":fig, "trace_temp": trace_temp}
-            # log.debug(f"Response: {resp}")
-            # self.write(resp)
+            fig = model.load_action_preview(domain)
+            log.info("Loading the domain plot")
+            if isinstance(fig, str):
+                fig = json.loads(fig)
+            resp = {"fig":fig, "particles": domain['particles']}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
         self.finish()
