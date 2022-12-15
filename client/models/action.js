@@ -37,7 +37,8 @@ module.exports = State.extend({
     vol: 'number'
   },
   children: {
-    point: Point
+    point: Point,
+    newPoint: Point
   },
   session: {
     selected: {

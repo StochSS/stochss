@@ -55,21 +55,41 @@ div.mx-1
 
       div.hidden(data-hook="single-particle-scope")
 
-        h5.inline.mr-2 Location:
+        div
 
-        div.inline.mr-2 (x:
+          h5.inline.mr-2 Current Location:
 
-        div.inline.ml-2(data-hook="point-x-container" data-target="point" data-name="x" style="width: 25%")
+          div.inline.mr-2 (x:
 
-        div.inline.mr-2 ,  y:
+          div.inline.ml-2(data-hook="point-x-container" data-target="point" data-name="x" style="width: 25%")
 
-        div.inline.ml-2(data-hook="point-y-container" data-target="point" data-name="y" style="width: 25%")
+          div.inline.mr-2 ,  y:
 
-        div.inline.mr-2 ,  z:
+          div.inline.ml-2(data-hook="point-y-container" data-target="point" data-name="y" style="width: 25%")
 
-        div.inline.ml-2(data-hook="point-z-container" data-target="point" data-name="z" style="width: 25%")
+          div.inline.mr-2 ,  z:
 
-        div.inline )
+          div.inline.ml-2(data-hook="point-z-container" data-target="point" data-name="z" style="width: 25%")
+
+          div.inline )
+
+        div.hidden(data-hook="new-location")
+
+          h5.inline.mr-2 New Location:
+
+          div.inline.mr-2 (x:
+
+          div.inline.ml-2(data-hook="new-point-x-container" data-target="new-point" data-name="x" style="width: 25%")
+
+          div.inline.mr-2 ,  y:
+
+          div.inline.ml-2(data-hook="new-point-y-container" data-target="new-point" data-name="y" style="width: 25%")
+
+          div.inline.mr-2 ,  z:
+
+          div.inline.ml-2(data-hook="new-point-z-container" data-target="new-point" data-name="z" style="width: 25%")
+
+          div.inline )
 
       div.hidden(data-hook="particle-properties")
 

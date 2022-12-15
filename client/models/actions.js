@@ -43,6 +43,7 @@ module.exports = Collection.extend({
     });
     action.selected = true;
     action.point = this.getNewPoint();
+    action.newPoint = this.getNewPoint();
     this.add(action);
   },
   getNewPoint: function (action) {

@@ -41,21 +41,41 @@ div.mx-1
 
   div.hidden(data-hook="single-particle-scope")
 
-    h5.inline.mr-2 Location:
+    div
 
-    span.inline (x:
+      h5.inline.mr-2 Current Location:
 
-    div.inline=this.model.point.x
+      span.inline (x:
 
-    span.inline.mr-2 , y:
+      div.inline=this.model.point.x
 
-    div.inline=this.model.point.y
+      span.inline.mr-2 , y:
 
-    span.inline.mr-2 , z:
+      div.inline=this.model.point.y
 
-    div.inline=this.model.point.z
+      span.inline.mr-2 , z:
 
-    span.inline )
+      div.inline=this.model.point.z
+
+      span.inline )
+
+    div.hidden(data-hook="new-location")
+
+      h5.inline.mr-2 New Location:
+
+      span.inline (x:
+
+      div.inline=this.model.newPoint.x
+
+      span.inline.mr-2 , y:
+
+      div.inline=this.model.newPoint.y
+
+      span.inline.mr-2 , z:
+
+      div.inline=this.model.newPoint.z
+
+      span.inline )
 
   div.hidden(data-hook="particle-properties")
 

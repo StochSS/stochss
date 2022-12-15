@@ -51,6 +51,7 @@ module.exports = View.extend({
     'change [data-hook=geometry-container]' : 'selectGeometry',
     'change [data-hook=fill-lattice-container]' : 'selectLattice',
     'change [data-target=point]' : 'setPoint',
+    'change [data-target=new-point]' : 'setNewPoint',
     'change [data-hook=particle-type]' : 'setParticleType',
     'change [data-target=particle-property-containers]' : 'updateViewer',
     'change [data-hook=particle-fixed]' : 'setParticleFixed',
@@ -87,6 +88,7 @@ module.exports = View.extend({
         ],
         'Set Action': [
           $(this.queryByHook('single-particle-scope')),
+          $(this.queryByHook('new-location')),
           $(this.queryByHook('particle-properties'))
         ],
         'Remove Action': [
@@ -102,6 +104,7 @@ module.exports = View.extend({
       this.model.on('change', _.bind(this.updateViewer, this));
       this.renderGeometrySelectView();
       this.renderLatticeSelectView();
+      this.renderNewLocationViews();
       this.renderTypeSelectView();
     }
     this.displayDetails();
@@ -178,6 +181,45 @@ module.exports = View.extend({
     let hook = "fill-lattice-container";
     app.registerRenderSubview(this, this.latticeSelectView, hook);
   },
+  renderNewLocationViews: function () {
+    if(this.newLocationViews) {
+      this.newLocationViews['x'].remove();
+      this.newLocationViews['y'].remove();
+      this.newLocationViews['z'].remove();
+    }else{
+      this.newLocationViews = {};
+    }
+    this.newLocationViews['x'] = new InputView({
+      parent: this,
+      required: true,
+      name: 'new-point-x',
+      tests: tests.valueTests,
+      valueType: 'number',
+      value: this.model.newPoint.x
+    });
+    let hookX = "new-point-x-container";
+    app.registerRenderSubview(this, this.newLocationViews['x'], hookX);
+    this.newLocationViews['y'] = new InputView({
+      parent: this,
+      required: true,
+      name: 'new-point-y',
+      tests: tests.valueTests,
+      valueType: 'number',
+      value: this.model.newPoint.y
+    });
+    let hookY = "new-point-y-container";
+    app.registerRenderSubview(this, this.newLocationViews['y'], hookY);
+    this.newLocationViews['z'] = new InputView({
+      parent: this,
+      required: true,
+      name: 'new-point-z',
+      tests: tests.valueTests,
+      valueType: 'number',
+      value: this.model.newPoint.z
+    });
+    let hookZ = "new-point-z-container";
+    app.registerRenderSubview(this, this.newLocationViews['z'], hookZ);
+  },
   renderTypeSelectView: function () {
     if(this.typeSelectView) {
       this.typeSelectView.remove();
@@ -219,6 +261,12 @@ module.exports = View.extend({
     this.model.collection.parent.trigger('update-transformation-deps');
     this.updateViewer();
   },
+  setNewPoint: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    let value = Number(e.target.value);
+    this.model.newPoint[key] = value;
+    this.updateViewer();
+  },
   setParticleFixed: function (e) {
     this.model.fixed = !this.model.fixed;
     this.updateViewer();
@@ -231,6 +279,10 @@ module.exports = View.extend({
   setPoint: function (e) {
     let key = e.target.parentElement.parentElement.dataset.name;
     let value = Number(e.target.value);
+    if(this.model.newPoint[key] === this.model.point[key]) {
+      this.model.newPoint[key] = value;
+      this.renderNewLocationViews();
+    }
     this.model.point[key] = value;
     this.updateViewer();
   },
