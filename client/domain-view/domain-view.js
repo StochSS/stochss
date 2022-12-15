@@ -63,13 +63,6 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
-    this.renderPropertiesView();
-    this.renderLimitsView();
-    this.renderTypesView();
-    this.renderGeometriesView();
-    this.renderLatticesView();
-    this.renderTransformationsView();
-    this.renderActionsView();
     if(this.readOnly) {
       $(this.queryByHook('domain-particles-editor')).css('display', 'none');
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
@@ -81,6 +74,13 @@ module.exports = View.extend({
       this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
       this.model.on('update-transformation-deps', this.updateTransformationDeps, this);
     }
+    this.renderPropertiesView();
+    this.renderLimitsView();
+    this.renderTypesView();
+    this.renderGeometriesView();
+    this.renderLatticesView();
+    this.renderTransformationsView();
+    this.renderActionsView();
     if(!this.elements) {
       this.elements = {
         figure: this.queryByHook('domain-figure'),
@@ -574,16 +574,24 @@ module.exports = View.extend({
     this.model.transformations.trigger('update-inuse', {deps: deps});
   },
   updateTypeDeps: function () {
+    console.log("Updating type deps")
     let deps = [];
-    let typeNames = this.model.types.map((type) => {
-      return type.name;
+    let revDeps = {};
+    this.model.types.forEach((type) => {
+      if(type.name !== "Un-Assigned") {
+        revDeps[type.name] = [];
+      }
     });
     this.model.actions.forEach((action) => {
       let type = this.model.types.get(action.typeID, 'typeID').name;
-      if(typeNames.includes(type) && !deps.includes(type)) {
-        deps.push(type);
+      if(Object.keys(revDeps).includes(type)) {
+        revDeps[type].push(action.cid);
+        if(!deps.includes(type)) {
+          deps.push(type);
+        }
       }
     });
+    console.log(revDeps);
     this.model.types.trigger('update-inuse', {deps: deps});
   },
   // updateParticleViews: function () {
