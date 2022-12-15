@@ -60,7 +60,6 @@ module.exports = View.extend({
   handleAddDomainType: function () {
     let name = this.collection.addType();
     this.collection.parent.actions.trigger('update-type-options', {currName: name});
-    // this.parent.addType(name);
   },
   renderEditTypeView: function () {
     if(this.editTypeView) {

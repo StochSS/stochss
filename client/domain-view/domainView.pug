@@ -83,20 +83,6 @@ div#domain-view
 
             span Particle Removed
 
-  div.card(data-hook="domain-view-advanced-container")
-
-    div.card-header.pb-0
-
-      h3.inline Advanced
-
-      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#dv-advanced-section" data-hook="collapse-dv-advanced-section") +
-
-    div.collapse(id="dv-advanced-section" data-hook="dv-advanced-section")
-
-      div.card-body
-
-        div(data-hook="domain-limits-container")
-
   div#domain-figure-preview.card(data-hook="domain-figure-preview")
 
     div.card-header.pb-0
@@ -112,3 +98,17 @@ div#domain-view
         div(id="domain-figure" data-hook="domain-figure" style="height: 800px")
 
         div.text-danger(data-hook="domain-figure-empty") The domain currently has no particles to display
+
+  div.card(data-hook="domain-view-advanced-container")
+
+    div.card-header.pb-0
+
+      h3.inline Advanced
+
+      button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#dv-advanced-section" data-hook="collapse-dv-advanced-section") +
+
+    div.collapse(id="dv-advanced-section" data-hook="dv-advanced-section")
+
+      div.card-body
+
+        div(data-hook="domain-limits-container")
