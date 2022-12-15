@@ -16,43 +16,15 @@ div#domain-view
 
     div.card-header.pb-0
 
-      h3.inline.mr-3 Particles
-
-      div.inline.mr-3
-
-        ul.nav.nav-tabs.card-header-tabs(id="domain-particles-tabs")
-
-          li.nav-item
-
-            a.nav-link.tab.active(data-hook="new-particle-tab" data-toggle="tab" href="#create-new-particle") Create New
-
-          li.nav-item
-
-            a.nav-link.tab(data-hook="edit-particle-tab" data-toggle="tab" href="#edit-selected-particle") Edit Selected
+      h3.inline.mr-3 Particle
 
       button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-particles-section" data-hook="collapse-domain-particles") +
 
     div.collapse(id="domain-particles-section" data-hook="domain-particles-section")
 
-      div.card-body.tab-content
+      div.card-body
 
-        div.tab-pane.active(id="create-new-particle" data-hook="new-particle-section")
-
-          div(data-hook="new-particle-container")
-
-          button.btn.btn-outline-primary.box-shadow(data-hook="add-new-particle") Add Particle
-
-          div.mdl-edit-btn.saving-status.inline(data-hook="anp-in-progress")
-
-            div.spinner-grow.mr-2
-
-            span Adding particle ...
-
-          div.mdl-edit-btn.saved-status.inline(data-hook="anp-complete")
-
-            span Particle Added
-
-        div.tab-pane(id="edit-selected-particle" data-hook="edit-particle-section")
+        div(id="edit-selected-particle" data-hook="edit-particle-section")
 
           div.text-info.mb-4(data-hook="edit-select-message" style="display: none")
             | Click on a particle in the Domain section to begin editing.

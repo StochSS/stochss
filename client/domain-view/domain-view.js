@@ -25,7 +25,8 @@ let Plotly = require('plotly.js-dist');
 //collections
 let Particles = require('../models/particles');
 //models
-let Particle = require('../models/particle');
+let Action = require('../models/action');
+// let Particle = require('../models/particle');
 //views
 let View = require('ampersand-view');
 let TypesView = require('./views/types-view');
@@ -57,8 +58,7 @@ module.exports = View.extend({
     this.plot = attrs.plot ? attrs.plot : null;
     this.elements = attrs.elements ? attrs.elements : null;
     this.queryStr = attrs.queryStr;
-    // this.newPart = this.createNewParticle();
-    this.actPart = {"part":null, "tn":0, "pn":0};
+    this.actPart = {"action": null, "part": null, "tn": 0, "pn": 0};
     this.model.updateValid();
   },
   render: function (attrs, options) {
@@ -68,7 +68,7 @@ module.exports = View.extend({
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
       this.renderTypesQuickview();
     }else{
-      // this.updateParticleViews();
+      this.renderEditParticleView();
       this.model.on('update-type-deps', this.updateTypeDeps, this);
       this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
       this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
@@ -172,17 +172,14 @@ module.exports = View.extend({
   //     this.resetFigure();
   //   }
   // },
-  createNewParticle: function () {
+  createNewAction: function () {
     let type = this.model.types.get(0, 'typeID');
-    return new Particle({
-      c: type.c,
-      fixed: type.fixed,
-      mass: type.mass,
-      nu: type.nu,
-      point: [0, 0, 0],
-      rho: type.rho,
-      type: type.typeID,
-      volume: type.volume
+    return new Action({
+      type: "", scope: 'Single Particle', priority: 1, enable: true,
+      geometry: '', lattice: '', typeID: type.typeID,
+      point: {x: 0, y: 0, z: 0}, newPoint: {x: 0, y: 0, z: 0},
+      c: type.c, fixed: type.fixed, mass: type.mass,
+      nu: type.nu, rho: type.rho, vol: type.volume
     });
   },
   completeAction: function (prefix) {
@@ -289,10 +286,10 @@ module.exports = View.extend({
     if(this.editParticleView) {
       this.editParticleView.remove();
     }
-    let disable = this.actPart.part == null
+    let disable = this.actPart.action == null
     this.editParticleView = new EditParticleView({
-      model: this.actPart.part ? this.actPart.part : this.createNewParticle(),
-      defaultType: this.model.types.get(this.actPart.part ? this.actPart.part.type : 0, "typeID"),
+      model: this.actPart.action ? this.actPart.action : this.createNewAction(),
+      defaultType: this.model.types.get(this.actPart.action ? this.actPart.action.typeID : 0, "typeID"),
       viewIndex: 1,
       disable: disable
     });
@@ -333,17 +330,17 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.limitsView, "domain-limits-container");
   },
-  renderNewParticleView: function () {
-    if(this.newParticleView) {
-      this.newParticleView.remove();
-    }
-    this.newParticleView = new EditParticleView({
-      model: this.newPart,
-      defaultType: this.model.types.get(0, "typeID"),
-      viewIndex: 0
-    });
-    app.registerRenderSubview(this, this.newParticleView, "new-particle-container");
-  },
+  // renderNewParticleView: function () {
+  //   if(this.newParticleView) {
+  //     this.newParticleView.remove();
+  //   }
+  //   this.newParticleView = new EditParticleView({
+  //     model: this.newPart,
+  //     defaultType: this.model.types.get(0, "typeID"),
+  //     viewIndex: 0
+  //   });
+  //   app.registerRenderSubview(this, this.newParticleView, "new-particle-container");
+  // },
   renderPropertiesView: function () {
     if(this.propertiesView) {
       this.propertiesView.remove();
@@ -417,7 +414,16 @@ module.exports = View.extend({
   },
   selectParticle: function (data) {
     let point = data.points[0];
-    this.actPart.part = this.model.particles.get(point.id, 'particle_id');
+    let particle = this.model.particles.get(point.id, 'particle_id')
+    this.actPart.part = particle;
+    this.actPart.action = new Action({
+      type: "", scope: 'Single Particle', priority: 1, enable: true,
+      geometry: '', lattice: '', typeID: particle.type,
+      point: {x: particle.point[0], y: particle.point[1], z: particle.point[2]},
+      newPoint: {x: particle.point[0], y: particle.point[1], z: particle.point[2]},
+      c: particle.c, fixed: particle.fixed, mass: particle.mass,
+      nu: particle.nu, rho: particle.rho, vol: particle.volume
+    });
     this.actPart.tn = point.curveNumber;
     this.actPart.pn = point.pointNumber;
     if(this.readOnly) {
@@ -574,7 +580,6 @@ module.exports = View.extend({
     this.model.transformations.trigger('update-inuse', {deps: deps});
   },
   updateTypeDeps: function () {
-    console.log("Updating type deps")
     let deps = [];
     let revDeps = {};
     this.model.types.forEach((type) => {
