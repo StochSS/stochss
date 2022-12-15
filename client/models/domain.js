@@ -44,7 +44,6 @@ module.exports = State.extend({
     actions: Actions,
     geometries: Geometries,
     lattices: Lattices,
-    particles: Particles,
     transformations: Transformations,
     types: Types
   },
@@ -52,22 +51,23 @@ module.exports = State.extend({
     def_particle_id: 'number',
     def_type_id: 'number',
     directory: 'string',
-    dirname: 'string'
+    dirname: 'string',
+    particles: 'object'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
+    this.particles = new Particles();
     this.particles.on('add change remove', this.updateValid, this);
     this.def_particle_id = this.particles.length;
     this.def_type_id = this.types.length;
-    let self = this;
-    this.particles.forEach(function (particle) {
+    this.particles.forEach((particle) => {
       if(particle.particle_id >= self.def_particle_id) {
-        self.def_particle_id = particle.particle_id + 1;
+        this.def_particle_id = particle.particle_id + 1;
       }
     });
-    this.types.forEach(function (type) {
+    this.types.forEach((type) => {
       if(type.typeID >= self.def_type_id) {
-        self.def_type_id = type.typeID + 1;
+        this.def_type_id = type.typeID + 1;
       }
     });
   },
