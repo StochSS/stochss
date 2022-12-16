@@ -226,7 +226,7 @@ module.exports = View.extend({
       parent: this,
       required: true,
       name: 'new-point-x',
-      tests: tests.valueTests,
+      tests: [tests.nanValue],
       valueType: 'number',
       value: this.model.newPoint.x
     });
@@ -236,7 +236,7 @@ module.exports = View.extend({
       parent: this,
       required: true,
       name: 'new-point-y',
-      tests: tests.valueTests,
+      tests: [tests.nanValue],
       valueType: 'number',
       value: this.model.newPoint.y
     });
@@ -246,7 +246,7 @@ module.exports = View.extend({
       parent: this,
       required: true,
       name: 'new-point-z',
-      tests: tests.valueTests,
+      tests: [tests.nanValue],
       valueType: 'number',
       value: this.model.newPoint.z
     });
@@ -460,7 +460,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'point-x',
-          tests: tests.valueTests,
+          tests: [tests.nanValue],
           valueType: 'number',
           value: this.model.point.x
         });
@@ -473,7 +473,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'point-y',
-          tests: tests.valueTests,
+          tests: [tests.nanValue],
           valueType: 'number',
           value: this.model.point.y
         });
@@ -486,7 +486,7 @@ module.exports = View.extend({
           parent: this,
           required: true,
           name: 'point-z',
-          tests: tests.valueTests,
+          tests: [tests.nanValue],
           valueType: 'number',
           value: this.model.point.z
         });
