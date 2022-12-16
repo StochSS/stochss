@@ -68,11 +68,12 @@ module.exports = View.extend({
       $(this.queryByHook('domain-figure-preview')).css('display', 'none');
       this.renderTypesQuickview();
     }else{
-      this.renderEditParticleView();
       this.model.on('update-type-deps', this.updateTypeDeps, this);
       this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
       this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
       this.model.on('update-transformation-deps', this.updateTransformationDeps, this);
+      this.model.on('update-particle-type-options', this.updateParticleTypeOptions, this);
+      this.renderEditParticleView();
     }
     this.renderPropertiesView();
     this.renderLimitsView();
@@ -247,18 +248,11 @@ module.exports = View.extend({
   //   this.renderEditParticleView();
   //   this.completeAction("rsp")
   // },
-  // handleSaveParticle: function () {
-  //   this.startAction("esp");
-  //   if(this.editParticleView.origType !== this.actPart.part.type) {
-  //     this.changeParticleType(this.actPart.part.type, {update: false});
-  //     this.renderTypesView();
-  //   }
-  //   if(!this.actPart.part.comparePoint(this.editParticleView.origPoint)) {
-  //     this.changeParticleLocation();
-  //   }
-  //   this.resetFigure();
-  //   this.completeAction("esp");
-  // },
+  handleSaveParticle: function () {
+    this.startAction("esp");
+    console.log(this.actPart)
+    this.completeAction("esp");
+  },
   removeFigure: function () {
     try {
       this.elements.figure.removeListener('plotly_click', this.selectParticle);
@@ -543,6 +537,13 @@ module.exports = View.extend({
       }
     });
     this.model.lattices.trigger('update-inuse', {deps: deps});
+  },
+  updateParticleTypeOptions: function ({currName=null, newName=null}={}) {
+    if(currName === null && newName === null) { return; }
+    if(this.editParticleView.model.typeID === currName) {
+      this.editParticleView.model.typeID = newName;
+    }
+    this.editParticleView.renderTypeSelectView();
   },
   updatePlotPreview: function ({resetFigure=true}={}) {
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot");

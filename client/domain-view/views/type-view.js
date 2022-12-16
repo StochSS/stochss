@@ -69,8 +69,10 @@ module.exports = View.extend({
   },
   handleDeleteType: function (e) {
     let typeID = this.model.typeID;
-    let actions = this.model.collection.parent.actions;
+    let domain = this.model.collection.parent;
+    let actions = domain.actions;
     this.model.collection.removeType(this.model);
+    domain.trigger('update-particle-type-options', {currName: typeID});
     actions.trigger('update-type-options', {currName: typeID});
   },
   openTypeDetails: function () {
@@ -87,6 +89,9 @@ module.exports = View.extend({
   updateDepsOptions: function (e) {
     let typeID = this.model.typeID;
     this.model.name = e.target.value;
+    this.model.collection.parent.trigger(
+      'update-particle-type-options', {currName: typeID, newName: this.model.typeID}
+    );
     this.model.collection.parent.actions.trigger(
       'update-type-options', {currName: typeID, newName: this.model.typeID}
     );

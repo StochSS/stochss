@@ -59,6 +59,7 @@ module.exports = View.extend({
   },
   handleAddDomainType: function () {
     let name = this.collection.addType();
+    this.collection.parent.trigger('update-particle-type-options', {currName: name});
     this.collection.parent.actions.trigger('update-type-options', {currName: name});
   },
   renderEditTypeView: function () {
