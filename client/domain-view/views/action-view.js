@@ -48,12 +48,13 @@ module.exports = View.extend({
   events: {
     'change [data-hook=select-type-container]' : 'selectActionType',
     'change [data-hook=select-scope-container]' : 'selectActionScope',
+    'change [data-target=update-preview-plot]' : 'updatePreviewPlot',
     'change [data-hook=geometry-container]' : 'selectGeometry',
     'change [data-hook=fill-lattice-container]' : 'selectLattice',
     'change [data-target=point]' : 'setPoint',
     'change [data-target=new-point]' : 'setNewPoint',
     'change [data-hook=particle-type]' : 'setParticleType',
-    'change [data-target=particle-property-containers]' : 'updateViewer',
+    'change [data-target=particle-property-containers]' : 'updateViewers',
     'change [data-hook=particle-fixed]' : 'setParticleFixed',
     'click [data-hook=select-action]' : 'selectAction',
     'click [data-hook=enable-action]' : 'enableAction',
@@ -117,6 +118,7 @@ module.exports = View.extend({
   },
   enableAction: function () {
     this.model.enable = !this.model.enable;
+    this.collection.parent.trigger('update-plot-preview');
   },
   getGeometryOptions: function () {
     let geometries = this.model.collection.parent.geometries.map((geometry) => {
@@ -150,7 +152,12 @@ module.exports = View.extend({
     $("#collapse-action-details" + this.model.cid).collapse("show");
   },
   removeAction: function () {
-    this.collection.removeAction(this.model);
+    let actions = this.collection;
+    let enabled = this.model.enable;
+    actions.removeAction(this.model);
+    if(enabled) {
+      actions.parent.trigger('update-plot-preview');
+    }
   },
   renderDensityPropertyView: function () {
     if(this.densityPropertyView) {
@@ -331,33 +338,39 @@ module.exports = View.extend({
     this.hideDetails();
     this.model.scope = e.target.value;
     this.displayDetails();
+    this.updatePreviewPlot();
   },
   selectActionType: function (e) {
     this.hideDetails();
     this.model.type = e.target.value;
     this.displayDetails();
+    this.updatePreviewPlot();
   },
   selectGeometry: function (e) {
     this.model.geometry = e.target.value;
     this.model.collection.parent.trigger('update-geometry-deps');
     this.model.collection.parent.trigger('update-transformation-deps');
     this.updateViewer();
+    this.updatePreviewPlot();
   },
   selectLattice: function (e) {
     this.model.lattice = e.target.value;
     this.model.collection.parent.trigger('update-lattice-deps');
     this.model.collection.parent.trigger('update-transformation-deps');
     this.updateViewer();
+    this.updatePreviewPlot();
   },
   setNewPoint: function (e) {
     let key = e.target.parentElement.parentElement.dataset.name;
     let value = Number(e.target.value);
     this.model.newPoint[key] = value;
     this.updateViewer();
+    this.updatePreviewPlot();
   },
   setParticleFixed: function (e) {
     this.model.fixed = !this.model.fixed;
     this.updateViewer();
+    this.updatePreviewPlot();
   },
   setParticleType: function (e) {
     let value = Number(e.target.value);
@@ -367,6 +380,7 @@ module.exports = View.extend({
     this.model.typeID = value;
     this.model.collection.parent.trigger('update-type-deps');
     this.updateViewer();
+    this.updatePreviewPlot();
   },
   setPoint: function (e) {
     let key = e.target.parentElement.parentElement.dataset.name;
@@ -377,8 +391,16 @@ module.exports = View.extend({
     }
     this.model.point[key] = value;
     this.updateViewer();
+    this.updatePreviewPlot();
   },
   update: function () {},
+  updatePreviewPlot: function () {
+    if(!this.model.enable) { return }
+    if(this.model.type === "Fill Action" && this.model.scope === "Multi Particle" && this.model.lattice === "") {
+      return
+    }
+    this.collection.parent.trigger('update-plot-preview');
+  },
   updatePropertyDefaults: function (currType, newType) {
     if(this.model.mass === currType.mass) {
       this.model.mass = newType.mass;
@@ -404,6 +426,10 @@ module.exports = View.extend({
   updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewActionsView();
+  },
+  updateViewers: function () {
+    this.updatePreviewPlot();
+    this.updateViewer();
   },
   subviews: {
     inputPriority: {

@@ -46,7 +46,6 @@ module.exports = View.extend({
   template: template,
   events: {
     'click [data-hook=collapse-domain-particles]' : 'changeCollapseButtonText',
-    'click [data-hook=add-new-particle]' : 'handleAddParticle',
     'click [data-hook=save-selected-particle]' : 'handleSaveParticle',
     'click [data-hook=remove-selected-particle]' : 'handleRemoveParticle',
     'click [data-hook=collapse-domain-figure]' : 'changeCollapseButtonText',
@@ -95,28 +94,6 @@ module.exports = View.extend({
       this.model.trigger('update-plot-preview', {resetFigure: false});
     }
   },
-  // addMissingTypes: function (typeIDs) {
-  //   typeIDs.forEach((typeID) => {
-  //     if(!this.model.types.get(typeID, 'typeID')) {
-  //       let name = this.model.types.addType();
-  //       this.addType(name, {update: false});
-  //     }
-  //   });
-  // },
-  // addParticle: function ({particle=this.newPart}={}) {
-  //   this.plot.data[particle.type].ids.push(particle.particle_id);
-  //   this.plot.data[particle.type].x.push(particle.point[0]);
-  //   this.plot.data[particle.type].y.push(particle.point[1]);
-  //   this.plot.data[particle.type].z.push(particle.point[2]);
-  // },
-  // addType: function (name, {update=true}={}) {
-  //   let newTrace = JSON.parse(JSON.stringify(this.traceTemp));
-  //   newTrace.name = name;
-  //   this.plot.data.push(newTrace);
-  //   if(update) {
-  //     this.updateParticleViews();
-  //   }
-  // },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e)
   },
@@ -155,24 +132,6 @@ module.exports = View.extend({
   //   }
   //   return limitsChanged;
   // },
-  // changeParticleLocation: function () {
-  //   this.plot.data[this.actPart.tn].x[this.actPart.pn] = this.actPart.part.point[0];
-  //   this.plot.data[this.actPart.tn].y[this.actPart.pn] = this.actPart.part.point[1];
-  //   this.plot.data[this.actPart.tn].z[this.actPart.pn] = this.actPart.part.point[2];
-  // },
-  // changeParticleType: function (type, {update=true}={}) {
-  //   let id = this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1)[0];
-  //   let x = this.plot.data[this.actPart.tn].x.splice(this.actPart.pn, 1)[0];
-  //   let y = this.plot.data[this.actPart.tn].y.splice(this.actPart.pn, 1)[0];
-  //   let z = this.plot.data[this.actPart.tn].z.splice(this.actPart.pn, 1)[0];
-  //   this.plot.data[type].ids.push(id);
-  //   this.plot.data[type].x.push(x);
-  //   this.plot.data[type].y.push(y);
-  //   this.plot.data[type].z.push(z);
-  //   if(update) {
-  //     this.resetFigure();
-  //   }
-  // },
   createNewAction: function () {
     let type = this.model.types.get(0, 'typeID');
     return new Action({
@@ -190,34 +149,6 @@ module.exports = View.extend({
       $(this.queryByHook(`${prefix}-complete`)).css('display', 'none');
     }, 5000);
   },
-  // deleteParticle: function () {
-  //   this.plot.data[this.actPart.tn].ids.splice(this.actPart.pn, 1);
-  //   this.plot.data[this.actPart.tn].x.splice(this.actPart.pn, 1);
-  //   this.plot.data[this.actPart.tn].y.splice(this.actPart.pn, 1);
-  //   this.plot.data[this.actPart.tn].z.splice(this.actPart.pn, 1);
-  //   this.resetFigure();
-  // },
-  // deleteType: function (type, {unassign=true}={}) {
-  //   if(unassign) {
-  //     this.unassignAllParticles(type, {update: false});
-  //   }else{
-  //     if(this.actPart.part && this.actPart.part.type === type) {
-  //       this.actPart = {"part":null, "tn":0, "pn":0};
-  //     }
-  //     if(this.newPart && this.newPart.type === type) {
-  //       this.newPart.type = 0
-  //     }
-  //     let particles = this.model.particles.filter((particle) => {
-  //       return particle.type === type;
-  //     });
-  //     this.model.particles.removeParticles(particles);
-  //   }
-  //   this.model.realignTypes(type);
-  //   this.plot.data.splice(type, 1);
-  //   this.renderTypesView();
-  //   this.updateParticleViews();
-  //   this.resetFigure();
-  // },
   displayFigure: function () {
     if(this.model.particles.length > 0) {
       $(this.elements.figureEmpty).css('display', 'none');
@@ -229,20 +160,11 @@ module.exports = View.extend({
       $(this.elements.figure).css('display', 'none');
     }
   },
-  // handleAddParticle: function () {
-  //   this.startAction("anp")
-  //   this.model.particles.addParticle({particle: this.newPart});
-  //   this.addParticle();
-  //   this.resetFigure();
-  //   this.renderTypesView();
-  //   this.newPart = this.createNewParticle();
-  //   this.renderNewParticleView();
-  //   this.completeAction("anp");
-  // },
   handleRemoveParticle: function () {
     this.startAction("rsp")
     let action = this.actPart.action;
     this.model.actions.addAction("Remove Action", {action: action});
+    this.model.trigger('update-plot-preview');
     this.actPart.action = this.createNewAction();
     this.completeAction("rsp")
     this.renderEditParticleView();
@@ -251,6 +173,7 @@ module.exports = View.extend({
     this.startAction("esp");
     let action = this.actPart.action;
     this.model.actions.addAction("Set Action", {action: action});
+    this.model.trigger('update-plot-preview');
     this.actPart.action = this.createNewAction();
     this.completeAction("esp");
     this.renderEditParticleView();
@@ -263,10 +186,6 @@ module.exports = View.extend({
       return
     }
   },
-  // renameType: function (index, name) {
-  //   this.plot.data[index].name = name;
-  //   this.resetFigure();
-  // },
   renderActionsView: function () {
     if(this.actionsView) {
       this.actionsView.remove();
@@ -326,17 +245,6 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.limitsView, "domain-limits-container");
   },
-  // renderNewParticleView: function () {
-  //   if(this.newParticleView) {
-  //     this.newParticleView.remove();
-  //   }
-  //   this.newParticleView = new EditParticleView({
-  //     model: this.newPart,
-  //     defaultType: this.model.types.get(0, "typeID"),
-  //     viewIndex: 0
-  //   });
-  //   app.registerRenderSubview(this, this.newParticleView, "new-particle-container");
-  // },
   renderPropertiesView: function () {
     if(this.propertiesView) {
       this.propertiesView.remove();
@@ -428,66 +336,10 @@ module.exports = View.extend({
       this.renderEditParticleView();
     }
   },
-  // setParticleTypes: function (typeIDs, types) {
-  //   this.addMissingTypes(typeIDs);
-  //   let actPart = JSON.parse(JSON.stringify(this.actPart));
-  //   types.forEach((type) => {
-  //     let particle = this.model.particles.get(type.particle_id, 'particle_id');
-  //     this.actPart = {
-  //       part: particle,
-  //       tn: particle.type,
-  //       pn: this.plot.data[particle.type].ids.indexOf(particle.particle_id)
-  //     }
-  //     this.changeParticleType(type.typeID, {update: false});
-  //     particle.type = type.typeID;
-  //   });
-  //   if(actPart.part && actPart.part.type === type) {
-  //     this.actPart = {
-  //       part: this.model.particles.get(actPart.part.particle_id, "particle_id"),
-  //       tn: 0,
-  //       pn: this.plot.data[0].ids.indexOf(actPart.part.particle_id)
-  //     }
-  //     this.renderEditParticleView();
-  //   }else{
-  //     this.actPart = actPart
-  //   }
-  //   this.resetFigure();
-  //   this.updateParticleViews();
-  // },
   startAction: function (prefix) {
     $(this.queryByHook(`${prefix}-complete`)).css('display', 'none');
     $(this.queryByHook(`${prefix}-in-progress`)).css("display", "inline-block");
   },
-  // unassignAllParticles: function (type, {update=true}={}) {
-  //   let actPart = JSON.parse(JSON.stringify(this.actPart));
-  //   this.model.particles.forEach((particle) => {
-  //     if(particle.type === type) {
-  //       this.actPart = {
-  //         part: particle,
-  //         tn: type,
-  //         pn: this.plot.data[type].ids.indexOf(particle.particle_id)
-  //       }
-  //       this.changeParticleType(0, {update: false});
-  //       particle.type = 0;
-  //     }
-  //   });
-  //   if(actPart.part) {
-  //     this.actPart = {
-  //       part: this.model.particles.get(actPart.part.particle_id, "particle_id"),
-  //       tn: 0,
-  //       pn: this.plot.data[0].ids.indexOf(actPart.part.particle_id)
-  //     }
-  //     if(actPart.part.type === type) {
-  //       this.renderEditParticleView();
-  //     }
-  //   }else{
-  //     this.actPart = actPart
-  //   }
-  //   if(update) {
-  //     this.renderTypesView();
-  //     this.resetFigure();
-  //   }
-  // },
   updateGeometryDeps: function () {
     let deps = [];
     let geomNames = [];
@@ -601,9 +453,5 @@ module.exports = View.extend({
     });
     console.log(revDeps);
     this.model.types.trigger('update-inuse', {deps: deps});
-  },
-  // updateParticleViews: function () {
-  //   this.renderNewParticleView();
-  //   this.renderEditParticleView();
-  // }
+  }
 });
