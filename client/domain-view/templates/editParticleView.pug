@@ -2,31 +2,49 @@ div.mx-1
 
   div
 
-    h4.inline.mr-2 Type:
+    h5.inline.mr-2 Current Location:
 
-    div.inline(data-target="type" data-hook=`particle-type-${this.viewIndex}`)
+    span.inline.mr-2 (x:
+
+    div.inline=this.model.point.x
+
+    span.inline.mr-2 , y:
+
+    div.inline=this.model.point.y
+
+    span.inline.mr-2 , z:
+
+    div.inline=this.model.point.z
+
+    span.inline )
 
   div
 
-    h4.inline.mr-2 Location:
+    h5.inline.mr-2 New Location:
 
     div.inline.mr-2 (x:
 
-    div.inline.ml2(data-target=`location-${this.viewIndex}` data-hook=`x-coord-${this.viewIndex}` data-index="0")
+    div.inline.ml-2(data-hook="new-point-x-container" data-target="new-point" data-name="x" style="width: 25%")
 
     div.inline.mr-2 ,  y:
 
-    div.inline.ml2(data-target=`location-${this.viewIndex}` data-hook=`y-coord-${this.viewIndex}` data-index="1")
+    div.inline.ml-2(data-hook="new-point-y-container" data-target="new-point" data-name="y" style="width: 25%")
 
     div.inline.mr-2 ,  z:
 
-    div.inline.ml2(data-target=`location-${this.viewIndex}` data-hook=`z-coord-${this.viewIndex}` data-index="2")
+    div.inline.ml-2(data-hook="new-point-z-container" data-target="new-point" data-name="z" style="width: 25%")
 
     div.inline )
 
   h4 Particle Properties
 
-  div.pl-2(data-hook="particle-details")
+  div
+
+    h5.inline.mr-2 Type:
+
+    div.inline(data-hook="particle-type")
+
+  div
 
     hr
 
@@ -60,24 +78,24 @@ div.mx-1
 
       div.col-sm-2
 
-        div(data-hook=`particle-mass-${this.viewIndex}`)
+        div.pl-2(data-hook="particle-mass" data-target="particle-property-containers")
 
       div.col-sm-2
 
-        div(data-hook=`particle-vol-${this.viewIndex}`)
+        div(data-hook="particle-vol" data-target="particle-property-containers")
 
       div.col-sm-2
 
-        div(data-hook=`particle-rho-${this.viewIndex}`)
+        div(data-hook="particle-rho" data-target="particle-property-containers")
 
       div.col-sm-2
 
-        div(data-hook=`particle-nu-${this.viewIndex}`)
+        div(data-hook="particle-nu" data-target="particle-property-containers")
 
       div.col-sm-2
 
-        div(data-hook=`particle-c-${this.viewIndex}`)
+        div(data-hook="particle-c" data-target="particle-property-containers")
 
       div.col-sm-2
 
-        input(type="checkbox" data-hook=`particle-fixed-${this.viewIndex}`)
+        input(type="checkbox" data-hook="particle-fixed" checked=this.model.fixed)
