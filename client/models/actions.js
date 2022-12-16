@@ -25,25 +25,29 @@ let Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: Action,
-  addAction: function (type) {
-    let action = new Action({
-      c: 10,
-      enable: true,
-      fixed: false,
-      geometry: '',
-      lattice: '',
-      mass: 1.0,
-      nu: 0.0,
-      priority: 1,
-      rho: 1.0,
-      scope: 'Multi Particle',
-      type: type,
-      typeID: 0,
-      vol: 1.0
-    });
-    action.selected = true;
-    action.point = this.getNewPoint();
-    action.newPoint = this.getNewPoint();
+  addAction: function (type, {action=null}={}) {
+    if(action) {
+      action.type = type;
+    }else{
+      action = new Action({
+        c: 10,
+        enable: true,
+        fixed: false,
+        geometry: '',
+        lattice: '',
+        mass: 1.0,
+        nu: 0.0,
+        priority: 1,
+        rho: 1.0,
+        scope: 'Multi Particle',
+        type: type,
+        typeID: 0,
+        vol: 1.0
+      });
+      action.selected = true;
+      action.point = this.getNewPoint();
+      action.newPoint = this.getNewPoint();
+    }
     this.add(action);
   },
   getNewPoint: function (action) {

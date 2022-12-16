@@ -239,19 +239,21 @@ module.exports = View.extend({
   //   this.renderNewParticleView();
   //   this.completeAction("anp");
   // },
-  // handleRemoveParticle: function () {
-  //   this.startAction("rsp")
-  //   this.model.particles.removeParticle(this.actPart.part);
-  //   this.deleteParticle();
-  //   this.actPart = {"part":null, "tn":0, "pn":0};
-  //   this.renderTypesView();
-  //   this.renderEditParticleView();
-  //   this.completeAction("rsp")
-  // },
+  handleRemoveParticle: function () {
+    this.startAction("rsp")
+    let action = this.actPart.action;
+    this.model.actions.addAction("Remove Action", {action: action});
+    this.actPart.action = this.createNewAction();
+    this.completeAction("rsp")
+    this.renderEditParticleView();
+  },
   handleSaveParticle: function () {
     this.startAction("esp");
-    console.log(this.actPart)
+    let action = this.actPart.action;
+    this.model.actions.addAction("Set Action", {action: action});
+    this.actPart.action = this.createNewAction();
     this.completeAction("esp");
+    this.renderEditParticleView();
   },
   removeFigure: function () {
     try {
