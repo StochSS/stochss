@@ -106,6 +106,7 @@ module.exports = View.extend({
       this.renderLatticeSelectView();
       this.renderNewLocationViews();
       this.renderTypeSelectView();
+      this.renderParticleProperties();
     }
     this.displayDetails();
   },
@@ -151,6 +152,22 @@ module.exports = View.extend({
   removeAction: function () {
     this.collection.removeAction(this.model);
   },
+  renderDensityPropertyView: function () {
+    if(this.densityPropertyView) {
+      this.densityPropertyView.remove();
+    }
+    this.densityPropertyView = new InputView({
+      parent: this,
+      required: true,
+      name: 'density',
+      tests: tests.valueTests,
+      valueType: 'number',
+      modelKey: 'rho',
+      value: this.model.rho
+    });
+    let hook = "particle-rho";
+    app.registerRenderSubview(this, this.densityPropertyView, hook);
+  },
   renderGeometrySelectView: function () {
     if(this.geometrySelectView) {
       this.geometrySelectView.remove();
@@ -180,6 +197,22 @@ module.exports = View.extend({
     });
     let hook = "fill-lattice-container";
     app.registerRenderSubview(this, this.latticeSelectView, hook);
+  },
+  renderMassPropertyView: function () {
+    if(this.massPropertyView) {
+      this.massPropertyView.remove();
+    }
+    this.massPropertyView = new InputView({
+      parent: this,
+      required: true,
+      name: 'mass',
+      tests: tests.valueTests,
+      valueType: 'number',
+      modelKey: 'mass',
+      value: this.model.mass
+    });
+    let hook = "particle-mass";
+    app.registerRenderSubview(this, this.massPropertyView, hook);
   },
   renderNewLocationViews: function () {
     if(this.newLocationViews) {
@@ -220,6 +253,29 @@ module.exports = View.extend({
     let hookZ = "new-point-z-container";
     app.registerRenderSubview(this, this.newLocationViews['z'], hookZ);
   },
+  renderParticleProperties: function () {
+    this.renderMassPropertyView();
+    this.renderVolumePropertyView();
+    this.renderDensityPropertyView();
+    this.renderViscosityPropertyView();
+    this.renderSOSPropertyView();
+  },
+  renderSOSPropertyView: function () {
+    if(this.sOSPropertyView) {
+      this.sOSPropertyView.remove();
+    }
+    this.sOSPropertyView = new InputView({
+      parent: this,
+      required: true,
+      name: 'speed-of-sound',
+      tests: tests.valueTests,
+      valueType: 'number',
+      modelKey: 'c',
+      value: this.model.c
+    });
+    let hook = "particle-c";
+    app.registerRenderSubview(this, this.sOSPropertyView, hook);
+  },
   renderTypeSelectView: function () {
     if(this.typeSelectView) {
       this.typeSelectView.remove();
@@ -235,6 +291,38 @@ module.exports = View.extend({
     });
     let hook = "particle-type";
     app.registerRenderSubview(this, this.typeSelectView, hook);
+  },
+  renderViscosityPropertyView: function () {
+    if(this.viscosityPropertyView) {
+      this.viscosityPropertyView.remove();
+    }
+    this.viscosityPropertyView = new InputView({
+      parent: this,
+      required: true,
+      name: 'viscosity',
+      tests: tests.valueTests,
+      valueType: 'number',
+      modelKey: 'nu',
+      value: this.model.nu
+    });
+    let hook = "particle-nu";
+    app.registerRenderSubview(this, this.viscosityPropertyView, hook);
+  },
+  renderVolumePropertyView: function () {
+    if(this.volumePropertyView) {
+      this.volumePropertyView.remove();
+    }
+    this.volumePropertyView = new InputView({
+      parent: this,
+      required: true,
+      name: 'volume',
+      tests: tests.valueTests,
+      valueType: 'number',
+      modelKey: 'vol',
+      value: this.model.vol
+    });
+    let hook = "particle-vol";
+    app.registerRenderSubview(this, this.volumePropertyView, hook);
   },
   selectAction: function () {
     this.model.selected = !this.model.selected;
@@ -272,7 +360,11 @@ module.exports = View.extend({
     this.updateViewer();
   },
   setParticleType: function (e) {
-    this.model.typeID = Number(e.target.value);
+    let value = Number(e.target.value);
+    let currType = this.model.collection.parent.types.get(this.model.typeID, "typeID");
+    let newType = this.model.collection.parent.types.get(value, "typeID");
+    this.updatePropertyDefaults(currType, newType);
+    this.model.typeID = value;
     this.model.collection.parent.trigger('update-type-deps');
     this.updateViewer();
   },
@@ -287,6 +379,28 @@ module.exports = View.extend({
     this.updateViewer();
   },
   update: function () {},
+  updatePropertyDefaults: function (currType, newType) {
+    if(this.model.mass === currType.mass) {
+      this.model.mass = newType.mass;
+    }
+    if(this.model.vol === currType.volume) {
+      this.model.vol = newType.volume;
+    }
+    if(this.model.rho === currType.rho) {
+      this.model.rho = newType.rho;
+    }
+    if(this.model.nu === currType.nu) {
+      this.model.nu = newType.nu;
+    }
+    if(this.model.c === currType.c) {
+      this.model.c = newType.c;
+    }
+    if(this.model.fixed === currType.fixed) {
+      this.model.fixed = newType.fixed;
+    }
+    this.renderParticleProperties();
+    $(this.queryByHook('particle-fixed')).prop('checked', this.model.fixed);
+  },
   updateValid: function () {},
   updateViewer: function () {
     this.parent.renderViewActionsView();
@@ -375,76 +489,6 @@ module.exports = View.extend({
           tests: tests.valueTests,
           valueType: 'number',
           value: this.model.point.z
-        });
-      }
-    },
-    inputParticleMass: {
-      hook: 'particle-mass',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'mass',
-          tests: tests.valueTests,
-          valueType: 'number',
-          modelKey: 'mass',
-          value: this.model.mass
-        });
-      }
-    },
-    inputParticleVol: {
-      hook: 'particle-vol',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'volume',
-          tests: tests.valueTests,
-          valueType: 'number',
-          modelKey: 'vol',
-          value: this.model.vol
-        });
-      }
-    },
-    inputParticleRho: {
-      hook: 'particle-rho',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'density',
-          tests: tests.valueTests,
-          valueType: 'number',
-          modelKey: 'rho',
-          value: this.model.rho
-        });
-      }
-    },
-    inputParticleNu: {
-      hook: 'particle-nu',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'viscosity',
-          tests: tests.valueTests,
-          valueType: 'number',
-          modelKey: 'nu',
-          value: this.model.nu
-        });
-      }
-    },
-    inputParticleC: {
-      hook: 'particle-c',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: true,
-          name: 'speed-of-sound',
-          tests: tests.valueTests,
-          valueType: 'number',
-          modelKey: 'c',
-          value: this.model.c
         });
       }
     }
