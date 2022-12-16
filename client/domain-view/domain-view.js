@@ -49,7 +49,8 @@ module.exports = View.extend({
     'click [data-hook=save-selected-particle]' : 'handleSaveParticle',
     'click [data-hook=remove-selected-particle]' : 'handleRemoveParticle',
     'click [data-hook=collapse-domain-figure]' : 'changeCollapseButtonText',
-    'click [data-hook=collapse-dv-advanced-section]' : 'changeCollapseButtonText'
+    'click [data-hook=collapse-dv-advanced-section]' : 'changeCollapseButtonText',
+    'click [data-hook=update-preview-plot]' : 'updatePlotPreview'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -385,6 +386,9 @@ module.exports = View.extend({
     this.editParticleView.renderTypeSelectView();
   },
   updatePlotPreview: function ({resetFigure=true}={}) {
+    if(resetFigure) {
+      this.startAction("upp");
+    }
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot");
     app.postXHR(endpoint, this.model, {success: (err, response, body) => {
       this.plot = body.fig;
@@ -404,6 +408,7 @@ module.exports = View.extend({
       this.typesView.renderViewTypeView();
       if(resetFigure) {
         this.resetFigure();
+        this.completeAction("upp");
       }else{
         this.displayFigure();
       }

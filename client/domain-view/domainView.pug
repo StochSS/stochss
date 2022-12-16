@@ -71,6 +71,18 @@ div#domain-view
 
         div.text-danger(data-hook="domain-figure-empty") The domain currently has no particles to display
 
+        button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="update-preview-plot") Update Preview
+
+        div.mdl-edit-btn.saving-status.inline(data-hook="upp-in-progress")
+
+          div.spinner-grow.mr-2
+
+          span Updating preview ...
+
+        div.mdl-edit-btn.saved-status.inline(data-hook="upp-complete")
+
+          span Preview Updated
+
   div.card(data-hook="domain-view-advanced-container")
 
     div.card-header.pb-0
