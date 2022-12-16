@@ -608,6 +608,9 @@ class StochSSSpatialModel(StochSSBase):
 
         self.__update_domain_to_v1(domain)
 
+        # TODO: Add backward compatability for existing domains.
+        # TEST: Loading the 3D Cylinder should load the original domain as a lattice
+        
         geometries = []
         for d_type in domain['types']:
             if 'geometry' in d_type and d_type['geometry']:
@@ -617,12 +620,11 @@ class StochSSSpatialModel(StochSSBase):
                     'formula': d_type['geometry']
                 })
         domain['actions'] = []
+        # TODO: Create action entry for backward comatability
         domain['geometries'] = geometries
         domain['lattices'] = []
-        # TODO: Add backward compatability for existing domains.
-        # TEST: Loading the 3D Cylinder should load the original domain as a lattice
+        # TODO: Create lattice entry for backward compatability
         domain['transformations'] = []
-
         domain['template_version'] = self.DOMAIN_TEMPLATE_VERSION
 
     def __update_model_to_current(self):
@@ -852,8 +854,9 @@ class StochSSSpatialModel(StochSSBase):
         types = sorted(s_domain['types'], key=lambda d_type: d_type['typeID'])
         type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
         domain = self.__convert_domain(type_ids, s_domain=s_domain)
+        xlim, ylim, zlim = domain.get_bounding_box()
         s_domain['particles'] = self.__build_stochss_domain_particles(domain)
-        return self.get_domain_plot(domains=(domain, s_domain))
+        return self.get_domain_plot(domains=(domain, s_domain)), [list(xlim), list(ylim), list(zlim)]
 
     def publish_presentation(self):
         '''

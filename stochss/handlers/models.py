@@ -168,11 +168,11 @@ class LoadDomainAPIHandler(APIHandler):
         log.info("Generating the domain plot")
         try:
             model = StochSSSpatialModel(path="")
-            fig = model.load_action_preview(domain)
+            fig, limits = model.load_action_preview(domain)
             log.info("Loading the domain plot")
             if isinstance(fig, str):
                 fig = json.loads(fig)
-            resp = {"fig":fig, "particles": domain['particles']}
+            resp = {"fig":fig, "particles": domain['particles'], "limits": limits}
             log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:

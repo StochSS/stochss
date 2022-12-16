@@ -98,41 +98,36 @@ module.exports = View.extend({
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e)
   },
-  // changeDomainLimits: function (limits, reset) {
-  //   var limitsChanged = false;
-  //   if(reset) {
-  //     this.model.x_lim = limits.x_lim;
-  //     this.model.y_lim = limits.y_lim;
-  //     this.model.y_lim = limits.y_lim;
-  //     limitsChanged = true;
-  //   }else{
-  //     if(this.model.x_lim[0] > limits.x_lim[0]) {
-  //       this.model.x_lim[0] = limits.x_lim[0];
-  //       limitsChanged = true;
-  //     }
-  //     if(this.model.y_lim[0] > limits.y_lim[0]) {
-  //       this.model.y_lim[0] = limits.y_lim[0];
-  //       limitsChanged = true;
-  //     }
-  //     if(this.model.z_lim[0] > limits.z_lim[0]) {
-  //       this.model.z_lim[0] = limits.z_lim[0];
-  //       limitsChanged = true;
-  //     }
-  //     if(this.model.x_lim[1] < limits.x_lim[1]) {
-  //       this.model.x_lim[1] = limits.x_lim[1];
-  //       limitsChanged = true;
-  //     }
-  //     if(this.model.y_lim[1] < limits.y_lim[1]) {
-  //       this.model.y_lim[1] = limits.y_lim[1];
-  //       limitsChanged = true;
-  //     }
-  //     if(this.model.z_lim[1] < limits.z_lim[1]) {
-  //       this.model.z_lim[1] = limits.z_lim[1];
-  //       limitsChanged = true;
-  //     }
-  //   }
-  //   return limitsChanged;
-  // },
+  changeDomainLimits: function (limits) {
+    limitsChanged = false;
+    if(this.model.x_lim[0] > limits[0][0]) {
+      this.model.x_lim[0] = limits[0][0];
+      limitsChanged = true;
+    }
+    if(this.model.y_lim[0] > limits[1][0]) {
+      this.model.y_lim[0] = limits[1][0];
+      limitsChanged = true;
+    }
+    if(this.model.z_lim[0] > limits[2][0]) {
+      this.model.z_lim[0] = limits[2][0];
+      limitsChanged = true;
+    }
+    if(this.model.x_lim[1] < limits[0][1]) {
+      this.model.x_lim[1] = limits[0][1];
+      limitsChanged = true;
+    }
+    if(this.model.y_lim[1] < limits[1][1]) {
+      this.model.y_lim[1] = limits[1][1];
+      limitsChanged = true;
+    }
+    if(this.model.z_lim[1] < limits[2][1]) {
+      this.model.z_lim[1] = limits[2][1];
+      limitsChanged = true;
+    }
+    if(limitsChanged) {
+      this.renderLimitsView();
+    }
+  },
   createNewAction: function () {
     let type = this.model.types.get(0, 'typeID');
     return new Action({
@@ -412,6 +407,7 @@ module.exports = View.extend({
       }else{
         this.displayFigure();
       }
+      this.changeDomainLimits(body.limits);
     }});
   },
   updateTransformationDeps: function () {
