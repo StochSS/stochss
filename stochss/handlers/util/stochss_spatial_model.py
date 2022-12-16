@@ -175,7 +175,7 @@ class StochSSSpatialModel(StochSSBase):
                 if action['type'] == "Fill Action":
                     if action['scope'] == 'Multi Particle':
                         lattice = lattices[action['lattice']] if action['lattice'] in lattices else transformations[action['lattice']]
-                        domain.add_fill_action(
+                        _ = domain.add_fill_action(
                             lattice=lattice, geometry=geometry, enable=action['enable'], apply_action=action['enable'], **kwargs
                         )
                     else:
@@ -242,8 +242,10 @@ class StochSSSpatialModel(StochSSBase):
             domain = Domain(0, xlim, ylim, zlim, rho0=rho0, c0=c_0, P0=p_0, gravity=gravity)
             self.__convert_actions(domain, s_domain, type_ids)
             if model is None:
+                self.__convert_types(domain, type_ids)
                 return domain
             model.add_domain(domain)
+            self.__convert_types(model.domain, type_ids)
             model.staticDomain = self.model['domain']['static']
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
@@ -484,6 +486,16 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial transformations are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
+    def __convert_types(self, domain, type_ids):
+        domain.typeNdxMapping = {"type_UnAssigned": 0}
+        domain.typeNameMapping = {0: "type_UnAssigned"}
+        domain.listOfTypeIDs = [0]
+        for ndx, name in type_ids.items():
+            name = f"type_{name}"
+            domain.typeNdxMapping[name] = ndx
+            domain.typeNameMapping[ndx] = name
+            domain.listOfTypeIDs.append(ndx)
 
     @classmethod
     def __get_trace_data(cls, particles, name="", index=None):
@@ -826,7 +838,14 @@ class StochSSSpatialModel(StochSSBase):
         types = sorted(s_domain['types'], key=lambda d_type: d_type['typeID'])
         type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
         domain = self.__convert_domain(type_ids, s_domain=s_domain)
-        domain.compile_prep()
+        print(len(domain.vertices))
+        print(len(domain.vol))
+        print(len(domain.mass))
+        print(len(domain.type_id))
+        print(len(domain.nu))
+        print(len(domain.c))
+        print(len(domain.rho))
+        print(len(domain.fixed), "\n")
         s_domain['particles'] = self.__build_stochss_domain_particles(domain)
         return self.get_domain_plot(domains=(domain, s_domain))
 
