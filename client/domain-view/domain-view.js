@@ -281,21 +281,6 @@ module.exports = View.extend({
     if(this.typesView) {
       this.typesView.remove();
     }
-    let particleCounts = {};
-    this.model.particles.forEach((particle) => {
-      if(particleCounts[particle.type]) {
-        particleCounts[particle.type] += 1;
-      }else{
-        particleCounts[particle.type] = 1;
-      }
-    });
-    this.model.types.forEach((dType) => {
-      if(particleCounts[dType.typeID]) {
-        dType.numParticles = particleCounts[dType.typeID];
-      }else{
-        dType.numParticles = 0;
-      }
-    });
     this.typesView = new TypesView({
       collection: this.model.types,
       readOnly: this.readOnly
@@ -403,7 +388,20 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot");
     app.postXHR(endpoint, this.model, {success: (err, response, body) => {
       this.plot = body.fig;
-      this.model.particles = new Particles(body.particles)
+      this.model.particles = new Particles(body.particles);
+      let particleCounts = {};
+      this.model.particles.forEach((particle) => {
+        if(particleCounts[particle.type]) {
+          particleCounts[particle.type] += 1;
+        }else{
+          particleCounts[particle.type] = 1;
+        }
+      });
+      this.typesView.editTypeView.views.forEach((view) => {
+        view.model.numParticles = particleCounts[view.model.typeID] ? particleCounts[view.model.typeID] : 0;
+      });
+      this.typesView.renderEditTypeView();
+      this.typesView.renderViewTypeView();
       if(resetFigure) {
         this.resetFigure();
       }else{
