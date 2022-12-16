@@ -97,6 +97,26 @@ class StochSSSpatialModel(StochSSBase):
         return NewBC()
 
     @classmethod
+    def __build_geometry(cls, geometry):
+        class NewGeometry(Geometry): # pylint: disable=too-few-public-methods
+            '''
+            ########################################################################################
+            Custom SpatialPy Geometry
+            ########################################################################################
+            '''
+            __class__ = f"__main__.{geometry['name']}"
+            def __init__(self):
+                pass
+
+            def inside(self, point, on_boundary): # pylint: disable=no-self-use
+                '''
+                Custom inside function for geometry
+                '''
+                namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+                return eval(geometry['formula'], {}, namespace)
+        return NewGeometry()
+
+    @classmethod
     def __build_stochss_domain(cls, s_domain, data=None):
         particles = cls.__build_stochss_domain_particles(s_domain=s_domain, data=data)
         gravity = [0] * 3 if s_domain.gravity is None else s_domain.gravity
@@ -258,22 +278,16 @@ class StochSSSpatialModel(StochSSBase):
             comb_geoms = []
             for s_geometry in s_domain['geometries']:
                 if s_geometry['type'] == "Standard Geometry":
-                    class NewGeometry(Geometry):
-                        def __init__(self):
-                            pass
-
-                        def inside(self, point, on_boundary):
-                            namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
-                            return eval(s_geometry['formula'], {}, namespace)
-                    geometries[s_geometry['name']] = NewGeometry()
+                    geometries[s_geometry['name']] = self.__build_geometry(s_geometry)
                 else:
                     name = s_geometry['name']
-                    geometry = CombinatoryGeometry("", {})
-                    geometry.formula = s_geometry['formula']
-                    geometries[name] = geometry
+                    comb_geometry = CombinatoryGeometry("", {})
+                    comb_geometry.formula = s_geometry['formula']
+                    geometries[name] = comb_geometry
                     comb_geoms.append(name)
             for name in comb_geoms:
-                geometries[name].geo_namespace = geometries
+                geo_namespace = {key: geometry for key, geometry in geometries.items() if key != name}
+                geometries[name].geo_namespace = geo_namespace
             return geometries
         except KeyError as err:
             message = "Spatial geometries are not properly formatted or "
@@ -838,14 +852,6 @@ class StochSSSpatialModel(StochSSBase):
         types = sorted(s_domain['types'], key=lambda d_type: d_type['typeID'])
         type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
         domain = self.__convert_domain(type_ids, s_domain=s_domain)
-        print(len(domain.vertices))
-        print(len(domain.vol))
-        print(len(domain.mass))
-        print(len(domain.type_id))
-        print(len(domain.nu))
-        print(len(domain.c))
-        print(len(domain.rho))
-        print(len(domain.fixed), "\n")
         s_domain['particles'] = self.__build_stochss_domain_particles(domain)
         return self.get_domain_plot(domains=(domain, s_domain))
 
