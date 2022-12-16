@@ -31,7 +31,7 @@ module.exports = Collection.extend({
     }else{
       action = new Action({
         c: 10,
-        enable: true,
+        enable: false,
         fixed: false,
         geometry: '',
         lattice: '',
