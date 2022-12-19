@@ -727,7 +727,7 @@ class StochSSSpatialModel(StochSSBase):
         s_model = Model(name=name)
         self.__convert_model_settings(model=s_model)
         types = sorted(self.model['domain']['types'], key=lambda d_type: d_type['typeID'])
-        type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
+        type_ids = {d_type['typeID']: d_type['name'] for d_type in types}
         self.__convert_domain(model=s_model, type_ids=type_ids)
         if "boundaryConditions" in self.model.keys():
             self.__convert_boundary_conditions(model=s_model)
@@ -886,7 +886,7 @@ class StochSSSpatialModel(StochSSBase):
 
     def load_action_preview(self, s_domain):
         types = sorted(s_domain['types'], key=lambda d_type: d_type['typeID'])
-        type_ids = {d_type['typeID']: d_type['name'] for d_type in types if d_type['typeID'] > 0}
+        type_ids = {d_type['typeID']: d_type['name'] for d_type in types}
         domain = self.__convert_domain(type_ids, s_domain=s_domain)
         xlim, ylim, zlim = domain.get_bounding_box()
         s_domain['particles'] = self.__build_stochss_domain_particles(domain)
