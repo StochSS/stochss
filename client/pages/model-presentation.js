@@ -56,7 +56,9 @@ let ModelPresentationPage = PageView.extend({
         this.renderSubviews(false, domainPlot);
       },
       error: (err, response, body) => {
-        this.notFound = true;
+        this.logoPath = "/hub/static/stochss-logo.png";
+        this.title = "404 PAGE NOT FOUND";
+        this.errMsg = `This ${this.fileType} presentation was removed by the author and is no longer available.`;
         this.renderSubviews(true);
       }
     });
