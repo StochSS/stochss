@@ -26,7 +26,6 @@ let Plotly = require('plotly.js-dist');
 let Particles = require('../models/particles');
 //models
 let Action = require('../models/action');
-// let Particle = require('../models/particle');
 //views
 let View = require('ampersand-view');
 let TypesView = require('./views/types-view');
@@ -289,6 +288,7 @@ module.exports = View.extend({
     }
     this.elements.select.css('display', 'none');
     this.viewParticleView = new ViewParticleView({
+      parent: this,
       model: this.actPart.part
     });
     app.registerRenderSubview(this.elements.particle.view, this.viewParticleView, this.elements.particle.hook);
@@ -396,9 +396,12 @@ module.exports = View.extend({
           particleCounts[particle.type] = 1;
         }
       });
-      this.typesView.editTypeView.views.forEach((view) => {
-        view.model.numParticles = particleCounts[view.model.typeID] ? particleCounts[view.model.typeID] : 0;
+      this.model.types.forEach((type) => {
+        type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
       });
+      if(this.readOnly) {
+        this.renderTypesQuickview();
+      }
       this.typesView.renderEditTypeView();
       this.typesView.renderViewTypeView();
       if(resetFigure) {

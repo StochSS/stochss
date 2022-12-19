@@ -22,7 +22,6 @@ let State = require('ampersand-state');
 let Actions = require('./actions');
 let Lattices = require('./lattices');
 let Types = require('./domain-types');
-let Particles = require('./particles');
 let Geometries = require('./geometries');
 let Transformations = require('./transformations');
 
@@ -56,25 +55,12 @@ module.exports = State.extend({
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
-    this.particles = new Particles();
-    this.particles.on('add change remove', this.updateValid, this);
-    this.def_particle_id = this.particles.length;
     this.def_type_id = this.types.length;
-    this.particles.forEach((particle) => {
-      if(particle.particle_id >= self.def_particle_id) {
-        this.def_particle_id = particle.particle_id + 1;
-      }
-    });
     this.types.forEach((type) => {
-      if(type.typeID >= self.def_type_id) {
+      if(type.typeID >= this.def_type_id) {
         this.def_type_id = type.typeID + 1;
       }
     });
-  },
-  getDefaultID: function () {
-    let id = this.def_particle_id;
-    this.def_particle_id += 1;
-    return id;
   },
   getDefaultTypeID: function () {
     let id = this.def_type_id;
@@ -92,14 +78,8 @@ module.exports = State.extend({
         type.typeID = id;
       }
     });
-    this.particles.forEach((particle) => {
-      if(particle.type > oldType) {
-        particle.type -= 1;
-      }
-    });
   },
   validateModel: function () {
-    if(!this.particles.validateCollection()) return false;
     return true;
   },
   updateValid: function () {
