@@ -185,7 +185,7 @@ class StochSSSpatialModel(StochSSBase):
                 else:
                     geometry = transformations[action['geometry']]
                 # Build props arg
-                if action['type'] in ('Fill Action', 'Set Action') and action['useProps']:
+                if action['type'] in ('Fill Action', 'Set Action'):
                     kwargs = {
                         'type_id': type_ids[action['typeID']], 'mass': action['mass'], 'vol': action['vol'],
                         'rho': action['rho'], 'nu': action['nu'], 'c': action['c'], 'fixed': action['fixed']
@@ -194,6 +194,8 @@ class StochSSSpatialModel(StochSSBase):
                     kwargs = {}
                 # Apply actions
                 if action['type'] == "Fill Action":
+                    if not action['useProps']:
+                        kwargs = {}
                     if action['scope'] == 'Multi Particle':
                         lattice = lattices[action['lattice']] if action['lattice'] in lattices else transformations[action['lattice']]
                         _ = domain.add_fill_action(
@@ -650,7 +652,7 @@ class StochSSSpatialModel(StochSSBase):
         domain['geometries'] = geometries
         domain['lattices'] = [{
             'name': 'lattice1', 'type': 'StochSS Lattice',
-            'filename': filename.replace(self.user_dir, ''), 'subdomainFile': '',
+            'filename': filename.replace(f'{self.user_dir}/', ''), 'subdomainFile': '',
             'center': {'x': 0, 'y': 0, 'z': 0}, 'length': 0, 'radius': 0,
             'deltar': 0,'deltas': 0,'deltax': 0,'deltay': 0,'deltaz': 0,
             'xmax': 0,'xmin': 0,'ymax': 0,'ymin': 0,'zmax': 0,'zmin': 0
