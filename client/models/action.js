@@ -34,6 +34,7 @@ module.exports = State.extend({
     scope: 'string',
     type: 'string',
     typeID: 'number',
+    useProps: 'boolean',
     vol: 'number'
   },
   children: {

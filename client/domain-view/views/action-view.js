@@ -355,6 +355,15 @@ module.exports = View.extend({
   },
   selectLattice: function (e) {
     this.model.lattice = e.target.value;
+    if(this.model.lattice !== '') {
+      let lattice = this.model.collection.parent.lattices.get(this.model.lattice, 'name');
+      if(lattice) {
+        this.model.useProps = lattice.type !== "StochSS Lattice";
+      }else{
+        let transformation = this.model.collection.parent.transformations.get(this.model.lattice, 'name');
+        this.model.useProps = transformation.useProps;
+      }
+    }
     this.model.collection.parent.trigger('update-lattice-deps');
     this.model.collection.parent.trigger('update-transformation-deps');
     this.updateViewer();

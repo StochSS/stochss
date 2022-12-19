@@ -48,6 +48,19 @@ module.exports = State.extend({
       default: false
     }
   },
+  derived: {
+    useProps: {
+      deps: ['lattice', 'transformation'],
+      fn: function () {
+        let lattice = this.model.collection.parent.lattices.get(this.lattice, 'name');
+        if(lattice) { return lattice.type !== 'StochSS Lattice'; }
+
+        let transformation = this.model.collection.parent.transformations.get(this.transformation, 'name');
+        if(transformation) { return transformation.useProps; }
+        return true
+      }
+    }
+  },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },

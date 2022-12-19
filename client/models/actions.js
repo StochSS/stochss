@@ -42,6 +42,7 @@ module.exports = Collection.extend({
         scope: 'Multi Particle',
         type: type,
         typeID: 0,
+        useProps: true,
         vol: 1.0
       });
       action.selected = true;
