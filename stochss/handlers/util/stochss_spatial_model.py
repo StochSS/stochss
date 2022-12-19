@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import copy
+import shutil
 import string
 import hashlib
 import traceback
@@ -35,7 +36,7 @@ from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, 
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
-                            StochSSModelFormatError, StochSSPermissionsError
+                            StochSSModelFormatError, StochSSPermissionsError, DomainUpdateError
 
 class StochSSSpatialModel(StochSSBase):
     '''
@@ -184,7 +185,7 @@ class StochSSSpatialModel(StochSSBase):
                 else:
                     geometry = transformations[action['geometry']]
                 # Build props arg
-                if action['type'] in ('Fill Action', 'Set Action'):
+                if action['type'] in ('Fill Action', 'Set Action') and action['useProps']:
                     kwargs = {
                         'type_id': type_ids[action['typeID']], 'mass': action['mass'], 'vol': action['vol'],
                         'rho': action['rho'], 'nu': action['nu'], 'c': action['c'], 'fixed': action['fixed']
@@ -544,6 +545,7 @@ class StochSSSpatialModel(StochSSBase):
             if path.endswith(".domn"):
                 with open(path, "r", encoding="utf-8") as domain_file:
                     s_domain = json.load(domain_file)
+                    self.path = path
                     self.__update_domain_to_current(domain=s_domain)
                     return s_domain
             s_domain = Domain.read_xml_mesh(filename=path)
@@ -608,8 +610,28 @@ class StochSSSpatialModel(StochSSBase):
 
         self.__update_domain_to_v1(domain)
 
-        # TODO: Add backward compatability for existing domains.
-        # TEST: Loading the 3D Cylinder should load the original domain as a lattice
+        # Create version 1 domain directory if needed.
+        v1_dir = os.path.join(self.user_dir, "Version 1 Domains")
+        if not os.path.exists(v1_dir):
+            os.mkdir(v1_dir)
+        # Get the file name for the version 1 domain file
+        v1_domain = None
+        filename = os.path.join(v1_dir, self.get_file().replace(".smdl", ".domn"))
+        if self.path == filename:
+            errmsg = f"{self.get_file()} may be a dependency of another doamin (.domn) "
+            errmsg += "or a spatial model (.smdl) and can't be updated."
+            raise DomainUpdateError(errmsg)
+        if os.path.exists(filename):
+            with open(filename, "r", encoding="utf-8") as v1_domain_fd:
+                v1_domain = json.dumps(json.load(v1_domain_fd), sort_keys=True, indent=4)
+            curr_domain = json.dumps(domain, sort_keys=True, indent=4)
+            if v1_domain != curr_domain:
+                filename, _ = self.get_unique_path(self.get_file().replace(".smdl", ".domn"), dirname=v1_dir)
+                v1_domain = None
+        # Create the version 1 doman file
+        if v1_domain is None:
+            with open(filename, "w", encoding="utf-8") as v1_domain_fd:
+                json.dump(domain, v1_domain_fd, sort_keys=True, indent=4)
         
         geometries = []
         for d_type in domain['types']:
@@ -619,11 +641,20 @@ class StochSSSpatialModel(StochSSBase):
                     'type': 'Standard Geometry',
                     'formula': d_type['geometry']
                 })
-        domain['actions'] = []
-        # TODO: Create action entry for backward comatability
+        domain['actions'] = [{
+            'type': 'Fill Action', 'scope': 'Multi Particle', 'priority': 1, 'enable': True,
+            'geometry': '', 'lattice': 'lattice1', 'useProps': False,
+            'point': {'x': 0, 'y': 0, 'z': 0}, 'newPoint': {'x': 0, 'y': 0, 'z': 0},
+            'c': 10, 'fixed': False, 'mass': 1.0, 'nu': 0.0, 'rho': 1.0, 'typeID': 0, 'vol': 0.0
+        }]
         domain['geometries'] = geometries
-        domain['lattices'] = []
-        # TODO: Create lattice entry for backward compatability
+        domain['lattices'] = [{
+            'name': 'lattice1', 'type': 'StochSS Lattice',
+            'filename': filename.replace(self.user_dir, ''), 'subdomainFile': '',
+            'center': {'x': 0, 'y': 0, 'z': 0}, 'length': 0, 'radius': 0,
+            'deltar': 0,'deltas': 0,'deltax': 0,'deltay': 0,'deltaz': 0,
+            'xmax': 0,'xmin': 0,'ymax': 0,'ymin': 0,'zmax': 0,'zmin': 0
+        }]
         domain['transformations'] = []
         domain['template_version'] = self.DOMAIN_TEMPLATE_VERSION
 
@@ -845,6 +876,7 @@ class StochSSSpatialModel(StochSSBase):
         if "template_version" not in self.model['domain']:
             self.model['domain']['template_version'] = 0
 
+        print("File Path:", self.path)
         self.__update_model_to_current()
         self.__update_domain_to_current()
 
