@@ -3,12 +3,12 @@ section.page
   div#page-error.container.centered
 
     div.logo(id="stochss-logo" data-hook="stochss-logo")
-      img(src="/hub/static/stochss-logo.png")
+      img(src=this.logoPath)
 
     div.presentation-header
 
-      h1 404 PAGE NOT FOUND
+      h1=this.title
 
     div
 
-      h5="This " + this.fileType + " presentation was removed by the author and is no longer available."
+      h5=errMsg
