@@ -208,12 +208,12 @@ module.exports = View.extend({
     if(this.meshSelectView) {
       this.meshSelectView.remove();
     }
-    var file = this.meshFiles.files.filter((file) => {
-      if(file[1] === this.model.filename) {
+    let files = this.meshFiles.files.filter((file) => {
+      if(file[1] === this.model.filename.split('/').pop()) {
         return file;
       }
     });
-    let value = file.length > 0 ? file[0] : "";
+    let value = files.length > 0 ? files[0] : "";
     this.meshSelectView = new SelectView({
       name: 'mesh-files',
       required: false,
