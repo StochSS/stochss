@@ -34,7 +34,7 @@ class TestModelTemplate(unittest.TestCase):
         '''
         template_path = "stochss_templates/modelTemplate.json"
 
-        with open(template_path, "r") as template_file:
+        with open(template_path, "r", encoding="utf8") as template_file:
             self.template = json.load(template_file)
 
 
@@ -45,7 +45,7 @@ class TestModelTemplate(unittest.TestCase):
         template_keys = sorted(list(self.template.keys()))
         model_path = "client/models/model.js"
 
-        with open(model_path, "r") as model_file:
+        with open(model_path, "r", encoding="utf8") as model_file:
             data = model_file.read()
             props = data.split("props: {").pop().split('}')[0].split(',')
             collections = data.split("collections: {").pop().split('}')[0].split(',')
@@ -66,7 +66,7 @@ class TestModelTemplate(unittest.TestCase):
         template_keys = sorted(list(self.template['modelSettings'].keys()))
         mdl_settings_path = "client/models/timespan-settings.js"
 
-        with open(mdl_settings_path, "r") as mdl_settings_file:
+        with open(mdl_settings_path, "r", encoding="utf8") as mdl_settings_file:
             data = mdl_settings_file.read().split("props: {").pop().split('}')[0].split(',')
             mdl_settings_keys = sorted(list(map(lambda item: item.strip().split(':')[0], data)))
 
@@ -81,7 +81,7 @@ class TestModelTemplate(unittest.TestCase):
         template_keys = sorted(list(self.template['domain'].keys()))
         domain_path = "client/models/domain.js"
 
-        with open(domain_path, "r") as domain_file:
+        with open(domain_path, "r", encoding="utf8") as domain_file:
             data = domain_file.read()
             props = data.split("props: {").pop().split('}')[0].split(',')
             collections = data.split("collections: {").pop().split('}')[0].split(',')

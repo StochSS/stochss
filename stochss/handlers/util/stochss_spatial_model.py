@@ -15,11 +15,9 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-
 import os
 import json
 import copy
-import shutil
 import string
 import hashlib
 import traceback
@@ -44,7 +42,6 @@ class StochSSSpatialModel(StochSSBase):
     StochSS spatial model object
     ################################################################################################
     '''
-
     def __init__(self, path, new=False, model=None):
         '''
         Intitialize a spatial model object and if its new create it on the users file system
@@ -77,7 +74,6 @@ class StochSSSpatialModel(StochSSBase):
         else:
             self.model = None
 
-
     @classmethod
     def __build_boundary_condition(cls, boundary_condition):
         class NewBC(BoundaryCondition): # pylint: disable=too-few-public-methods
@@ -91,9 +87,7 @@ class StochSSSpatialModel(StochSSBase):
                 pass
 
             def expression(self): # pylint: disable=no-self-use
-                '''
-                Custom expression for boundary condition
-                '''
+                ''' Custom expression for boundary condition. '''
                 return boundary_condition['expression']
         return NewBC()
 
@@ -115,9 +109,7 @@ class StochSSSpatialModel(StochSSBase):
                 pass
 
             def inside(self, point, on_boundary): # pylint: disable=no-self-use
-                '''
-                Custom inside function for geometry
-                '''
+                ''' Custom inside function for geometry. '''
                 namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
                 return eval(geometry['formula'], {}, namespace)
         return NewGeometry()
@@ -134,19 +126,15 @@ class StochSSSpatialModel(StochSSBase):
                   "x_lim":s_domain.xlim,
                   "y_lim":s_domain.ylim,
                   "z_lim":s_domain.zlim,
-                  "types":[{"fixed":False,
-                            "mass":1.0,
-                            "name":"Un-Assigned",
-                            "nu":0.0,
-                            "typeID":0,
-                            "volume":1.0}],
+                  "types":[{
+                      "fixed":False, "mass":1.0, "name":"Un-Assigned",
+                      "nu":0.0, "typeID":0, "volume":1.0
+                  }],
                   "boundary_condition": {
-                      "reflect_x": True,
-                      "reflect_y": True,
-                      "reflect_z": True},
+                      "reflect_x": True, "reflect_y": True, "reflect_z": True
+                  },
                   "particles":particles}
         return domain
-
 
     @classmethod
     def __build_stochss_domain_particles(cls, s_domain, data=None):
@@ -192,8 +180,9 @@ class StochSSSpatialModel(StochSSBase):
                 # Build props arg
                 if action['type'] in ('Fill Action', 'Set Action'):
                     kwargs = {
-                        'type_id': type_ids[action['typeID']], 'mass': action['mass'], 'vol': action['vol'],
-                        'rho': action['rho'], 'nu': action['nu'], 'c': action['c'], 'fixed': action['fixed']
+                        'type_id': type_ids[action['typeID']], 'mass': action['mass'],
+                        'vol': action['vol'], 'rho': action['rho'], 'nu': action['nu'],
+                        'c': action['c'], 'fixed': action['fixed']
                     }
                 else:
                     kwargs = {}
@@ -202,9 +191,13 @@ class StochSSSpatialModel(StochSSBase):
                     if not action['useProps']:
                         kwargs = {}
                     if action['scope'] == 'Multi Particle':
-                        lattice = lattices[action['lattice']] if action['lattice'] in lattices else transformations[action['lattice']]
+                        if action['lattice'] in lattices:
+                            lattice = lattices[action['lattice']]
+                        else:
+                            lattice = transformations[action['lattice']]
                         _ = domain.add_fill_action(
-                            lattice=lattice, geometry=geometry, enable=action['enable'], apply_action=action['enable'], **kwargs
+                            lattice=lattice, geometry=geometry, enable=action['enable'],
+                            apply_action=action['enable'], **kwargs
                         )
                     else:
                         point = [action['point']['x'], action['point']['y'], action['point']['z']]
@@ -213,15 +206,26 @@ class StochSSSpatialModel(StochSSBase):
                     # Get proper geometry for scope
                     # 'Single Particle' scope creates a geometry using actions point.
                     if action['scope'] == 'Single Particle':
-                        formula = f"x == {action['point']['x']} and y == {action['point']['y']} and z == {action['point']['z']}"
-                        geometry = self.__build_geometry(None, name=f"SPAGeometry{i + 1}", formula=formula)
+                        p_x = action['point']['x']
+                        p_y = action['point']['y']
+                        p_z = action['point']['z']
+                        formula = f"x == {p_x} and y == {p_y} and z == {p_z}"
+                        geometry = self.__build_geometry(
+                            None, name=f"SPAGeometry{i + 1}", formula=formula
+                        )
                     if action['type'] == "Set Action":
                         domain.add_set_action(
-                            geometry=geometry, enable=action['enable'], apply_action=action['enable'], **kwargs
+                            geometry=geometry, enable=action['enable'],
+                            apply_action=action['enable'], **kwargs
                         )
                         if action['scope'] == "Single Particle":
-                            curr_pnt = numpy.array([action['point']['x'], action['point']['y'], action['point']['z']])
-                            new_pnt = numpy.array([action['newPoint']['x'], action['newPoint']['y'], action['newPoint']['z']])
+                            curr_pnt = numpy.array(
+                                [action['point']['x'], action['point']['y'], action['point']['z']]
+                            )
+                            new_pnt = numpy.array([
+                                action['newPoint']['x'], action['newPoint']['y'],
+                                action['newPoint']['z']
+                            ])
                             if numpy.count_nonzero(curr_pnt - new_pnt) > 0:
                                 for j, vertex in enumerate(domain.vertices):
                                     if numpy.count_nonzero(curr_pnt - vertex) <= 0:
@@ -229,13 +233,14 @@ class StochSSSpatialModel(StochSSBase):
                                         break
                     else:
                         domain.add_remove_action(
-                            geometry=geometry, enable=action['enable'], apply_action=action['enable']
+                            geometry=geometry, enable=action['enable'],
+                            apply_action=action['enable']
                         )
         except KeyError as err:
             message = "Spatial actions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-    
+
     def __convert_boundary_conditions(self, model):
         try:
             for boundary_condition in self.model['boundaryConditions']:
@@ -245,7 +250,6 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial model boundary conditions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
 
     def __convert_domain(self, type_ids, model=None, s_domain=None):
         try:
@@ -268,6 +272,7 @@ class StochSSSpatialModel(StochSSBase):
             model.add_domain(domain)
             self.__convert_types(model.domain, type_ids)
             model.staticDomain = self.model['domain']['static']
+            return None
         except KeyError as err:
             message = "Spatial model domain properties are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -287,14 +292,16 @@ class StochSSSpatialModel(StochSSBase):
                     geometries[name] = comb_geometry
                     comb_geoms.append(name)
             for name in comb_geoms:
-                geo_namespace = {key: geometry for key, geometry in geometries.items() if key != name}
+                geo_namespace = {
+                    key: geometry for key, geometry in geometries.items() if key != name
+                }
                 geometries[name].geo_namespace = geo_namespace
             return geometries
         except KeyError as err:
             message = "Spatial geometries are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-    
+
     def __convert_initial_conditions(self, model, type_ids):
         try:
             s_species = model.get_all_species()
@@ -305,9 +312,9 @@ class StochSSSpatialModel(StochSSBase):
                     types = [type_ids[d_type] for d_type in initial_condition['types']]
                     s_ic = ScatterInitialCondition(species, count, types=types)
                 elif initial_condition['icType'] == "Place":
-                    location = [initial_condition['x'],
-                                initial_condition['y'],
-                                initial_condition['z']]
+                    location = [
+                        initial_condition['x'], initial_condition['y'], initial_condition['z']
+                    ]
                     s_ic = PlaceInitialCondition(species, count, location)
                 else:
                     types = [type_ids[d_type] for d_type in initial_condition['types']]
@@ -318,7 +325,8 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-    def __convert_lattices(self, s_domain):
+    @classmethod
+    def __convert_lattices(cls, s_domain):
         try:
             lattices = {}
             for s_lattice in s_domain['lattices']:
@@ -334,7 +342,8 @@ class StochSSSpatialModel(StochSSBase):
                     )
                 elif s_lattice['type'] == "Spherical Lattice":
                     lattice = SphericalLattice(
-                        s_lattice['radius'], s_lattice['deltas'], center=center, deltar=s_lattice['deltar']
+                        s_lattice['radius'], s_lattice['deltas'], center=center,
+                        deltar=s_lattice['deltar']
                     )
                 elif s_lattice['type'] == "Cylindrical Lattice":
                     lattice = CylindricalLattice(
@@ -343,11 +352,13 @@ class StochSSSpatialModel(StochSSBase):
                     )
                 elif s_lattice['type'] == "XML Mesh Lattice":
                     lattice = XMLMeshLattice(
-                        s_lattice['filename'], center=center, subdomain_file=s_lattice['subdomainFile']
+                        s_lattice['filename'], center=center,
+                        subdomain_file=s_lattice['subdomainFile']
                     )
                 elif s_lattice['type'] == "Mesh IO Lattice":
                     lattice = MeshIOLattice(
-                        s_lattice['filename'], center=center, subdomain_file=s_lattice['subdomainFile']
+                        s_lattice['filename'], center=center,
+                        subdomain_file=s_lattice['subdomainFile']
                     )
                 else:
                     lattice = StochSSLattice(s_lattice['filename'], center=center)
@@ -357,7 +368,7 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial lattices are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-    
+
     def __convert_model_settings(self, model):
         try:
             end = self.model['modelSettings']['endSim']
@@ -370,7 +381,6 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-
     def __convert_parameters(self, model):
         try:
             for parameter in self.model['parameters']:
@@ -380,7 +390,6 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial model parameters are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
 
     def __convert_reactions(self, model, type_ids):
         try:
@@ -399,19 +408,16 @@ class StochSSSpatialModel(StochSSBase):
                 types = [type_ids[d_type] for d_type in reaction['types']]
                 if len(types) == len(type_ids):
                     types = None
-                s_reaction = Reaction(name=reaction['name'],
-                                      reactants=reactants,
-                                      products=products,
-                                      rate=rate,
-                                      propensity_function=propensity,
-                                      ode_propensity_function=ode_propensity,
-                                      restrict_to=types)
+                s_reaction = Reaction(
+                    name=reaction['name'], reactants=reactants, products=products,
+                    rate=rate, propensity_function=propensity,
+                    ode_propensity_function=ode_propensity, restrict_to=types
+                )
                 model.add_reaction(s_reaction)
         except KeyError as err:
             message = "Spatial model reactions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
 
     def __convert_species(self, model, type_ids):
         try:
@@ -429,7 +435,6 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial model species are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
 
     @classmethod
     def __convert_stoich_species(cls, model, reaction):
@@ -457,41 +462,78 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-    def __convert_transformations(self, s_domain, geometries, lattices):
+    @classmethod
+    def __convert_transformations(cls, s_domain, geometries, lattices):
         try:
             transformations = {}
             nested_trans = {}
             for s_transformation in s_domain['transformations']:
                 name = s_transformation['name']
                 vector = [
-                    [s_transformation['vector'][0]['x'], s_transformation['vector'][0]['y'], s_transformation['vector'][0]['z']],
-                    [s_transformation['vector'][1]['x'], s_transformation['vector'][1]['y'], s_transformation['vector'][1]['z']]
+                    [
+                        s_transformation['vector'][0]['x'],
+                        s_transformation['vector'][0]['y'],
+                        s_transformation['vector'][0]['z']
+                    ],
+                    [
+                        s_transformation['vector'][1]['x'],
+                        s_transformation['vector'][1]['y'],
+                        s_transformation['vector'][1]['z']
+                    ]
                 ]
-                geometry = geometries[s_transformation['geometry']] if s_transformation['geometry'] != "" else None
-                lattice = lattices[s_transformation['lattice']] if s_transformation['lattice'] != "" else None
+                if s_transformation['geometry'] != "":
+                    geometry = geometries[s_transformation['geometry']]
+                else:
+                    geometry = None
+                if s_transformation['lattice'] != "":
+                    lattice = lattices[s_transformation['lattice']]
+                else:
+                    lattice = None
                 if s_transformation['transformation'] != "":
                     nested_trans[name] = s_transformation['transformation']
                 if s_transformation['type'] == "Translate Transformation":
-                    transformation = TranslationTransformation(vector, geometry=geometry, lattice=lattice)
+                    transformation = TranslationTransformation(
+                        vector, geometry=geometry, lattice=lattice
+                    )
                 elif s_transformation['type'] == "Rotate Transformation":
-                    transformation = RotationTransformation(vector, s_transformation['angle'], geometry=geometry, lattice=lattice)
+                    transformation = RotationTransformation(
+                        vector, s_transformation['angle'], geometry=geometry, lattice=lattice
+                    )
                 elif s_transformation['type'] == "Reflect Transformation":
-                    normal = numpy.array([s_transformation['normal']['x'], s_transformation['normal']['y'], s_transformation['normal']['z']])
-                    point1 = numpy.array([s_transformation['point1']['x'], s_transformation['point1']['y'], s_transformation['point1']['z']])
-                    point2 = numpy.array([s_transformation['point2']['x'], s_transformation['point2']['y'], s_transformation['point2']['z']])
-                    point3 = numpy.array([s_transformation['point3']['x'], s_transformation['point3']['y'], s_transformation['point3']['z']])
-                    if numpy.count_nonzero(point3 - point1) <= 0 or numpy.count_nonzero(point2 - point1) <= 0:
+                    normal = numpy.array([
+                        s_transformation['normal']['x'], s_transformation['normal']['y'],
+                        s_transformation['normal']['z']
+                    ])
+                    point1 = numpy.array([
+                        s_transformation['point1']['x'], s_transformation['point1']['y'],
+                        s_transformation['point1']['z']
+                    ])
+                    point2 = numpy.array([
+                        s_transformation['point2']['x'], s_transformation['point2']['y'],
+                        s_transformation['point2']['z']
+                    ])
+                    point3 = numpy.array([
+                        s_transformation['point3']['x'], s_transformation['point3']['y'],
+                        s_transformation['point3']['z']
+                    ])
+                    if numpy.count_nonzero(point3 - point1) <= 0 or \
+                                numpy.count_nonzero(point2 - point1) <= 0:
                         point2 = None
                         point3 = None
                     else:
                         normal = None
                     transformation = ReflectionTransformation(
-                        point1, normal=normal, point2=point2, point3=point3, geometry=geometry, lattice=lattice
+                        point1, normal=normal, point2=point2, point3=point3,
+                        geometry=geometry, lattice=lattice
                     )
                 else:
-                    center = numpy.array([s_transformation['center']['x'], s_transformation['center']['y'], s_transformation['center']['z']])
+                    center = numpy.array([
+                        s_transformation['center']['x'], s_transformation['center']['y'],
+                        s_transformation['center']['z']
+                    ])
                     transformation = ScalingTransformation(
-                        s_transformation['factor'], center=center, geometry=geometry, lattice=lattice
+                        s_transformation['factor'], center=center,
+                        geometry=geometry, lattice=lattice
                     )
                 transformations[name] = transformation
             for trans, nested_tran in nested_trans.items():
@@ -502,7 +544,8 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-    def __convert_types(self, domain, type_ids):
+    @classmethod
+    def __convert_types(cls, domain, type_ids):
         domain.typeNdxMapping = {"type_UnAssigned": 0}
         domain.typeNameMapping = {0: "type_UnAssigned"}
         domain.listOfTypeIDs = [0]
@@ -518,8 +561,10 @@ class StochSSSpatialModel(StochSSBase):
         if len(self.model['domain']['lattices'] == 0):
             return self.__write_presentation_file(presentation, dst)
         # Check if the domain has file based lattices
+        file_based_types = ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice')
         lattices = list(filter(
-            lambda lattice: lattice['type'] in ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice'),self.model['domain']['lattices'])
+            lambda lattice, file_based=file_based_types: lattice['type'] in file_based,
+            self.model['domain']['lattices'])
         )
         if len(lattices) == 0:
             return self.__write_presentation_file(presentation, dst)
@@ -542,7 +587,7 @@ class StochSSSpatialModel(StochSSBase):
         entry['pres_path'] = os.path.join(
             "/tmp/presentation_cache", f"{presentation_file}_doamin_files", entry['name']
         )
-        with open(path, "r" encoding="utf-8") as entry_fd:
+        with open(path, "r", encoding="utf-8") as entry_fd:
             entry['body'] = entry_fd.read().strip()
         return entry
 
@@ -593,7 +638,6 @@ class StochSSSpatialModel(StochSSBase):
             message = f"The domain file is not in proper format: {str(err)}"
             raise DomainFormatError(message, traceback.format_exc()) from err
 
-
     def __read_model_file(self):
         try:
             with open(self.get_path(full=True), "r", encoding="utf-8") as smdl_file:
@@ -605,8 +649,8 @@ class StochSSSpatialModel(StochSSBase):
             message = f"The spatial model is not JSON decobable: {str(err)}"
             raise FileNotJSONFormatError(message, traceback.format_exc()) from err
 
-
-    def __update_domain_to_v1(self, domain=None):
+    @classmethod
+    def __update_domain_to_v1(cls, domain=None):
         if domain['template_version'] == 1:
             return
 
@@ -642,7 +686,6 @@ class StochSSSpatialModel(StochSSBase):
             return
 
         self.__update_domain_to_v1(domain)
-
         # Create version 1 domain directory if needed.
         v1_dir = os.path.join(self.user_dir, "Version 1 Domains")
         if not os.path.exists(v1_dir):
@@ -659,13 +702,15 @@ class StochSSSpatialModel(StochSSBase):
                 v1_domain = json.dumps(json.load(v1_domain_fd), sort_keys=True, indent=4)
             curr_domain = json.dumps(domain, sort_keys=True, indent=4)
             if v1_domain != curr_domain:
-                filename, _ = self.get_unique_path(self.get_file().replace(".smdl", ".domn"), dirname=v1_dir)
+                filename, _ = self.get_unique_path(
+                    self.get_file().replace(".smdl", ".domn"), dirname=v1_dir
+                )
                 v1_domain = None
         # Create the version 1 doman file
         if v1_domain is None:
             with open(filename, "w", encoding="utf-8") as v1_domain_fd:
                 json.dump(domain, v1_domain_fd, sort_keys=True, indent=4)
-        
+
         geometries = []
         for d_type in domain['types']:
             if 'geometry' in d_type and d_type['geometry']:
@@ -721,18 +766,13 @@ class StochSSSpatialModel(StochSSBase):
         self.model['template_version'] = self.TEMPLATE_VERSION
 
     @classmethod
-    def __write_presentation_file(cls, body, file):
+    def __write_presentation_file(cls, body, path):
         with open(path, "w", encoding="utf-8") as presentation_fd:
             json.dump(body, presentation_fd, sort_keys=True, indent=4)
         return True
 
     def convert_to_model(self):
-        '''
-        Convert a spatial model to a non_spatial model
-
-        Attributes
-        ----------
-        '''
+        ''' Convert a spatial model to a non_spatial model. '''
         if self.model is None:
             s_model = self.load()
         s_model['is_spatial'] = False
@@ -750,14 +790,8 @@ class StochSSSpatialModel(StochSSBase):
         message = f"{self.get_file()} was successfully convert to {m_file}!"
         return {"Message":message, "File":m_file}, {"model":s_model, "path":m_path}
 
-
     def convert_to_spatialpy(self):
-        '''
-        Convert a spatial model to a spatialpy model
-
-        Attributes
-        ----------
-        '''
+        '''Convert a spatial model to a spatialpy model. '''
         if self.model is None:
             _ = self.load()
         name = self.get_name()
@@ -774,7 +808,6 @@ class StochSSSpatialModel(StochSSBase):
         self.__convert_reactions(model=s_model, type_ids=type_ids)
         # self.log("debug", str(s_model))
         return s_model
-
 
     def create_boundary_condition(self, kwargs):
         '''
@@ -806,7 +839,6 @@ class StochSSSpatialModel(StochSSBase):
         if path is None:
             return self.load()['domain']
         return self.__load_domain_from_file(path=path)
-
 
     def get_domain_plot(self, path=None, new=False, domains=None):
         '''
@@ -885,14 +917,8 @@ class StochSSSpatialModel(StochSSBase):
         fig['config'] = {"responsive":True}
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-
     def get_notebook_data(self):
-        '''
-        Get the needed data for converting to notebook
-
-        Attributes
-        ----------
-        '''
+        ''' Get the needed data for converting to notebook. '''
         file = f"{self.get_name()}.ipynb"
         path = os.path.join(self.get_dir_name(), file)
         s_model = self.convert_to_spatialpy()
@@ -901,10 +927,7 @@ class StochSSSpatialModel(StochSSBase):
 
     def load(self):
         '''
-        Reads the spatial model file, updates it to the current format, and stores it in self.model
-
-        Attributes
-        ----------
+        Reads the spatial model file, updates it to the current format, and stores it in self.model.
         '''
         if self.model is None:
             self.__read_model_file()
@@ -915,27 +938,23 @@ class StochSSSpatialModel(StochSSBase):
         if "template_version" not in self.model['domain']:
             self.model['domain']['template_version'] = 0
 
-        print("File Path:", self.path)
         self.__update_model_to_current()
         self.__update_domain_to_current()
-
         return self.model
 
     def load_action_preview(self, s_domain):
+        ''' Get a domain preview of all enabled actions. '''
         types = sorted(s_domain['types'], key=lambda d_type: d_type['typeID'])
         type_ids = {d_type['typeID']: d_type['name'] for d_type in types}
         domain = self.__convert_domain(type_ids, s_domain=s_domain)
         xlim, ylim, zlim = domain.get_bounding_box()
+        limits = [list(xlim), list(ylim), list(zlim)]
         s_domain['particles'] = self.__build_stochss_domain_particles(domain)
-        return self.get_domain_plot(domains=(domain, s_domain)), [list(xlim), list(ylim), list(zlim)]
+        plot = self.get_domain_plot(domains=(domain, s_domain))
+        return plot, limits
 
     def publish_presentation(self):
-        '''
-        Publish a model or spatial model presentation
-
-        Attributes
-        ----------
-        '''
+        ''' Publish a model or spatial model presentation. '''
         present_dir = os.path.join(self.user_dir, ".presentations")
         if not os.path.exists(present_dir):
             os.mkdir(present_dir)
@@ -962,7 +981,6 @@ class StochSSSpatialModel(StochSSBase):
         except PermissionError as err:
             message = f"You do not have permission to publish this file: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
-
 
     def save_domain(self, domain):
         '''

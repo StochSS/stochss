@@ -285,16 +285,16 @@ class ImportMeshAPIHandler(APIHandler):
         mesh_file = self.request.files['datafile'][0]
         log.info(f"Importing mesh: {mesh_file['filename']}")
         if "typefile" in self.request.files.keys():
-            types_file = self.request.files['typefile'][0]
+            type_file = self.request.files['typefile'][0]
             log.info(f"Importing type descriptions: {type_file['filename']}")
         else:
-            types_file = None
+            type_file = None
         try:
             folder = StochSSFolder(path=dirname)
             mesh_resp = folder.upload('file', mesh_file['filename'], mesh_file['body'])
             resp = {'meshPath': mesh_resp['path'], 'meshFile': mesh_resp['file']}
-            if types_file is not None:
-                types_resp = folder.upload('file', type_files['filename'], type_files['body'])
+            if type_file is not None:
+                types_resp = folder.upload('file', type_file['filename'], type_file['body'])
                 resp['typesPath'] = types_resp['path']
                 resp['typesFile'] = types_resp['file']
             log.info("Successfully uploaded files")
@@ -350,7 +350,8 @@ class LoadLatticeFiles(APIHandler):
         try:
             folder = StochSSFolder(path="")
             test = lambda ext, root, file: bool(
-                "trash" in root.split("/") or file.startswith('.') or 'wkfl' in root or root.startswith('.')
+                "trash" in root.split("/") or file.startswith('.') or \
+                'wkfl' in root or root.startswith('.')
             )
             mesh_files = folder.get_file_list(ext=target_ext, test=test)
             resp = {'meshFiles': mesh_files}

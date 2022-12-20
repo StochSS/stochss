@@ -50,7 +50,8 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
-    def __build_example_html(self, exm_data, home):
+    @classmethod
+    def __build_example_html(cls, exm_data, home):
         row = "<div class='row'>__CONTENTS__</div>"
         entry = "__ALERT__' href='__OPEN_LINK__' role='button' style='width: 100%'>__NAME__</a>"
         entry_a = f"<a class='btn box-shadow btn-outline-{entry}"
@@ -75,13 +76,15 @@ class StochSSBase():
 
         return {"wellMixed": well_mixed, "spatial": spatial}
 
-    def __get_entry(self, entries, name):
+    @classmethod
+    def __get_entry(cls, entries, name):
         for entry in entries:
             if entry['name'] == name:
                 return entry
         return None
 
-    def __get_from_remote(self):
+    @classmethod
+    def __get_from_remote(cls):
         p_path = "/stochss/.proxies.txt"
         rel_path = "https://raw.githubusercontent.com/StochSS/StochSS_Example_Library/main/example_data.json"
         if os.path.exists(p_path):
