@@ -110,6 +110,18 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
+    def get_file(self, path=None):
+        '''
+        Get the file from the path
+
+        Attributes
+        ----------
+        path : str
+            Path to a file object
+        '''
+        file = self.path if path is None else path
+        return file.split('/').pop()
+
     def log(self, level, message):
         '''
         Add a log to the objects internal logs
