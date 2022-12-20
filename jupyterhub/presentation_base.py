@@ -96,6 +96,7 @@ class StochSSBase():
     '''
     user_dir = os.path.expanduser("~") # returns the path to the users home directory
     TEMPLATE_VERSION = 1
+    DOMAIN_TEMPLATE_VERSION = 2
 
     def __init__(self, path=None):
         '''
@@ -109,7 +110,6 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
-
     def log(self, level, message):
         '''
         Add a log to the objects internal logs
@@ -122,7 +122,6 @@ class StochSSBase():
             Message to be logged
         '''
         self.logs.append({"level":level, "message":message})
-
 
     def print_logs(self, log):
         '''
