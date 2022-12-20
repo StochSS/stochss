@@ -560,23 +560,17 @@ class StochSSSpatialModel(StochSSBase):
         # Check if the domain has lattices
         if len(self.model['domain']['lattices'] == 0):
             return self.__write_presentation_file(presentation, dst)
-        # Check if the domain has file based lattices
-        file_based_types = ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice')
-        lattices = list(filter(
-            lambda lattice, file_based=file_based_types: lattice['type'] in file_based,
-            self.model['domain']['lattices'])
-        )
-        if len(lattices) == 0:
-            return self.__write_presentation_file(presentation, dst)
         # Process file based lattices
-        for lattice in lattices:
-            entry = self.__get_presentation_file_entry(lattice['filename'], file)
-            lattice['filename'] = entry['pres_path']
-            presentation['files'][lattice['name']] = entry
-            if lattice['subdomainFile'] != "":
-                sdf_entry = self.__get_presentation_file_entry(lattice['subdomainFile'], file)
-                lattice['subdomainFile'] = sdf_entry['pres_path']
-                presentation['files'][f"{lattice['name']}_sdf"] = sdf_entry
+        file_based_types = ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice')
+        for lattice in self.model['domain']['lattices']:
+            if lattice['type'] in file_based_types:
+                entry = self.__get_presentation_file_entry(lattice['filename'], file)
+                lattice['filename'] = entry['pres_path']
+                presentation['files'][lattice['name']] = entry
+                if lattice['subdomainFile'] != "":
+                    sdf_entry = self.__get_presentation_file_entry(lattice['subdomainFile'], file)
+                    lattice['subdomainFile'] = sdf_entry['pres_path']
+                    presentation['files'][f"{lattice['name']}_sdf"] = sdf_entry
         return self.__write_presentation_file(presentation, dst)
 
     def __get_presentation_file_entry(self, path, presentation_file):

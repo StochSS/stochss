@@ -55,8 +55,13 @@ class JsonFileAPIHandler(BaseHandler):
         log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/json')
         try:
-            model = get_presentation_from_user(owner=owner, file=file, kwargs={"file": file},
-                                               process_func=process_model_presentation)
+            process_funcs = {
+                "mdl": process_wmmodel_presentation, "smdl": process_smodel_presentation
+            }
+            ext = file.split(".").pop()
+            model = get_presentation_from_user(
+                owner=owner, file=file, kwargs={"file": file}, process_func=process_funcs[ext]
+            )
             log.debug(f"Contents of the json file: {model['model']}")
             self.write(model)
         except StochSSAPIError as load_err:
@@ -81,10 +86,14 @@ class DownModelPresentationAPIHandler(BaseHandler):
         log.debug(f"Name to the file: {file}")
         self.set_header('Content-Type', 'application/json')
         try:
-            model = get_presentation_from_user(owner=owner, file=file,
-                                               kwargs={"for_download": True},
-                                               process_func=process_model_presentation)
+            process_funcs = {
+                "mdl": process_wmmodel_presentation, "smdl": process_smodel_presentation
+            }
             ext = file.split(".").pop()
+            model = get_presentation_from_user(
+                owner=owner, file=file, kwargs={"for_download": True},
+                process_func=process_funcs[ext]
+            )
             self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
             log.debug(f"Contents of the json file: {model}")
             self.write(model)
@@ -93,7 +102,7 @@ class DownModelPresentationAPIHandler(BaseHandler):
         self.finish()
 
 
-def process_model_presentation(path, file=None, for_download=False):
+def process_wmmodel_presentation(path, file=None, for_download=False):
     '''
     Get the model presentation data from the file.
 
@@ -110,13 +119,37 @@ def process_model_presentation(path, file=None, for_download=False):
         model = json.load(mdl_file)
     if for_download:
         return model
-    file_objs = {"mdl":StochSSModel, "smdl":StochSSSpatialModel}
-    ext = file.split(".").pop()
-    file_obj = file_objs[ext](model=model)
+    file_obj = StochSSModel(model=model)
     model_pres = file_obj.load()
     file_obj.print_logs(log)
     return model_pres
 
+def process_smodel_presentation(path, file=None, for_download=False):
+    '''
+    Get the model presentation data from the file.
+
+    Attributes
+    ----------
+    path : str
+        Path to the model presentation file.
+    file : str
+        Name of the presentation file.
+    for_download : bool
+        Whether or not the model presentation is being downloaded.
+    '''
+    with open(path, "r", encoding="utf-8") as mdl_file:
+        body = json.load(mdl_file)
+    if "files" not in body:
+        body = StochSSSpatialModel(model=body).load(v1_domain=True)
+    if for_download:
+        return StochSSSpatialModel.get_presentation(**body)
+    for entry in body['files'].values():
+        with open(entry['pres_path'], "w", encoding="utf-8") as entry_fd:
+            entry_fd.write(entry['body'])
+    file_obj = StochSSSpatialModel(model=body['model'])
+    model_pres = file_obj.load()
+    file_obj.print_logs(log)
+    return model_pres
 
 class StochSSModel(StochSSBase):
     '''
@@ -568,16 +601,17 @@ class StochSSSpatialModel(StochSSBase):
         domain = self.model['domain']
 
         if domain['template_version'] == self.DOMAIN_TEMPLATE_VERSION:
-            return
+            return None
 
         self.__update_domain_to_v1(domain)
         # Create version 1 domain directory if needed.
-        v1_dir = os.path.join('/tmp/presentation_cache', "Version 1 Domains")
+        v1_dir = os.path.join('/tmp/presentation_cache', f"{self.model['name']}_domain_files")
         if not os.path.exists(v1_dir):
             os.mkdir(v1_dir)
         # Get the file name for the version 1 domain file
         v1_domain = None
-        filename = os.path.join(v1_dir, self.get_file().replace(".smdl", ".domn"))
+        file = self.get_file().replace(".smdl", ".domn")
+        filename = os.path.join(v1_dir, file)
         if self.path == filename:
             errmsg = f"{self.get_file()} may be a dependency of another doamin (.domn) "
             errmsg += "or a spatial model (.smdl) and can't be updated."
@@ -591,6 +625,11 @@ class StochSSSpatialModel(StochSSBase):
                     self.get_file().replace(".smdl", ".domn"), dirname=v1_dir
                 )
                 v1_domain = None
+        entry = {
+            'body': json.dumps(domain, sort_keys=True, indent=4), 'name': file,
+            'dwn_path': os.path.join(f"{self.model['name']}_domain_files", file),
+            'pres_path': filename
+        }
         # Create the version 1 doman file
         if v1_domain is None:
             with open(filename, "w", encoding="utf-8") as v1_domain_fd:
@@ -620,6 +659,8 @@ class StochSSSpatialModel(StochSSBase):
         }]
         domain['transformations'] = []
         domain['template_version'] = self.DOMAIN_TEMPLATE_VERSION
+
+        return {'lattice1': entry}
 
     @classmethod
     def __update_domain_to_v1(cls, domain=None):
@@ -677,6 +718,22 @@ class StochSSSpatialModel(StochSSBase):
 
         self.model['template_version'] = self.TEMPLATE_VERSION
 
+    @classmethod
+    def get_presentation(cls, model=None, files=None):
+        ''' Get the presentation for download. '''
+        # Check if the domain has lattices
+        if len(model['domain']['lattices'] == 0):
+            return {'model': model, 'files': files}
+        # Process file based lattices
+        file_based_types = ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice')
+        for lattice in model['domain']['lattices']:
+            if lattice['type'] in file_based_types:
+                lattice['filename'] = files[lattice['name']]['dwn_path']
+                if lattice['subdomainFile'] != "":
+                    entry = files[f"{lattice['name']}_sdf"]
+                    lattice['subdomainFile'] = entry['dwn_path']
+        return {'model': model, 'files': files}
+
     def get_domain_plot(self, domain, s_domain):
         '''
         Get a plotly plot of the models domain or a prospective domain
@@ -721,7 +778,7 @@ class StochSSSpatialModel(StochSSBase):
         fig['config'] = {"responsive":True}
         return json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder)
 
-    def load(self):
+    def load(self, v1_domain=False):
         '''
         Reads the spatial model file, updates it to the current format, and stores it in self.model
         '''
@@ -731,8 +788,9 @@ class StochSSSpatialModel(StochSSBase):
             self.model['domain']['template_version'] = 0
 
         self.__update_model_to_current()
-        self.__update_domain_to_current()
-
+        files = self.__update_domain_to_current()
+        if v1_domain:
+            return {'model': self.model, 'files': files}
         plot = self.load_action_preview()
         return {"model": self.model, "domainPlot": json.loads(plot)}
 
