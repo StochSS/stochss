@@ -98,7 +98,12 @@ class StochSSSpatialModel(StochSSBase):
         return NewBC()
 
     @classmethod
-    def __build_geometry(cls, geometry):
+    def __build_geometry(cls, geometry, name=None, formula=None):
+        if formula is None:
+            formula = geometry['formula']
+        if name is None:
+            name = geometry['name']
+
         class NewGeometry(Geometry): # pylint: disable=too-few-public-methods
             '''
             ########################################################################################
@@ -176,7 +181,7 @@ class StochSSSpatialModel(StochSSBase):
         transformations = self.__convert_transformations(s_domain, geometries, lattices)
         try:
             actions = sorted(s_domain['actions'], key=lambda action: action['priority'])
-            for action in actions:
+            for i, action in enumerate(actions):
                 # Get geometry. 'Multi Particle' scope uses geometry from action
                 if action['geometry'] == "":
                     geometry = None
@@ -209,14 +214,7 @@ class StochSSSpatialModel(StochSSBase):
                     # 'Single Particle' scope creates a geometry using actions point.
                     if action['scope'] == 'Single Particle':
                         formula = f"x == {action['point']['x']} and y == {action['point']['y']} and z == {action['point']['z']}"
-                        class NewGeometry(Geometry):
-                            def __init__(self):
-                                pass
-
-                            def inside(self, point, on_boundary):
-                                namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
-                                return eval(formula, {}, namespace)
-                        geometry = NewGeometry()
+                        geometry = self.__build_geometry(None, name=f"SPAGeometry{i + 1}", formula=formula)
                     if action['type'] == "Set Action":
                         domain.add_set_action(
                             geometry=geometry, enable=action['enable'], apply_action=action['enable'], **kwargs
@@ -225,9 +223,9 @@ class StochSSSpatialModel(StochSSBase):
                             curr_pnt = numpy.array([action['point']['x'], action['point']['y'], action['point']['z']])
                             new_pnt = numpy.array([action['newPoint']['x'], action['newPoint']['y'], action['newPoint']['z']])
                             if numpy.count_nonzero(curr_pnt - new_pnt) > 0:
-                                for i, vertex in enumerate(domain.vertices):
+                                for j, vertex in enumerate(domain.vertices):
                                     if numpy.count_nonzero(curr_pnt - vertex) <= 0:
-                                        domain.vertices[i] = new_pnt
+                                        domain.vertices[j] = new_pnt
                                         break
                     else:
                         domain.add_remove_action(
@@ -514,6 +512,40 @@ class StochSSSpatialModel(StochSSBase):
             domain.typeNameMapping[ndx] = name
             domain.listOfTypeIDs.append(ndx)
 
+    def __create_presentation(self, file, dst):
+        presentation = {'model': self.model, 'files': []}
+        # Check if the domain has lattices
+        if len(self.model['domain']['lattices'] == 0):
+            return self.__write_presentation_file(presentation, dst)
+        # Check if the domain has file based lattices
+        lattices = list(filter(
+            lambda lattice: lattice['type'] in ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice'),self.model['domain']['lattices'])
+        )
+        if len(lattices) == 0:
+            return self.__write_presentation_file(presentation, dst)
+        # Process file based lattices
+        for lattice in lattices:
+            entry = self.__get_presentation_file_entry(lattice['filename'], file)
+            lattice['filename'] = entry['pres_path']
+            presentation['files'].append(entry)
+            if lattice['subdomainFile'] != "":
+                sdf_entry = self.__get_presentation_file_entry(lattice['subdomainFile'], file)
+                lattice['subdomainFile'] = sdf_entry['pres_path']
+                presentation['files'].append(sdf_entry)
+        return self.__write_presentation_file(presentation, dst)
+
+    def __get_presentation_file_entry(self, path, presentation_file):
+        entry = {'name': self.get_file(path=path)}
+        entry['dwn_path'] = os.path.join(
+            self.user_dir, f"{self.model['name']}_doamin_files", entry['name']
+        )
+        entry['pres_path'] = os.path.join(
+            "/tmp/presentation_cache", f"{presentation_file}_doamin_files", entry['name']
+        )
+        with open(path, "r" encoding="utf-8") as entry_fd:
+            entry['body'] = entry_fd.read().strip()
+        return entry
+
     @classmethod
     def __get_trace_data(cls, particles, name="", index=None):
         common_rgb_values = [
@@ -539,7 +571,6 @@ class StochSSSpatialModel(StochSSBase):
             marker["color"] = common_rgb_values[(index) % len(common_rgb_values)]
         return plotly.graph_objs.Scatter3d(ids=ids, x=x_data, y=y_data, z=z_data,
                                            name=name, mode="markers", marker=marker)
-
 
     def __load_domain_from_file(self, path):
         try:
@@ -688,6 +719,12 @@ class StochSSSpatialModel(StochSSBase):
                 reaction['types'] = list(range(1, len(self.model['domain']['types'])))
 
         self.model['template_version'] = self.TEMPLATE_VERSION
+
+    @classmethod
+    def __write_presentation_file(cls, body, file):
+        with open(path, "w", encoding="utf-8") as presentation_fd:
+            json.dump(body, presentation_fd, sort_keys=True, indent=4)
+        return True
 
     def convert_to_model(self):
         '''
@@ -914,7 +951,7 @@ class StochSSSpatialModel(StochSSBase):
                 data = None
             else:
                 self.add_presentation_name(file, self.model['name'])
-                data = {"path": dst, "new":True, "model":self.model}
+                data = self.__create_presentation(file, dst)
             query_str = f"?owner={hostname}&file={file}"
             present_link = f"/stochss/present-model{query_str}"
             downloadlink = os.path.join("/stochss/download_presentation",

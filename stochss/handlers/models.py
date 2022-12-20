@@ -390,7 +390,8 @@ class ModelPresentationAPIHandler(APIHandler):
                 message = f"A presentation for {model.get_name()} already exists."
             else:
                 message = f"Successfully published the {model.get_name()} presentation."
-                file_objs[ext](**data)
+                if ext == "mdl":
+                    file_objs[ext](**data)
             resp = {"message": message, "links": links}
             log.info(resp['message'])
             log.debug(f"Response Message: {resp}")
