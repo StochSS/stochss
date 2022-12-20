@@ -199,7 +199,7 @@ class StochSSFolder(StochSSBase):
                     zip_file.write(body)
                 try:
                     with zipfile.ZipFile(ext_path, 'r') as zip_file:
-                        members = set([name.split('/')[0] for name in zip_file.namelist()])
+                        members = {name.split('/')[0] for name in zip_file.namelist()}
                         for name in members:
                             if "Examples" in path:
                                 m_path = self.get_new_path(dst_path=os.path.join("Examples", name))
@@ -228,7 +228,22 @@ class StochSSFolder(StochSSBase):
 
 
     def __upload_model(self, file, body, new_name=None):
-        is_valid, error = self.__validate_model(body, file)
+        try:
+            model = json.loads(body)
+            if "files" in model:
+                for entry in model['files'].values():
+                    if not entry['dwn_path'].startswith(self.user_dir):
+                        entry['dwn_path'] = os.path.join(self.user_dir, entry['dwn_path'])
+                    if not os.path.exists(os.path.dirname(entry['dwn_path'])):
+                        os.makedirs(os.path.dirname(entry['dwn_path']))
+                    with open(entry['dwn_path'], "w", encoding="utf-8") as entry_fd:
+                        entry_fd.write(entry['body'])
+                model = model['model']
+            is_valid, error = self.__validate_model(model, file)
+        except json.decoder.JSONDecodeError:
+            error = [f"The file {file} is not in JSON format."]
+            is_valid =  False
+
         if is_valid:
             ext = "smdl" if json.loads(body)['is_spatial'] else "mdl"
         else:
@@ -286,12 +301,6 @@ class StochSSFolder(StochSSBase):
 
     @classmethod
     def __validate_model(cls, body, file):
-        try:
-            body = json.loads(body)
-        except json.decoder.JSONDecodeError:
-            message = [f"The file {file} is not in JSON format."]
-            return False, message
-
         keys = ["species", "parameters", "reactions", "eventsCollection",
                 "rules", "functionDefinitions"]
         for key in body.keys():
@@ -633,7 +642,7 @@ class StochSSFolder(StochSSBase):
                 zip_file.write(body)
             try:
                 with zipfile.ZipFile(ext_path, 'r') as zip_file:
-                    members = set([name.split('/')[0] for name in zip_file.namelist()])
+                    members = {name.split('/')[0] for name in zip_file.namelist()}
                     for name in members:
                         if "github.com/StochSS/StochSS_Example_Library/raw/" in remote_path:
                             mem_path = self.get_new_path(dst_path=os.path.join("Examples", name))

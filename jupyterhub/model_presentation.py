@@ -144,6 +144,8 @@ def process_smodel_presentation(path, file=None, for_download=False):
     if for_download:
         return StochSSSpatialModel.get_presentation(**body)
     for entry in body['files'].values():
+        if not os.path.exists(os.path.dirname(entry['pres_path'])):
+            os.makedirs(os.path.dirname(entry['pres_path']))
         with open(entry['pres_path'], "w", encoding="utf-8") as entry_fd:
             entry_fd.write(entry['body'])
     file_obj = StochSSSpatialModel(model=body['model'])
@@ -630,10 +632,6 @@ class StochSSSpatialModel(StochSSBase):
             'dwn_path': os.path.join(f"{self.model['name']}_domain_files", file),
             'pres_path': filename
         }
-        # Create the version 1 doman file
-        if v1_domain is None:
-            with open(filename, "w", encoding="utf-8") as v1_domain_fd:
-                json.dump(domain, v1_domain_fd, sort_keys=True, indent=4)
 
         geometries = []
         for d_type in domain['types']:
