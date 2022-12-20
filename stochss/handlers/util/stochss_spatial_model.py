@@ -556,7 +556,7 @@ class StochSSSpatialModel(StochSSBase):
             domain.listOfTypeIDs.append(ndx)
 
     def __create_presentation(self, file, dst):
-        presentation = {'model': self.model, 'files': []}
+        presentation = {'model': self.model, 'files': {}}
         # Check if the domain has lattices
         if len(self.model['domain']['lattices'] == 0):
             return self.__write_presentation_file(presentation, dst)
@@ -572,11 +572,11 @@ class StochSSSpatialModel(StochSSBase):
         for lattice in lattices:
             entry = self.__get_presentation_file_entry(lattice['filename'], file)
             lattice['filename'] = entry['pres_path']
-            presentation['files'].append(entry)
+            presentation['files'][lattice['name']] = entry
             if lattice['subdomainFile'] != "":
                 sdf_entry = self.__get_presentation_file_entry(lattice['subdomainFile'], file)
                 lattice['subdomainFile'] = sdf_entry['pres_path']
-                presentation['files'].append(sdf_entry)
+                presentation['files'][f"{lattice['name']}_sdf"] = sdf_entry
         return self.__write_presentation_file(presentation, dst)
 
     def __get_presentation_file_entry(self, path, presentation_file):
