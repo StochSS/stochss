@@ -90,13 +90,17 @@ class DownModelPresentationAPIHandler(BaseHandler):
                 "mdl": process_wmmodel_presentation, "smdl": process_smodel_presentation
             }
             ext = file.split(".").pop()
-            model = get_presentation_from_user(
+            data = get_presentation_from_user(
                 owner=owner, file=file, kwargs={"for_download": True},
                 process_func=process_funcs[ext]
             )
-            self.set_header('Content-Disposition', f'attachment; filename="{model["name"]}.{ext}"')
-            log.debug(f"Contents of the json file: {model}")
-            self.write(model)
+            if "name" in data:
+                filename = f"{data['name']}.{ext}"
+            else:
+                filename = f"{data['model']['name']}.{ext}"
+            self.set_header('Content-Disposition', f'attachment; filename="{filename}"')
+            log.debug(f"Contents of the json file: {data}")
+            self.write(data)
         except StochSSAPIError as load_err:
             report_error(self, log, load_err)
         self.finish()
@@ -720,7 +724,7 @@ class StochSSSpatialModel(StochSSBase):
     def get_presentation(cls, model=None, files=None):
         ''' Get the presentation for download. '''
         # Check if the domain has lattices
-        if len(model['domain']['lattices'] == 0):
+        if len(model['domain']['lattices']) == 0:
             return {'model': model, 'files': files}
         # Process file based lattices
         file_based_types = ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice')

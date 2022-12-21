@@ -24,6 +24,7 @@ let bootstrap = require('bootstrap');
 let app = require('../app');
 //models
 let Model = require('../models/model');
+let Particles = require('../models/particles');
 //views
 let PageView = require('./base');
 let ModelView = require('../model-view/model-view');
@@ -52,6 +53,10 @@ let ModelPresentationPage = PageView.extend({
     app.getXHR(endpoint, {
       success: (err, response, body) => {
         this.model.set(body.model);
+        if(Object.keys(body.model.domain).includes("particles")) {
+          let particles = new Particles(body.model.domain.particles);
+          this.model.domain.particles = particles;
+        }
         let domainPlot = Boolean(body.domainPlot) ? body.domainPlot : null;
         this.renderSubviews(false, domainPlot);
       },
