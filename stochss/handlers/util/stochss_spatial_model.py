@@ -325,8 +325,7 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-    @classmethod
-    def __convert_lattices(cls, s_domain):
+    def __convert_lattices(self, s_domain):
         try:
             lattices = {}
             for s_lattice in s_domain['lattices']:
@@ -352,16 +351,18 @@ class StochSSSpatialModel(StochSSBase):
                     )
                 elif s_lattice['type'] == "XML Mesh Lattice":
                     lattice = XMLMeshLattice(
-                        s_lattice['filename'], center=center,
-                        subdomain_file=s_lattice['subdomainFile']
+                        os.path.join(self.user_dir, s_lattice['filename']), center=center,
+                        subdomain_file=os.path.join(self.user_dir, s_lattice['subdomainFile'])
                     )
                 elif s_lattice['type'] == "Mesh IO Lattice":
                     lattice = MeshIOLattice(
-                        s_lattice['filename'], center=center,
-                        subdomain_file=s_lattice['subdomainFile']
+                        os.path.join(self.user_dir, s_lattice['filename']), center=center,
+                        subdomain_file=os.path.join(self.user_dir, s_lattice['subdomainFile'])
                     )
                 else:
-                    lattice = StochSSLattice(s_lattice['filename'], center=center)
+                    lattice = StochSSLattice(
+                        os.path.join(self.user_dir, s_lattice['filename']), center=center
+                    )
                 lattices[name] = lattice
             return lattices
         except KeyError as err:
@@ -558,7 +559,7 @@ class StochSSSpatialModel(StochSSBase):
     def __create_presentation(self, file, dst):
         presentation = {'model': self.model, 'files': {}}
         # Check if the domain has lattices
-        if len(self.model['domain']['lattices'] == 0):
+        if len(self.model['domain']['lattices']) == 0:
             return self.__write_presentation_file(presentation, dst)
         # Process file based lattices
         file_based_types = ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice')
