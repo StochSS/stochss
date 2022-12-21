@@ -682,7 +682,7 @@ class StochSSSpatialModel(StochSSBase):
 
         self.__update_domain_to_v1(domain)
         # Create version 1 domain directory if needed.
-        v1_dir = os.path.join(self.user_dir, "Version 1 Domains")
+        v1_dir = os.path.join(self.user_dir, "Version1-Domains")
         if not os.path.exists(v1_dir):
             os.mkdir(v1_dir)
         # Get the file name for the version 1 domain file
@@ -927,14 +927,20 @@ class StochSSSpatialModel(StochSSBase):
         if self.model is None:
             self.__read_model_file()
 
-        self.model['name'] = self.get_name()
-        if "template_version" not in self.model:
-            self.model['template_version'] = 0
-        if "template_version" not in self.model['domain']:
-            self.model['domain']['template_version'] = 0
+        if "domain" in self.model:
+            self.model['name'] = self.get_name()
+            if "template_version" not in self.model:
+                self.model['template_version'] = 0
+            self.__update_model_to_current()
 
-        self.__update_model_to_current()
-        self.__update_domain_to_current()
+            if "template_version" not in self.model['domain']:
+                self.model['domain']['template_version'] = 0
+            self.__update_domain_to_current()
+        else:
+            if "template_version" not in self.model:
+                self.model['template_version'] = 0
+            self.__update_domain_to_current(domain=self.model)
+
         return self.model
 
     def load_action_preview(self, s_domain):
