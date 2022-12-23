@@ -165,7 +165,7 @@ let LoadingPage = PageView.extend({
   },
   uploadFileFromLink: function (filePath, overwrite) {
     setTimeout(() => {
-      $(this.queryByHook("loading-problem").css("display", "block"));
+      $(this.queryByHook("loading-problem")).css("display", "block");
     }, 30000);
     var queryStr = `?path=${filePath}`;
     if(overwrite) {
