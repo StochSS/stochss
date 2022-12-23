@@ -3,6 +3,6 @@ python-libsedml==2.0.9
 python-libcombine==0.2.7
 pyabc==0.12.6
 escapism==1.0.1
-gillespy2==1.7.1
-git+https://github.com/StochSS/SpatialPy@hotfix-remove-action
+gillespy2==1.7.2
+spatialpy==1.1.2
 git+https://github.com/StochSS/sciope.git@master
