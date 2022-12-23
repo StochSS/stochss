@@ -101,21 +101,24 @@ class StochSSNotebook(StochSSBase):
 
     def __create_configuration_cell(self):
         use_solver = self.nb_type not in (self.ENSEMBLE_SIMULATION, self.SPATIAL_SIMULATION)
+        algorithm = self.settings['simulationSettings']['algorithm']
+        is_automatic = self.settings['simulationSettings']['isAutomatic']
         if self.s_model['is_spatial']:
             settings = self.__get_spatialpy_run_setting()
+            settings_list = {
+                "SSA": ["number_of_trajectories", "seed"]
+            }
         else:
             settings = self.__get_gillespy2_run_settings(use_solver=use_solver)
-        is_automatic = self.settings['simulationSettings']['isAutomatic']
-        algorithm = self.settings['simulationSettings']['algorithm']
-        tau_leaping = self.model.get_best_solver_algo("Tau-Leaping").get_solver_settings()
-        tau_hybrid = self.model.get_best_solver_algo("Tau-Hybrid").get_solver_settings()
-        settings_lists = {
-            "ODE": self.model.get_best_solver_algo("ODE").get_solver_settings(),
-            "SSA": self.model.get_best_solver_algo("SSA").get_solver_settings(),
-            "CLE": self.model.get_best_solver_algo("CLE").get_solver_settings(),
-            "Tau-Leaping": tau_leaping,
-            "Hybrid-Tau-Leaping": tau_hybrid
-        }
+            tau_leaping = self.model.get_best_solver_algo("Tau-Leaping").get_solver_settings()
+            tau_hybrid = self.model.get_best_solver_algo("Tau-Hybrid").get_solver_settings()
+            settings_lists = {
+                "ODE": self.model.get_best_solver_algo("ODE").get_solver_settings(),
+                "SSA": self.model.get_best_solver_algo("SSA").get_solver_settings(),
+                "CLE": self.model.get_best_solver_algo("CLE").get_solver_settings(),
+                "Tau-Leaping": tau_leaping,
+                "Hybrid-Tau-Leaping": tau_hybrid
+            }
 
         pad = "    "
         config = ["def configure_simulation():"]
@@ -280,10 +283,23 @@ class StochSSNotebook(StochSSBase):
         try:
             pad = '    '
             tmp = f"{pad}model.__TYPE__ = '__ID__'"
+            xlim = tuple(self.s_model['domain']['x_lim'])
+            ylim = tuple(self.s_model['domain']['y_lim'])
+            zlim = tuple(self.s_model['domain']['z_lim'])
+            rho0 = self.s_model['domain']['rho_0']
+            c_0 = self.s_model['domain']['c_0']
+            p_0 = self.s_model['domain']['p_0']
+            gravity = self.s_model['domain']['gravity']
+            if gravity == [0, 0, 0]:
+                gravity = None
             nb_domain = [
                 "", f"{pad}# Define Domain Type IDs as constants of the Model",
                 "", f"{pad}# Domain",
-                f"{pad}domain = spatialpy.Domain.read_stochss_domain('{self.s_model['path']}')",
+                f"{pad}domain = spatialpy.Domain(",                
+    ################################################################################################
+                f"{pad*2}0, {xlim}, {ylim}, {zlim}, rho0={rho0}, c0={c_0}, P0={p_0}, " \
+                f"gravity={gravity}", f"{pad})",
+                # f"{pad}domain = spatialpy.Domain.read_stochss_domain('{self.s_model['path']}')",
                 f"{pad}model.add_domain(domain)", "",
                 f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
             ]
