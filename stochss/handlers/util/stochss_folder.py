@@ -264,6 +264,8 @@ class StochSSFolder(StochSSBase):
             path = os.path.join(wkgp_path, file)
         else:
             path = os.path.join(self.path, file)
+        if not isinstance(model, str):
+            model = json.dumps(model, sort_keys=True, indent=4)
         new_file = StochSSFile(path=path, new=True, body=model)
         file = new_file.get_file()
         dirname = new_file.get_dir_name()
