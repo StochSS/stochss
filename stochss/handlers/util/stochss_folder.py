@@ -247,7 +247,7 @@ class StochSSFolder(StochSSBase):
             is_valid =  False
 
         if is_valid:
-            ext = "smdl" if json.loads(body)['is_spatial'] else "mdl"
+            ext = "smdl" if model['is_spatial'] else "mdl"
         else:
             ext = "json"
         if new_name is not None:
@@ -264,7 +264,7 @@ class StochSSFolder(StochSSBase):
             path = os.path.join(wkgp_path, file)
         else:
             path = os.path.join(self.path, file)
-        new_file = StochSSFile(path=path, new=True, body=body)
+        new_file = StochSSFile(path=path, new=True, body=model)
         file = new_file.get_file()
         dirname = new_file.get_dir_name()
         if is_valid:
