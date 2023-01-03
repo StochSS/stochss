@@ -24,6 +24,8 @@ import nbformat
 from escapism import escape
 from nbformat import v4 as nbf
 
+import numpy
+
 from gillespy2.solvers.utilities.cpp_support_test import check_cpp_support
 
 from .stochss_base import StochSSBase
@@ -84,6 +86,22 @@ class StochSSNotebook(StochSSBase):
             return 8 + len(name), names
         names.append(name)
         return names_length + 2 + len(name), None
+
+    def __check_reflect_mathod(self, transformation):
+        point1 = numpy.array([
+            transformation['point1']['x'], transformation['point1']['y'], transformation['point1']['z']
+        ])
+        point2 = numpy.array([
+            transformation['point2']['x'], transformation['point2']['y'], transformation['point2']['z']
+        ])
+        point3 = numpy.array([
+            transformation['point3']['x'], transformation['point3']['y'], transformation['point3']['z']
+        ])
+        if numpy.count_nonzero(point3 - point1) == 0:
+            return "Point-Normal"
+        if numpy.count_nonzero(point2 - point1) == 0:
+            return "Point-Normal"
+        return "3-Point"
 
     def __create_common_header_cells(self):
         name = self.s_model['name'].replace('_', ' ').replace('-', ' ').title()
@@ -279,7 +297,7 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
         return index
 
-    def __create_spatial_domain(self, nb_model, index):
+    def __create_spatial_domain(self, cells, nb_model, index):
         try:
             pad = '    '
             tmp = f"{pad}model.__TYPE__ = '__ID__'"
@@ -294,15 +312,16 @@ class StochSSNotebook(StochSSBase):
                 gravity = None
             nb_domain = [
                 "", f"{pad}# Define Domain Type IDs as constants of the Model",
-                "", f"{pad}# Domain",
-                f"{pad}domain = spatialpy.Domain(",                
+                "", f"{pad}# Domain", f"{pad}domain = spatialpy.Domain(", 
+                f"{pad*2}0, {xlim}, {ylim},",
+                f"{pad*2}{zlim}, rho0={rho0}, c0={c_0}, P0={p_0}, gravity={gravity}", f"{pad})", "",
     ################################################################################################
-                f"{pad*2}0, {xlim}, {ylim}, {zlim}, rho0={rho0}, c0={c_0}, P0={p_0}, " \
-                f"gravity={gravity}", f"{pad})",
-                # f"{pad}domain = spatialpy.Domain.read_stochss_domain('{self.s_model['path']}')",
                 f"{pad}model.add_domain(domain)", "",
                 f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
             ]
+            c_index, d_index = self.__create_spatial_geometries(cells, nb_domain, 8)
+            d_index = self.__create_spatial_lattices(nb_domain, d_index)
+            d_index = self.__create_spatial_transformations(nb_domain, d_index)
             d_index = 2
             for d_type in self.s_model['domain']['types']:
                 if d_type['typeID'] > 0:
@@ -315,7 +334,62 @@ class StochSSNotebook(StochSSBase):
             message = "The domain is not properly formatted or "
             message += f"is referenced incorrectly for notebooks: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
-        return index + 1
+        return c_index, index + 1
+
+    def __create_spatial_geometries(self, cells, nb_domain, index):
+        if len(self.s_model['domain']['geometries']) > 0:
+            pad = '    '
+            c_index = 2
+            tmp = f"{pad}__NAME__ = __CLASS_NAME__(__ARGS__)"
+            comb_geoms = {}
+            geometries = ["", f"{pad}# Domain Geometries"]
+            try:
+                for s_geom in self.s_model['domain']['geometries']:
+                    if s_geom['type'] == "Standard Geometry":
+                        if c_index == 2:
+                            cells.insert(c_index, nbf.new_markdown_cell("***\n## Geometries\n***"))
+                            c_index += 1
+                        c_name = s_geom['name'].title().replace("-", "")
+                        geom_cell = [
+                            f"class {c_name}(spatialpy.Geometry):", f"{pad}def __init__(self):",
+                            f"{pad * 2}pass", "", f"{pad}def inside(self, point, on_boundary):",
+                            f"{pad * 2}namespace = " + "{'x': point[0], 'y': point[1], 'z': point[2]}",
+                            f"{pad * 2}formula = '{s_geom['formula']}'",
+                            f"{pad * 2}return eval(formula, " + "{}, namespace)"
+                        ]
+                        cells.insert(c_index, nbf.new_code_cell("\n".join(geom_cell)))
+                        c_index += 1
+                        nb_geom = tmp.replace("__ARGS__", "").replace("__NAME__", s_geom['name'])
+                        nb_geom = nb_geom.replace("__CLASS_NAME__", c_name)
+                        geometries.append(nb_geom)
+                    else:
+                        comb_geoms[s_geom['name']] = s_geom['formula']
+                        nb_geom = tmp.replace("__ARGS__", "'', {}")
+                        nb_geom = nb_geom.replace("__NAME__", s_geom['name'])
+                        nb_geom = nb_geom.replace("__CLASS_NAME__", "spatialpy.CombinatoryGeometry")
+                        geometries.append(nb_geom)
+                        geometries.append(f"{pad}{s_geom['name']}.formula = '{s_geom['formula']}'")
+                if len(comb_geoms) > 0:
+                    geometries.append("")
+                for name, formula in comb_geoms.items():
+                    geo_namespace = []
+                    items = ['and', 'or', 'not', '(', ')']
+                    for item in items:
+                        formula = formula.replace(item, " ")
+                    deps = formula.split(" ")
+                    for i, dep in enumerate(deps):
+                        if dep != '':
+                            entry = f"'{dep}': {dep}"
+                            geo_namespace.insert(i + 1, entry)
+                    nb_geo_ns = f"{pad}{name}.geo_namespace = " + "{" + f"{', '.join(geo_namespace)}" + "}"
+                    geometries.append(nb_geo_ns)
+                nb_domain.insert(index, '\n'.join(geometries))
+                index += 1
+            except KeyError as err:
+                message = "The domain geometry is not properly formatted or "
+                message += f"is referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return c_index + 1, index
 
     def __create_spatial_initial_condition(self, nb_model, index, type_refs):
         if len(self.s_model['initialConditions']) > 0:
@@ -359,7 +433,48 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
         return index
 
-    def __create_spatial_model_cell(self, func_name):
+    def __create_spatial_lattices(self, nb_domain, index):
+        if len(self.s_model['domain']['lattices']) > 0:
+            class_map = {
+                'Cartesian Lattice': 'CartesianLattice',
+                'Spherical Lattice': 'SphericalLattice',
+                'Cylindrical Lattice': 'CylindricalLattice',
+                'XML Mesh Lattice': 'XMLMeshLattice',
+                'Mesh IO Lattice': 'MeshIOLattice',
+                'StochSS Lattice': 'StochSSLattice'
+            }
+            pad = '    '
+            tmp = f"{pad}__NAME__ = spatialpy.__CLASS__(\n{pad*2}__ARGS__\n{pad})"
+            lattices = ["", f"{pad}# Domain Lattices"]
+            try:
+                for s_latt in self.s_model['domain']['lattices']:
+                    l_class = class_map[s_latt['type']]
+                    nb_latt = tmp.replace("__NAME__", s_latt['name']).replace("__CLASS__", l_class)
+                    args = f"center=[{s_latt['center']['x']}, {s_latt['center']['y']}, {s_latt['center']['z']}]"
+                    if l_class == "CartesianLattice":
+                        args = ''.join([
+                            f"{s_latt['xmin']}, {s_latt['xmax']}, {s_latt['deltax']}, {args},\n{pad*2}",
+                            f"ymin={s_latt['ymin']}, ymax={s_latt['ymax']}, deltay={s_latt['deltay']}, ",
+                            f"zmin={s_latt['zmin']}, zmax={s_latt['zmax']}, deltaz={s_latt['deltaz']}"
+                        ])
+                    elif l_class in ("SphericalLattice", "CylindricalLattice"):
+                        length = "" if l_class == "SphericalLattice" else f", {s_latt['length']}"
+                        args = f"{s_latt['radius']}{length}, {s_latt['deltas']}, {args}, deltar={s_latt['deltar']}"
+                    else:
+                        args = f"{s_latt['filename']}, {args}"
+                        if l_class != "StochSSLattice":
+                            args += f", subdomain_file={s_latt['subdomainFile']}"
+                    nb_latt = nb_latt.replace("__ARGS__", args)
+                    lattices.append(nb_latt)
+                nb_domain.insert(index, '\n'.join(lattices))
+                index += 1
+            except KeyError as err:
+                message = "The domain lattice is not properly formatted or "
+                message += f"is referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return index
+
+    def __create_spatial_model_cell(self, cells, func_name):
         pad = '    '
         frequency = self.s_model['modelSettings']['timeStep']
         end = self.s_model['modelSettings']['endSim']
@@ -372,13 +487,13 @@ class StochSSNotebook(StochSSBase):
             f"{pad}model.timespan(tspan)", f"{pad}return model"
         ]
         type_refs = self.__get_object_types()
-        index = self.__create_spatial_domain(nb_model, 2)
+        c_index, index = self.__create_spatial_domain(cells, nb_model, 2)
         index = self.__create_spatial_species(nb_model, index, type_refs)
         index = self.__create_spatial_initial_condition(nb_model, index, type_refs)
         index = self.__create_parameters(nb_model, index)
         index = self.__create_reactions(nb_model, index, type_refs=type_refs)
         index = self.__create_spatial_boundary_conditions(nb_model, index)
-        return nbf.new_code_cell("\n".join(nb_model))
+        return c_index, nbf.new_code_cell("\n".join(nb_model))
 
     def __create_spatial_species(self, nb_model, index, type_refs):
         if len(self.s_model['species']) > 0:
@@ -409,6 +524,58 @@ class StochSSNotebook(StochSSBase):
             except KeyError as err:
                 message = "Species are not properly formatted or "
                 message += f"are referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return index
+
+    def __create_spatial_transformations(self, nb_domain, index):
+        if len(self.s_model['domain']['transformations']) > 0:
+            class_map = {
+                'Translate Transformation': 'TranslationTransformation',
+                'Rotate Transformation': 'RotationTransformation',
+                'Reflect Transformation': 'ReflectionTransformation',
+                'Scale Transformation': 'ScalingTransformation'
+            }
+            pad = '    '
+            tmp = f"{pad}__NAME__ = spatialpy.__CLASS__(\n{pad*2}__ARGS__\n{pad})"
+            nested_trans = {}
+            transformations = ["", f"{pad}# Domain Transformations"]
+            try:
+                for s_tran in self.s_model['domain']['transformations']:
+                    t_class = class_map[s_tran['type']]
+                    nb_tran = tmp.replace("__NAME__", s_tran['name']).replace("__CLASS__", t_class)
+                    geom = "" if s_tran['geometry'] == "" else f", geometry={s_tran['geometry']}"
+                    latt = "" if s_tran['lattice'] == "" else f", lattice={s_tran['lattice']}"
+                    if s_tran['transformation'] != "":
+                        nested_trans[s_tran['name']] = s_tran['transformation']
+                    args = f"{geom}{latt}".replace(", ", f",\n{pad*2}", 1)
+                    if t_class in ("TranslationTransformation", "RotationTransformation"):
+                        point1 = f"[{s_tran['vector'][0]['x']}, {s_tran['vector'][0]['y']}, {s_tran['vector'][0]['z']}]"
+                        point2 = f"[{s_tran['vector'][1]['x']}, {s_tran['vector'][1]['y']}, {s_tran['vector'][1]['z']}]"
+                        angle = "" if t_class == "TranslationTransformation" else f", {s_tran['angle']}"
+                        args = f"({point1}, {point2}){angle}{args}"
+                    elif t_class == "ScalingTransformation":
+                        center = f"[{s_tran['center']['x']}, {s_tran['center']['y']}, {s_tran['center']['z']}]"
+                        args = f"{s_tran['factor']}, center={center}{args}"
+                    else:
+                        point1 = f"[{s_tran['point1']['x']}, {s_tran['point1']['y']}, {s_tran['point1']['z']}]"
+                        if self.__check_reflect_mathod(s_tran) == "Point-Normal":
+                            normal = f"[{s_tran['normal']['x']}, {s_tran['normal']['y']}, {s_tran['normal']['z']}]"
+                            args = f"{point1}, normal={normal}{args}"
+                        else:
+                            point2 = f"[{s_tran['point2']['x']}, {s_tran['point2']['y']}, {s_tran['point2']['z']}]"
+                            point3 = f"[{s_tran['point3']['x']}, {s_tran['point3']['y']}, {s_tran['point3']['z']}]"
+                            args = f"{point1}, point2={point2}, point3={point3}{args}"
+                    nb_tran = nb_tran.replace("__ARGS__", args)
+                    transformations.append(nb_tran)
+                if len(nested_trans) > 0:
+                    transformations.append("")
+                for tran, nested_tran in nested_trans.items():
+                    transformations.append(f"{pad}{tran}.transformation = {nested_trans}")
+                nb_domain.insert(index, '\n'.join(transformations))
+                index += 1
+            except KeyError as err:
+                message = "The domain transformation is not properly formatted or "
+                message += f"is referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
         return index
 
@@ -678,7 +845,8 @@ class StochSSNotebook(StochSSBase):
         if self.nb_type == self.SPATIAL_SIMULATION:
             cells.insert(1, nbf.new_code_cell("import spatialpy"))
             index = self.__create_spatial_boundary_condition_cells(cells)
-            cells.insert(index, self.__create_spatial_model_cell(func_name))
+            index, mdl_cell = self.__create_spatial_model_cell(cells, func_name)
+            cells.insert(index, mdl_cell)
         else:
             cells.insert(1, nbf.new_code_cell("import gillespy2"))
             cells.insert(3, self.__create_well_mixed_model_cell(func_name))
