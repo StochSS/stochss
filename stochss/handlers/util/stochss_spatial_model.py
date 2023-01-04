@@ -104,14 +104,14 @@ class StochSSSpatialModel(StochSSBase):
             Custom SpatialPy Geometry
             ########################################################################################
             '''
-            __class__ = f"__main__.{geometry['name']}"
+            __class__ = f"__main__.{name}"
             def __init__(self):
                 pass
 
             def inside(self, point, on_boundary): # pylint: disable=no-self-use
                 ''' Custom inside function for geometry. '''
                 namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
-                return eval(geometry['formula'], {}, namespace)
+                return eval(formula, {}, namespace)
         return NewGeometry()
 
     @classmethod
@@ -165,6 +165,11 @@ class StochSSSpatialModel(StochSSBase):
 
     def __convert_actions(self, domain, s_domain, type_ids):
         geometries = self.__convert_geometries(s_domain)
+        for name, geometry in geometries.items():
+            print(name)
+            if hasattr(geometry, "geo_namespace"):
+                print("-->", geometry.geo_namespace)
+                print("-->", geometry.formula)
         lattices = self.__convert_lattices(s_domain)
         transformations = self.__convert_transformations(s_domain, geometries, lattices)
         try:
@@ -293,7 +298,7 @@ class StochSSSpatialModel(StochSSBase):
                     comb_geoms.append(name)
             for name in comb_geoms:
                 geo_namespace = {
-                    key: geometry for key, geometry in geometries.items() if key != name
+                    key: geometry for key, geometry in geometries.items() if key != name and key in geometries[name].formula
                 }
                 geometries[name].geo_namespace = geo_namespace
             return geometries
