@@ -433,7 +433,7 @@ class StochSSNotebook(StochSSBase):
                     geometries.append("")
                 for name, formula in comb_geoms.items():
                     geo_namespace = []
-                    items = ['and', 'or', 'not', '(', ')']
+                    items = [' and ', ' or ', ' not ', '(', ')']
                     for item in items:
                         formula = formula.replace(item, " ")
                     deps = formula.split(" ")
