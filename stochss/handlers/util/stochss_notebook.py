@@ -87,6 +87,16 @@ class StochSSNotebook(StochSSBase):
         names.append(name)
         return names_length + 2 + len(name), None
 
+    def __build_geometry(self, name, formula):
+        pad = '    '
+        return "\n".join([
+            f"class {name}(spatialpy.Geometry):", f"{pad}def __init__(self):",
+            f"{pad * 2}pass", "", f"{pad}def inside(self, point, on_boundary):",
+            f"{pad * 2}namespace = " + "{'x': point[0], 'y': point[1], 'z': point[2]}",
+            f"{pad * 2}formula = '{formula}'",
+            f"{pad * 2}return eval(formula, " + "{}, namespace)"
+        ])
+
     def __check_reflect_mathod(self, transformation):
         point1 = numpy.array([
             transformation['point1']['x'], transformation['point1']['y'], transformation['point1']['z']
@@ -250,6 +260,61 @@ class StochSSNotebook(StochSSBase):
         nb_run = "\n".join(nb_run)
         return nbf.new_markdown_cell(nb_run_header), nbf.new_code_cell(nb_run)
 
+    def __create_spatial_actions(self, cells, c_index, nb_domain, index, type_refs):
+        if len(self.s_model['domain']['actions']) > 0:
+            func_map = {
+                "Fill Action": "add_fill_action",
+                "Remove Action": "add_remove_action",
+                "Set Action": "add_set_action"
+            }
+            pad = '    '
+            args_tmp = "__GEOMETRY____ENABLE____PROPS__"
+            tmp = f"{pad}domain.__FUNCTION__(\n{pad*2}__ARGS__\n{pad})"
+            actions = ["", f"{pad}# Domain Actions"]
+            try:
+                for i, s_act in enumerate(self.s_model['domain']['actions']):
+                    p_x = s_act['point']['x']
+                    p_y = s_act['point']['y']
+                    p_z = s_act['point']['z']
+                    if s_act['type'] == "Fill Action" and s_act['scope'] == "Single Particle":
+                        nb_act = tmp.replace("__FUNCTION__", "add_point")
+                        args = args_tmp.replace("__GEOMETRY____ENABLE__", f"[{p_x}, {p_y}, {p_z}]")
+                    else:
+                        nb_act = tmp.replace("__FUNCTION__", func_map[s_act['type']])
+                        args = args_tmp.replace("__ENABLE__", f"enable={s_act['enable']}")
+                        if s_act['scope'] == "Single Particle":
+                            formula = f"x == {p_x} and y == {p_y} and z == {p_z}"
+                            c_name = f"SPAGeometry{i + 1}"
+                            cells.insert(c_index, nbf.new_code_cell(
+                                self.__build_geometry(c_name, s_geom['formula'])
+                            ))
+                            c_index += 1
+                            geometry = f"geometry={c_name}(), "
+                        elif s_act['geometry'] != "":
+                            geometry = f"geometry={s_act['geometry']}, "
+                        else:
+                            geometry = ""
+                        args = args.replace("__GEOMETRY__", geometry)
+                        if s_act['type'] == "Fill Action":
+                            lattice = "None" if s_act['lattice'] == "" else s_act['lattice']
+                            args = f"lattice={lattice}, {args}"
+                    if s_act['useProps'] and s_act['type'] != "Remove Action":
+                        props = "".join([
+                            f"type_id={type_refs[s_act['typeID']]}, mass={s_act['mass']}, ",
+                            f"vol={s_act['vol']},\n{pad*2}rho={s_act['rho']}, ",
+                            f"nu={s_act['nu']}, c={s_act['c']}, fixed={s_act['fixed']}"
+                        ])
+                        args = args.replace("__PROPS__", f",\n{pad*2}{props}")
+                    nb_act = nb_act.replace("__ARGS__", args)
+                    actions.append(nb_act)
+                nb_domain.insert(index, '\n'.join(actions))
+                index += 1
+            except KeyError as err:
+                message = "The domain actions is not properly formatted or "
+                message += f"is referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return index
+
     def __create_spatial_boundary_conditions(self, nb_model, index):
         if len(self.s_model['boundaryConditions']) > 0:
             pad = '    '
@@ -297,7 +362,7 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
         return index
 
-    def __create_spatial_domain(self, cells, nb_model, index):
+    def __create_spatial_domain(self, cells, nb_model, index, type_refs):
         try:
             pad = '    '
             tmp = f"{pad}model.__TYPE__ = '__ID__'"
@@ -315,13 +380,13 @@ class StochSSNotebook(StochSSBase):
                 "", f"{pad}# Domain", f"{pad}domain = spatialpy.Domain(", 
                 f"{pad*2}0, {xlim}, {ylim},",
                 f"{pad*2}{zlim}, rho0={rho0}, c0={c_0}, P0={p_0}, gravity={gravity}", f"{pad})", "",
-    ################################################################################################
                 f"{pad}model.add_domain(domain)", "",
                 f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
             ]
             c_index, d_index = self.__create_spatial_geometries(cells, nb_domain, 8)
             d_index = self.__create_spatial_lattices(nb_domain, d_index)
             d_index = self.__create_spatial_transformations(nb_domain, d_index)
+            d_index = self.__create_spatial_actions(cells, c_index, nb_domain, d_index, type_refs)
             d_index = 2
             for d_type in self.s_model['domain']['types']:
                 if d_type['typeID'] > 0:
@@ -350,14 +415,9 @@ class StochSSNotebook(StochSSBase):
                             cells.insert(c_index, nbf.new_markdown_cell("***\n## Geometries\n***"))
                             c_index += 1
                         c_name = s_geom['name'].title().replace("-", "")
-                        geom_cell = [
-                            f"class {c_name}(spatialpy.Geometry):", f"{pad}def __init__(self):",
-                            f"{pad * 2}pass", "", f"{pad}def inside(self, point, on_boundary):",
-                            f"{pad * 2}namespace = " + "{'x': point[0], 'y': point[1], 'z': point[2]}",
-                            f"{pad * 2}formula = '{s_geom['formula']}'",
-                            f"{pad * 2}return eval(formula, " + "{}, namespace)"
-                        ]
-                        cells.insert(c_index, nbf.new_code_cell("\n".join(geom_cell)))
+                        cells.insert(
+                            c_index, nbf.new_code_cell(self.__build_geometry(c_name, s_geom['formula']))
+                        )
                         c_index += 1
                         nb_geom = tmp.replace("__ARGS__", "").replace("__NAME__", s_geom['name'])
                         nb_geom = nb_geom.replace("__CLASS_NAME__", c_name)
@@ -385,11 +445,12 @@ class StochSSNotebook(StochSSBase):
                     geometries.append(nb_geo_ns)
                 nb_domain.insert(index, '\n'.join(geometries))
                 index += 1
+                c_index += 1
             except KeyError as err:
                 message = "The domain geometry is not properly formatted or "
                 message += f"is referenced incorrectly for notebooks: {str(err)}"
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
-        return c_index + 1, index
+        return c_index, index
 
     def __create_spatial_initial_condition(self, nb_model, index, type_refs):
         if len(self.s_model['initialConditions']) > 0:
@@ -487,7 +548,7 @@ class StochSSNotebook(StochSSBase):
             f"{pad}model.timespan(tspan)", f"{pad}return model"
         ]
         type_refs = self.__get_object_types()
-        c_index, index = self.__create_spatial_domain(cells, nb_model, 2)
+        c_index, index = self.__create_spatial_domain(cells, nb_model, 2, type_refs)
         index = self.__create_spatial_species(nb_model, index, type_refs)
         index = self.__create_spatial_initial_condition(nb_model, index, type_refs)
         index = self.__create_parameters(nb_model, index)
@@ -703,8 +764,7 @@ class StochSSNotebook(StochSSBase):
         nb_model = [
             f"def {func_name}(parameter_values=None):",
             f"{pad}model = gillespy2.Model(name='{self.s_model['name']}')",
-            f"{pad}model.volume = {self.s_model['volume']}",
-            "", f"{pad}# Timespan",
+            f"{pad}model.volume = {self.s_model['volume']}", "", f"{pad}# Timespan",
             f"{pad}tspan = gillespy2.TimeSpan.arange({frequency}, t={end})",
             f"{pad}model.timespan(tspan)", f"{pad}return model"
         ]
@@ -791,9 +851,6 @@ class StochSSNotebook(StochSSBase):
         return index
 
     def __get_gillespy2_run_settings(self, use_solver=False):
-        # is_automatic = self.settings['simulationSettings']['isAutomatic']
-        # if self.nb_type in (self.PARAMETER_SWEEP_1D, self.PARAMETER_SWEEP_2D) and is_automatic:
-        #     self.settings['simulationSettings']['realizations'] = 20
         settings = self.settings['simulationSettings']
         # Map algorithm settings for GillesPy2. GillesPy2 requires snake case, remap camelCase
         settings_map = {
