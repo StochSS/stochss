@@ -192,7 +192,7 @@ module.exports = View.extend({
   renderLatticeFileSelects: function () {
     var queryStr = `?ext=${this.accept}`;
     if(this.typeFiles === null) {
-      queryStr = `${queryStr}&includeTypes=True`;
+      queryStr += `${queryStr}&includeTypes=True`;
     }
     let endpoint = `${path.join(app.getApiPath(), 'spatial-model/lattice-files')}${queryStr}`;
     app.getXHR(endpoint, {success: (err, response, body) => {
@@ -250,7 +250,7 @@ module.exports = View.extend({
       this.typeSelectView.remove();
     }
     var file = this.typeFiles.files.filter((file) => {
-      if(file[1] === this.model.filename) {
+      if(file[1] === this.model.subdomainFile.split('/').pop()) {
         return file;
       }
     });
