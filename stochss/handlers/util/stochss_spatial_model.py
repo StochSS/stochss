@@ -110,7 +110,7 @@ class StochSSSpatialModel(StochSSBase):
 
             def inside(self, point, on_boundary): # pylint: disable=no-self-use
                 ''' Custom inside function for geometry. '''
-                namespace = {'x': point[0], 'y': point[1], 'z': point[2]}
+                namespace = {'x': point[0], 'y': point[1], 'z': point[2], 'on_boundary': on_boundary}
                 return eval(formula, {}, namespace)
         return NewGeometry()
 
@@ -180,7 +180,7 @@ class StochSSSpatialModel(StochSSBase):
                 # Build props arg
                 if action['type'] in ('Fill Action', 'Set Action'):
                     kwargs = {
-                        'type_id': type_ids[action['typeID']], 'mass': action['mass'],
+                        'type_id': type_ids[action['typeID']].replace("-", ""), 'mass': action['mass'],
                         'vol': action['vol'], 'rho': action['rho'], 'nu': action['nu'],
                         'c': action['c'], 'fixed': action['fixed']
                     }
@@ -293,7 +293,8 @@ class StochSSSpatialModel(StochSSBase):
                     comb_geoms.append(name)
             for name in comb_geoms:
                 geo_namespace = {
-                    key: geometry for key, geometry in geometries.items() if key != name and key in geometries[name].formula
+                    key: geometry for key, geometry in geometries.items() \
+                                    if key != name and key in geometries[name].formula
                 }
                 geometries[name].geo_namespace = geo_namespace
             return geometries
