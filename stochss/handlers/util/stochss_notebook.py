@@ -29,14 +29,13 @@ import numpy
 from gillespy2.solvers.utilities.cpp_support_test import check_cpp_support
 
 from .stochss_base import StochSSBase
-from .stochss_errors import StochSSFileNotFoundError, StochSSModelFormatError, \
-                            StochSSPermissionsError
+from .stochss_errors import StochSSFileNotFoundError, StochSSModelFormatError, StochSSPermissionsError
 
 class StochSSNotebook(StochSSBase):
     '''
-    ################################################################################################
+    ####################################################################################################################
     StochSS notebook object
-    ################################################################################################
+    ####################################################################################################################
     '''
     ENSEMBLE_SIMULATION = 1
     SPATIAL_SIMULATION = 2
@@ -45,9 +44,8 @@ class StochSSNotebook(StochSSBase):
     MODEL_EXPLORATION = 5
     MODEL_INFERENCE = 6
     SOLVER_MAP = {"SSACSolver":"SSA", "NumPySSASolver":"SSA", "ODESolver":"ODE", "Solver":"SSA",
-                  "TauLeapingSolver":"Tau-Leaping", "TauHybridSolver":"Hybrid-Tau-Leaping",
-                  "ODECSolver":"ODE", "TauLeapingCSolver":"Tau-Leaping",
-                  "TauHybridCSolver":"Hybrid-Tau-Leaping"}
+                  "TauLeapingSolver":"Tau-Leaping", "TauHybridSolver":"Hybrid-Tau-Leaping", "ODECSolver":"ODE",
+                  "TauLeapingCSolver":"Tau-Leaping", "TauHybridCSolver":"Hybrid-Tau-Leaping"}
 
     def __init__(self, path, new=False, models=None, settings=None):
         '''Intitialize a notebook object and if its new create it on the users file system
@@ -80,24 +78,26 @@ class StochSSNotebook(StochSSBase):
             if changed:
                 self.path = n_path.replace(self.user_dir + '/', "")
 
-    def __add_name(self, names, names_length, name, max_len=100):
+    @classmethod
+    def __add_name(cls, names, names_length, name, max_len=100):
         if names_length + len(name) > max_len:
             names = [f"{', '.join(names)},\n{' ' * (8 + 100 - max_len)}{name}"]
             return 8 + len(name), names
         names.append(name)
         return names_length + 2 + len(name), None
 
-    def __build_geometry(self, name, formula):
+    @classmethod
+    def __build_geometry(cls, name, formula):
         pad = '    '
         return "\n".join([
             f"class {name}(spatialpy.Geometry):", f"{pad}def __init__(self):",
             f"{pad * 2}pass", "", f"{pad}def inside(self, point, on_boundary):",
             f"{pad * 2}namespace = " + "{'x': point[0], 'y': point[1], 'z': point[2]}",
-            f"{pad * 2}formula = '{formula}'",
-            f"{pad * 2}return eval(formula, " + "{}, namespace)"
+            f"{pad * 2}formula = '{formula}'", f"{pad * 2}return eval(formula, " + "{}, namespace)"
         ])
 
-    def __check_reflect_mathod(self, transformation):
+    @classmethod
+    def __check_reflect_mathod(cls, transformation):
         point1 = numpy.array([
             transformation['point1']['x'], transformation['point1']['y'], transformation['point1']['z']
         ])
@@ -119,7 +119,6 @@ class StochSSNotebook(StochSSBase):
         if 'annotation' in self.s_model and self.s_model['annotation'] != '':
             nb_title = f"{nb_title}\n{self.s_model['annotation']}\n***"
         nb_title = f"{nb_title}\n## Setup the Environment\n***"
-
         return [
             nbf.new_markdown_cell(nb_title),
             nbf.new_markdown_cell(f"***\n## Create the {name} Model\n***"),
@@ -133,19 +132,15 @@ class StochSSNotebook(StochSSBase):
         is_automatic = self.settings['simulationSettings']['isAutomatic']
         if self.s_model['is_spatial']:
             settings = self.__get_spatialpy_run_setting()
-            settings_list = {
-                "SSA": ["number_of_trajectories", "seed"]
-            }
+            settings_lists = {"SSA": ["number_of_trajectories", "seed"]}
         else:
             settings = self.__get_gillespy2_run_settings(use_solver=use_solver)
-            tau_leaping = self.model.get_best_solver_algo("Tau-Leaping").get_solver_settings()
-            tau_hybrid = self.model.get_best_solver_algo("Tau-Hybrid").get_solver_settings()
             settings_lists = {
                 "ODE": self.model.get_best_solver_algo("ODE").get_solver_settings(),
                 "SSA": self.model.get_best_solver_algo("SSA").get_solver_settings(),
                 "CLE": self.model.get_best_solver_algo("CLE").get_solver_settings(),
-                "Tau-Leaping": tau_leaping,
-                "Hybrid-Tau-Leaping": tau_hybrid
+                "Tau-Leaping": self.model.get_best_solver_algo("Tau-Leaping").get_solver_settings(),
+                "Hybrid-Tau-Leaping": self.model.get_best_solver_algo("Tau-Hybrid").get_solver_settings()
             }
 
         pad = "    "
@@ -245,7 +240,8 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
         return index
 
-    def __create_run(self, results):
+    @classmethod
+    def __create_run(cls, results):
         nb_run_header = "***\n## Run the Simulation\n***"
         nb_run = ["kwargs = configure_simulation()"]
         if results is None:
@@ -285,9 +281,7 @@ class StochSSNotebook(StochSSBase):
                         if s_act['scope'] == "Single Particle":
                             formula = f"x == {p_x} and y == {p_y} and z == {p_z}"
                             c_name = f"SPAGeometry{i + 1}"
-                            cells.insert(c_index, nbf.new_code_cell(
-                                self.__build_geometry(c_name, s_geom['formula'])
-                            ))
+                            cells.insert(c_index, nbf.new_code_cell(self.__build_geometry(c_name, formula)))
                             c_index += 1
                             geometry = f"geometry={c_name}(), "
                         elif s_act['geometry'] != "":
@@ -296,13 +290,11 @@ class StochSSNotebook(StochSSBase):
                             geometry = ""
                         args = args.replace("__GEOMETRY__", geometry)
                         if s_act['type'] == "Fill Action":
-                            lattice = "None" if s_act['lattice'] == "" else s_act['lattice']
-                            args = f"lattice={lattice}, {args}"
+                            args = f"lattice={'None' if s_act['lattice'] == '' else s_act['lattice']}, {args}"
                     if s_act['useProps'] and s_act['type'] != "Remove Action":
                         props = "".join([
-                            f"type_id={type_refs[s_act['typeID']]}, mass={s_act['mass']}, ",
-                            f"vol={s_act['vol']},\n{pad*2}rho={s_act['rho']}, ",
-                            f"nu={s_act['nu']}, c={s_act['c']}, fixed={s_act['fixed']}"
+                            f"type_id={type_refs[s_act['typeID']]}, mass={s_act['mass']}, vol={s_act['vol']},\n{pad*2}",
+                            f"rho={s_act['rho']}, nu={s_act['nu']}, c={s_act['c']}, fixed={s_act['fixed']}",
                         ])
                         args = args.replace("__PROPS__", f",\n{pad*2}{props}")
                     nb_act = nb_act.replace("__ARGS__", args)
@@ -376,12 +368,10 @@ class StochSSNotebook(StochSSBase):
             if gravity == [0, 0, 0]:
                 gravity = None
             nb_domain = [
-                "", f"{pad}# Define Domain Type IDs as constants of the Model",
-                "", f"{pad}# Domain", f"{pad}domain = spatialpy.Domain(", 
-                f"{pad*2}0, {xlim}, {ylim},",
+                "", f"{pad}# Define Domain Type IDs as constants of the Model", "", f"{pad}# Domain",
+                f"{pad}domain = spatialpy.Domain(", f"{pad*2}0, {xlim}, {ylim},",
                 f"{pad*2}{zlim}, rho0={rho0}, c0={c_0}, P0={p_0}, gravity={gravity}", f"{pad})", "",
-                f"{pad}model.add_domain(domain)", "",
-                f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
+                f"{pad}model.add_domain(domain)", "", f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
             ]
             c_index, d_index = self.__create_spatial_geometries(cells, nb_domain, 8)
             d_index = self.__create_spatial_lattices(nb_domain, d_index)
@@ -415,17 +405,14 @@ class StochSSNotebook(StochSSBase):
                             cells.insert(c_index, nbf.new_markdown_cell("***\n## Geometries\n***"))
                             c_index += 1
                         c_name = s_geom['name'].title().replace("-", "")
-                        cells.insert(
-                            c_index, nbf.new_code_cell(self.__build_geometry(c_name, s_geom['formula']))
-                        )
+                        cells.insert(c_index, nbf.new_code_cell(self.__build_geometry(c_name, s_geom['formula'])))
                         c_index += 1
                         nb_geom = tmp.replace("__ARGS__", "").replace("__NAME__", s_geom['name'])
                         nb_geom = nb_geom.replace("__CLASS_NAME__", c_name)
                         geometries.append(nb_geom)
                     else:
                         comb_geoms[s_geom['name']] = s_geom['formula']
-                        nb_geom = tmp.replace("__ARGS__", "'', {}")
-                        nb_geom = nb_geom.replace("__NAME__", s_geom['name'])
+                        nb_geom = tmp.replace("__ARGS__", "'', {}").replace("__NAME__", s_geom['name'])
                         nb_geom = nb_geom.replace("__CLASS_NAME__", "spatialpy.CombinatoryGeometry")
                         geometries.append(nb_geom)
                         geometries.append(f"{pad}{s_geom['name']}.formula = '{s_geom['formula']}'")
@@ -473,9 +460,7 @@ class StochSSNotebook(StochSSBase):
                         names = n_names
                     nb_init_cond = tmp.replace("__OBJECT__", ic_types[s_init_cond['icType']])
                     nb_init_cond = nb_init_cond.replace("__NAME__", name)
-                    nb_init_cond = nb_init_cond.replace(
-                        "__SPECIES__", s_init_cond['specie']['name']
-                    )
+                    nb_init_cond = nb_init_cond.replace("__SPECIES__", s_init_cond['specie']['name'])
                     nb_init_cond = nb_init_cond.replace("__COUNT__", str(s_init_cond['count']))
                     if s_init_cond['icType'] == "Place":
                         location = f"location=[{s_init_cond['x']}, {s_init_cond['y']}, {s_init_cond['z']}]"
@@ -542,8 +527,7 @@ class StochSSNotebook(StochSSBase):
         timestep_size = self.s_model['modelSettings']['timestepSize']
         nb_model = [
             f"def {func_name}(parameter_values=None):",
-            f"{pad}model = spatialpy.Model(name='{self.s_model['name']}')",
-            "", f"{pad}# Timespan",
+            f"{pad}model = spatialpy.Model(name='{self.s_model['name']}')", "", f"{pad}# Timespan",
             f"{pad}tspan = spatialpy.TimeSpan.arange({frequency}, t={end}, timestep_size={timestep_size})",
             f"{pad}model.timespan(tspan)", f"{pad}return model"
         ]
@@ -631,7 +615,7 @@ class StochSSNotebook(StochSSBase):
                 if len(nested_trans) > 0:
                     transformations.append("")
                 for tran, nested_tran in nested_trans.items():
-                    transformations.append(f"{pad}{tran}.transformation = {nested_trans}")
+                    transformations.append(f"{pad}{tran}.transformation = {nested_tran}")
                 nb_domain.insert(index, '\n'.join(transformations))
                 index += 1
             except KeyError as err:
@@ -640,7 +624,8 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
         return index
 
-    def __create_stoich_species(self, stoich_species):
+    @classmethod
+    def __create_stoich_species(cls, stoich_species):
         species = {}
         for stoich_spec in stoich_species:
             name = stoich_spec['specie']['name']
@@ -657,8 +642,7 @@ class StochSSNotebook(StochSSBase):
             l2_args = f"{pad*2}assignments=__ASSIGNMENTS__,"
             l3_args = f"{pad*2}delay=__DELAY__, priority='__PRIORITY__',"
             l4_args = f"{pad*2}use_values_from_trigger_time=__UVFTT__"
-            args = f"{l1_args}\n{l2_args}\n{l3_args}\n{l4_args}"
-            tmp = f"{pad}__NAME__ = gillespy2.Event(\n{args}\n{pad})"
+            tmp = f"{pad}__NAME__ = gillespy2.Event(\n{l1_args}\n{l2_args}\n{l3_args}\n{l4_args}\n{pad})"
             names = []
             n_len = 8
             triggers = ["", f"{pad}# Event Triggers"]
@@ -677,14 +661,10 @@ class StochSSNotebook(StochSSBase):
                     if n_names is not None:
                         names = n_names
 
-                    nb_event = tmp.replace("__NAME__", name)
-                    nb_event = nb_event.replace("__TRIGGER__", t_name)
-                    nb_event = nb_event.replace("__ASSIGNMENTS__", a_names)
-                    nb_event = nb_event.replace("__DELAY__", delay)
+                    nb_event = tmp.replace("__NAME__", name).replace("__TRIGGER__", t_name)
+                    nb_event = nb_event.replace("__ASSIGNMENTS__", a_names).replace("__DELAY__", delay)
                     nb_event = nb_event.replace("__PRIORITY__", s_event['priority'])
-                    nb_event = nb_event.replace(
-                        "__UVFTT__", str(s_event['useValuesFromTriggerTime'])
-                    )
+                    nb_event = nb_event.replace("__UVFTT__", str(s_event['useValuesFromTriggerTime']))
                     events.append(nb_event)
                 events.append(f"{pad}model.add_event([\n{pad*2}{', '.join(names)}\n{pad}])")
                 nb_model.insert(index, '\n'.join(triggers))
@@ -717,7 +697,8 @@ class StochSSNotebook(StochSSBase):
             assignments.append(nb_assignment)
         return f"[{', '.join(names)}]", assignments
 
-    def __create_well_mixed_event_trigger(self, s_event):
+    @classmethod
+    def __create_well_mixed_event_trigger(cls, s_event):
         pad = '    '
         name = f"{s_event['name']}_trig"
         value = s_event['initialValue']
