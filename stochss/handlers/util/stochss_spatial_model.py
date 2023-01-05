@@ -165,11 +165,6 @@ class StochSSSpatialModel(StochSSBase):
 
     def __convert_actions(self, domain, s_domain, type_ids):
         geometries = self.__convert_geometries(s_domain)
-        for name, geometry in geometries.items():
-            print(name)
-            if hasattr(geometry, "geo_namespace"):
-                print("-->", geometry.geo_namespace)
-                print("-->", geometry.formula)
         lattices = self.__convert_lattices(s_domain)
         transformations = self.__convert_transformations(s_domain, geometries, lattices)
         try:

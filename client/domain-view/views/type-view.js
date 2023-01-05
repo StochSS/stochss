@@ -89,6 +89,7 @@ module.exports = View.extend({
   updateDepsOptions: function (e) {
     let typeID = this.model.typeID;
     this.model.name = e.target.value;
+    this.updateViewer();
     this.model.collection.parent.trigger(
       'update-particle-type-options', {currName: typeID, newName: this.model.typeID}
     );
