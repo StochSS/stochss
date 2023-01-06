@@ -21,6 +21,7 @@
         "lattices": [],
         "p_0": 100.0,
         "rho_0": 1.0,
+        "shapes": [],
         "size": null,
         "static": true,
         "template_version": 2,

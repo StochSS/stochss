@@ -715,6 +715,7 @@ class StochSSSpatialModel(StochSSBase):
             with open(filename, "w", encoding="utf-8") as v1_domain_fd:
                 json.dump(domain, v1_domain_fd, sort_keys=True, indent=4)
 
+        shapes = []
         geometries = []
         for d_type in domain['types']:
             if 'geometry' in d_type and d_type['geometry']:
@@ -723,12 +724,14 @@ class StochSSSpatialModel(StochSSBase):
                     'type': 'Standard Geometry',
                     'formula': d_type['geometry']
                 })
+                # TODO: Convert old type geometries to shapes
         domain['actions'] = [{
             'type': 'Fill Action', 'scope': 'Multi Particle', 'priority': 1, 'enable': True,
             'geometry': '', 'lattice': 'lattice1', 'useProps': False,
             'point': {'x': 0, 'y': 0, 'z': 0}, 'newPoint': {'x': 0, 'y': 0, 'z': 0},
             'c': 10, 'fixed': False, 'mass': 1.0, 'nu': 0.0, 'rho': 1.0, 'typeID': 0, 'vol': 0.0
         }]
+        domain['shapes'] = shapes
         domain['geometries'] = geometries
         domain['lattices'] = [{
             'name': 'lattice1', 'type': 'StochSS Lattice',
