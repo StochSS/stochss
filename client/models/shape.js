@@ -28,6 +28,7 @@ module.exports = State.extend({
     deltay: 'number',
     deltaz: 'number',
     depth: 'number',
+    fillable: 'boolean',
     formula: 'number',
     height: 'number',
     lattice: 'string',
@@ -40,10 +41,6 @@ module.exports = State.extend({
     center: Point
   },
   session: {
-    selected: {
-      type: 'boolean',
-      default: false
-    },
     inUse: {
       type: 'boolean',
       default: false,

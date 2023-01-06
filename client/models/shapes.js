@@ -34,16 +34,16 @@ module.exports = Collection.extend({
       deltax: 0,
       deltay: 0,
       deltaz: 0,
-      depth: 0
+      depth: 0,
+      fillable: false,
       formula: '',
       height: 0,
-      lattice: '',
+      lattice: type,
       length: 0,
       name: name,
       radius: 0,
-      type: type
+      type: 'Standard'
     });
-    shape.selected = true;
     shape.center = this.getNewPoint();
     this.add(shape);
     return name;
