@@ -552,10 +552,18 @@ class StochSSSpatialModel(StochSSBase):
         domain.typeNameMapping = {0: "type_UnAssigned"}
         domain.listOfTypeIDs = [0]
         for ndx, name in type_ids.items():
-            name = f"type_{name}"
-            domain.typeNdxMapping[name] = ndx
-            domain.typeNameMapping[ndx] = name
-            domain.listOfTypeIDs.append(ndx)
+            if ndx not in domain.typeNameMapping:
+                name = f"type_{name}"
+                domain.typeNdxMapping[name] = ndx
+                domain.typeNameMapping[ndx] = name
+                domain.listOfTypeIDs.append(ndx)
+        types = list(set(domain.type_id))
+        for name in types:
+            if name not in domain.typeNdxMapping:
+                ndx = len(domain.typeNdxMapping)
+                domain.typeNdxMapping[name] = ndx
+                domain.typeNameMapping[ndx] = name
+                domain.listOfTypeIDs.append(ndx)
 
     def __create_presentation(self, file, dst):
         presentation = {'model': self.model, 'files': {}}
