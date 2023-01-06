@@ -24,31 +24,29 @@ div#domain-properties-editor.card
 
       div.tab-pane.active(id="edit-domain-properties" data-hook="edit-domain-properties")
         
-        div
-
-          span.mr-3(for="#static-domain") <b>Static Domain</b>:
-
-          input(type="checkbox" id="static-domain" data-hook="static-domain")
-
         hr
 
         div.mx-1.row.head.align-items-baseline
 
-          div.col-sm-3
+          div.col-sm-1
+
+            h6.inline <b>Static Domain</b>
+
+          div.col-sm-2
 
             h6.inline <b>Density</b>
             
-          div.col-sm-3
+          div.col-sm-5
 
             h6.inline <b>Gravity</b>
 
-          div.col-sm-3
+          div.col-sm-2
 
             h6.inline <b>Pressure</b>
 
             div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.pressure) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-          div.col-sm-3
+          div.col-sm-2
 
             h6.inline <b>Speed of Sound</b>
 
@@ -56,68 +54,82 @@ div#domain-properties-editor.card
 
         div.mt-3.mx-1.row
 
-          div.col-sm-3
+          div.col-sm-1
+
+            input(type="checkbox" id="static-domain" data-hook="static-domain")
+
+          div.col-sm-2
 
             div(data-hook="density")
 
-          div.col-sm-3
+          div.col-sm-5
 
-            div(data-target="gravity" data-hook="gravity-x" data-index="0")
-            
-            div(data-target="gravity" data-hook="gravity-y" data-index="1")
-            
-            div(data-target="gravity" data-hook="gravity-z" data-index="2")
+            span.inline.mr-2 (x:
 
-          div.col-sm-3
+            div.inline(data-target="gravity" data-hook="gravity-x" data-index="0" style="width: 25%")
+
+            span.inline.mr-2 , y:
+
+            div.inline(data-target="gravity" data-hook="gravity-y" data-index="1" style="width: 25%")
+
+            span.inline.mr-2 , z:
+
+            div.inline(data-target="gravity" data-hook="gravity-z" data-index="2" style="width: 25%")
+
+            span.inline )
+
+          div.col-sm-2
 
             div(data-hook="pressure")
 
-          div.col-sm-3
+          div.col-sm-2
 
             div(data-hook="speed")
 
       div.tab-pane(id="view-domain-properties" data-hook="view-domain-properties")
 
-        div
-
-          span.mr-3(for="#view-static-domain") <b>Static Domain</b>:
-
-          input(type="checkbox" id="view-static-domain" data-hook="view-static-domain" disabled)
-
         hr
 
         div.mx-1.row.head.align-items-baseline
 
-          div.col-sm-3
+          div.col-sm-1
+
+            h6.inline <b>Static Domain</b>
+
+          div.col-sm-2
 
             h6.inline <b>Density</b>
             
-          div.col-sm-3
+          div.col-sm-5
 
             h6.inline <b>Gravity</b>
 
-          div.col-sm-3
+          div.col-sm-2
 
             h6.inline <b>Pressure</b>
 
-          div.col-sm-3
+          div.col-sm-2
 
             h6.inline <b>Speed of Sound</b>
 
         div.mt-3.mx-1.row
 
-          div.col-sm-3
+          div.col-sm-1
+
+            input(type="checkbox" id="view-static-domain" data-hook="view-static-domain" disabled)
+
+          div.col-sm-2
 
             div=this.model.rho_0
 
-          div.col-sm-3
+          div.col-sm-5
 
             div=`(X: ${this.model.gravity[0]}, Y: ${this.model.gravity[1]}, Z: ${this.model.gravity[2]})`
 
-          div.col-sm-3
+          div.col-sm-2
 
             div=this.model.p_0
 
-          div.col-sm-3
+          div.col-sm-2
 
             div=this.model.c_0
