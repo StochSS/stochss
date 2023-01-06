@@ -724,7 +724,11 @@ class StochSSSpatialModel(StochSSBase):
                     'type': 'Standard Geometry',
                     'formula': d_type['geometry']
                 })
-                # TODO: Convert old type geometries to shapes
+                shapes.append({
+                    'deltar': 0, 'deltas': 0, 'deltax': 0, 'deltay': 0, 'deltaz': 0, 'depth': 0,
+                    'formula': d_type['geometry'], 'height': 0, 'lattice': 'Cartesian Lattice',
+                    'length': 0, 'name': f"shape{len(shapes) + 1}", 'radius': 0, 'type': 'Standard Geometry'
+                })
         domain['actions'] = [{
             'type': 'Fill Action', 'scope': 'Multi Particle', 'priority': 1, 'enable': True,
             'geometry': '', 'lattice': 'lattice1', 'useProps': False,
