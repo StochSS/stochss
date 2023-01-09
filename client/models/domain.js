@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 //models
 let State = require('ampersand-state');
 //collections
-let Shapes = require('/shapes');
+let Shapes = require('./shapes');
 let Actions = require('./actions');
 let Lattices = require('./lattices');
 let Types = require('./domain-types');

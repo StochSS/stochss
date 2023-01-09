@@ -29,7 +29,7 @@ module.exports = State.extend({
     deltaz: 'number',
     depth: 'number',
     fillable: 'boolean',
-    formula: 'number',
+    formula: 'string',
     height: 'number',
     lattice: 'string',
     length: 'number',
@@ -41,9 +41,21 @@ module.exports = State.extend({
     center: Point
   },
   session: {
+    selected: {
+      type: 'boolean',
+      default: false
+    },
     inUse: {
       type: 'boolean',
-      default: false,
+      default: false
+    }
+  },
+  derived: {
+    notEditable: {
+      deps: ['fillable'],
+      fn: function () {
+        return this.fillable;
+      }
     }
   },
   initialize: function (attrs, options) {
