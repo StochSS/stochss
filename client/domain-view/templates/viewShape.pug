@@ -1,0 +1,154 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-2
+
+      div.pl-2=this.model.name
+
+    div.col-sm-2
+
+      div.pl-2=this.model.type
+
+    div.col-sm-7
+
+      div=this.model.formula
+
+    div.col-sm-1
+
+      div.pl-3
+
+        input(type="checkbox" checked=this.model.fillable disabled)
+
+  div.mx-1.pl-2(data-hook="shape-details")
+
+    div.collapse(id="collapse-shape-details" + this.model.cid data-hook="collapse-shape-details" + this.model.cid)
+
+      div.row
+
+        div.col-sm-5
+
+          hr
+
+          div.mx-1.row.head.align-items-baseline
+
+            div.col-sm-3
+
+              h6.inline <b>Lattice</b>
+
+            div.col-sm-9
+
+              h6.inline <b>Center</b>
+
+          div.row
+
+            div.col-sm-3
+
+              div.pl-2=this.model.lattice
+
+            div.col-sm-9
+
+              div.pl-2=`(${this.model.center.x}, ${this.model.center.y}, ${this.model.center.z})`
+
+        div.col-sm-7
+
+          div.hidden(data-hook="cartesian-lattice-props")
+
+            hr
+
+            div.mx-1.row.head.align-items-baseline
+
+              div.col-sm-3
+              
+              div.col-sm-3
+
+                h6.inline <b>X-Axis</b>
+
+              div.col-sm-3
+
+                h6.inline <b>Y-Axis</b>
+
+              div.col-sm-3
+
+                h6.inline <b>Z-Axis</b>
+
+            div.mt-3.mx-1.row
+
+              div.col-sm-3
+
+                h6.inline <b>Lengths</b>
+
+              div.col-sm-3
+
+                div=this.model.length
+
+              div.col-sm-3
+
+                div=this.model.height
+
+              div.col-sm-3
+
+                div=this.model.depth
+
+            hr
+
+            div.mx-1.row
+
+              div.col-sm-3
+
+                h6.inline <b>Spacing</b>
+
+              div.col-sm-3
+
+                div=this.model.deltax
+
+              div.col-sm-3
+
+                div=this.model.deltay
+
+              div.col-sm-3
+
+                div=this.model.deltaz
+
+          div.hidden(data-hook="circular-lattice-props")
+
+            hr
+
+            div.mx-1.row.head.align-items-baseline
+
+              div.col-sm-3
+
+                h6.inline <b>Radius</b>
+              
+              div.col-sm-3.hidden(data-hook="cylinder-length-header")
+
+                h6.inline <b>length</b>
+
+              div.col-sm-3
+
+                h6.inline <b>Surface Spacing</b>
+
+              div.col-sm-3
+
+                h6.inline <b>Radial Spacing</b>
+
+            div.mt-3.mx-1.row
+
+              div.col-sm-3
+
+                div=this.model.radius
+
+              div.col-sm-3.hidden(data-hook="cylinder-length-feild")
+
+                div=this.model.length
+
+              div.col-sm-3
+
+                div=this.model.deltas
+
+              div.col-sm-3
+
+                div=this.model.deltar
