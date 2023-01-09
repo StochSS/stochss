@@ -30,6 +30,7 @@ let Action = require('../models/action');
 let View = require('ampersand-view');
 let TypesView = require('./views/types-view');
 let LimitsView = require('./views/limits-view');
+let ShapesView = require('./views/shapes-view');
 let ActionsView = require('./views/actions-view');
 let LatticesView = require('./views/lattices-view');
 let QuickviewType = require('./views/quickview-type');
@@ -68,6 +69,7 @@ module.exports = View.extend({
       this.renderTypesQuickview();
     }else{
       this.model.on('update-type-deps', this.updateTypeDeps, this);
+      this.model.on('update-shape-deps', this.updateShapeDeps, this);
       this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
       this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
       this.model.on('update-transformation-deps', this.updateTransformationDeps, this);
@@ -77,6 +79,7 @@ module.exports = View.extend({
     this.renderPropertiesView();
     this.renderLimitsView();
     this.renderTypesView();
+    this.renderShapesView();
     this.renderGeometriesView();
     this.renderLatticesView();
     this.renderTransformationsView();
@@ -250,6 +253,17 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.propertiesView, "domain-properties-container");
   },
+  renderShapesView: function () {
+    if(this.shapesView) {
+      this.shapesView.remove();
+    }
+    this.shapesView = new ShapesView({
+      collection: this.model.shapes,
+      readOnly: this.readOnly
+    });
+    let hook = "domain-shapes-container";
+    app.registerRenderSubview(this, this.shapesView, hook);
+  },
   renderTransformationsView: function () {
     if(this.transformationsView) {
       this.transformationsView.reomve();
@@ -412,6 +426,33 @@ module.exports = View.extend({
       }
       this.changeDomainLimits(body.limits);
     }});
+  },
+  updateShapeDeps: function () {
+    let deps = [];
+    let shapeNames = [];
+    let combForms = [];
+    this.model.shapes.forEach((shape) => {
+      shapeNames.push(shape.name);
+      if(shape.geometry === "Combinatory") {
+        combForms.push(shape.formula)
+      }
+    });
+    combForms.forEach((formula) => {
+      formula = formula.replace(/\(/g, ' ').replace(/\)/g, ' ');
+      let formDeps = formula.split(' ');
+      shapeNames.forEach((name) => {
+        if(formDeps.includes(name) && !deps.includes(name)) {
+          deps.push(name);
+        }
+      });
+    });
+    // this.model.actions.forEach((action) => {
+    //   let shape = action.shape;
+    //   if(shapeNames.includes(shape) && !deps.includes(shape)) {
+    //     deps.push(shape);
+    //   }
+    // });
+    this.model.shapes.trigger('update-inuse', {deps: deps});
   },
   updateTransformationDeps: function () {
     let deps = [];
