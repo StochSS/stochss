@@ -87,14 +87,17 @@ class StochSSNotebook(StochSSBase):
         return names_length + 2 + len(name), None
 
     @classmethod
-    def __build_geometry(cls, name, formula):
+    def __build_geometry(cls, cells, c_index, name, formula):
         pad = '    '
-        return "\n".join([
-            f"class {name}(spatialpy.Geometry):", f"{pad}def __init__(self):",
+        c_name = name.title().replace("-", "")
+        cell_str = "\n".join([
+            f"class {c_name}(spatialpy.Geometry):", f"{pad}def __init__(self):",
             f"{pad * 2}pass", "", f"{pad}def inside(self, point, on_boundary):",
             f"{pad * 2}namespace = " + "{'x': point[0], 'y': point[1], 'z': point[2]}",
             f"{pad * 2}formula = '{formula}'", f"{pad * 2}return eval(formula, " + "{}, namespace)"
         ])
+        cells.insert(c_index, nbf.new_code_cell(cell_str))
+        return c_name, c_index + 1
 
     @classmethod
     def __check_reflect_mathod(cls, transformation):
@@ -280,9 +283,8 @@ class StochSSNotebook(StochSSBase):
                         args = args_tmp.replace("__ENABLE__", f"enable={s_act['enable']}")
                         if s_act['scope'] == "Single Particle":
                             formula = f"x == {p_x} and y == {p_y} and z == {p_z}"
-                            c_name = f"SPAGeometry{i + 1}"
-                            cells.insert(c_index, nbf.new_code_cell(self.__build_geometry(c_name, formula)))
-                            c_index += 1
+                            name = f"SPAGeometry{i + 1}"
+                            c_name, c_index = self.__build_geometry(cells, c_index, name, formula)
                             geometry = f"geometry={c_name}(), "
                         elif s_act['geometry'] != "":
                             geometry = f"geometry={s_act['geometry']}, "
@@ -373,8 +375,9 @@ class StochSSNotebook(StochSSBase):
                 f"{pad*2}{zlim}, rho0={rho0}, c0={c_0}, P0={p_0}, gravity={gravity}", f"{pad})", "",
                 f"{pad}model.add_domain(domain)", "", f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
             ]
-            c_index, d_index = self.__create_spatial_geometries(cells, nb_domain, 8)
-            d_index = self.__create_spatial_lattices(nb_domain, d_index)
+            # c_index, d_index = self.__create_spatial_geometries(cells, nb_domain, 8)
+            # d_index = self.__create_spatial_lattices(nb_domain, d_index)
+            c_index, d_index = self.__create_spatial_shapes(cells, nb_domain, 8)
             d_index = self.__create_spatial_transformations(nb_domain, d_index)
             d_index = self.__create_spatial_actions(cells, c_index, nb_domain, d_index, type_refs)
             d_index = 2
@@ -404,9 +407,7 @@ class StochSSNotebook(StochSSBase):
                         if c_index == 2:
                             cells.insert(c_index, nbf.new_markdown_cell("***\n## Geometries\n***"))
                             c_index += 1
-                        c_name = s_geom['name'].title().replace("-", "")
-                        cells.insert(c_index, nbf.new_code_cell(self.__build_geometry(c_name, s_geom['formula'])))
-                        c_index += 1
+                        c_name, c_index = self.__build_geometry(cells, c_index, s_geom['name'], s_geom['formula'])
                         nb_geom = tmp.replace("__ARGS__", "").replace("__NAME__", s_geom['name'])
                         nb_geom = nb_geom.replace("__CLASS_NAME__", c_name)
                         geometries.append(nb_geom)
@@ -539,6 +540,83 @@ class StochSSNotebook(StochSSBase):
         index = self.__create_reactions(nb_model, index, type_refs=type_refs)
         index = self.__create_spatial_boundary_conditions(nb_model, index)
         return c_index, nbf.new_code_cell("\n".join(nb_model))
+
+    def __create_spatial_shapes(self, cells, nb_domain, index):
+        if len(self.s_model['domain']['shapes']) > 0:
+            class_map = {
+                'Cartesian Lattice': 'CartesianLattice',
+                'Spherical Lattice': 'SphericalLattice',
+                'Cylindrical Lattice': 'CylindricalLattice'
+            }
+            pad = '    '
+            c_index = 2
+            comb_geoms = {}
+            geo_tmp = f"{pad}__NAME__ = __CLASS_NAME__(__ARGS__)"
+            lat_tmp = f"{pad}__NAME__ = spatialpy.__CLASS__(\n{pad*2}__ARGS__\n{pad})"
+            geometries = ["", f"{pad}# Domain Geometries"]
+            lattices = ["", f"{pad}# Domain Lattices"]
+            try:
+                for s_shape in self.s_model['domain']['shapes']:
+                    # Create geometry from shape
+                    geo_name = f"{s_shape['name']}_geom"
+                    if s_shape['type'] == "Standard":
+                        if c_index == 2:
+                            cells.insert(c_index, nbf.new_markdown_cell("***\n## Geometries\n***"))
+                            c_index += 1
+                        c_name, c_index = self.__build_geometry(cells, c_index, s_shape['name'], s_shape['formula'])
+                        nb_geom = geo_tmp.replace("__ARGS__", "").replace("__NAME__", geo_name)
+                        nb_geom = nb_geom.replace("__CLASS_NAME__", c_name)
+                        geometries.append(nb_geom)
+                    else:
+                        comb_geoms[geo_name] = s_shape['formula']
+                        nb_geom = geo_tmp.replace("__ARGS__", "'', {}").replace("__NAME__", geo_name)
+                        nb_geom = nb_geom.replace("__CLASS_NAME__", "spatialpy.CombinatoryGeometry")
+                        geometries.append(nb_geom)
+                        geometries.append(f"{pad}{s_shape['name']}.formula = '{s_shape['formula']}'")
+                    # Create lattice from shape if fillable
+                    if s_shape['fillable']:
+                        l_class = class_map[s_shape['lattice']]
+                        lat_name = f"{s_shape['name']}_latt"
+                        nb_latt = lat_tmp.replace("__NAME__", lat_name).replace("__CLASS__", l_class)
+                        args = f"center=[{s_shape['center']['x']}, {s_shape['center']['y']}, {s_shape['center']['z']}]"
+                        if l_class == "CartesianLattice":
+                            half_length = s_shape['length'] / 2
+                            half_height = s_shape['height'] / 2
+                            half_depth = s_shape['depth'] / 2
+                            args = ''.join([
+                                f"-{half_length}, {half_length}, {s_shape['deltax']}, {args},\n{pad*2}",
+                                f"ymin=-{half_height}, ymax={half_height}, deltay={s_shape['deltay']}, ",
+                                f"zmin=-{half_depth}, zmax={half_depth}, deltaz={s_shape['deltaz']}"
+                            ])
+                        else:
+                            length = "" if l_class == "SphericalLattice" else f", {s_shape['length']}"
+                            args = f"{s_shape['radius']}{length}, {s_shape['deltas']}, {args}, deltar={s_shape['deltar']}"
+                        nb_latt = nb_latt.replace("__ARGS__", args)
+                        lattices.append(nb_latt)
+                if len(comb_geoms) > 0:
+                    geometries.append("")
+                items = [' and ', ' or ', ' not ', '(', ')']
+                for name, formula in comb_geoms.items():
+                    for item in items:
+                        formula = formula.replace(item, " ")
+                    deps = formula.split(" ")
+                    geo_namespace = []
+                    for dep in deps:
+                        if dep != '':
+                            geo_namespace.append(f"'{dep}': {dep}_geom")
+                    nb_geo_ns = f"{pad}{name}.geo_namespace = " + "{" + f"{', '.join(geo_namespace)}" + "}"
+                    geometries.append(nb_geo_ns)
+                nb_domain.insert(index, '\n'.join(geometries))
+                index += 1
+                if len(lattices) > 2:
+                    nb_domain.insert(index, '\n'.join(lattices))
+                    index += 1
+                c_index += 1
+            except KeyError as err:
+                message = "The domain shape is not properly formatted or "
+                message += f"is referenced incorrectly for notebooks: {str(err)}"
+                raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        return c_index, index
 
     def __create_spatial_species(self, nb_model, index, type_refs):
         if len(self.s_model['species']) > 0:
