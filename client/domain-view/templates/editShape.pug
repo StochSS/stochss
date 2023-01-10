@@ -39,97 +39,65 @@ div.mx-1
 
       hr
 
-      div.mb-3.mx-1.row.head.align-items-baseline
+      div.mx-1.mb-2
 
-        div.col-sm-3
+        h6.inline.mr-3 <b>Lattice</b>:
 
-          h6.inline <b>Lattice</b>
-
-        div.col-sm-9
-
-          h6.inline <b>Center</b>
-
-      div.row
-
-        div.col-sm-3
-
-          div.pl-2(data-hook="select-lattice-container")
-
-        div.col-sm-9
-
-          span.inline.mr-2 (x:
-
-          div.inline(data-hook="center-x-container" data-target="shape-center" data-name="x" style="width: 25%")
-
-          span.inline.mr-2 , y:
-
-          div.inline(data-hook="center-y-container" data-target="shape-center" data-name="y" style="width: 25%")
-
-          span.inline.mr-2 , z:
-
-          div.inline(data-hook="center-z-container" data-target="shape-center" data-name="z" style="width: 25%")
-
-          span.inline )
+        div.inline(data-hook="select-lattice-container")
 
       div.hidden(data-hook="cartesian-lattice-props")
 
-        hr
-
         div.mx-1.row.head.align-items-baseline
 
-          div.col-sm-3
-          
-          div.col-sm-3
+          div.col-sm-2
 
-            h6.inline <b>X-Axis</b>
+            h6.inline <b>Length</b>
 
-          div.col-sm-3
+          div.col-sm-2
 
-            h6.inline <b>Y-Axis</b>
+            h6.inline <b>Height</b>
 
-          div.col-sm-3
+          div.col-sm-2
 
-            h6.inline <b>Z-Axis</b>
+            h6.inline <b>Depth</b>
+
+          div.col-sm-2
+
+            h6.inline <b>X-Spacing</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Y-Spacing</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Z-Spacing</b>
 
         div.mt-3.mx-1.row
 
-          div.col-sm-3
-
-            h6.inline <b>Lengths</b>
-
-          div.col-sm-3
+          div.col-sm-2
 
             div(data-hook="length-container")
 
-          div.col-sm-3
+          div.col-sm-2
 
             div(data-hook="height-container")
 
-          div.col-sm-3
+          div.col-sm-2
 
             div(data-hook="depth-container")
 
-        hr
-
-        div.mx-1.row
-
-          div.col-sm-3
-
-            h6.inline <b>Spacing</b>
-
-          div.col-sm-3
+          div.col-sm-2
 
             div(data-hook="delta-x-container")
 
-          div.col-sm-3
+          div.col-sm-2
 
             div(data-hook="delta-y-container")
 
-          div.col-sm-3
+          div.col-sm-2
 
             div(data-hook="delta-z-container")
-
-      hr
 
       div.hidden(data-hook="circular-lattice-props")
 
