@@ -27,10 +27,10 @@ import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
-                      TimeSpan, Geometry, CombinatoryGeometry, CartesianLattice, SphericalLattice, \
-                      CylindricalLattice, XMLMeshLattice, MeshIOLattice, StochSSLattice, \
-                      TranslationTransformation, RotationTransformation, ReflectionTransformation, \
-                      ScalingTransformation
+                      TimeSpan, Geometry, GeometryAll, CombinatoryGeometry, CartesianLattice, \
+                      SphericalLattice, CylindricalLattice, XMLMeshLattice, MeshIOLattice, \
+                      StochSSLattice, TranslationTransformation, RotationTransformation, \
+                      ReflectionTransformation, ScalingTransformation
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -164,8 +164,9 @@ class StochSSSpatialModel(StochSSBase):
         return particles
 
     def __convert_actions(self, domain, s_domain, type_ids):
-        geometries = self.__convert_geometries(s_domain)
-        lattices = self.__convert_lattices(s_domain)
+        # geometries = self.__convert_geometries(s_domain)
+        # lattices = self.__convert_lattices(s_domain)
+        geometries, lattices = self.__convert_shapes(s_domain)
         transformations = self.__convert_transformations(s_domain, geometries, lattices)
         try:
             actions = sorted(s_domain['actions'], key=lambda action: action['priority'])
@@ -418,6 +419,66 @@ class StochSSSpatialModel(StochSSBase):
                 model.add_reaction(s_reaction)
         except KeyError as err:
             message = "Spatial model reactions are not properly formatted or "
+            message += f"are referenced incorrectly: {str(err)}"
+            raise StochSSModelFormatError(message, traceback.format_exc()) from err
+
+    def __convert_shapes(self, s_domain):
+        try:
+            geometries = {}
+            comb_geoms = []
+            lattices = {}
+            for s_shape in s_domain['shapes']:
+                # Create geometry from shape
+                geo_name = f"{s_shape['name']}_geom"
+                if s_shape['type'] == "Standard":
+                    if s_shape['formula'] == "True":
+                        geometries[geo_name] = GeometryAll()
+                    else:
+                        geometries[geo_name] = self.__build_geometry(None, name=geo_name, formula=s_shape['formula'])
+                else:
+                    geometry = CombinatoryGeometry("", {})
+                    geometry.formula = s_shape['formula']
+                    geometries[geo_name] = geometry
+                    comb_geoms.append(geo_name)
+                # Create lattice from shape if fillable
+                if s_shape['fillable']:
+                    lat_name = f"{s_shape['name']}_latt"
+                    center = [
+                        s_shape['center']['x'], s_shape['center']['y'], s_shape['center']['z']
+                    ]
+                    if s_shape['lattice'] == "Cartesian Lattice":
+                        half_length = s_shape['length'] / 2
+                        half_height = s_shape['height'] / 2
+                        half_depth = s_shape['depth'] / 2
+                        lattice = CartesianLattice(
+                            -half_length, half_length, s_shape['deltax'], center=center,
+                            ymin=-half_height, ymax=half_height, deltay=s_shape['deltay'],
+                            zmin=-half_depth, zmax=half_depth, deltaz=s_shape['deltaz']
+                        )
+                    elif s_shape['lattice'] == "Spherical Lattice":
+                        lattice = SphericalLattice(
+                            s_shape['radius'], s_shape['deltas'], center=center, deltar=s_shape['deltar']
+                        )
+                    elif s_shape['lattice'] == "Cylindrical Lattice":
+                        lattice = CylindricalLattice(
+                            s_shape['radius'], s_shape['length'], s_shape['deltas'],
+                            center=center, deltar=s_shape['deltar']
+                        )
+                    lattices[lat_name] = lattice
+            items = [' and ', ' or ', ' not ', '(', ')']
+            for name in comb_geoms:
+                formula = geometries[name].formula
+                for item in items:
+                    formula = formula.replace(item, " ")
+                formula = formula.split(" ")
+                geo_namespace = {}
+                for key, geometry in geometries.items():
+                    if key != name and key[:-5] in formula:
+                        geo_namespace[key[:-5]] = geometry
+                geometries[name].geo_namespace = geo_namespace
+            return geometries, lattices
+        except KeyError as err:
+            message = "Spatial domain shapes are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
