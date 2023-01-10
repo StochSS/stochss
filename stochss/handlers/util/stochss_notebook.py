@@ -560,19 +560,22 @@ class StochSSNotebook(StochSSBase):
                     # Create geometry from shape
                     geo_name = f"{s_shape['name']}_geom"
                     if s_shape['type'] == "Standard":
-                        if c_index == 2:
-                            cells.insert(c_index, nbf.new_markdown_cell("***\n## Geometries\n***"))
-                            c_index += 1
-                        c_name, c_index = self.__build_geometry(cells, c_index, s_shape['name'], s_shape['formula'])
-                        nb_geom = geo_tmp.replace("__ARGS__", "").replace("__NAME__", geo_name)
-                        nb_geom = nb_geom.replace("__CLASS_NAME__", c_name)
-                        geometries.append(nb_geom)
+                        if s_shape['formula'] == "True":
+                            geometries.append(f"{pad}{geo_name} = spatialpy.GeometryAll()")
+                        else:
+                            if c_index == 2:
+                                cells.insert(c_index, nbf.new_markdown_cell("***\n## Geometries\n***"))
+                                c_index += 1
+                            c_name, c_index = self.__build_geometry(cells, c_index, s_shape['name'], s_shape['formula'])
+                            nb_geom = geo_tmp.replace("__ARGS__", "").replace("__NAME__", geo_name)
+                            nb_geom = nb_geom.replace("__CLASS_NAME__", c_name)
+                            geometries.append(nb_geom)
                     else:
                         comb_geoms[geo_name] = s_shape['formula']
                         nb_geom = geo_tmp.replace("__ARGS__", "'', {}").replace("__NAME__", geo_name)
                         nb_geom = nb_geom.replace("__CLASS_NAME__", "spatialpy.CombinatoryGeometry")
                         geometries.append(nb_geom)
-                        geometries.append(f"{pad}{s_shape['name']}.formula = '{s_shape['formula']}'")
+                        geometries.append(f"{pad}{geo_name}.formula = '{s_shape['formula']}'")
                     # Create lattice from shape if fillable
                     if s_shape['fillable']:
                         l_class = class_map[s_shape['lattice']]
