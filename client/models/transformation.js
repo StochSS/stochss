@@ -46,19 +46,6 @@ module.exports = State.extend({
       default: false
     }
   },
-  derived: {
-    useProps: {
-      deps: ['lattice', 'transformation'],
-      fn: function () {
-        let lattice = this.collection.parent.lattices.get(this.lattice, 'name');
-        if(lattice) { return lattice.type !== 'StochSS Lattice'; }
-
-        let transformation = this.model.collection.parent.transformations.get(this.transformation, 'name');
-        if(transformation) { return transformation.useProps; }
-        return true
-      }
-    }
-  },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
@@ -68,8 +55,6 @@ module.exports = State.extend({
     let checks = {
       'angle': this.angle === Number(key),
       'factor': this.factor === Number(key),
-      'geometry': this.geometry.includes(key),
-      'lattice': this.lattice.includes(key),
       'name': this.name.includes(key),
       'transformation': this.transformation.includes(key),
       'type': this.type === key

@@ -21,9 +21,7 @@ let State = require('ampersand-state');
 //collections
 let Shapes = require('./shapes');
 let Actions = require('./actions');
-let Lattices = require('./lattices');
 let Types = require('./domain-types');
-let Geometries = require('./geometries');
 let Transformations = require('./transformations');
 
 module.exports = State.extend({
