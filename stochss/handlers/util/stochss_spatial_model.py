@@ -164,22 +164,13 @@ class StochSSSpatialModel(StochSSBase):
         return particles
 
     def __convert_actions(self, domain, s_domain, type_ids):
-        # geometries = self.__convert_geometries(s_domain)
-        # lattices = self.__convert_lattices(s_domain)
         geometries, lattices = self.__convert_shapes(s_domain)
-        transformations = self.__convert_transformations(s_domain, geometries, lattices)
+        transformations = self.__convert_transformations(s_domain)
         try:
             actions = sorted(s_domain['actions'], key=lambda action: action['priority'])
             for i, action in enumerate(actions):
-                # Get geometry. 'Multi Particle' scope uses geometry from action
-                if action['geometry'] == "":
-                    geometry = None
-                elif action['geometry'] in geometries:
-                    geometry = geometries[action['geometry']]
-                else:
-                    geometry = transformations[action['geometry']]
                 # Build props arg
-                if action['type'] in ('Fill Action', 'Set Action'):
+                if action['type'] in ('Fill Action', 'Set Action', 'XML Mesh', 'Mesh IO'):
                     kwargs = {
                         'type_id': type_ids[action['typeID']].replace("-", ""), 'mass': action['mass'],
                         'vol': action['vol'], 'rho': action['rho'], 'nu': action['nu'],
@@ -189,13 +180,13 @@ class StochSSSpatialModel(StochSSBase):
                     kwargs = {}
                 # Apply actions
                 if action['type'] == "Fill Action":
-                    if not action['useProps']:
-                        kwargs = {}
                     if action['scope'] == 'Multi Particle':
-                        if action['lattice'] in lattices:
-                            lattice = lattices[action['lattice']]
+                        geometry = geometries[f"{action['shape']}_geom"]
+                        if action['transformation'] == "":
+                            lattice = lattices[f"{action['shape']}_latt"]
                         else:
-                            lattice = transformations[action['lattice']]
+                            lattice = transformations[action['transformation']]
+                            lattice.lattice = lattices[f"{action['shape']}_latt"]
                         _ = domain.add_fill_action(
                             lattice=lattice, geometry=geometry, enable=action['enable'],
                             apply_action=action['enable'], **kwargs
@@ -214,6 +205,11 @@ class StochSSSpatialModel(StochSSBase):
                         geometry = self.__build_geometry(
                             None, name=f"SPAGeometry{i + 1}", formula=formula
                         )
+                    elif action['transformation'] == "":
+                        geometry = geometries[f"{action['shape']}_geom"]
+                    else:
+                        geometry = transformations[action['transformation']]
+                        geometry.geometry = geometries[f"{action['shape']}_geom"]
                     if action['type'] == "Set Action":
                         domain.add_set_action(
                             geometry=geometry, enable=action['enable'],
@@ -279,31 +275,6 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-    def __convert_geometries(self, s_domain):
-        try:
-            geometries = {}
-            comb_geoms = []
-            for s_geometry in s_domain['geometries']:
-                if s_geometry['type'] == "Standard Geometry":
-                    geometries[s_geometry['name']] = self.__build_geometry(s_geometry)
-                else:
-                    name = s_geometry['name']
-                    comb_geometry = CombinatoryGeometry("", {})
-                    comb_geometry.formula = s_geometry['formula']
-                    geometries[name] = comb_geometry
-                    comb_geoms.append(name)
-            for name in comb_geoms:
-                geo_namespace = {
-                    key: geometry for key, geometry in geometries.items() \
-                                    if key != name and key in geometries[name].formula
-                }
-                geometries[name].geo_namespace = geo_namespace
-            return geometries
-        except KeyError as err:
-            message = "Spatial geometries are not properly formatted or "
-            message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
     def __convert_initial_conditions(self, model, type_ids):
         try:
             s_species = model.get_all_species()
@@ -327,50 +298,50 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-    def __convert_lattices(self, s_domain):
-        try:
-            lattices = {}
-            for s_lattice in s_domain['lattices']:
-                name = s_lattice['name']
-                center = [
-                    s_lattice['center']['x'], s_lattice['center']['y'], s_lattice['center']['z']
-                ]
-                if s_lattice['type'] == "Cartesian Lattice":
-                    lattice = CartesianLattice(
-                        s_lattice['xmin'], s_lattice['xmax'], s_lattice['deltax'], center=center,
-                        ymin=s_lattice['ymin'], ymax=s_lattice['ymax'], deltay=s_lattice['deltay'],
-                        zmin=s_lattice['zmin'], zmax=s_lattice['zmax'], deltaz=s_lattice['deltaz']
-                    )
-                elif s_lattice['type'] == "Spherical Lattice":
-                    lattice = SphericalLattice(
-                        s_lattice['radius'], s_lattice['deltas'], center=center,
-                        deltar=s_lattice['deltar']
-                    )
-                elif s_lattice['type'] == "Cylindrical Lattice":
-                    lattice = CylindricalLattice(
-                        s_lattice['radius'], s_lattice['length'], s_lattice['deltas'],
-                        center=center, deltar=s_lattice['deltar']
-                    )
-                elif s_lattice['type'] == "XML Mesh Lattice":
-                    lattice = XMLMeshLattice(
-                        os.path.join(self.user_dir, s_lattice['filename']), center=center,
-                        subdomain_file=os.path.join(self.user_dir, s_lattice['subdomainFile'])
-                    )
-                elif s_lattice['type'] == "Mesh IO Lattice":
-                    lattice = MeshIOLattice(
-                        os.path.join(self.user_dir, s_lattice['filename']), center=center,
-                        subdomain_file=os.path.join(self.user_dir, s_lattice['subdomainFile'])
-                    )
-                else:
-                    lattice = StochSSLattice(
-                        os.path.join(self.user_dir, s_lattice['filename']), center=center
-                    )
-                lattices[name] = lattice
-            return lattices
-        except KeyError as err:
-            message = "Spatial lattices are not properly formatted or "
-            message += f"are referenced incorrectly: {str(err)}"
-            raise StochSSModelFormatError(message, traceback.format_exc()) from err
+    # def __convert_lattices(self, s_domain):
+    #     try:
+    #         lattices = {}
+    #         for s_lattice in s_domain['lattices']:
+    #             name = s_lattice['name']
+    #             center = [
+    #                 s_lattice['center']['x'], s_lattice['center']['y'], s_lattice['center']['z']
+    #             ]
+    #             if s_lattice['type'] == "Cartesian Lattice":
+    #                 lattice = CartesianLattice(
+    #                     s_lattice['xmin'], s_lattice['xmax'], s_lattice['deltax'], center=center,
+    #                     ymin=s_lattice['ymin'], ymax=s_lattice['ymax'], deltay=s_lattice['deltay'],
+    #                     zmin=s_lattice['zmin'], zmax=s_lattice['zmax'], deltaz=s_lattice['deltaz']
+    #                 )
+    #             elif s_lattice['type'] == "Spherical Lattice":
+    #                 lattice = SphericalLattice(
+    #                     s_lattice['radius'], s_lattice['deltas'], center=center,
+    #                     deltar=s_lattice['deltar']
+    #                 )
+    #             elif s_lattice['type'] == "Cylindrical Lattice":
+    #                 lattice = CylindricalLattice(
+    #                     s_lattice['radius'], s_lattice['length'], s_lattice['deltas'],
+    #                     center=center, deltar=s_lattice['deltar']
+    #                 )
+    #             elif s_lattice['type'] == "XML Mesh Lattice":
+    #                 lattice = XMLMeshLattice(
+    #                     os.path.join(self.user_dir, s_lattice['filename']), center=center,
+    #                     subdomain_file=os.path.join(self.user_dir, s_lattice['subdomainFile'])
+    #                 )
+    #             elif s_lattice['type'] == "Mesh IO Lattice":
+    #                 lattice = MeshIOLattice(
+    #                     os.path.join(self.user_dir, s_lattice['filename']), center=center,
+    #                     subdomain_file=os.path.join(self.user_dir, s_lattice['subdomainFile'])
+    #                 )
+    #             else:
+    #                 lattice = StochSSLattice(
+    #                     os.path.join(self.user_dir, s_lattice['filename']), center=center
+    #                 )
+    #             lattices[name] = lattice
+    #         return lattices
+    #     except KeyError as err:
+    #         message = "Spatial lattices are not properly formatted or "
+    #         message += f"are referenced incorrectly: {str(err)}"
+    #         raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     def __convert_model_settings(self, model):
         try:
@@ -443,26 +414,22 @@ class StochSSSpatialModel(StochSSBase):
                 # Create lattice from shape if fillable
                 if s_shape['fillable']:
                     lat_name = f"{s_shape['name']}_latt"
-                    center = [
-                        s_shape['center']['x'], s_shape['center']['y'], s_shape['center']['z']
-                    ]
                     if s_shape['lattice'] == "Cartesian Lattice":
                         half_length = s_shape['length'] / 2
                         half_height = s_shape['height'] / 2
                         half_depth = s_shape['depth'] / 2
                         lattice = CartesianLattice(
-                            -half_length, half_length, s_shape['deltax'], center=center,
+                            -half_length, half_length, s_shape['deltax'],
                             ymin=-half_height, ymax=half_height, deltay=s_shape['deltay'],
                             zmin=-half_depth, zmax=half_depth, deltaz=s_shape['deltaz']
                         )
                     elif s_shape['lattice'] == "Spherical Lattice":
                         lattice = SphericalLattice(
-                            s_shape['radius'], s_shape['deltas'], center=center, deltar=s_shape['deltar']
+                            s_shape['radius'], s_shape['deltas'], deltar=s_shape['deltar']
                         )
                     elif s_shape['lattice'] == "Cylindrical Lattice":
                         lattice = CylindricalLattice(
-                            s_shape['radius'], s_shape['length'], s_shape['deltas'],
-                            center=center, deltar=s_shape['deltar']
+                            s_shape['radius'], s_shape['length'], s_shape['deltas'], deltar=s_shape['deltar']
                         )
                     lattices[lat_name] = lattice
             items = [' and ', ' or ', ' not ', '(', ')']
@@ -526,42 +493,32 @@ class StochSSSpatialModel(StochSSBase):
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
     @classmethod
-    def __convert_transformations(cls, s_domain, geometries, lattices):
+    def __convert_transformations(cls, s_domain):
         try:
             transformations = {}
             nested_trans = {}
             for s_transformation in s_domain['transformations']:
                 name = s_transformation['name']
-                vector = [
-                    [
-                        s_transformation['vector'][0]['x'],
-                        s_transformation['vector'][0]['y'],
-                        s_transformation['vector'][0]['z']
-                    ],
-                    [
-                        s_transformation['vector'][1]['x'],
-                        s_transformation['vector'][1]['y'],
-                        s_transformation['vector'][1]['z']
-                    ]
-                ]
-                if s_transformation['geometry'] != "":
-                    geometry = geometries[s_transformation['geometry']]
-                else:
-                    geometry = None
-                if s_transformation['lattice'] != "":
-                    lattice = lattices[s_transformation['lattice']]
-                else:
-                    lattice = None
                 if s_transformation['transformation'] != "":
                     nested_trans[name] = s_transformation['transformation']
-                if s_transformation['type'] == "Translate Transformation":
-                    transformation = TranslationTransformation(
-                        vector, geometry=geometry, lattice=lattice
-                    )
-                elif s_transformation['type'] == "Rotate Transformation":
-                    transformation = RotationTransformation(
-                        vector, s_transformation['angle'], geometry=geometry, lattice=lattice
-                    )
+                if s_transformation['type'] in ("Translate Transformation", "Rotate Transformation"):
+                    vector = [
+                        [
+                            s_transformation['vector'][0]['x'],
+                            s_transformation['vector'][0]['y'],
+                            s_transformation['vector'][0]['z']
+                        ],
+                        [
+                            s_transformation['vector'][1]['x'],
+                            s_transformation['vector'][1]['y'],
+                            s_transformation['vector'][1]['z']
+                        ]
+                    ]
+
+                    if s_transformation['type'] == "Translate Transformation":
+                        transformation = TranslationTransformation(vector)
+                    else:
+                        transformation = RotationTransformation(vector, s_transformation['angle'])
                 elif s_transformation['type'] == "Reflect Transformation":
                     normal = numpy.array([
                         s_transformation['normal']['x'], s_transformation['normal']['y'],
@@ -585,19 +542,13 @@ class StochSSSpatialModel(StochSSBase):
                         point3 = None
                     else:
                         normal = None
-                    transformation = ReflectionTransformation(
-                        point1, normal=normal, point2=point2, point3=point3,
-                        geometry=geometry, lattice=lattice
-                    )
+                    transformation = ReflectionTransformation(point1, normal=normal, point2=point2, point3=point3)
                 else:
                     center = numpy.array([
                         s_transformation['center']['x'], s_transformation['center']['y'],
                         s_transformation['center']['z']
                     ])
-                    transformation = ScalingTransformation(
-                        s_transformation['factor'], center=center,
-                        geometry=geometry, lattice=lattice
-                    )
+                    transformation = ScalingTransformation(s_transformation['factor'], center=center)
                 transformations[name] = transformation
             for trans, nested_tran in nested_trans.items():
                 transformations[trans].transformation = transformations[nested_tran]
@@ -643,6 +594,12 @@ class StochSSSpatialModel(StochSSBase):
                     lattice['subdomainFile'] = sdf_entry['pres_path']
                     presentation['files'][f"{lattice['name']}_sdf"] = sdf_entry
         return self.__write_presentation_file(presentation, dst)
+
+    @classmethod
+    def __get_base_transformation(cls, transformation):
+        while transformation.transformation is not None:
+            transformation = transformation.transformation
+        return transformation
 
     def __get_presentation_file_entry(self, path, presentation_file):
         entry = {'name': self.get_file(path=path)}
@@ -777,34 +734,20 @@ class StochSSSpatialModel(StochSSBase):
                 json.dump(domain, v1_domain_fd, sort_keys=True, indent=4)
 
         shapes = []
-        geometries = []
         for d_type in domain['types']:
             if 'geometry' in d_type and d_type['geometry']:
-                geometries.append({
-                    'name': f"geometry{len(geometries) + 1}",
-                    'type': 'Standard Geometry',
-                    'formula': d_type['geometry']
-                })
                 shapes.append({
-                    'deltar': 0, 'deltas': 0, 'deltax': 0, 'deltay': 0, 'deltaz': 0, 'depth': 0,
+                    'deltar': 0, 'deltas': 0, 'deltax': 0, 'deltay': 0, 'deltaz': 0, 'depth': 0, 'fillable': False,
                     'formula': d_type['geometry'], 'height': 0, 'lattice': 'Cartesian Lattice',
-                    'length': 0, 'name': f"shape{len(shapes) + 1}", 'radius': 0, 'type': 'Standard Geometry'
+                    'length': 0, 'name': f"shape{len(shapes) + 1}", 'radius': 0, 'type': 'Standard'
                 })
         domain['actions'] = [{
-            'type': 'Fill Action', 'scope': 'Multi Particle', 'priority': 1, 'enable': True,
-            'geometry': '', 'lattice': 'lattice1', 'useProps': False,
+            'type': 'StochSS Domain', 'scope': 'Multi Particle', 'priority': 1, 'enable': True, 'shape': '',
+            'transformation': '', 'filename': filename.replace(f'{self.user_dir}/', ''), 'subdomainFile': '',
             'point': {'x': 0, 'y': 0, 'z': 0}, 'newPoint': {'x': 0, 'y': 0, 'z': 0},
             'c': 10, 'fixed': False, 'mass': 1.0, 'nu': 0.0, 'rho': 1.0, 'typeID': 0, 'vol': 0.0
         }]
         domain['shapes'] = shapes
-        domain['geometries'] = geometries
-        domain['lattices'] = [{
-            'name': 'lattice1', 'type': 'StochSS Lattice',
-            'filename': filename.replace(f'{self.user_dir}/', ''), 'subdomainFile': '',
-            'center': {'x': 0, 'y': 0, 'z': 0}, 'length': 0, 'radius': 0,
-            'deltar': 0,'deltas': 0,'deltax': 0,'deltay': 0,'deltaz': 0,
-            'xmax': 0,'xmin': 0,'ymax': 0,'ymin': 0,'zmax': 0,'zmin': 0
-        }]
         domain['transformations'] = []
         domain['template_version'] = self.DOMAIN_TEMPLATE_VERSION
 
