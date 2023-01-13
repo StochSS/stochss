@@ -42,8 +42,6 @@ module.exports = State.extend({
   },
   collections: {
     actions: Actions,
-    geometries: Geometries,
-    lattices: Lattices,
     shapes: Shapes,
     transformations: Transformations,
     types: Types
