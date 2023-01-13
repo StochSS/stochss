@@ -186,7 +186,7 @@ module.exports = View.extend({
     this.transformationSelectView = new SelectView({
       name: 'transformation',
       required: true,
-      groupOptions: options,
+      options: options,
       value: this.model.transformation,
       unselectedText: "-- Select Transformation --"
     });
