@@ -53,8 +53,6 @@ module.exports = View.extend({
       $(this.queryByHook('view-transformations')).addClass('active');
     }else{
       this.renderEditTransformationsView();
-      this.collection.on('update-geometry-options', this.updateGeometryOptions, this);
-      this.collection.on('update-lattice-options', this.updateLatticeOptions, this);
       this.collection.on('update-transformation-options', this.updateTransformationOptions, this);
       this.collection.on('update-inuse', this.updateInUse, this);
       this.collection.parent.trigger('update-transformation-deps');
@@ -97,28 +95,10 @@ module.exports = View.extend({
       options
     );
   },
-  updateGeometryOptions: function ({currName=null, newName=null}={}) {
-    if(currName === null || newName === null) { return; }
-    this.editTransformationsView.views.forEach((view) => {
-      if(view.model.geometry === currName) {
-        view.model.geometry = newName
-      }
-      view.renderGeometrySelectView();
-    });
-  },
   updateInUse: function ({deps=null}={}) {
     if(deps === null) { return; }
     this.collection.forEach((transformation) => {
       transformation.inUse = deps.includes(transformation.name);
-    });
-  },
-  updateLatticeOptions: function ({currName=null, newName=null}={}) {
-    if(currName === null || newName === null) { return; }
-    this.editTransformationsView.views.forEach((view) => {
-      if(view.model.lattice === currName) {
-        view.model.lattice = newName
-      }
-      view.renderLatticeSelectView();
     });
   },
   updateTransformationOptions: function ({currName=null, newName=null}={}) {

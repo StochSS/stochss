@@ -46,8 +46,6 @@ module.exports = View.extend({
   events: {
     'change [data-hook=input-name-container]' : 'updateDepsOptions',
     'change [data-hook=select-type-container]' : 'selectTransformationType',
-    'change [data-hook=geometry-select-container]' : 'selectNestedGeometry',
-    'change [data-hook=lattice-select-container]' : 'selectNestedLattice',
     'change [data-hook=transformation-select-container]' : 'selectNestedTransformation',
     'change [data-target=vector-point1]' : 'setVectorPoint1',
     'change [data-target=vector-point2]' : 'setVectorPoint2',
@@ -112,8 +110,6 @@ module.exports = View.extend({
         setTimeout(_.bind(this.openDetails, this), 1);
       }
       this.model.on('change', _.bind(this.updateViewer, this));
-      this.renderGeometrySelectView();
-      this.renderLatticeSelectView();
       this.renderTransformationSelectView();
     }
     this.displayDetails();
@@ -139,42 +135,6 @@ module.exports = View.extend({
     collection.trigger('update-transformation-options', {currName: name});
     actions.trigger('update-transformation-options', {currName: name});
   },
-  renderGeometrySelectView: function () {
-    if(this.geometrySelectView) {
-      this.geometrySelectView.remove();
-    }
-    let options = this.model.collection.parent.geometries;
-    this.geometrySelectView = new SelectView({
-      name: 'geometry',
-      required: false,
-      idAttribute: 'name',
-      textAttribute: 'name',
-      eagerValidate: false,
-      options: options,
-      value: this.model.geometry,
-      unselectedText: '-- Select a Geometry --'
-    });
-    let hook = "geometry-select-container";
-    app.registerRenderSubview(this, this.geometrySelectView, hook);
-  },
-  renderLatticeSelectView: function () {
-    if(this.latticeSelectView) {
-      this.latticeSelectView.remove();
-    }
-    let options = this.model.collection.parent.lattices;
-    this.latticeSelectView = new SelectView({
-      name: 'lattice',
-      required: false,
-      idAttribute: 'name',
-      textAttribute: 'name',
-      eagerValidate: false,
-      options: options,
-      value: this.model.lattice,
-      unselectedText: '-- Select a Lattice --'
-    });
-    let hook = "lattice-select-container";
-    app.registerRenderSubview(this, this.latticeSelectView, hook);
-  },
   renderTransformationSelectView: function () {
     if(this.transformationSelectView) {
       this.transformationSelectView.remove();
@@ -195,14 +155,6 @@ module.exports = View.extend({
     });
     let hook = "transformation-select-container";
     app.registerRenderSubview(this, this.transformationSelectView, hook);
-  },
-  selectNestedGeometry: function (e) {
-    this.model.geometry = e.target.value;
-    this.model.collection.parent.trigger('update-geometry-deps');
-  },
-  selectNestedLattice: function (e) {
-    this.model.lattice = e.target.value;
-    this.model.collection.parent.trigger('update-lattice-deps');
   },
   selectNestedTransformation: function (e) {
     this.model.transformation = e.target.value;
