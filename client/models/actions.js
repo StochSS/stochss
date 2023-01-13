@@ -33,16 +33,15 @@ module.exports = Collection.extend({
         c: 10,
         enable: false,
         fixed: false,
-        geometry: '',
-        lattice: '',
         mass: 1.0,
         nu: 0.0,
         priority: 1,
         rho: 1.0,
         scope: 'Multi Particle',
+        shape: '',
+        transformation: '',
         type: type,
         typeID: 0,
-        useProps: true,
         vol: 1.0
       });
       action.selected = true;
