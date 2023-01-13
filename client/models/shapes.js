@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let _ = require('underscore');
 //models
-let Point = require('./point');
 let Shape = require('./shape');
 //collections
 let Collection = require('ampersand-collection');
@@ -44,7 +43,6 @@ module.exports = Collection.extend({
       radius: 0,
       type: 'Standard'
     });
-    shape.center = this.getNewPoint();
     this.add(shape);
     return name;
   },
@@ -57,9 +55,6 @@ module.exports = Collection.extend({
       name = `shape${i}`;
     }
     return name;
-  },
-  getNewPoint: function () {
-    return new Point({x: 0, y: 0, z: 0});
   },
   removeShape: function (shape) {
     this.remove(shape);

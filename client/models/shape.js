@@ -17,7 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //models
-let Point = require('./point');
 let State = require('ampersand-state');
 
 module.exports = State.extend({
@@ -36,9 +35,6 @@ module.exports = State.extend({
     name: 'string',
     radius: 'number',
     type: 'string'
-  },
-  children: {
-    center: Point
   },
   session: {
     selected: {
@@ -64,8 +60,6 @@ module.exports = State.extend({
   contains: function (attr, key) {
     if(key === null) { return true; }
 
-    let center = `[${this.x}, ${this.y}, ${this.z}]`
-
     let checks = {
       'deltar': ["Spherical Lattice", "Cylindrical Lattice"].includes(this.lattice) &&
                   this.deltar === key,
@@ -87,14 +81,6 @@ module.exports = State.extend({
     }
 
     if(attr !== null) {
-      let otherAttrs = {'centerx': 'x','centery': 'y','centerz': 'z'}
-      if(Object.keys(otherAttrs).includes(attr)) {
-        attr = otherAttrs[attr];
-      }
-      checks['center'] = this.center.contains(attr, key)
-      if(['x', 'y', 'z'].includes(attr)) {
-        return checks.center;
-      }
       return checks[attr];
     }
     for(let attribute in checks) {

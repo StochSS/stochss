@@ -34,7 +34,6 @@ module.exports = View.extend({
     'change [data-hook=select-geometry-container]' : 'selectGeometryType',
     'change [data-hook=input-formula-container]' : 'updateGeometriesInUse',
     'change [data-hook=select-lattice-container]' : 'selectLatticeType',
-    'change [data-target=shape-center]' : 'handleShapeCenter',
     'click [data-hook=select-shape]' : 'selectShape',
     'click [data-hook=fillable-shape]' : 'selectFillable',
     'click [data-hook=remove]' : 'removeShape'
@@ -91,7 +90,7 @@ module.exports = View.extend({
         setTimeout(_.bind(this.openDetails, this), 1);
       }
       this.renderFormulaInputView();
-      this.model.on('change', _.bind(this.updateViewer, this));
+      // this.model.on('change', _.bind(this.updateViewer, this));
       this.displayDetails();
     }else if(this.model.fillable) {
       setTimeout(_.bind(this.openDetails, this), 1);
@@ -102,11 +101,6 @@ module.exports = View.extend({
     this.details[this.model.lattice].forEach((element) => {
       element.css('display', 'block');
     });
-  },
-  handleShapeCenter: function (e) {
-    let key = e.target.parentElement.parentElement.dataset.name;
-    this.model.center[key] = Number(e.target.value);
-    this.model.trigger('change');
   },
   hideDetails: function () {
     this.details[this.model.lattice].forEach((element) => {
@@ -212,42 +206,6 @@ module.exports = View.extend({
           idAttributes: 'cid',
           options: options,
           value: this.model.lattice
-        });
-      }
-    },
-    inputCenterX: {
-      hook: 'center-x-container',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          name: 'center-x',
-          tests: [tests.nanValue],
-          valueType: 'number',
-          value: this.model.center.x
-        });
-      }
-    },
-    inputCenterY: {
-      hook: 'center-y-container',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          name: 'center-y',
-          tests: [tests.nanValue],
-          valueType: 'number',
-          value: this.model.center.y
-        });
-      }
-    },
-    inputCenterZ: {
-      hook: 'center-z-container',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          name: 'center-z',
-          tests: [tests.nanValue],
-          valueType: 'number',
-          value: this.model.center.z
         });
       }
     },
