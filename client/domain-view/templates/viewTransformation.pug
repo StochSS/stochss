@@ -15,7 +15,7 @@ div.mx-1
 
     div.col-sm-4
 
-      div=this.model.transformation
+      div=this.model.transformation ? this.model.transformation : 'None'
 
   div.hidden(data-hook="vector-transformation-props")
 
