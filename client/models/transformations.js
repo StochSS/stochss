@@ -31,8 +31,6 @@ module.exports = Collection.extend({
     let transformation = new Transformation({
       angle: 0,
       factor: 1,
-      geometry: "",
-      lattice: "",
       name: name,
       transformation: "",
       type: type,

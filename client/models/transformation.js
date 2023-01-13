@@ -24,8 +24,6 @@ module.exports = State.extend({
   props: {
     angle: 'number',
     factor: 'number',
-    geometry: 'string',
-    lattice: 'string',
     name: 'string',
     transformation: 'string',
     type: 'string',
