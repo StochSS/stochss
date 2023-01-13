@@ -52,8 +52,7 @@ module.exports = View.extend({
       $(this.queryByHook('view-actions')).addClass('active');
     }else{
       this.renderEditActionsView();
-      this.collection.on('update-geometry-options', this.updateGeometryOptions, this);
-      this.collection.on('update-lattice-options', this.updateLatticeOptions, this);
+      this.collection.on('update-shape-options', this.updateShapeOptions, this);
       this.collection.on('update-transformation-options', this.updateTransformationOptions, this);
       this.collection.on('update-type-options', this.updateTypeOptions, this);
     }
@@ -93,35 +92,22 @@ module.exports = View.extend({
       options
     );
   },
-  updateGeometryOptions: function ({currName=null, newName=null}={}) {
+  updateShapeOptions: function ({currName=null, newName=null}={}) {
     if(currName === null && newName === null) { return; }
     this.editActionsView.views.forEach((view) => {
-      if(view.model.geometry === currName) {
-        view.model.geometry = newName;
+      if(view.model.shape === currName) {
+        view.model.shape = newName;
       }
-      view.renderGeometrySelectView();
-    });
-  },
-  updateLatticeOptions: function ({currName=null, newName=null}={}) {
-    if(currName === null && newName === null) { return; }
-    this.editActionsView.views.forEach((view) => {
-      if(view.model.lattice === currName) {
-        view.model.lattice = newName;
-      }
-      view.renderLatticeSelectView();
+      view.renderShapeSelectView();
     });
   },
   updateTransformationOptions: function ({currName=null, newName=null}={}) {
     if(currName === null && newName === null) { return; }
     this.editActionsView.views.forEach((view) => {
-      if(view.model.geometry === currName && newName !== null) {
-        view.model.geometry = newName;
+      if(view.model.transformation === currName && newName !== null) {
+        view.model.transformation = newName;
       }
-      if(view.model.lattice === currName && newName !== null) {
-        view.model.lattice = newName;
-      }
-      view.renderGeometrySelectView();
-      view.renderLatticeSelectView();
+      view.renderTransformationSelectView();
     });
   },
   updateTypeOptions: function ({currName=null, newName=null}={}) {

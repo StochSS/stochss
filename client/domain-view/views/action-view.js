@@ -49,8 +49,8 @@ module.exports = View.extend({
     'change [data-hook=select-type-container]' : 'selectActionType',
     'change [data-hook=select-scope-container]' : 'selectActionScope',
     'change [data-target=update-preview-plot]' : 'updatePreviewPlot',
-    'change [data-hook=geometry-container]' : 'selectGeometry',
-    'change [data-hook=fill-lattice-container]' : 'selectLattice',
+    'change [data-hook=shape-container]' : 'selectShape',
+    'change [data-hook=transformation-container]' : 'selectTransformation',
     'change [data-target=point]' : 'setPoint',
     'change [data-target=new-point]' : 'setNewPoint',
     'change [data-hook=particle-type]' : 'setParticleType',
@@ -71,7 +71,6 @@ module.exports = View.extend({
       'Multi Particle': {
         'Fill Action': [
           $(this.queryByHook('multi-particle-scope')),
-          $(this.queryByHook('fill-lattice')),
           $(this.queryByHook('particle-properties'))
         ],
         'Set Action': [
@@ -103,8 +102,8 @@ module.exports = View.extend({
         setTimeout(_.bind(this.openDetails, this), 1);
       }
       this.model.on('change', _.bind(this.updateViewer, this));
-      this.renderGeometrySelectView();
-      this.renderLatticeSelectView();
+      this.renderShapeSelectView();
+      this.renderTransformationSelectView();
       this.renderNewLocationViews();
       this.renderTypeSelectView();
       this.renderParticleProperties();
@@ -120,22 +119,11 @@ module.exports = View.extend({
     this.model.enable = !this.model.enable;
     this.collection.parent.trigger('update-plot-preview');
   },
-  getGeometryOptions: function () {
-    let geometries = this.model.collection.parent.geometries.map((geometry) => {
-      return geometry.name;
+  getShapeOptions: function () {
+    let options = [];
+    this.model.collection.parent.shapes.forEach((shape) => {
+      if(shape.fillable) { options.push(shape.name); }
     });
-    let transformations = this.getTransformationOptions();
-    let options = [{groupName: "Geometries", options: geometries},
-                   {groupName: "Transformations", options: transformations}];
-    return options
-  },
-  getLatticeOptions: function () {
-    let lattices = this.model.collection.parent.lattices.map((lattice) => {
-      return lattice.name;
-    });
-    let transformations = this.getTransformationOptions();
-    let options = [{groupName: "Lattices", options: lattices},
-                   {groupName: "Transformations", options: transformations}];
     return options;
   },
   getTransformationOptions: function () {
@@ -175,35 +163,35 @@ module.exports = View.extend({
     let hook = "particle-rho";
     app.registerRenderSubview(this, this.densityPropertyView, hook);
   },
-  renderGeometrySelectView: function () {
-    if(this.geometrySelectView) {
-      this.geometrySelectView.remove();
+  renderShapeSelectView: function () {
+    if(this.shapeSelectView) {
+      this.shapeSelectView.remove();
     }
-    let options = this.getGeometryOptions();
-    this.geometrySelectView = new SelectView({
-      name: 'geometry',
+    let options = this.getShapeOptions();
+    this.shapeSelectView = new SelectView({
+      name: 'shape',
       required: true,
-      groupOptions: options,
-      value: this.model.geometry,
-      unselectedText: "-- Select Geometry --"
+      options: options,
+      value: this.model.shape,
+      unselectedText: "-- Select Shape --"
     });
-    let hook = "geometry-container";
-    app.registerRenderSubview(this, this.geometrySelectView, hook);
+    let hook = "shape-container";
+    app.registerRenderSubview(this, this.shapeSelectView, hook);
   },
-  renderLatticeSelectView: function () {
-    if(this.latticeSelectView) {
-      this.latticeSelectView.remove();
+  renderTransformationSelectView: function () {
+    if(this.transformationSelectView) {
+      this.transformationSelectView.remove();
     }
-    let options = this.getLatticeOptions();
-    this.latticeSelectView = new SelectView({
-      name: 'lattice',
+    let options = this.getTransformationOptions();
+    this.transformationSelectView = new SelectView({
+      name: 'transformation',
       required: true,
       groupOptions: options,
-      value: this.model.lattice,
-      unselectedText: "-- Select Lattice --"
+      value: this.model.transformation,
+      unselectedText: "-- Select Transformation --"
     });
-    let hook = "fill-lattice-container";
-    app.registerRenderSubview(this, this.latticeSelectView, hook);
+    let hook = "transformation-container";
+    app.registerRenderSubview(this, this.transformationSelectView, hook);
   },
   renderMassPropertyView: function () {
     if(this.massPropertyView) {
@@ -346,25 +334,14 @@ module.exports = View.extend({
     this.displayDetails();
     this.updatePreviewPlot();
   },
-  selectGeometry: function (e) {
-    this.model.geometry = e.target.value;
-    this.model.collection.parent.trigger('update-geometry-deps');
-    this.model.collection.parent.trigger('update-transformation-deps');
+  selectShape: function (e) {
+    this.model.shape = e.target.value;
+    this.model.collection.parent.trigger('update-shape-deps');
     this.updateViewer();
     this.updatePreviewPlot();
   },
-  selectLattice: function (e) {
-    this.model.lattice = e.target.value;
-    if(this.model.lattice !== '') {
-      let lattice = this.model.collection.parent.lattices.get(this.model.lattice, 'name');
-      if(lattice) {
-        this.model.useProps = lattice.type !== "StochSS Lattice";
-      }else{
-        let transformation = this.model.collection.parent.transformations.get(this.model.lattice, 'name');
-        this.model.useProps = transformation.useProps;
-      }
-    }
-    this.model.collection.parent.trigger('update-lattice-deps');
+  selectTransformation: function (e) {
+    this.model.transformation = e.target.value;
     this.model.collection.parent.trigger('update-transformation-deps');
     this.updateViewer();
     this.updatePreviewPlot();
@@ -405,7 +382,7 @@ module.exports = View.extend({
   update: function () {},
   updatePreviewPlot: function () {
     if(!this.model.enable) { return }
-    if(this.model.type === "Fill Action" && this.model.scope === "Multi Particle" && this.model.lattice === "") {
+    if(this.model.type === "Fill Action" && this.model.scope === "Multi Particle" && this.model.shape === "") {
       return
     }
     this.collection.parent.trigger('update-plot-preview');

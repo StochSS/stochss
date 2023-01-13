@@ -29,15 +29,15 @@ div.mx-1
 
       div.col-sm-6.pl-0
 
-        h5.inline.mr-2 Geometry:
+        h5.inline.mr-2 Shape:
 
-        div.inline=this.model.geometry ? this.model.geometry : 'None'
+        div.inline=this.model.shape ? this.model.shape : 'None'
 
-      div.col-sm-6(data-hook="fill-lattice")
+      div.col-sm-6
 
-        h5.inline.mr-2 Lattice
+        h5.inline.mr-2 Transformation:
 
-        div.inline=this.model.lattice ? this.model.lattice : 'None'
+        div.inline=this.model.transformation ? this.model.transformation : 'None'
 
   div.hidden(data-hook="single-particle-scope")
 
