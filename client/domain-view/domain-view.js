@@ -32,9 +32,7 @@ let TypesView = require('./views/types-view');
 let LimitsView = require('./views/limits-view');
 let ShapesView = require('./views/shapes-view');
 let ActionsView = require('./views/actions-view');
-let LatticesView = require('./views/lattices-view');
 let QuickviewType = require('./views/quickview-type');
-let GeometriesView = require('./views/geometries-view');
 let PropertiesView = require('./views/properties-view');
 let EditParticleView = require('./views/particle-view');
 let ViewParticleView = require('./views/view-particle');
@@ -70,8 +68,6 @@ module.exports = View.extend({
     }else{
       this.model.on('update-type-deps', this.updateTypeDeps, this);
       this.model.on('update-shape-deps', this.updateShapeDeps, this);
-      this.model.on('update-geometry-deps', this.updateGeometryDeps, this);
-      this.model.on('update-lattice-deps', this.updateLatticeDeps, this);
       this.model.on('update-transformation-deps', this.updateTransformationDeps, this);
       this.model.on('update-particle-type-options', this.updateParticleTypeOptions, this);
       this.renderEditParticleView();
@@ -80,8 +76,6 @@ module.exports = View.extend({
     this.renderLimitsView();
     this.renderTypesView();
     this.renderShapesView();
-    this.renderGeometriesView();
-    this.renderLatticesView();
     this.renderTransformationsView();
     this.renderActionsView();
     if(!this.elements) {
@@ -134,7 +128,7 @@ module.exports = View.extend({
     let type = this.model.types.get(0, 'typeID');
     return new Action({
       type: "", scope: 'Single Particle', priority: 1, enable: true,
-      geometry: '', lattice: '', typeID: type.typeID,
+      shape: '', transformation: '', typeID: type.typeID,
       point: {x: 0, y: 0, z: 0}, newPoint: {x: 0, y: 0, z: 0},
       c: type.c, fixed: type.fixed, mass: type.mass,
       nu: type.nu, rho: type.rho, vol: type.volume
@@ -210,28 +204,6 @@ module.exports = View.extend({
     $(this.queryByHook("edit-select-message")).css('display', disable ? 'block' : 'none');
     $(this.queryByHook("save-selected-particle")).prop('disabled', disable);
     $(this.queryByHook("remove-selected-particle")).prop('disabled', disable);
-  },
-  renderGeometriesView: function () {
-    if(this.geometriesView) {
-      this.geometriesView.reomve();
-    }
-    this.geometriesView = new GeometriesView({
-      collection: this.model.geometries,
-      readOnly: this.readOnly
-    });
-    let hook = "domain-geometries-container";
-    app.registerRenderSubview(this, this.geometriesView, hook);
-  },
-  renderLatticesView: function () {
-    if(this.latticesView) {
-      this.latticesView.reomve();
-    }
-    this.latticesView = new LatticesView({
-      collection: this.model.lattices,
-      readOnly: this.readOnly
-    });
-    let hook = "domain-lattices-container";
-    app.registerRenderSubview(this, this.latticesView, hook);
   },
   renderLimitsView: function () {
     if(this.limitsView) {
@@ -317,7 +289,7 @@ module.exports = View.extend({
     this.actPart.part = particle;
     this.actPart.action = new Action({
       type: "", scope: 'Single Particle', priority: 1, enable: true,
-      geometry: '', lattice: '', typeID: particle.type,
+      shape: '', transformation: '', typeID: particle.type,
       point: {x: particle.point[0], y: particle.point[1], z: particle.point[2]},
       newPoint: {x: particle.point[0], y: particle.point[1], z: particle.point[2]},
       c: particle.c, fixed: particle.fixed, mass: particle.mass,
@@ -334,58 +306,6 @@ module.exports = View.extend({
   startAction: function (prefix) {
     $(this.queryByHook(`${prefix}-complete`)).css('display', 'none');
     $(this.queryByHook(`${prefix}-in-progress`)).css("display", "inline-block");
-  },
-  updateGeometryDeps: function () {
-    let deps = [];
-    let geomNames = [];
-    let combForms = [];
-    this.model.geometries.forEach((geometry) => {
-      geomNames.push(geometry.name);
-      if(geometry.type === "Combinatory Geometry") {
-        combForms.push(geometry.formula)
-      }
-    });
-    combForms.forEach((formula) => {
-      formula = formula.replace(/\(/g, ' ').replace(/\)/g, ' ');
-      let formDeps = formula.split(' ');
-      geomNames.forEach((name) => {
-        if(formDeps.includes(name) && !deps.includes(name)) {
-          deps.push(name);
-        }
-      });
-    });
-    this.model.transformations.forEach((transformation) => {
-      let geometry = transformation.geometry;
-      if(geomNames.includes(geometry) && !deps.includes(geometry)) {
-        deps.push(geometry);
-      }
-    });
-    this.model.actions.forEach((action) => {
-      let geometry = action.geometry;
-      if(geomNames.includes(geometry) && !deps.includes(geometry)) {
-        deps.push(geometry);
-      }
-    });
-    this.model.geometries.trigger('update-inuse', {deps: deps});
-  },
-  updateLatticeDeps: function () {
-    let deps = [];
-    let lattNames = this.model.lattices.map((lattice) => {
-      return lattice.name;
-    });
-    this.model.transformations.forEach((transformation) => {
-      let lattice = transformation.lattice;
-      if(lattNames.includes(lattice) && !deps.includes(lattice)) {
-        deps.push(lattice);
-      }
-    });
-    this.model.actions.forEach((action) => {
-      let lattice = action.lattice
-      if(lattNames.includes(lattice) && !deps.includes(lattice)) {
-        deps.push(lattice);
-      }
-    });
-    this.model.lattices.trigger('update-inuse', {deps: deps});
   },
   updateParticleTypeOptions: function ({currName=null, newName=null}={}) {
     if(currName === null && newName === null) { return; }
@@ -433,7 +353,7 @@ module.exports = View.extend({
     let combForms = [];
     this.model.shapes.forEach((shape) => {
       shapeNames.push(shape.name);
-      if(shape.geometry === "Combinatory") {
+      if(shape.type === "Combinatory") {
         combForms.push(shape.formula)
       }
     });
@@ -446,12 +366,12 @@ module.exports = View.extend({
         }
       });
     });
-    // this.model.actions.forEach((action) => {
-    //   let shape = action.shape;
-    //   if(shapeNames.includes(shape) && !deps.includes(shape)) {
-    //     deps.push(shape);
-    //   }
-    // });
+    this.model.actions.forEach((action) => {
+      let shape = action.shape;
+      if(shapeNames.includes(shape) && !deps.includes(shape)) {
+        deps.push(shape);
+      }
+    });
     this.model.shapes.trigger('update-inuse', {deps: deps});
   },
   updateTransformationDeps: function () {
@@ -466,13 +386,9 @@ module.exports = View.extend({
       }
     });
     this.model.actions.forEach((action) => {
-      let geometry = action.geometry;
-      let lattice = action.lattice;
-      if(transNames.includes(geometry) && !deps.includes(geometry)) {
-        deps.push(geometry);
-      }
-      if(transNames.includes(lattice) && !deps.includes(lattice)) {
-        deps.push(lattice);
+      let transformation = action.transformation;
+      if(transNames.includes(transformation) && !deps.includes(transformation)) {
+        deps.push(transformation);
       }
     });
     this.model.transformations.trigger('update-inuse', {deps: deps});
