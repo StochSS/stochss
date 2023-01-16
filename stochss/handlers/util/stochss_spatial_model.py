@@ -298,51 +298,6 @@ class StochSSSpatialModel(StochSSBase):
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
 
-    # def __convert_lattices(self, s_domain):
-    #     try:
-    #         lattices = {}
-    #         for s_lattice in s_domain['lattices']:
-    #             name = s_lattice['name']
-    #             center = [
-    #                 s_lattice['center']['x'], s_lattice['center']['y'], s_lattice['center']['z']
-    #             ]
-    #             if s_lattice['type'] == "Cartesian Lattice":
-    #                 lattice = CartesianLattice(
-    #                     s_lattice['xmin'], s_lattice['xmax'], s_lattice['deltax'], center=center,
-    #                     ymin=s_lattice['ymin'], ymax=s_lattice['ymax'], deltay=s_lattice['deltay'],
-    #                     zmin=s_lattice['zmin'], zmax=s_lattice['zmax'], deltaz=s_lattice['deltaz']
-    #                 )
-    #             elif s_lattice['type'] == "Spherical Lattice":
-    #                 lattice = SphericalLattice(
-    #                     s_lattice['radius'], s_lattice['deltas'], center=center,
-    #                     deltar=s_lattice['deltar']
-    #                 )
-    #             elif s_lattice['type'] == "Cylindrical Lattice":
-    #                 lattice = CylindricalLattice(
-    #                     s_lattice['radius'], s_lattice['length'], s_lattice['deltas'],
-    #                     center=center, deltar=s_lattice['deltar']
-    #                 )
-    #             elif s_lattice['type'] == "XML Mesh Lattice":
-    #                 lattice = XMLMeshLattice(
-    #                     os.path.join(self.user_dir, s_lattice['filename']), center=center,
-    #                     subdomain_file=os.path.join(self.user_dir, s_lattice['subdomainFile'])
-    #                 )
-    #             elif s_lattice['type'] == "Mesh IO Lattice":
-    #                 lattice = MeshIOLattice(
-    #                     os.path.join(self.user_dir, s_lattice['filename']), center=center,
-    #                     subdomain_file=os.path.join(self.user_dir, s_lattice['subdomainFile'])
-    #                 )
-    #             else:
-    #                 lattice = StochSSLattice(
-    #                     os.path.join(self.user_dir, s_lattice['filename']), center=center
-    #                 )
-    #             lattices[name] = lattice
-    #         return lattices
-    #     except KeyError as err:
-    #         message = "Spatial lattices are not properly formatted or "
-    #         message += f"are referenced incorrectly: {str(err)}"
-    #         raise StochSSModelFormatError(message, traceback.format_exc()) from err
-
     def __convert_model_settings(self, model):
         try:
             end = self.model['modelSettings']['endSim']
@@ -594,12 +549,6 @@ class StochSSSpatialModel(StochSSBase):
                     lattice['subdomainFile'] = sdf_entry['pres_path']
                     presentation['files'][f"{lattice['name']}_sdf"] = sdf_entry
         return self.__write_presentation_file(presentation, dst)
-
-    @classmethod
-    def __get_base_transformation(cls, transformation):
-        while transformation.transformation is not None:
-            transformation = transformation.transformation
-        return transformation
 
     def __get_presentation_file_entry(self, path, presentation_file):
         entry = {'name': self.get_file(path=path)}
