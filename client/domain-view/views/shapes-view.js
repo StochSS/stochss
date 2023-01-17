@@ -41,7 +41,6 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
-    console.log(this.collection)
     if(this.readOnly) {
       $(this.queryByHook('shapes-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
