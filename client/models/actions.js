@@ -32,6 +32,7 @@ module.exports = Collection.extend({
       action = new Action({
         c: 10,
         enable: false,
+        filename: '',
         fixed: false,
         mass: 1.0,
         nu: 0.0,
@@ -39,6 +40,7 @@ module.exports = Collection.extend({
         rho: 1.0,
         scope: 'Multi Particle',
         shape: '',
+        subdomainFile: '',
         transformation: '',
         type: type,
         typeID: 0,
