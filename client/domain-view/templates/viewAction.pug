@@ -144,3 +144,17 @@ div.mx-1
         div.col-sm-2
 
           input(type="checkbox" checked=this.model.fixed disabled)
+
+  div.hidden(data-hook="import-properties")
+
+    div
+
+      h6.mr-2.inline <b>Filename</b>:
+
+      div.inline=this.model.filename ? `'${this.model.filename}'` : 'None'
+
+    div.hidden(data-hook="type-descriptions-prop")
+
+      h6.mr-2.inline <b>Type Descriptions</b>:
+
+      div.inline=this.model.subdomainFile ? `'${this.model.subdomainFile}'` : 'None'
