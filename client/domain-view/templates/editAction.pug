@@ -11,15 +11,11 @@ div.mx-1
 
         input(type="checkbox" data-hook="select-action" data-toggle="collapse" data-target="#collapse-action-details" + this.model.cid)
 
-    div.col-sm-2
+    div.col-sm-4
 
       div(data-hook="select-type-container")
 
     div.col-sm-3
-
-      div(data-hook="select-scope-container")
-
-    div.col-sm-2
 
       div.pl-2(data-hook="input-priority-container" data-target="update-preview-plot")
 
@@ -37,17 +33,23 @@ div.mx-1
 
       hr
 
-      div.hidden(data-hook="multi-particle-scope")
+      div
 
         div.mb-3.mx-1.row.align-items-baseline
 
-          div.col-sm-6.pl-0
+          div.col-sm-4.pl-0.hidden(data-hook="action-scope")
+
+            h5.inline.mr-2 Scope:
+
+            div.inline(data-hook="select-scope-container")
+
+          div.col-sm-4.hidden(data-hook="multi-particle-shape")
 
             h5.inline.mr-2 Shape:
 
             div.inline(data-hook="shape-container")
 
-          div.col-sm-6
+          div.col-sm-4.hidden(data-hook="multi-particle-transformation")
 
             h5.inline.mr-2 Transformation:
 
@@ -113,7 +115,7 @@ div.mx-1
 
             div.col-sm-2
 
-              h6.inline <b>Volume<b>
+              h6.inline <b>Volume</b>
 
             div.col-sm-2
 

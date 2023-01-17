@@ -35,15 +35,11 @@ div#domain-actions-editor.card
 
             h6.inline <b>Edit</b>
 
-          div.col-sm-2
+          div.col-sm-4
 
             h6.inline <b>Type</b>
 
           div.col-sm-3
-
-            h6.inline <b>Scope</b>
-
-          div.col-sm-2
 
             h6.inline <b>Priority</b>
 
@@ -71,6 +67,11 @@ div#domain-actions-editor.card
             li.dropdown-item(data-hook="fill-action" data-name="Fill Action") Fill Action
             li.dropdown-item(data-hook="set-action" data-name="Set Action") Set Action
             li.dropdown-item(data-hook="remove-action" data-name="Remove Action") Remove Action
+            li.dropdown-item(href="#") Import Action &raquo;
+              ul.dropdown-menu.dropdown-submenu
+                li.dropdown-item(data-hook="xml-mesh-action" data-name="XML Mesh") XML Mesh
+                li.dropdown-item(data-hook="mesh-io-action" data-name="Mesh IO") Mesh IO
+                li.dropdown-item(data-hook="stochss-domain-action" data-name="StochSS Domain") StochSS Domain
 
       div.tab-pane(id="view-actions" data-hook="view-actions")
 
@@ -78,12 +79,10 @@ div#domain-actions-editor.card
 
         div.mx-1.row.head.align-items-baseline
 
-          div.col-sm-3: h6 <b>Type</b>
+          div.col-sm-4: h6 <b>Type</b>
 
-          div.col-sm-3: h6 <b>Scope</b>
+          div.col-sm-4: h6 <b>Priority</b>
 
-          div.col-sm-3: h6 <b>Priority</b>
-
-          div.col-sm-3: h6 <b>Enable</b>
+          div.col-sm-4: h6 <b>Enable</b>
 
         div.mt-3(data-hook="view-actions-list")

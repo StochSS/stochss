@@ -5,35 +5,37 @@ div.mx-1
 
   div.row
 
-    div.col-sm-3
+    div.col-sm-4
 
       div.pl-2=this.model.type
 
-    div.col-sm-3
-
-      div=this.model.scope
-
-    div.col-sm-3
+    div.col-sm-4
 
       div.pl-2=this.model.priority
 
-    div.col-sm-3
+    div.col-sm-4
 
       input(type="checkbox" checked=this.model.enable disabled)
 
   hr
 
-  div.hidden(data-hook="multi-particle-scope")
+  div
 
     div.mb-3.mx-1.row.align-items-baseline
 
-      div.col-sm-6.pl-0
+      div.col-sm-4.pl-0.hidden(data-hook="action-scope")
+
+        h5.inline.mr-2 Scope:
+
+        div.inline=this.model.scope
+
+      div.col-sm-4.hidden(data-hook="multi-particle-shape")
 
         h5.inline.mr-2 Shape:
 
         div.inline=this.model.shape ? this.model.shape : 'None'
 
-      div.col-sm-6
+      div.col-sm-4.hidden(data-hook="multi-particle-transformation")
 
         h5.inline.mr-2 Transformation:
 

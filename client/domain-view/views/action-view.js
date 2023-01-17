@@ -70,31 +70,49 @@ module.exports = View.extend({
     this.details = {
       'Multi Particle': {
         'Fill Action': [
-          $(this.queryByHook('multi-particle-scope')),
+          $(this.queryByHook('action-scope')),
+          $(this.queryByHook('multi-particle-shape')),
+          $(this.queryByHook('multi-particle-transformation')),
           $(this.queryByHook('particle-properties'))
         ],
         'Set Action': [
-          $(this.queryByHook('multi-particle-scope')),
+          $(this.queryByHook('action-scope')),
+          $(this.queryByHook('multi-particle-shape')),
+          $(this.queryByHook('multi-particle-transformation')),
           $(this.queryByHook('particle-properties'))
         ],
         'Remove Action': [
-          $(this.queryByHook('multi-particle-scope'))
+          $(this.queryByHook('action-scope')),
+          $(this.queryByHook('multi-particle-shape')),
+          $(this.queryByHook('multi-particle-transformation'))
         ]
       },
       'Single Particle': {
         'Fill Action': [
+          $(this.queryByHook('action-scope')),
           $(this.queryByHook('single-particle-scope')),
           $(this.queryByHook('particle-properties'))
         ],
         'Set Action': [
+          $(this.queryByHook('action-scope')),
           $(this.queryByHook('single-particle-scope')),
           $(this.queryByHook('new-location')),
           $(this.queryByHook('particle-properties'))
         ],
         'Remove Action': [
+          $(this.queryByHook('action-scope')),
           $(this.queryByHook('single-particle-scope'))
         ]
-      }
+      },
+      'XML Mesh': [
+        $(this.queryByHook('multi-particle-transformation'))
+      ],
+      'Mesh IO': [
+        $(this.queryByHook('multi-particle-transformation'))
+      ],
+      'StochSS Domain': [
+        $(this.queryByHook('multi-particle-transformation'))
+      ]
     }
     app.documentSetup();
     if(!this.viewMode){
@@ -111,7 +129,10 @@ module.exports = View.extend({
     this.displayDetails();
   },
   displayDetails: function () {
-    this.details[this.model.scope][this.model.type].forEach((element) => {
+    let importTypes = ['XML Mesh', 'Mesh IO', 'StochSS Domain']
+    let elements = importTypes.includes(this.model.type) ? 
+                   this.details[this.model.type] : this.details[this.model.scope][this.model.type];
+    elements.forEach((element) => {
       element.css('display', 'block');
     });
   },
@@ -132,7 +153,10 @@ module.exports = View.extend({
     });
   },
   hideDetails: function () {
-    this.details[this.model.scope][this.model.type].forEach((element) => {
+    let importTypes = ['XML Mesh', 'Mesh IO', 'StochSS Domain']
+    let elements = importTypes.includes(this.model.type) ? 
+                   this.details[this.model.type] : this.details[this.model.scope][this.model.type];
+    elements.forEach((element) => {
       element.css('display', 'none');
     });
   },
@@ -435,16 +459,15 @@ module.exports = View.extend({
     selectType: {
       hook: 'select-type-container',
       prepareView: function (el) {
-        let options = [
-          'Fill Action',
-          'Set Action',
-          'Remove Action',
-        ];
+        let groupOptions = [
+          {groupName: "Shape Actions", options: ['Fill Action', 'Set Action', 'Remove Action']},
+          {groupName: "Import Actions", options: ['XML Mesh', 'Mesh IO', 'StochSS Domain']}
+        ]
         return new SelectView({
           name: 'type',
           required: true,
           idAttributes: 'cid',
-          options: options,
+          groupOptions: groupOptions,
           value: this.model.type
         });
       }

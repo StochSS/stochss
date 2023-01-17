@@ -32,7 +32,10 @@ module.exports = View.extend({
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'click [data-hook=fill-action]' : 'addAction',
     'click [data-hook=set-action]' : 'addAction',
-    'click [data-hook=remove-action]' : 'addAction'
+    'click [data-hook=remove-action]' : 'addAction',
+    'click [data-hook=xml-mesh-action]' : 'addAction',
+    'click [data-hook=mesh-io-action]' : 'addAction',
+    'click [data-hook=stochss-domain-action]' : 'addAction'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
