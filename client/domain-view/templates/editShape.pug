@@ -9,7 +9,7 @@ div.mx-1
 
       div.pl-3
 
-        input(type="checkbox" data-hook="select-shape" data-toggle="collapse" data-target="#collapse-shape-details" + this.model.cid)
+        input(type="checkbox" data-hook="select-shape" data-toggle="collapse" data-target="#edit-collapse-shape-details" + this.model.cid)
 
     div.col-sm-2
 
@@ -35,7 +35,7 @@ div.mx-1
 
   div.mx-1.pl-2(data-hook="shape-details")
 
-    div.collapse(id="collapse-shape-details" + this.model.cid data-hook="collapse-shape-details" + this.model.cid)
+    div.collapse(id="edit-collapse-shape-details" + this.model.cid data-hook="edit-collapse-shape-details" + this.model.cid)
 
       hr
 
@@ -77,27 +77,27 @@ div.mx-1
 
           div.col-sm-2
 
-            div(data-hook="length-container")
+            div(data-hook="length-container" data-target="shape-property")
 
           div.col-sm-2
 
-            div(data-hook="height-container")
+            div(data-hook="height-container" data-target="shape-property")
 
           div.col-sm-2
 
-            div(data-hook="depth-container")
+            div(data-hook="depth-container" data-target="shape-property")
 
           div.col-sm-2
 
-            div(data-hook="delta-x-container")
+            div(data-hook="delta-x-container" data-target="shape-property")
 
           div.col-sm-2
 
-            div(data-hook="delta-y-container")
+            div(data-hook="delta-y-container" data-target="shape-property")
 
           div.col-sm-2
 
-            div(data-hook="delta-z-container")
+            div(data-hook="delta-z-container" data-target="shape-property")
 
       div.hidden(data-hook="circular-lattice-props")
 
@@ -123,16 +123,16 @@ div.mx-1
 
           div.col-sm-3
 
-            div(data-hook="radius-container")
+            div(data-hook="radius-container" data-target="shape-property")
 
           div.col-sm-3.hidden(data-hook="cylinder-length-feild")
 
-            div(data-hook="cylinder-length-container")
+            div(data-hook="cylinder-length-container" data-target="shape-property")
 
           div.col-sm-3
 
-            div(data-hook="delta-s-container")
+            div(data-hook="delta-s-container" data-target="shape-property")
 
           div.col-sm-3
 
-            div(data-hook="delta-r-container")
+            div(data-hook="delta-r-container" data-target="shape-property")

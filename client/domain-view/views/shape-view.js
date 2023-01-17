@@ -34,6 +34,7 @@ module.exports = View.extend({
     'change [data-hook=select-geometry-container]' : 'selectGeometryType',
     'change [data-hook=input-formula-container]' : 'updateGeometriesInUse',
     'change [data-hook=select-lattice-container]' : 'selectLatticeType',
+    'change [data-target=shape-property]' : 'updateViewer',
     'click [data-hook=select-shape]' : 'selectShape',
     'click [data-hook=fillable-shape]' : 'selectFillable',
     'click [data-hook=remove]' : 'removeShape'
@@ -90,7 +91,6 @@ module.exports = View.extend({
         setTimeout(_.bind(this.openDetails, this), 1);
       }
       this.renderFormulaInputView();
-      // this.model.on('change', _.bind(this.updateViewer, this));
       this.displayDetails();
     }else if(this.model.fillable) {
       setTimeout(_.bind(this.openDetails, this), 1);
@@ -108,7 +108,7 @@ module.exports = View.extend({
     });
   },
   openDetails: function () {
-    $(this.queryByHook("collapse-shape-details" + this.model.cid)).collapse("show");
+    $(this.queryByHook("view-collapse-shape-details" + this.model.cid)).collapse("show");
   },
   removeShape: function () {
     let name = this.model.name;
@@ -133,22 +133,30 @@ module.exports = View.extend({
   selectGeometryType: function (e) {
     this.model.type = e.target.value;
     this.renderFormulaInputView();
+    this.updateViewer();
   },
   selectShape: function () {
     this.model.selected = !this.model.selected;
   },
   selectFillable: function () {
     this.model.fillable = !this.model.fillable;
+    if(!this.model.fillable && this.model.selected) {
+      this.model.selected = false;
+      $(this.queryByHook("edit-collapse-shape-details" + this.model.cid)).collapse("hide");
+    }
+    this.updateViewer();
   },
   selectLatticeType: function (e) {
     this.hideDetails();
     this.model.lattice = e.target.value;
     this.displayDetails();
+    this.updateViewer();
   },
   update: function () {},
   updateDepsOptions: function (e) {
     let name = this.model.name;
     this.model.name = e.target.value;
+    this.updateViewer();
     this.model.collection.parent.actions.trigger(
       'update-shape-options', {currName: name, newName: this.model.name}
     );
@@ -157,6 +165,7 @@ module.exports = View.extend({
     if(this.model.type === "Combinatory") {
       this.model.collection.parent.trigger('update-shape-deps');
     }
+    this.updateViewer();
   },
   updateValid: function () {},
   updateViewer: function () {
