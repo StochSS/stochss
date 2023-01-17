@@ -56,13 +56,39 @@ module.exports = View.extend({
     'change [data-hook=particle-type]' : 'setParticleType',
     'change [data-target=particle-property-containers]' : 'updateViewers',
     'change [data-hook=particle-fixed]' : 'setParticleFixed',
+    'change [data-hook=mesh-file]' : 'setMeshFile',
+    'change [data-hook=type-file]' : 'setTypeFile',
+    'change [data-hook=action-mesh-select]' : 'selectMeshFile',
+    'change [data-hook=mesh-location-select]' : 'selectMeshLocation',
+    'change [data-hook=action-type-select]' : 'selectTypeFile',
+    'change [data-hook=type-location-select]' : 'selectFileLocation',
     'click [data-hook=select-action]' : 'selectAction',
     'click [data-hook=enable-action]' : 'enableAction',
-    'click [data-hook=remove]' : 'removeAction'
+    'click [data-hook=remove]' : 'removeAction',
+    'click [data-hook=collapseImportFiles]' : 'toggleImportFiles',
+    'click [data-hook=collapseUploadedFiles]' : 'toggleUploadedFiles',
+    'click [data-hook=import-mesh-file]' : 'handleImportMesh'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    this.chevrons = {
+      hide: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512">
+          <path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/>
+        </svg>
+      `,
+      show: `
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512">
+          <path d="M233.4 105.4c12.5-12.5 32.8-12.5 45.3 0l192 192c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L256 173.3 86.6 342.6c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3l192-192z"/>
+        </svg>
+      `
+    }
+    this.accepts = {"XML Mesh": ".xml", "Mesh IO": ".msh", "StochSS Domain": ".domn"};
+    this.accept = Object.keys(this.accepts).includes(this.model.type) ? this.accepts[this.model.type] : null;
+    this.filetype = this.model.type === "StochSS Domain" ? 'domain' : 'mesh';
+    this.meshFile = null;
+    this.typeFile = null;
   },
   render: function () {
     this.template = this.viewMode ? viewTemplate : editTemplate;
@@ -105,13 +131,18 @@ module.exports = View.extend({
         ]
       },
       'XML Mesh': [
-        $(this.queryByHook('multi-particle-transformation'))
+        $(this.queryByHook('multi-particle-transformation')),
+        $(this.queryByHook('import-properties')),
+        $(this.queryByHook('type-descriptions-prop'))
       ],
       'Mesh IO': [
-        $(this.queryByHook('multi-particle-transformation'))
+        $(this.queryByHook('multi-particle-transformation')),
+        $(this.queryByHook('import-properties')),
+        $(this.queryByHook('type-descriptions-prop'))
       ],
       'StochSS Domain': [
-        $(this.queryByHook('multi-particle-transformation'))
+        $(this.queryByHook('multi-particle-transformation')),
+        $(this.queryByHook('import-properties'))
       ]
     }
     app.documentSetup();
@@ -125,8 +156,20 @@ module.exports = View.extend({
       this.renderNewLocationViews();
       this.renderTypeSelectView();
       this.renderParticleProperties();
+      if(Object.keys(this.accepts).includes(this.model.type)) {
+        this.meshFiles = null;
+        this.typeFiles = null;
+        this.renderActionFileSelects();
+      }
     }
     this.displayDetails();
+  },
+  completeAction: function () {
+    $(this.queryByHook("imf-in-progress")).css("display", "none");
+    $(this.queryByHook("imf-complete")).css("display", "inline-block");
+    setTimeout(() => {
+      $(this.queryByHook("imf-complete")).css("display", "none");
+    }, 5000);
   },
   displayDetails: function () {
     let importTypes = ['XML Mesh', 'Mesh IO', 'StochSS Domain']
@@ -140,6 +183,11 @@ module.exports = View.extend({
     this.model.enable = !this.model.enable;
     this.collection.parent.trigger('update-plot-preview');
   },
+  errorAction: function (action) {
+    $(this.queryByHook("imf-in-progress")).css("display", "none");
+    $(this.queryByHook("imf-action-error")).text(action);
+    $(this.queryByHook("imf-error")).css("display", "block");
+  },
   getShapeOptions: function () {
     let options = [];
     this.model.collection.parent.shapes.forEach((shape) => {
@@ -151,6 +199,37 @@ module.exports = View.extend({
     return this.model.collection.parent.transformations.map((transformation) => {
       return transformation.name;
     });
+  },
+  handleImportMesh: function () {
+    this.startAction();
+    let formData = new FormData();
+    var filePath = this.model.collection.parent.directory;
+    if(filePath === null) {
+      filePath = this.parent.parent.parent.model.directory;
+    }
+    formData.append("path", filePath);
+    formData.append("datafile", this.meshFile);
+    if(this.typeFile) {
+      formData.append("typefile", this.typeFile);
+    }
+    let endpoint = path.join(app.getApiPath(), 'spatial-model/import-mesh');
+    app.postXHR(endpoint, formData, {
+      success: (err, response, body) => {
+        body = JSON.parse(body);
+        this.model.filename = path.join(body.meshPath, body.meshFile);
+        if(Object.keys(body).includes("typesPath")) {
+          this.model.subdomainFile = path.join(body.typesPath, body.typesFile);
+          this.typeFiles = null;
+        }
+        this.completeAction();
+        $(this.queryByHook('collapseUploadedFiles')).click();
+        this.renderActionFileSelects();
+      },
+      error: (err, response, body) => {
+        body = JSON.parse(body);
+        this.errorAction(body.Message);
+      }
+    }, false);
   },
   hideDetails: function () {
     let importTypes = ['XML Mesh', 'Mesh IO', 'StochSS Domain']
@@ -171,6 +250,21 @@ module.exports = View.extend({
       actions.parent.trigger('update-plot-preview');
     }
   },
+  renderActionFileSelects: function () {
+    var queryStr = `?ext=${this.accept}`;
+    if(this.typeFiles === null) {
+      queryStr += `${queryStr}&includeTypes=True`;
+    }
+    let endpoint = `${path.join(app.getApiPath(), 'spatial-model/lattice-files')}${queryStr}`;
+    app.getXHR(endpoint, {success: (err, response, body) => {
+      this.meshFiles = body.meshFiles;
+      this.renderMeshSelectView();
+      if(Object.keys(body).includes('typeFiles')) {
+        this.typeFiles = body.typeFiles;
+        this.renderTypeFileSelectView();
+      }
+    }});
+  },
   renderDensityPropertyView: function () {
     if(this.densityPropertyView) {
       this.densityPropertyView.remove();
@@ -187,36 +281,6 @@ module.exports = View.extend({
     let hook = "particle-rho";
     app.registerRenderSubview(this, this.densityPropertyView, hook);
   },
-  renderShapeSelectView: function () {
-    if(this.shapeSelectView) {
-      this.shapeSelectView.remove();
-    }
-    let options = this.getShapeOptions();
-    this.shapeSelectView = new SelectView({
-      name: 'shape',
-      required: true,
-      options: options,
-      value: this.model.shape,
-      unselectedText: "-- Select Shape --"
-    });
-    let hook = "shape-container";
-    app.registerRenderSubview(this, this.shapeSelectView, hook);
-  },
-  renderTransformationSelectView: function () {
-    if(this.transformationSelectView) {
-      this.transformationSelectView.remove();
-    }
-    let options = this.getTransformationOptions();
-    this.transformationSelectView = new SelectView({
-      name: 'transformation',
-      required: true,
-      options: options,
-      value: this.model.transformation,
-      unselectedText: "-- Select Transformation --"
-    });
-    let hook = "transformation-container";
-    app.registerRenderSubview(this, this.transformationSelectView, hook);
-  },
   renderMassPropertyView: function () {
     if(this.massPropertyView) {
       this.massPropertyView.remove();
@@ -232,6 +296,47 @@ module.exports = View.extend({
     });
     let hook = "particle-mass";
     app.registerRenderSubview(this, this.massPropertyView, hook);
+  },
+  renderMeshLocationSelectView: function (index) {
+    if(this.meshLocationSelectView) {
+      this.meshLocationSelectView.remove();
+    }
+    let value = Boolean(this.model.filename) ? this.model.filename : "";
+    this.meshLocationSelectView = new SelectView({
+      name: 'mesh-locations',
+      required: false,
+      idAttributes: 'cid',
+      options: this.meshFiles.paths[index],
+      value: value,
+      unselectedText: "-- Select Mesh File Location --"
+    });
+    let hook = "mesh-location-select";
+    app.registerRenderSubview(this, this.meshLocationSelectView, hook);
+  },
+  renderMeshSelectView: function () {
+    if(this.meshSelectView) {
+      this.meshSelectView.remove();
+    }
+    let files = this.meshFiles.files.filter((file) => {
+      if(file[1] === this.model.filename.split('/').pop()) {
+        return file;
+      }
+    });
+    let value = files.length > 0 ? files[0] : "";
+    this.meshSelectView = new SelectView({
+      name: 'mesh-files',
+      required: false,
+      idAttributes: 'cid',
+      options: this.meshFiles.files,
+      value: value,
+      unselectedText: "-- Select Mesh File --"
+    });
+    let hook = "action-mesh-select";
+    app.registerRenderSubview(this, this.meshSelectView, hook);
+    if(value !== "" && this.meshFiles.paths[value[0]].length > 1) {
+      this.renderMeshLocationSelectView(value[0]);
+      $(this.queryByHook("mesh-location-container")).css("display", "inline-block");
+    }
   },
   renderNewLocationViews: function () {
     if(this.newLocationViews) {
@@ -279,6 +384,21 @@ module.exports = View.extend({
     this.renderViscosityPropertyView();
     this.renderSOSPropertyView();
   },
+  renderShapeSelectView: function () {
+    if(this.shapeSelectView) {
+      this.shapeSelectView.remove();
+    }
+    let options = this.getShapeOptions();
+    this.shapeSelectView = new SelectView({
+      name: 'shape',
+      required: true,
+      options: options,
+      value: this.model.shape,
+      unselectedText: "-- Select Shape --"
+    });
+    let hook = "shape-container";
+    app.registerRenderSubview(this, this.shapeSelectView, hook);
+  },
   renderSOSPropertyView: function () {
     if(this.sOSPropertyView) {
       this.sOSPropertyView.remove();
@@ -294,6 +414,62 @@ module.exports = View.extend({
     });
     let hook = "particle-c";
     app.registerRenderSubview(this, this.sOSPropertyView, hook);
+  },
+  renderTransformationSelectView: function () {
+    if(this.transformationSelectView) {
+      this.transformationSelectView.remove();
+    }
+    let options = this.getTransformationOptions();
+    this.transformationSelectView = new SelectView({
+      name: 'transformation',
+      required: true,
+      options: options,
+      value: this.model.transformation,
+      unselectedText: "-- Select Transformation --"
+    });
+    let hook = "transformation-container";
+    app.registerRenderSubview(this, this.transformationSelectView, hook);
+  },
+  renderTypeLocationSelectView: function (index) {
+    if(this.typeLocationSelectView) {
+      this.typeLocationSelectView.remove();
+    }
+    let value = Boolean(this.model.subdomainFile) ? this.model.subdomainFile : "";
+    this.typeLocationSelectView = new SelectView({
+      name: 'type-locations',
+      required: false,
+      idAttributes: 'cid',
+      options: this.typeFiles.paths[index],
+      value: value,
+      unselectedText: "-- Select Type File Location --"
+    });
+    let hook = "type-location-select";
+    app.registerRenderSubview(this, this.typeLocationSelectView, hook);
+  },
+  renderTypeFileSelectView: function () {
+    if(this.typeSelectView) {
+      this.typeSelectView.remove();
+    }
+    var file = this.typeFiles.files.filter((file) => {
+      if(file[1] === this.model.subdomainFile.split('/').pop()) {
+        return file;
+      }
+    });
+    let value = file.length > 0 ? file[0] : "";
+    this.typeSelectView = new SelectView({
+      name: 'type-files',
+      required: false,
+      idAttributes: 'cid',
+      options: this.typeFiles.files,
+      value: value,
+      unselectedText: "-- Select Type File --"
+    });
+    let hook = "action-type-select";
+    app.registerRenderSubview(this, this.typeSelectView, hook);
+    if(value !== "" && this.typeFiles.paths[value[0]].length > 1) {
+      this.renderTypeLocationSelectView(value[0]);
+      $(this.queryByHook("types-location-container")).css("display", "inline-block");
+    }
   },
   renderTypeSelectView: function () {
     if(this.typeSelectView) {
@@ -356,7 +532,46 @@ module.exports = View.extend({
     this.hideDetails();
     this.model.type = e.target.value;
     this.displayDetails();
+    let types = {
+      'XML Mesh': '.xml', 'Mesh IO': '.msh', 'StochSS Domain': '.domn'
+    };
+    if(Object.keys(types).includes(this.model.type)) {
+      this.accept = types[this.model.type]
+      $(this.queryByHook('mesh-file')).prop('accept', this.accept);
+      this.filetype = this.model.type === "StochSS Domain" ? 'domain' : 'mesh';
+      $(this.queryByHook('meshfile-label')).text(`Please specify a ${this.filetype} to import: `);
+      $(this.queryByHook('action-filename-label')).text(`Please specify a ${this.filetype} to import: `);
+      $(this.queryByHook('mesh-location-message')).text(
+        `There are multiple ${this.filetype} files with that name, please select a location`
+      );
+      this.renderActionFileSelects();
+    }
     this.updatePreviewPlot();
+  },
+  selectFileLocation: function (e) {
+    this.model.subdomainFile = e.target.value ? e.target.value : "";
+  },
+  selectMeshFile: function (e) {
+    let value = e.target.value;
+    var msgDisplay = "none";
+    var contDisplay = "none";
+    if(value) {
+      if(this.meshFiles.paths[value].length > 1) {
+        msgDisplay = "block";
+        contDisplay = "inline-block";
+        this.renderMeshLocationSelectView(value);
+        this.model.filename = "";
+      }else{
+        this.model.filename = this.meshFiles.paths[value][0];
+      }
+    }else{
+      this.model.filename = "";
+    }
+    $(this.queryByHook("mesh-location-message")).css('display', msgDisplay);
+    $(this.queryByHook("mesh-location-container")).css("display", contDisplay);
+  },
+  selectMeshLocation: function (e) {
+    this.model.filename = e.target.value ? e.target.value : "";
   },
   selectShape: function (e) {
     this.model.shape = e.target.value;
@@ -364,11 +579,35 @@ module.exports = View.extend({
     this.updateViewer();
     this.updatePreviewPlot();
   },
+  selectTypeFile: function (e) {
+    let value = e.target.value;
+    var msgDisplay = "none";
+    var contDisplay = "none";
+    if(value) {
+      if(this.typeFiles.paths[value].length > 1) {
+        msgDisplay = "block";
+        contDisplay = "inline-block";
+        this.renderMeshLocationSelectView(value);
+        this.model.subdomainFile = "";
+      }else{
+        this.model.subdomainFile = this.typeFiles.paths[value][0];
+      }
+    }else{
+      this.model.subdomainFile = "";
+    }
+    $(this.queryByHook("types-location-message")).css('display', msgDisplay);
+    $(this.queryByHook("types-location-container")).css("display", contDisplay);
+  },
   selectTransformation: function (e) {
     this.model.transformation = e.target.value;
     this.model.collection.parent.trigger('update-transformation-deps');
     this.updateViewer();
     this.updatePreviewPlot();
+  },
+  setMeshFile: function (e) {
+    this.meshFile = e.target.files[0];
+    this.updateViewer();
+    $(this.queryByHook("import-mesh-file")).prop('disabled', !this.meshFile);
   },
   setNewPoint: function (e) {
     let key = e.target.parentElement.parentElement.dataset.name;
@@ -402,6 +641,33 @@ module.exports = View.extend({
     this.model.point[key] = value;
     this.updateViewer();
     this.updatePreviewPlot();
+  },
+  setTypeFile: function (e) {
+    this.typeFile = e.target.files[0];
+    this.updateViewer();
+  },
+  startAction: function () {
+    $(this.queryByHook("imf-complete")).css("display", "none");
+    $(this.queryByHook("imf-error")).css("display", "none");
+    $(this.queryByHook("imf-in-progress")).css("display", "inline-block");
+  },
+  toggleImportFiles: function (e) {
+    let classes = $(this.queryByHook('collapseImportFiles')).attr("class").split(/\s+/);
+    $(this.queryByHook('uploaded-chevron')).html(this.chevrons.hide);
+    if(classes.includes('collapsed')) {
+      $(this.queryByHook('import-chevron')).html(this.chevrons.show);
+    }else{
+      $(this.queryByHook('import-chevron')).html(this.chevrons.hide);
+    }
+  },
+  toggleUploadedFiles: function (e) {
+    let classes = $(this.queryByHook('collapseUploadedFiles')).attr("class").split(/\s+/);
+    $(this.queryByHook('import-chevron')).html(this.chevrons.hide);
+    if(classes.includes('collapsed')) {
+      $(this.queryByHook('uploaded-chevron')).html(this.chevrons.show);
+    }else{
+      $(this.queryByHook('uploaded-chevron')).html(this.chevrons.hide);
+    }
   },
   update: function () {},
   updatePreviewPlot: function () {
