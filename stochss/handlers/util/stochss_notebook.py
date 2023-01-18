@@ -497,7 +497,7 @@ class StochSSNotebook(StochSSBase):
                     # Create geometry from shape
                     geo_name = f"{s_shape['name']}_geom"
                     if s_shape['type'] == "Standard":
-                        if s_shape['formula'] == "True":
+                        if s_shape['formula'] in ("", "True"):
                             geometries.append(f"{pad}{geo_name} = spatialpy.GeometryAll()")
                         else:
                             c_name = s_shape['name'].title().replace("_", "")
