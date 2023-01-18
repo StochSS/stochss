@@ -279,7 +279,7 @@ class StochSSNotebook(StochSSBase):
                                 lattice = s_act['transformation']
                                 actions.insert(t_ndx, f"{pad}{lattice}.lattice = {s_act['shape']}_latt")
                                 t_ndx += 1
-                            args = args.replace("__GEOMETRY__", f"lattice={lattice}, geometry={s_act['shape']}_geom")
+                            args = args.replace("__GEOMETRY__", f"lattice={lattice}, geometry={s_act['shape']}_geom, ")
                             nb_act = tmp.replace("__FUNCTION__", "add_fill_action").replace("__ARGS__", args)
                         else:
                             p_x = s_act['point']['x']
@@ -289,7 +289,7 @@ class StochSSNotebook(StochSSBase):
                             nb_act = tmp.replace("__FUNCTION__", "add_point").replace("__ARGS__", args)
                     elif s_act['type'] in ('XML Mesh', 'Mesh IO', 'StochSS Domain'):
                         args = args.replace("__ENABLE__", f"enable={s_act['enable']}")
-                        args = args.replace("__GEOMETRY__", f"lattice={f'ipa_lattice{l_ndx}'}")
+                        args = args.replace("__GEOMETRY__", f"lattice={f'ipa_lattice{l_ndx}'}, ")
                         nb_act = tmp.replace("__FUNCTION__", "add_fill_action").replace("__ARGS__", args)
                         l_ndx += 1
                     else:
@@ -303,7 +303,7 @@ class StochSSNotebook(StochSSBase):
                             geometry = f"{s_act['transformation']}, "
                             actions.insert(t_ndx, f"{pad}{geometry}.geometry = {s_act['shape']}_geom")
                             t_ndx += 1
-                        args = args.replace("__GEOMETRY__", geometry)
+                        args = args.replace("__GEOMETRY__", f"{geometry}, ")
                         nb_act = tmp.replace("__FUNCTION__", func_map[s_act['type']]).replace("__ARGS__", args)
                     actions.append(nb_act)
                 nb_domain.insert(index, '\n'.join(actions))
