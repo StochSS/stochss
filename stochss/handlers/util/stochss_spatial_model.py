@@ -172,10 +172,11 @@ class StochSSSpatialModel(StochSSBase):
                 # Build props arg
                 if action['type'] in ('Fill Action', 'Set Action', 'XML Mesh', 'Mesh IO'):
                     kwargs = {
-                        'type_id': type_ids[action['typeID']].replace("-", ""), 'mass': action['mass'],
-                        'vol': action['vol'], 'rho': action['rho'], 'nu': action['nu'],
-                        'c': action['c'], 'fixed': action['fixed']
+                        'mass': action['mass'], 'vol': action['vol'], 'rho': action['rho'],
+                        'nu': action['nu'], 'c': action['c'], 'fixed': action['fixed']
                     }
+                    if action['type'] in ('Fill Action', 'Set Action'):
+                        kwargs['type'] = type_ids[action['typeID']].replace("-", "")
                 else:
                     kwargs = {}
                 # Apply actions
@@ -194,6 +195,7 @@ class StochSSSpatialModel(StochSSBase):
                     else:
                         point = [action['point']['x'], action['point']['y'], action['point']['z']]
                         domain.add_point(point, **kwargs)
+                elif action['type'] in ('XML Mesh', 'Mesh IO', 'StochSS Domain'):
                 else:
                     # Get proper geometry for scope
                     # 'Single Particle' scope creates a geometry using actions point.
@@ -357,7 +359,7 @@ class StochSSSpatialModel(StochSSBase):
                 # Create geometry from shape
                 geo_name = f"{s_shape['name']}_geom"
                 if s_shape['type'] == "Standard":
-                    if s_shape['formula'] == "True":
+                    if s_shape['formula'] in ("", "True"):
                         geometries[geo_name] = GeometryAll()
                     else:
                         geometries[geo_name] = self.__build_geometry(None, name=geo_name, formula=s_shape['formula'])

@@ -121,8 +121,8 @@ module.exports = View.extend({
         this.formulaInputView.remove();
     }
     let placeholder = this.model.type === "Standard" ?
-        "-- Formula in terms of 'x', 'y', 'z' --" :
-        "-- Formula in terms of other shapes --";
+        "-- Boolean Formula in terms of 'x', 'y', 'z' --" :
+        "-- Boolean Formula in terms of other shapes --";
     this.formulaInputView = new InputView({
       parent: this, required: true, name: 'formula', modelKey: 'formula',
       valueType: 'string', value: this.model.formula, placeholder: placeholder

@@ -35,7 +35,7 @@ module.exports = Collection.extend({
       deltaz: 0,
       depth: 0,
       fillable: false,
-      formula: 'True',
+      formula: '',
       height: 0,
       lattice: type,
       length: 0,
