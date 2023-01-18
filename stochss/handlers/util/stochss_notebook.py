@@ -256,8 +256,8 @@ class StochSSNotebook(StochSSBase):
             tmp = f"{pad}domain.__FUNCTION__(\n{pad*2}__ARGS__\n{pad})"
             actions = ["", f"{pad}# Domain Actions"]
             try:
-                actions = sorted(self.s_model['domain']['actions'], key=lambda action: action['priority'])
-                for s_act in actions:
+                s_actions = sorted(self.s_model['domain']['actions'], key=lambda action: action['priority'])
+                for s_act in s_actions:
                     # Build props arg
                     if s_act['type'] in ('Fill Action', 'Set Action', 'XML Mesh', 'Mesh IO'):
                         props = [
