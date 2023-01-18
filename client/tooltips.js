@@ -179,6 +179,8 @@ module.exports = {
     parameterSweep: "Produced and compare results from model simulations by varying parameters over a range."
   },
   domainEditor: {
+    staticDomain: "TODO: static domain tooltip.",
+
     pressure: "Atmospheric or background pressure.",
 
     speed: "Approximate or artificial speed of sound"
