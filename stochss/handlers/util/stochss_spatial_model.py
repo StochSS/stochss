@@ -196,6 +196,14 @@ class StochSSSpatialModel(StochSSBase):
                         point = [action['point']['x'], action['point']['y'], action['point']['z']]
                         domain.add_point(point, **kwargs)
                 elif action['type'] in ('XML Mesh', 'Mesh IO', 'StochSS Domain'):
+                    lattices = {'XML Mesh': XMLMeshLattice, 'Mesh IO': MeshIOLattice, 'StochSS Domain': StochSSLattice}
+                    if action['type'] == "StochSS Domain" or action['subdomainFile'] == "":
+                        lattice = lattices[action['type']](action['filename'])
+                    else:
+                        lattice = lattices[action['type']](action['filename'], subdomain_file=action['subdomainFile'])
+                    _ = domain.add_fill_action(
+                        lattice=lattice, enable=action['enable'], apply_action=action['enable'], **kwargs
+                    )
                 else:
                     # Get proper geometry for scope
                     # 'Single Particle' scope creates a geometry using actions point.
