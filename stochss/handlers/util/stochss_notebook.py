@@ -250,50 +250,48 @@ class StochSSNotebook(StochSSBase):
         if len(self.s_model['domain']['actions']) > 0:
             func_map = {"Remove Action": "add_remove_action", "Set Action": "add_set_action"}
             pad = '    '
-            t_ndx = 0
             c_ndx = 1
             l_ndx = 1
             args_tmp = "__GEOMETRY____ENABLE____PROPS__"
             tmp = f"{pad}domain.__FUNCTION__(\n{pad*2}__ARGS__\n{pad})"
             actions = ["", f"{pad}# Domain Actions"]
             try:
-                for s_act in self.s_model['domain']['actions']:
+                actions = sorted(self.s_model['domain']['actions'], key=lambda action: action['priority'])
+                for s_act in actions:
                     # Build props arg
                     if s_act['type'] in ('Fill Action', 'Set Action', 'XML Mesh', 'Mesh IO'):
                         props = [
-                            f"mass={s_act['mass']}, vol={s_act['vol']},\n{pad*2}",
-                            f"rho={s_act['rho']}, nu={s_act['nu']}, c={s_act['c']}, fixed={s_act['fixed']}",
+                            f"mass={s_act['mass']}, vol={s_act['vol']}, rho={s_act['rho']}, ",
+                            f"nu={s_act['nu']}, c={s_act['c']}, fixed={s_act['fixed']}",
                         ]
                         if s_act['type'] in ('Fill Action', 'Set Action'):
                             props.insert(0, f"type_id={type_refs[s_act['typeID']]}, ")
                         args = args_tmp.replace("__PROPS__", f",\n{pad*2}{''.join(props)}")
                     else:
                         args = args_tmp.replace("__PROPS__", "")
+                    if s_act['scope'] == 'Multi Particle' or s_act['type'] != "Fill Action":
+                        args = args.replace("__ENABLE__", f"enable={s_act['enable']}, apply_action={s_act['enable']}")
                     # Apply actions
                     if s_act['type'] == "Fill Action":
                         if s_act['scope'] == 'Multi Particle':
-                            args = args.replace("__ENABLE__", f"enable={s_act['enable']}")
                             if s_act['transformation'] == "":
                                 lattice = f"{s_act['shape']}_latt"
                             else:
                                 lattice = s_act['transformation']
-                                actions.insert(t_ndx, f"{pad}{lattice}.lattice = {s_act['shape']}_latt")
-                                t_ndx += 1
+                                actions.append(f"{pad}{lattice}.lattice = {s_act['shape']}_latt")
                             args = args.replace("__GEOMETRY__", f"lattice={lattice}, geometry={s_act['shape']}_geom, ")
                             nb_act = tmp.replace("__FUNCTION__", "add_fill_action").replace("__ARGS__", args)
                         else:
                             p_x = s_act['point']['x']
                             p_y = s_act['point']['y']
                             p_z = s_act['point']['z']
-                            args = args_tmp.replace("__GEOMETRY____ENABLE__", f"[{p_x}, {p_y}, {p_z}]")
+                            args = args.replace("__GEOMETRY____ENABLE__", f"[{p_x}, {p_y}, {p_z}]")
                             nb_act = tmp.replace("__FUNCTION__", "add_point").replace("__ARGS__", args)
                     elif s_act['type'] in ('XML Mesh', 'Mesh IO', 'StochSS Domain'):
-                        args = args.replace("__ENABLE__", f"enable={s_act['enable']}")
                         args = args.replace("__GEOMETRY__", f"lattice={f'ipa_lattice{l_ndx}'}, ")
                         nb_act = tmp.replace("__FUNCTION__", "add_fill_action").replace("__ARGS__", args)
                         l_ndx += 1
                     else:
-                        args = args_tmp.replace("__ENABLE__", f"enable={s_act['enable']}")
                         if s_act['scope'] == "Single Particle":
                             geometry = f"geometry=SPAGeometry{c_ndx}(), "
                             c_ndx += 1
@@ -301,8 +299,7 @@ class StochSSNotebook(StochSSBase):
                             geometry = f"geometry={s_act['shape']}_geom, "
                         else:
                             geometry = f"{s_act['transformation']}, "
-                            actions.insert(t_ndx, f"{pad}{geometry}.geometry = {s_act['shape']}_geom")
-                            t_ndx += 1
+                            actions.append(f"{pad}{geometry}.geometry = {s_act['shape']}_geom")
                         args = args.replace("__GEOMETRY__", f"{geometry}, ")
                         nb_act = tmp.replace("__FUNCTION__", func_map[s_act['type']]).replace("__ARGS__", args)
                     actions.append(nb_act)
