@@ -69,10 +69,8 @@ class StochSSNotebook(StochSSBase):
                 if "timespanSettings" in settings.keys():
                     keys = settings['timespanSettings'].keys()
                     if "endSim" in keys and "timeStep" in keys:
-                        end = settings['timespanSettings']['endSim']
-                        step_size = settings['timespanSettings']['timeStep']
-                        self.s_model['modelSettings']['endSim'] = end
-                        self.s_model['modelSettings']['timeStep'] = step_size
+                        self.s_model['modelSettings']['endSim'] = settings['timespanSettings']['endSim']
+                        self.s_model['modelSettings']['timeStep'] = settings['timespanSettings']['timeStep']
             self.make_parent_dirs()
             n_path, changed = self.get_unique_path(name=self.get_file())
             if changed:
@@ -122,8 +120,7 @@ class StochSSNotebook(StochSSBase):
             nb_title = f"{nb_title}\n{self.s_model['annotation']}\n***"
         nb_title = f"{nb_title}\n## Setup the Environment\n***"
         return [
-            nbf.new_markdown_cell(nb_title),
-            nbf.new_markdown_cell(f"***\n## Create the {name} Model\n***"),
+            nbf.new_markdown_cell(nb_title), nbf.new_markdown_cell(f"***\n## Create the {name} Model\n***"),
             nbf.new_markdown_cell("### Instantiate the model"),
             nbf.new_markdown_cell("***\n## Simulation Parameters\n***")
         ]
@@ -144,7 +141,6 @@ class StochSSNotebook(StochSSBase):
                 "Tau-Leaping": self.model.get_best_solver_algo("Tau-Leaping").get_solver_settings(),
                 "Hybrid-Tau-Leaping": self.model.get_best_solver_algo("Tau-Hybrid").get_solver_settings()
             }
-
         pad = "    "
         config = ["def configure_simulation():"]
         if use_solver:
@@ -155,7 +151,6 @@ class StochSSNotebook(StochSSBase):
                 del_dir = ", delete_directory=False" if "CSolver" in solver else ""
                 nb_solver = f"gillespy2.{solver}(model=model{del_dir})"
             config.append(f"{pad}solver = {nb_solver}")
-
         config.append(pad + "kwargs = {")
         for name, val in settings.items():
             if name == "solver" and \
@@ -213,13 +208,11 @@ class StochSSNotebook(StochSSBase):
                     products = self.__create_stoich_species(stoich_species=s_reaction['products'])
                     if s_reaction['rate'] != {}:
                         nb_reac = tmp.replace("__L3____L4__", "")
-                        rate = s_reaction['rate']['name']
-                        nb_reac = nb_reac.replace("__RATE__", f" rate='{rate}',")
+                        nb_reac = nb_reac.replace("__RATE__", f" rate='{s_reaction['rate']['name']}',")
                     else:
                         ssa = f",\n{pad*2}propensity_function='{s_reaction['propensity']}',"
                         ode = f"\n{pad*2}ode_propensity_function='{s_reaction['odePropensity']}'"
-                        nb_reac = tmp.replace("__RATE__", "")
-                        nb_reac = nb_reac.replace("__L3__", ssa).replace("__L4__", ode)
+                        nb_reac = tmp.replace("__RATE__", "").replace("__L3__", ssa).replace("__L4__", ode)
                     if type_refs is None or len(s_reaction['types']) == len(type_refs):
                         nb_reac = nb_reac.replace("__RESTRICT_TO__", "")
                     else:
@@ -259,6 +252,7 @@ class StochSSNotebook(StochSSBase):
             pad = '    '
             t_ndx = 0
             c_ndx = 1
+            l_ndx = 1
             args_tmp = "__GEOMETRY____ENABLE____PROPS__"
             tmp = f"{pad}domain.__FUNCTION__(\n{pad*2}__ARGS__\n{pad})"
             actions = ["", f"{pad}# Domain Actions"]
@@ -266,11 +260,13 @@ class StochSSNotebook(StochSSBase):
                 for s_act in self.s_model['domain']['actions']:
                     # Build props arg
                     if s_act['type'] in ('Fill Action', 'Set Action', 'XML Mesh', 'Mesh IO'):
-                        props = "".join([
-                            f"type_id={type_refs[s_act['typeID']]}, mass={s_act['mass']}, vol={s_act['vol']},\n{pad*2}",
+                        props = [
+                            f"mass={s_act['mass']}, vol={s_act['vol']},\n{pad*2}",
                             f"rho={s_act['rho']}, nu={s_act['nu']}, c={s_act['c']}, fixed={s_act['fixed']}",
-                        ])
-                        args = args_tmp.replace("__PROPS__", f",\n{pad*2}{props}")
+                        ]
+                        if s_act['type'] in ('Fill Action', 'Set Action'):
+                            props.insert(0, f"type_id={type_refs[s_act['typeID']]}, ")
+                        args = args_tmp.replace("__PROPS__", f",\n{pad*2}{''.join(props)}")
                     else:
                         args = args_tmp.replace("__PROPS__", "")
                     # Apply actions
@@ -291,6 +287,11 @@ class StochSSNotebook(StochSSBase):
                             p_z = s_act['point']['z']
                             args = args_tmp.replace("__GEOMETRY____ENABLE__", f"[{p_x}, {p_y}, {p_z}]")
                             nb_act = tmp.replace("__FUNCTION__", "add_point").replace("__ARGS__", args)
+                    elif s_act['type'] in ('XML Mesh', 'Mesh IO', 'StochSS Domain'):
+                        args = args.replace("__ENABLE__", f"enable={s_act['enable']}")
+                        args = args.replace("__GEOMETRY__", f"lattice={f'ipa_lattice{l_ndx}'}")
+                        nb_act = tmp.replace("__FUNCTION__", "add_fill_action").replace("__ARGS__", args)
+                        l_ndx += 1
                     else:
                         args = args_tmp.replace("__ENABLE__", f"enable={s_act['enable']}")
                         if s_act['scope'] == "Single Particle":
@@ -394,7 +395,8 @@ class StochSSNotebook(StochSSBase):
 
     def __create_spatial_geometry_cells(self, cells, index):
         shapes = list(filter(
-            lambda shape: shape['type'] == "Standard" and shape['formula'] != "True", self.s_model['domain']['shapes']
+            lambda shape: shape['type'] == "Standard" and shape['formula'] not in ("", "True"),
+            self.s_model['domain']['shapes']
         ))
         actions = list(filter(
             lambda action: action['scope'] == "Single Particle" and action['type'] in ("Set Action", "Remove Action"),
@@ -482,9 +484,9 @@ class StochSSNotebook(StochSSBase):
     def __create_spatial_shapes(self, nb_domain, index):
         if len(self.s_model['domain']['shapes']) > 0:
             class_map = {
-                'Cartesian Lattice': 'CartesianLattice',
-                'Spherical Lattice': 'SphericalLattice',
-                'Cylindrical Lattice': 'CylindricalLattice'
+                'Cartesian Lattice': 'CartesianLattice', 'Spherical Lattice': 'SphericalLattice',
+                'Cylindrical Lattice': 'CylindricalLattice', 'XML Mesh': 'XMLMeshLattice',
+                'Mesh IO': 'MeshIOLattice', 'StochSS Domain': 'StochSSLattice'
             }
             pad = '    '
             comb_geoms = {}
@@ -538,6 +540,17 @@ class StochSSNotebook(StochSSBase):
                     geometries.append(nb_geo_ns)
                 nb_domain.insert(index, '\n'.join(geometries))
                 index += 1
+                actions = list(filter(
+                    lambda act: act['type'] == ('XML Mesh', 'Mesh IO', 'StochSS Domain'),
+                    self.s_model['domain']['actions']
+                ))
+                for i, s_act in enumerate(actions):
+                    args = s_act['filename']
+                    if s_act['type'] != "StochSS Domain" and s_act['subdomainFile'] != "":
+                        args = f"{args}, subdomain_file={s_act['subdomainFile']}"
+                    nb_latt = lat_tmp.replace("__NAME__", f"ipa_lattice{i+1}")
+                    nb_latt = nb_latt.replace("__CLASS__", class_map[s_act['type']]).replace("__ARGS__", args)
+                    lattices.append(nb_latt)
                 if len(lattices) > 2:
                     nb_domain.insert(index, '\n'.join(lattices))
                     index += 1
@@ -699,10 +712,9 @@ class StochSSNotebook(StochSSBase):
     def __create_well_mixed_event_trigger(cls, s_event):
         pad = '    '
         name = f"{s_event['name']}_trig"
-        value = s_event['initialValue']
         persistent = s_event['persistent']
         l1_args = f"{pad*2}expression='{s_event['triggerExpression']}',"
-        l2_args = f"{pad*2}initial_value={value}, persistent={persistent}"
+        l2_args = f"{pad*2}initial_value={s_event['initialValue']}, persistent={persistent}"
         nb_trig = f"{pad}{name} = gillespy2.EventTrigger(\n{l1_args}\n{l2_args}\n{pad})"
         return name, nb_trig
 
@@ -720,8 +732,7 @@ class StochSSNotebook(StochSSBase):
                     n_len, n_names = self.__add_name(names, n_len, s_func_def['name'])
                     if n_names is not None:
                         names = n_names
-                    nb_func_def = tmp.replace("__NAME__", s_func_def['name'])
-                    nb_func_def = nb_func_def.replace("__ARGS__", args)
+                    nb_func_def = tmp.replace("__NAME__", s_func_def['name']).replace("__ARGS__", args)
                     nb_func_def = nb_func_def.replace("__FUNCTION__", s_func_def['expression'])
                     func_defs.append(nb_func_def)
                 func_defs.append(f"{pad}model.add_function_definition([\n{pad*2}{', '.join(names)}\n{pad}])")
@@ -806,9 +817,7 @@ class StochSSNotebook(StochSSBase):
                         nb_rule = nb_rule.replace("__TYPE__", "AssignmentRule")
                         assignment_rules.append(nb_rule)
                 if len(rate_rules) > 2:
-                    rate_rules.append(
-                        f"{pad}model.add_rate_rule([\n{pad*2}{', '.join(rr_names)}\n{pad}])"
-                    )
+                    rate_rules.append(f"{pad}model.add_rate_rule([\n{pad*2}{', '.join(rr_names)}\n{pad}])")
                     nb_model.insert(index, '\n'.join(rate_rules))
                     index += 1
                 if len(assignment_rules) > 2:
@@ -907,8 +916,7 @@ class StochSSNotebook(StochSSBase):
         vis_header = nbf.new_markdown_cell("***\n## Visualization\n***")
         plt_args = "animated=True, width='auto', height='auto'"
         if len(self.s_model['species']) > 0:
-            species = self.s_model['species'][0]['name']
-            plot_str = f"results.plot_species('{species}', {plt_args})"
+            plot_str = f"results.plot_species('{self.s_model['species'][0]['name']}', {plt_args})"
         else:
             plot_str = f"results.plot_property('type', {plt_args})"
         vis_code = nbf.new_code_cell(plot_str)
