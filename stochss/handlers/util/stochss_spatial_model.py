@@ -176,7 +176,7 @@ class StochSSSpatialModel(StochSSBase):
                         'nu': action['nu'], 'c': action['c'], 'fixed': action['fixed']
                     }
                     if action['type'] in ('Fill Action', 'Set Action'):
-                        kwargs['type'] = type_ids[action['typeID']].replace("-", "")
+                        kwargs['type_id'] = type_ids[action['typeID']].replace("-", "")
                 else:
                     kwargs = {}
                 # Apply actions
