@@ -298,9 +298,9 @@ class StochSSNotebook(StochSSBase):
                         elif s_act['transformation'] == "":
                             geometry = f"geometry={s_act['shape']}_geom, "
                         else:
-                            geometry = f"{s_act['transformation']}, "
+                            geometry = f"geometry={s_act['transformation']}, "
                             actions.append(f"{pad}{geometry}.geometry = {s_act['shape']}_geom")
-                        args = args.replace("__GEOMETRY__", f"{geometry}, ")
+                        args = args.replace("__GEOMETRY__", geometry)
                         nb_act = tmp.replace("__FUNCTION__", func_map[s_act['type']]).replace("__ARGS__", args)
                     actions.append(nb_act)
                 nb_domain.insert(index, '\n'.join(actions))
@@ -849,8 +849,7 @@ class StochSSNotebook(StochSSBase):
         types = sorted(self.s_model['domain']['types'], key=lambda d_type: d_type['typeID'])
         type_map = {}
         for d_type in types:
-            if d_type['typeID'] > 0:
-                type_map[d_type['typeID']] = f"model.{d_type['name'].upper()}"
+            type_map[d_type['typeID']] = f"model.{d_type['name'].upper()}"
         return type_map
 
     @classmethod
