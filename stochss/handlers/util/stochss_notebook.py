@@ -264,7 +264,7 @@ class StochSSNotebook(StochSSBase):
                             f"mass={s_act['mass']}, vol={s_act['vol']}, rho={s_act['rho']}, ",
                             f"nu={s_act['nu']}, c={s_act['c']}, fixed={s_act['fixed']}",
                         ]
-                        if s_act['type'] in ('Fill Action', 'Set Action'):
+                        if s_act['type'] in ('Fill Action', 'Set Action') and s_act['typeID'] > 0:
                             props.insert(0, f"type_id={type_refs[s_act['typeID']]}, ")
                         args = args_tmp.replace("__PROPS__", f",\n{pad*2}{''.join(props)}")
                     else:
@@ -381,7 +381,8 @@ class StochSSNotebook(StochSSBase):
             d_index = 2
             for d_type in self.s_model['domain']['types']:
                 if d_type['typeID'] > 0:
-                    nb_type = tmp.replace("__TYPE__", d_type['name'].upper())
+                    name = f"N_{d_type['name']}" if d_type['name'].isdigit() else d_type['name'].upper()
+                    nb_type = tmp.replace("__TYPE__", name)
                     nb_domain.insert(d_index, nb_type.replace("__ID__", d_type['name']))
                     d_index += 1
             nb_model.insert(index, '\n'.join(nb_domain))
@@ -479,7 +480,11 @@ class StochSSNotebook(StochSSBase):
         return nbf.new_code_cell("\n".join(nb_model))
 
     def __create_spatial_shapes(self, nb_domain, index):
-        if len(self.s_model['domain']['shapes']) > 0:
+        actions = list(filter(
+            lambda act: act['type'] in ('XML Mesh', 'Mesh IO', 'StochSS Domain'),
+            self.s_model['domain']['actions']
+        ))
+        if len(self.s_model['domain']['shapes']) > 0 or len(actions) > 0:
             class_map = {
                 'Cartesian Lattice': 'CartesianLattice', 'Spherical Lattice': 'SphericalLattice',
                 'Cylindrical Lattice': 'CylindricalLattice', 'XML Mesh': 'XMLMeshLattice',
@@ -535,16 +540,13 @@ class StochSSNotebook(StochSSBase):
                     geo_namespace = [f"'{dep}': {dep}_geom" for dep in deps if dep != '']
                     nb_geo_ns = f"{pad}{name}.geo_namespace = " + "{" + f"{', '.join(geo_namespace)}" + "}"
                     geometries.append(nb_geo_ns)
-                nb_domain.insert(index, '\n'.join(geometries))
-                index += 1
-                actions = list(filter(
-                    lambda act: act['type'] == ('XML Mesh', 'Mesh IO', 'StochSS Domain'),
-                    self.s_model['domain']['actions']
-                ))
+                if len(geometries) > 2:
+                    nb_domain.insert(index, '\n'.join(geometries))
+                    index += 1
                 for i, s_act in enumerate(actions):
                     args = s_act['filename']
                     if s_act['type'] != "StochSS Domain" and s_act['subdomainFile'] != "":
-                        args = f"{args}, subdomain_file={s_act['subdomainFile']}"
+                        args = f"'{args}', subdomain_file='{s_act['subdomainFile']}'"
                     nb_latt = lat_tmp.replace("__NAME__", f"ipa_lattice{i+1}")
                     nb_latt = nb_latt.replace("__CLASS__", class_map[s_act['type']]).replace("__ARGS__", args)
                     lattices.append(nb_latt)
@@ -849,7 +851,8 @@ class StochSSNotebook(StochSSBase):
         types = sorted(self.s_model['domain']['types'], key=lambda d_type: d_type['typeID'])
         type_map = {}
         for d_type in types:
-            type_map[d_type['typeID']] = f"model.{d_type['name'].upper()}"
+            name = f"N_{d_type['name']}" if d_type['name'].isdigit() else d_type['name'].upper()
+            type_map[d_type['typeID']] = f"model.{name}"
         return type_map
 
     @classmethod
