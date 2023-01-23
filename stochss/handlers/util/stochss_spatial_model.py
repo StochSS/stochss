@@ -167,7 +167,8 @@ class StochSSSpatialModel(StochSSBase):
         geometries, lattices = self.__convert_shapes(s_domain)
         transformations = self.__convert_transformations(s_domain)
         try:
-            actions = sorted(s_domain['actions'], key=lambda action: action['priority'])
+            actions = list(filter(lambda action: action['enable'], s_domain['actions']))
+            actions = sorted(actions, key=lambda action: action['priority'])
             for i, action in enumerate(actions):
                 # Build props arg
                 if action['type'] in ('Fill Action', 'Set Action', 'XML Mesh', 'Mesh IO'):
