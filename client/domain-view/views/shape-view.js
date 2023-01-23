@@ -124,7 +124,7 @@ module.exports = View.extend({
         "-- Boolean Formula in terms of 'x', 'y', 'z' --" :
         "-- Boolean Formula in terms of other shapes --";
     this.formulaInputView = new InputView({
-      parent: this, required: true, name: 'formula', modelKey: 'formula',
+      parent: this, required: this.model.type === "Combinatory", name: 'formula', modelKey: 'formula',
       valueType: 'string', value: this.model.formula, placeholder: placeholder
     });
     let hook = 'input-formula-container';
