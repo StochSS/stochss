@@ -190,9 +190,15 @@ module.exports = View.extend({
   },
   getShapeOptions: function () {
     let options = [];
-    this.model.collection.parent.shapes.forEach((shape) => {
-      if(shape.fillable) { options.push(shape.name); }
-    });
+    if(this.model.type === "Fill Action" && this.model.scope === "Multi Particle") {
+      this.model.collection.parent.shapes.forEach((shape) => {
+        if(shape.fillable) { options.push(shape.name); }
+      });
+    }else {
+      this.model.collection.parent.shapes.forEach((shape) => {
+        options.push(shape.name);
+      });
+    }
     return options;
   },
   getTransformationOptions: function () {
