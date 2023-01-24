@@ -20,7 +20,11 @@ div#domain-geometries-editor.card
 
   div.card-body
     p.mb-0
-     | TODO: Shapes descriptive text.
+     | Shapes to define regions in space.  Formulas define a boolean expression that evaluates as True when inside the region of space, False otherwise.
+
+    ul.mb-0
+      li Formulas for <b>'Standard Geometry'</b> are in terms of the variables <b>'x'</b>, <b>'y'</b>, and <b>'z'</b>.
+      li Formulas for <b>'Combinatory Geometry'</b> are in terms of other <b>'Shapes'</b>.
 
     div.collapse.tab-content(id="collapse-shapes" data-hook="shapes-list-container")
 

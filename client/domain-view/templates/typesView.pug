@@ -18,9 +18,13 @@ div#domain-types-editor.card
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-types-section" data-hook="collapse-domain-types") +
 
-  div.collapse(id="domain-types-section" data-hook="domain-types-section")
+  div.card-body
+    p.mb-0
+     | Classifications of matter within the domain.  Types can have different properties (mass, volume, etc...), and can be set as movable or Fixed.
 
-    div.card-body.tab-content
+    div.collapse.tab-content(id="domain-types-section" data-hook="domain-types-section")
+
+      hr
 
       div
 

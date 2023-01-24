@@ -179,11 +179,11 @@ module.exports = {
     parameterSweep: "Produced and compare results from model simulations by varying parameters over a range."
   },
   domainEditor: {
-    staticDomain: "TODO: static domain tooltip.",
+    staticDomain: "If true, particles are fixed system wide.  If false, Fixed property of particles is used.",
 
     pressure: "Atmospheric or background pressure.",
 
-    speed: "Approximate or artificial speed of sound"
+    speed: "Approximate or artificial speed of sound."
   },
   domainGeometry: {
     name: "Unique identifier for Geometry. Cannot share a name with other model components.",

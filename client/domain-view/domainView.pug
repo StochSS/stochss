@@ -61,9 +61,12 @@ div#domain-view
 
       button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-figure-container" data-hook="collapse-domain-figure") -
 
-    div.collapse.show(id="domain-figure-container" data-hook="domain-figure-container")
+    div.card-body
 
-      div.card-body
+      p.mb-0
+       | Preview the domain below.
+
+      div.collapse.show(id="domain-figure-container" data-hook="domain-figure-container")
 
         div(id="domain-figure" data-hook="domain-figure" style="height: 800px")
 

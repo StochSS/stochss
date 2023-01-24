@@ -18,12 +18,14 @@ div#domain-properties-editor.card
 
     button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-properties-section" data-hook="collapse-domain-properties") -
 
-  div.collapse.show(id="domain-properties-section" data-hook="domain-properties-section")
+  div.card-body
+    p.mb-0
+     | Set system wide domain properties/initial values.
 
-    div.card-body.tab-content
+    div.collapse.tab-content.show(id="domain-properties-section" data-hook="domain-properties-section")
 
       div.tab-pane.active(id="edit-domain-properties" data-hook="edit-domain-properties")
-        
+
         hr
 
         div.mx-1.row.head.align-items-baseline
