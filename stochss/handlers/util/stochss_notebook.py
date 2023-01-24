@@ -505,6 +505,10 @@ class StochSSNotebook(StochSSBase):
                     if s_shape['type'] == "Standard":
                         if s_shape['formula'] in ("", "True"):
                             geometries.append(f"{pad}{geo_name} = spatialpy.GeometryAll()")
+                        elif s_shape['formula'] == "on_boundary":
+                            geometries.append(f"{pad}{geo_name} = spatialpy.GeometryExterior()")
+                        elif s_shape['formula'] == "not on_boundary":
+                            geometries.append(f"{pad}{geo_name} = spatialpy.GeometryInterior()")
                         else:
                             c_name = s_shape['name'].title().replace("_", "")
                             nb_geom = geo_tmp.replace("__ARGS__", "").replace("__NAME__", geo_name)

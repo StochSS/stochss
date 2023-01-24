@@ -27,10 +27,10 @@ import plotly
 from escapism import escape
 from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, BoundaryCondition, \
                       PlaceInitialCondition, UniformInitialCondition, ScatterInitialCondition, \
-                      TimeSpan, Geometry, GeometryAll, CombinatoryGeometry, CartesianLattice, \
-                      SphericalLattice, CylindricalLattice, XMLMeshLattice, MeshIOLattice, \
-                      StochSSLattice, TranslationTransformation, RotationTransformation, \
-                      ReflectionTransformation, ScalingTransformation
+                      TimeSpan, Geometry, GeometryAll, GeometryExterior, GeometryInterior, \
+                      CombinatoryGeometry, CartesianLattice, SphericalLattice, CylindricalLattice, \
+                      XMLMeshLattice, MeshIOLattice, StochSSLattice, TranslationTransformation, \
+                      RotationTransformation, ReflectionTransformation, ScalingTransformation
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
@@ -370,6 +370,10 @@ class StochSSSpatialModel(StochSSBase):
                 if s_shape['type'] == "Standard":
                     if s_shape['formula'] in ("", "True"):
                         geometries[geo_name] = GeometryAll()
+                    elif s_shape['formula'] == "on_boundary":
+                        geometries[geo_name] = GeometryExterior()
+                    elif s_shape['formula'] == "not on_boundary":
+                        geometries[geo_name] = GeometryInterior()
                     else:
                         geometries[geo_name] = self.__build_geometry(None, name=geo_name, formula=s_shape['formula'])
                 else:
