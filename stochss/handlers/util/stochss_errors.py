@@ -250,16 +250,16 @@ class DomainUpdateError(StochSSAPIError):
         super().__init__(405, "Domain File Can't Be Updated.", msg, trace)
 
 
-class DomainGeometryError(StochSSAPIError):
+class DomainActionError(StochSSAPIError):
     '''
     ################################################################################################
-    Domain Geometry Action Failed
+    Domain Action Failed to Initialize
     ################################################################################################
     '''
 
     def __init__(self, msg, trace=None):
         '''
-        Indicates that a geometry action for the a domain failed
+        Indicates that an action for the a domain failed.
 
         Attributes
         ----------
@@ -268,7 +268,49 @@ class DomainGeometryError(StochSSAPIError):
         trace : str
             Error traceback for the error
         '''
-        super().__init__(406, "Domain Geometry Action Failed", msg, trace)
+        super().__init__(406, "Domain Action Failed", msg, trace)
+
+
+class DomainShapeError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain Shape Failed to Initialize
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that a shape failed to initialize.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Domain Shape Failed", msg, trace)
+
+
+class DomainTransformationError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain Transformation Failed to Initialize
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that a transformation failed to initialize.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Domain Transformations Failed", msg, trace)
 
 ####################################################################################################
 # Job Errors

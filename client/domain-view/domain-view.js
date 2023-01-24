@@ -137,6 +137,7 @@ module.exports = View.extend({
   completeAction: function (prefix) {
     $(this.queryByHook(`${prefix}-in-progress`)).css("display", "none");
     $(this.queryByHook(`${prefix}-complete`)).css("display", "inline-block");
+    $(this.queryByHook("upp-error")).css("display", "none");
     setTimeout(() => {
       $(this.queryByHook(`${prefix}-complete`)).css('display', 'none');
     }, 5000);
@@ -151,6 +152,11 @@ module.exports = View.extend({
       $(this.elements.figureEmpty).css('display', 'block');
       $(this.elements.figure).css('display', 'none');
     }
+  },
+  errorAction: function (action) {
+    $(this.queryByHook("upp-in-progress")).css("display", "none");
+    $(this.queryByHook("upp-action-error")).text(action);
+    $(this.queryByHook("upp-error")).css("display", "block");
   },
   handleRemoveParticle: function () {
     this.startAction("rsp")
@@ -319,33 +325,41 @@ module.exports = View.extend({
       this.startAction("upp");
     }
     let endpoint = path.join(app.getApiPath(), "spatial-model/domain-plot");
-    app.postXHR(endpoint, this.model, {success: (err, response, body) => {
-      this.plot = body.fig;
-      this.model.particles = new Particles(body.particles);
-      let particleCounts = {};
-      this.model.particles.forEach((particle) => {
-        if(particleCounts[particle.type]) {
-          particleCounts[particle.type] += 1;
-        }else{
-          particleCounts[particle.type] = 1;
+    app.postXHR(endpoint, this.model, {
+      success: (err, response, body) => {
+        this.plot = body.fig;
+        this.model.particles = new Particles(body.particles);
+        let particleCounts = {};
+        this.model.particles.forEach((particle) => {
+          if(particleCounts[particle.type]) {
+            particleCounts[particle.type] += 1;
+          }else{
+            particleCounts[particle.type] = 1;
+          }
+        });
+        this.model.types.forEach((type) => {
+          type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
+        });
+        if(this.readOnly) {
+          this.renderTypesQuickview();
         }
-      });
-      this.model.types.forEach((type) => {
-        type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
-      });
-      if(this.readOnly) {
-        this.renderTypesQuickview();
+        this.typesView.renderEditTypeView();
+        this.typesView.renderViewTypeView();
+        if(resetFigure) {
+          this.resetFigure();
+          this.completeAction("upp");
+        }else{
+          this.displayFigure();
+        }
+        this.changeDomainLimits(body.limits);
+      },
+      error: (err, response, body) => {
+        this.removeFigure();
+        $(this.elements.figureEmpty).css('display', 'none');
+        $(this.elements.figure).css('display', 'none');
+        this.errorAction(body.Message);
       }
-      this.typesView.renderEditTypeView();
-      this.typesView.renderViewTypeView();
-      if(resetFigure) {
-        this.resetFigure();
-        this.completeAction("upp");
-      }else{
-        this.displayFigure();
-      }
-      this.changeDomainLimits(body.limits);
-    }});
+    });
   },
   updateShapeDeps: function () {
     let deps = [];

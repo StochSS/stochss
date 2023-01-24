@@ -30,11 +30,13 @@ from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, 
                       TimeSpan, Geometry, GeometryAll, GeometryExterior, GeometryInterior, \
                       CombinatoryGeometry, CartesianLattice, SphericalLattice, CylindricalLattice, \
                       XMLMeshLattice, MeshIOLattice, StochSSLattice, TranslationTransformation, \
-                      RotationTransformation, ReflectionTransformation, ScalingTransformation
+                      RotationTransformation, ReflectionTransformation, ScalingTransformation, \
+                      ModelError
 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
-                            StochSSModelFormatError, StochSSPermissionsError, DomainUpdateError
+                            StochSSModelFormatError, StochSSPermissionsError, DomainUpdateError, \
+                            DomainActionError, DomainShapeError, DomainTransformationError
 
 class StochSSSpatialModel(StochSSBase):
     '''
@@ -248,6 +250,9 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial actions are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        except ModelError as err:
+            message = f"One or more domain actions are invalid: {err}"
+            raise DomainActionError(message, traceback.format_exc()) from err
 
     def __convert_boundary_conditions(self, model):
         try:
@@ -418,6 +423,9 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial domain shapes are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        except ModelError as err:
+            message = f"One or more domain shapes are invalid: {err}"
+            raise DomainShapeError(message, traceback.format_exc()) from err
 
     def __convert_species(self, model, type_ids):
         try:
@@ -527,6 +535,9 @@ class StochSSSpatialModel(StochSSBase):
             message = "Spatial transformations are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
             raise StochSSModelFormatError(message, traceback.format_exc()) from err
+        except ModelError as err:
+            message = f"One or more domain transformations are invalid: {err}"
+            raise DomainTransformationError(message, traceback.format_exc()) from err
 
     @classmethod
     def __convert_types(cls, domain, type_ids):
