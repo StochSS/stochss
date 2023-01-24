@@ -145,6 +145,7 @@ module.exports = View.extend({
       $(this.queryByHook("edit-collapse-shape-details" + this.model.cid)).collapse("hide");
     }
     this.updateViewer();
+    this.model.collection.parent.actions.trigger('update-shape-options', {currName: name});
   },
   selectLatticeType: function (e) {
     this.hideDetails();
