@@ -496,6 +496,8 @@ class StochSSNotebook(StochSSBase):
             lat_tmp = f"{pad}__NAME__ = spatialpy.__CLASS__(\n{pad*2}__ARGS__\n{pad})"
             geometries = ["", f"{pad}# Domain Geometries"]
             lattices = ["", f"{pad}# Domain Lattices"]
+            if len(actions) > 0:
+                lattices.insert(1, f"{pad}import os\n{pad}home = os.path.expanduser('~')")
             try:
                 for s_shape in self.s_model['domain']['shapes']:
                     # Create geometry from shape
@@ -546,7 +548,10 @@ class StochSSNotebook(StochSSBase):
                 for i, s_act in enumerate(actions):
                     args = s_act['filename']
                     if s_act['type'] != "StochSS Domain" and s_act['subdomainFile'] != "":
-                        args = f"'{args}', subdomain_file='{s_act['subdomainFile']}'"
+                        args = '\n'.join([
+                            f"os.path.join(home, '{args}'),",
+                            f"{pad*2}subdomain_file=os.path.join(home, '{s_act['subdomainFile']}')"
+                        ])
                     nb_latt = lat_tmp.replace("__NAME__", f"ipa_lattice{i+1}")
                     nb_latt = nb_latt.replace("__CLASS__", class_map[s_act['type']]).replace("__ARGS__", args)
                     lattices.append(nb_latt)
