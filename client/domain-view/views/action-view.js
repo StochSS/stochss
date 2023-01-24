@@ -161,6 +161,7 @@ module.exports = View.extend({
         this.typeFiles = null;
         this.renderActionFileSelects();
       }
+      this.toggleEnable();
     }
     this.displayDetails();
   },
@@ -581,6 +582,7 @@ module.exports = View.extend({
   },
   selectShape: function (e) {
     this.model.shape = e.target.value;
+    this.toggleEnable();
     this.model.collection.parent.trigger('update-shape-deps');
     this.updateViewer();
     this.updatePreviewPlot();
@@ -656,6 +658,10 @@ module.exports = View.extend({
     $(this.queryByHook("imf-complete")).css("display", "none");
     $(this.queryByHook("imf-error")).css("display", "none");
     $(this.queryByHook("imf-in-progress")).css("display", "inline-block");
+  },
+  toggleEnable: function () {
+    $(this.queryByHook("enable-action")).prop("disabled", this.model.shape === "");
+    
   },
   toggleImportFiles: function (e) {
     let classes = $(this.queryByHook('collapseImportFiles')).attr("class").split(/\s+/);
