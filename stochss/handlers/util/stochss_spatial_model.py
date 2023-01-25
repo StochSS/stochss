@@ -878,7 +878,7 @@ class StochSSSpatialModel(StochSSBase):
         # Case #3: 1 or more particles and one type
         if len(s_domain['types']) == 1:
             fig['data'][0]['name'] = "Un-Assigned"
-            ids = list(filter(lambda particle: particle['particle_id'], s_domain['particles']))
+            ids = list(map(lambda particle: particle['particle_id'], s_domain['particles']))
             fig['data'][0]['ids'] = ids
         # Case #4: 1 or more particles and multiple types
         else:
