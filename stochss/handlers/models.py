@@ -28,7 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSFolder, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
-                  StochSSAPIError, report_error
+                  StochSSAPIError, report_error, report_critical_error
 
 
 log = logging.getLogger('stochss')
@@ -83,6 +83,8 @@ class JsonFileAPIHandler(APIHandler):
                     report_error(self, log, new_model_err)
             else:
                 report_error(self, log, load_err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -111,6 +113,8 @@ class JsonFileAPIHandler(APIHandler):
             log.info(f"Successfully saved {model.get_file(path=path)}")
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -146,6 +150,8 @@ class LoadDomainEditorAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -208,33 +214,39 @@ class RunModelAPIHandler(APIHandler):
         target = self.get_query_argument(name="target", default=None)
         resp = {"Running":False, "Outfile":outfile, "Results":""}
         if run_cmd == "start":
-            model = StochSSModel(path=path)
-            if os.path.exists(f".{model.get_name()}-preview.json"):
-                os.remove(f".{model.get_name()}-preview.json")
-            exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
-                        f'{path}', f'{outfile}']
-            if target is not None:
-                exec_cmd.insert(1, "--target")
-                exec_cmd.insert(2, f"{target}")
-            log.debug(f"Script commands for running a preview: {exec_cmd}")
-            subprocess.Popen(exec_cmd)
-            resp['Running'] = True
-            log.debug(f"Response to the start command: {resp}")
-            self.write(resp)
-        else:
-            model = StochSSModel(path=path)
-            log.info("Check for preview results ...")
-            results = model.get_preview_results(outfile=outfile)
-            log.debug(f"Results for the model preview: {results}")
-            if results is None:
+            try:
+                model = StochSSModel(path=path)
+                if os.path.exists(f".{model.get_name()}-preview.json"):
+                    os.remove(f".{model.get_name()}-preview.json")
+                exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
+                            f'{path}', f'{outfile}']
+                if target is not None:
+                    exec_cmd.insert(1, "--target")
+                    exec_cmd.insert(2, f"{target}")
+                log.debug(f"Script commands for running a preview: {exec_cmd}")
+                subprocess.Popen(exec_cmd)
                 resp['Running'] = True
-                resp['Results'] = model.get_live_results()
-                log.info("The preview is still running")
-            else:
-                resp['Results'] = results
-                log.info("Loading the preview results")
-            log.debug(f"Response to the read command: {resp}")
-            self.write(resp)
+                log.debug(f"Response to the start command: {resp}")
+                self.write(resp)
+            except Exception as err:
+                report_critical_error(self, log, err)
+        else:
+            try:
+                model = StochSSModel(path=path)
+                log.info("Check for preview results ...")
+                results = model.get_preview_results(outfile=outfile)
+                log.debug(f"Results for the model preview: {results}")
+                if results is None:
+                    resp['Running'] = True
+                    resp['Results'] = model.get_live_results()
+                    log.info("The preview is still running")
+                else:
+                    resp['Results'] = results
+                    log.info("Loading the preview results")
+                log.debug(f"Response to the read command: {resp}")
+                self.write(resp)
+            except Exception as err:
+                report_critical_error(self, log, err)
         self.finish()
 
 
@@ -255,10 +267,13 @@ class ModelExistsAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug(f"Path to the file: {path}")
-        model = StochSSModel(path=path)
-        resp = {"exists":os.path.exists(model.get_path(full=True))}
-        log.debug(f"Response: {resp}")
-        self.write(resp)
+        try:
+            model = StochSSModel(path=path)
+            resp = {"exists":os.path.exists(model.get_path(full=True))}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -327,6 +342,8 @@ class LoadExternalDomains(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -430,4 +447,6 @@ class CreateNewBoundCondAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
