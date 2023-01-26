@@ -170,7 +170,8 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
   let typeCodes = {
     "Ensemble Simulation": "_ES",
     "Spatial Ensemble Simulation": "_SES",
-    "Parameter Sweep": "_PS"
+    "Parameter Sweep": "_PS",
+    "Model Inference": "_MI"
   }
   let self = parent;
   let ext = isSpatial ? /.smdl/g : /.mdl/g

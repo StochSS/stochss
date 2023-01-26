@@ -62,7 +62,7 @@ class StochSSWorkflow(StochSSBase):
             settings = self.get_settings_template()
             if wkfl_type == "Parameter Sweep":
                 settings['simulationSettings']['realizations'] = 20
-            if wkfl_type == "Spatial Ensemble Simulation":
+            if wkfl_type in ("Spatial Ensemble Simulation", "Model Inference"):
                 settings['simulationSettings']['realizations'] = 1
             if os.path.exists(mdl_path):
                 with open(mdl_path, "r", encoding="utf-8") as mdl_file:
