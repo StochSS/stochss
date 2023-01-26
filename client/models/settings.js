@@ -19,9 +19,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let State = require('ampersand-state');
 let ResultsSettings = require('./results-settings');
 let TimespanSettings = require('./timespan-settings');
+let InferenceSettings = require('./inference-settings');
 let SimulationSettings = require('./simulation-settings');
 let ParameterSweepSettings = require('./parameter-sweep-settings');
-let InferenceSettings = require('./inference-settings');
 
 module.exports = State.extend({
   props: {
@@ -31,6 +31,7 @@ module.exports = State.extend({
   	timespanSettings: TimespanSettings,
     simulationSettings: SimulationSettings,
     parameterSweepSettings: ParameterSweepSettings,
+    inferenceSettings: InferenceSettings,
     resultsSettings: ResultsSettings
   },
   initialize: function(attrs, options) {
