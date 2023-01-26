@@ -36,6 +36,7 @@ class StochSSBase():
     '''
     user_dir = os.path.expanduser("~") # returns the path to the users home directory
     TEMPLATE_VERSION = 1
+    SETTINGS_TEMPLATE_VERSION = 1
 
     def __init__(self, path):
         '''

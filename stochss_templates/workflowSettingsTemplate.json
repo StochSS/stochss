@@ -1,4 +1,19 @@
 {
+    "inferenceSettings":{
+        "obsData": "",
+        "parameters": [],
+        "priorMethod": "Uniform Prior",
+        "summryStats": ""
+    },
+    "parameterSweepSettings":{
+        "parameters": [],
+        "speciesOfInterest": {}
+    },
+    "resultsSettings":{
+        "mapper": "final",
+        "reducer": "avg",
+        "outputs": []
+    },
     "simulationSettings": {
         "isAutomatic": true,
         "relativeTol": 1e-3,
@@ -8,15 +23,7 @@
         "seed": -1,
         "tauTol": 0.03
     },
-    "parameterSweepSettings":{
-        "parameters": [],
-        "speciesOfInterest": {}
-    },
-    "resultsSettings":{
-        "mapper":"final",
-        "reducer":"avg",
-        "outputs": []
-    },
+    "template_version": 1,
     "timespanSettings": {
         "endSim": 20,
         "timeStep": 0.05,
