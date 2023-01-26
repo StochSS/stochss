@@ -15,36 +15,44 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+//collections
+let InferenceParameters = require('./inference-parameters');
 //models
 let State = require('ampersand-state');
-let ResultsSettings = require('./results-settings');
-let TimespanSettings = require('./timespan-settings');
-let SimulationSettings = require('./simulation-settings');
-let ParameterSweepSettings = require('./parameter-sweep-settings');
-let InferenceSettings = require('./inference-settings');
 
 module.exports = State.extend({
-  props: {
-    template_veersion: 'number'
+  Props: {
+    obsData: 'string',
+    priorMethod: 'string',
+    summaryStats: 'string'
   },
-  children: {
-  	timespanSettings: TimespanSettings,
-    simulationSettings: SimulationSettings,
-    parameterSweepSettings: ParameterSweepSettings,
-    resultsSettings: ResultsSettings
-  },
-  initialize: function(attrs, options) {
-    State.prototype.initialize.apply(this, arguments);
+  collections: {
+    parameters: InferenceParameters
   },
   derived: {
     elementID: {
       deps: ["parent"],
       fn: function () {
         if(this.parent) {
-          return this.parent.elementID + "Set-";
+          return this.parent.elementID + "IS-";
         }
-        return "Set-"
+        return "IS-"
       }
     }
+  },
+  initialize: function(attrs, options) {
+    State.prototype.initialize.apply(this, arguments);
+  },
+  updateVariables: function (parameters) {
+    this.parameters.forEach((variable) => {
+      let parameter = parameters.filter((parameter) => {
+        return parameter.compID === variable.paramID;
+      })[0];
+      if(parameter === undefined) {
+        this.removeVariable(variable);
+      }else{
+        variable.updateVariable(variable);
+      }
+    });
   }
 });

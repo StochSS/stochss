@@ -17,34 +17,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 //models
 let State = require('ampersand-state');
-let ResultsSettings = require('./results-settings');
-let TimespanSettings = require('./timespan-settings');
-let SimulationSettings = require('./simulation-settings');
-let ParameterSweepSettings = require('./parameter-sweep-settings');
-let InferenceSettings = require('./inference-settings');
 
 module.exports = State.extend({
   props: {
-    template_veersion: 'number'
+    hasChangedRange: 'boolean',
+    m: 'any',
+    min: 'any',
+    max: 'any',
+    name: 'string',
+    p: 'any',
+    paramID: 'number',
+    pm: 'any',
+    s: 'any',
+    u: 'any'
   },
-  children: {
-  	timespanSettings: TimespanSettings,
-    simulationSettings: SimulationSettings,
-    parameterSweepSettings: ParameterSweepSettings,
-    resultsSettings: ResultsSettings
+  derived: {
+    elementID: {
+      deps: ["collection"],
+      fn: function () {
+        if(this.collection) {
+          return "IT" + (this.collection.indexOf(this) + 1);
+        }
+        return "IT-"
+      }
+    }
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
-  derived: {
-    elementID: {
-      deps: ["parent"],
-      fn: function () {
-        if(this.parent) {
-          return this.parent.elementID + "Set-";
-        }
-        return "Set-"
-      }
+  updateVariable: function (parameter) {
+    let value = parameter.expression;
+    if(this.min <= 0 || !this.hasChangedRange) {
+      this.min = value * 0.5;
+    }
+    if(this.max <= 0 || !this.hasChangedRange) {
+      this.max = value * 1.5;
     }
   }
 });
