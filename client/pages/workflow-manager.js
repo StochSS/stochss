@@ -320,8 +320,16 @@ let WorkflowManager = PageView.extend({
       if(this.model.settings.parameterSweepSettings.parameters.length < 1) {
         $(this.queryByHook("start-job")).prop("disabled", true);
       }
-      this.model.settings.parameterSweepSettings.parameters.on("add remove", _.bind(function (e) {
+      this.model.settings.parameterSweepSettings.parameters.on("add remove", _.bind((e) => {
         let numParams = this.model.settings.parameterSweepSettings.parameters.length;
+        $(this.queryByHook("start-job")).prop("disabled", numParams < 1);
+      }, this))
+    }else if(this.model.type === "Model Inference") {
+      if(this.model.settings.inferenceSettings.parameters.length < 1) {
+        $(this.queryByHook("start-job")).prop("disabled", true);
+      }
+      this.model.settings.inferenceSettings.parameters.on("add remove", _.bind((e) => {
+        let numParams = this.model.settings.inferenceSettings.parameters.length;
         $(this.queryByHook("start-job")).prop("disabled", numParams < 1);
       }, this))
     }
@@ -330,15 +338,14 @@ let WorkflowManager = PageView.extend({
       newFormat: this.model.newFormat,
       type: this.model.type
     }
-    if(this.model.type === "Parameter Sweep") {
-      let self = this;
+    if(["Parameter Sweep", "Model Inference"].includes(this.model.type)) {
       options['stochssModel'] = new Model({
         directory: this.model.model
       });
       app.getXHR(options.stochssModel.url(), {
-        success: function (err, response, body) {
+        success: (err, response, body) => {
           options.stochssModel.set(body);
-          self.renderSettingsView(options);
+          this.renderSettingsView(options);
         }
       });
     }else {
