@@ -146,31 +146,40 @@ class StochSSWorkflow(StochSSBase):
             p_range = list(numpy.linspace(param['min'], param['max'], param['steps']))
             param['range'] = p_range
 
+    def __update_settings_to_current(self):
+        settings = self.workflow['settings']
+        if settings['template_version'] == self.SETTINGS_TEMPLATE_VERSION:
+            return
 
-    def __update_settings(self):
-        settings = self.workflow['settings']['parameterSweepSettings']
         parameters = []
-        if "parameters" not in settings.keys():
-            if "paramID" in settings['parameterOne']:
-                param1 = {"paramID": settings['parameterOne']['paramID'],
-                          "min": settings['p1Min'],
-                          "max": settings['p1Max'],
-                          "name": settings['parameterOne']['name'],
-                          "steps": settings['p1Steps'],
-                          "hasChangedRanged": False}
-                parameters.append(param1)
-            if "paramID" in settings['parameterTwo']:
-                param2 = {"paramID": settings['parameterTwo']['paramID'],
-                          "min": settings['p2Min'],
-                          "max": settings['p2Max'],
-                          "name": settings['parameterTwo']['name'],
-                          "steps": settings['p2Steps'],
-                          "hasChangedRanged": False}
-                parameters.append(param2)
-            soi = settings['speciesOfInterest']
-            self.workflow['settings']['parameterSweepSettings'] = {"speciesOfInterest": soi,
-                                                                   "parameters": parameters}
+        if "parameters" not in settings['parameterSweepSettings']:
+            if "paramID" in settings['parameterSweepSettings']['parameterOne']:
+                parameters.append({
+                    "paramID": settings['parameterOne']['paramID'],
+                    "min": settings['parameterSweepSettings']['p1Min'],
+                    "max": settings['parameterSweepSettings']['p1Max'],
+                    "name": settings['parameterSweepSettings']['parameterOne']['name'],
+                    "steps": settings['parameterSweepSettings']['p1Steps'],
+                    "hasChangedRanged": False
+                })
+            if "paramID" in settings['parameterSweepSettings']['parameterTwo']:
+                parameters.append({
+                    "paramID": settings['parameterSweepSettings']['parameterTwo']['paramID'],
+                    "min": settings['parameterSweepSettings']['p2Min'],
+                    "max": settings['parameterSweepSettings']['p2Max'],
+                    "name": settings['parameterSweepSettings']['parameterTwo']['name'],
+                    "steps": settings['parameterSweepSettings']['p2Steps'],
+                    "hasChangedRanged": False
+                })
+            soi = settings['parameterSweepSettings']['speciesOfInterest']
+            settings['parameterSweepSettings'] = {
+                "speciesOfInterest": soi, "parameters": parameters
+            }
 
+        settings['inferenceSettings'] = {
+            "obsData": "", "parameters": [], "priorMethod": "Uniform Prior", "summaryStats": ""
+        }
+        settings['template_version'] = self.SETTINGS_TEMPLATE_VERSION
 
     @classmethod
     def __write_new_files(cls, settings, annotation):
@@ -331,7 +340,9 @@ class StochSSWorkflow(StochSSBase):
             self.workflow['settings'] = jobdata['settings']
             self.workflow['type'] = jobdata['titleType']
             oldfmtrdy = jobdata['status'] == "ready"
-        self.__update_settings()
+        if "template_version" not in self.workflow['settings']:
+            self.workflow['settings']['template_version'] = 0
+        self.__update_settings_to_current()
         if not os.path.exists(self.workflow['model']) and (oldfmtrdy or self.workflow['newFormat']):
             if ".proj" in self.path:
                 if "WorkflowGroup1.wkgp" in self.path:

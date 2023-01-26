@@ -256,35 +256,52 @@ class StochSSJob(StochSSBase):
         return True
 
 
-    def __update_settings(self):
-        settings = self.job['settings']['parameterSweepSettings']
-        if "parameters" not in settings.keys():
+    def __update_settings_to_current(self):
+        settings = self.job['settings']
+        if settings['template_version'] == self.SETTINGS_TEMPLATE_VERSION:
+            return
+
+        if "parameters" not in settings['parameterSweepSettings']:
             parameters = []
-            if "paramID" in settings['parameterOne']:
-                p1_range = list(numpy.linspace(settings['p1Min'], settings['p1Max'],
-                                               settings['p1Steps']))
-                param1 = {"paramID": settings['parameterOne']['paramID'],
-                          "min": settings['p1Min'],
-                          "max": settings['p1Max'],
-                          "name": settings['parameterOne']['name'],
-                          "range" : p1_range,
-                          "steps": settings['p1Steps'],
-                          "hasChangedRanged": False}
-                parameters.append(param1)
-            if "paramID" in settings['parameterTwo']:
-                p2_range = list(numpy.linspace(settings['p2Min'], settings['p2Max'],
-                                               settings['p2Steps']))
-                param2 = {"paramID": settings['parameterTwo']['paramID'],
-                          "min": settings['p2Min'],
-                          "max": settings['p2Max'],
-                          "name": settings['parameterTwo']['name'],
-                          "range" : p2_range,
-                          "steps": settings['p2Steps'],
-                          "hasChangedRanged": False}
-                parameters.append(param2)
+            if "paramID" in settings['parameterSweepSettings']['parameterOne']:
+                p1_range = list(numpy.linspace(
+                    settings['parameterSweepSettings']['p1Min'],
+                    settings['parameterSweepSettings']['p1Max'],
+                    settings['parameterSweepSettings']['p1Steps']
+                ))
+                parameters.append({
+                    "paramID": settings['parameterSweepSettings']['parameterOne']['paramID'],
+                    "min": settings['parameterSweepSettings']['p1Min'],
+                    "max": settings['parameterSweepSettings']['p1Max'],
+                    "name": settings['parameterSweepSettings']['parameterOne']['name'],
+                    "range" : p1_range,
+                    "steps": settings['parameterSweepSettings']['p1Steps'],
+                    "hasChangedRanged": False
+                })
+            if "paramID" in settings['parameterSweepSettings']['parameterTwo']:
+                p2_range = list(numpy.linspace(
+                    settings['parameterSweepSettings']['p2Min'],
+                    settings['parameterSweepSettings']['p2Max'],
+                    settings['parameterSweepSettings']['p2Steps']
+                ))
+                parameters.append({
+                    "paramID": settings['parameterSweepSettings']['parameterTwo']['paramID'],
+                    "min": settings['parameterSweepSettings']['p2Min'],
+                    "max": settings['parameterSweepSettings']['p2Max'],
+                    "name": settings['parameterSweepSettings']['parameterTwo']['name'],
+                    "range" : p2_range,
+                    "steps": settings['parameterSweepSettings']['p2Steps'],
+                    "hasChangedRanged": False
+                })
             soi = settings['speciesOfInterest']
-            self.job['settings']['parameterSweepSettings'] = {"speciesOfInterest": soi,
-                                                              "parameters": parameters}
+            settings['parameterSweepSettings'] = {
+                "speciesOfInterest": soi, "parameters": parameters
+            }
+
+        settings['inferenceSettings'] = {
+            "obsData": "", "parameters": [], "priorMethod": "Uniform Prior", "summaryStats": ""
+        }
+        settings['template_version'] = self.SETTINGS_TEMPLATE_VERSION
 
 
     @classmethod
@@ -706,7 +723,9 @@ class StochSSJob(StochSSBase):
                         "startTime":info['start_time'], "status":status,
                         "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
                         "type":self.type, "directory":self.path, "logs":logs}
-            self.__update_settings()
+            if "template_version" not in self.job['settings']:
+                self.job['settings']['template_version'] = 0
+            self.__update_settings_to_current()
             if error is not None:
                 self.job['error'] = error
         return self.job
