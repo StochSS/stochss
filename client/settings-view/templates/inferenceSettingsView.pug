@@ -24,8 +24,132 @@ div#inference-settings.card
 
       div.tab-pane.active(id=this.model.elementID + "-edit-inference-settings" data-hook=this.model.elementID + "-edit-inference-settings")
 
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-2
+
+            h6 <b>Prior Method</b>
+
+          div.col-sm-10
+
+            h6.inline <b>Summary Statistics</b>
+
+        div.mx-1.my-3.row
+
+          div.col-sm-2
+
+            div(data-hook="prior-method")
+
+          div.col-sm-10
+
+            div(data-hook="summary-statistics")
+
         div(data-hook="edit-parameter-space-container")
 
+        div.mt-3.accordion(id="obs-data-section" data-hook="obs-data-section")
+
+          div.card
+
+            div.card-header(id="importObsDataHeader")
+
+              h3.mb-0.inline="Import Observed Data"
+
+              button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseImportObsData" data-hook="collapseImportObsData" aria-expanded="false" aria-controls="collapseImportObsData" style="float: right") 
+
+                div(data-hook="import-chevron")
+
+                  svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512")
+
+                    path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
+
+            div.collapse(id="collapseImportObsData" aria-labelledby="importObsDataHeader" data-parent="#obs-data-section")
+
+              div.card-body
+
+                div.my-3
+
+                  span.inline(for="obsDataFile")=`Please specify a file to import: `
+
+                  input.ml-2(id="obsDataFile" data-hook="obs-data-file" type="file" name="obs-data-file" size="30" accept='.txt, .csv' required)
+
+                div.inline
+
+                  button.btn.btn-outline-primary.box-shadow(data-hook="import-obs-data-file" disabled)=`Import File`
+
+                div.mdl-edit-btn.saving-status.inline(data-hook="iodf-in-progress")
+
+                  div.spinner-grow.mr-2
+
+                  span Importing observed data ...
+
+                div.mdl-edit-btn.saved-status.inline(data-hook="iodf-complete")
+
+                  span Successfully imported observed data!
+
+                div.mdl-edit-btn.save-error-status(data-hook="iodf-error")
+
+                  span(data-hook="iodf-action-error")
+
+          div.card
+
+            div.card-header(id="uploadObsDataHeader")
+
+              h3.mb-0.inline="Upload Observed Data"
+
+              button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseUploadObsData" data-hook="collapseUploadObsData" aria-expanded="false" aria-controls="collapseUploadObsData" style="float: right")
+
+                div(data-hook="upload-chevron")
+
+                  svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512")
+
+                    path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
+
+            div.collapse(id="collapseUploadObsData" aria-labelledby="uploadObsDataHeader" data-parent="#obs-data-section")
+
+              div.card-body
+
+                div
+
+                  div.hidden.text-info(data-hook="obs-data-location-message")=`There are multiple observed data files with that name, please select a location`
+
+                  div
+
+                    div.inline.mr-3
+
+                      span.inline(for="obs-data-file-select")=`Please specify a file to upload: `
+
+                      div.inline(id="obs-data-file-select" data-hook="obs-data-file-select")
+
+                    div.hidden.inline(data-hook="obs-data-location-container")
+
+                      span.inline.mr-2(for="obs-data-location-select") Location:
+
+                      div.inline(id="obs-data-location-select" data-hook="obs-data-location-select")
+
       div.tab-pane(id=this.model.elementID + "-view-inference-settings" data-hook=this.model.elementID + "-view-inference-settings")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-2
+
+            h6 <b>Prior Method</b>
+
+          div.col-sm-10
+
+            h6.inline <b>Summary Statistics</b>
+
+        div.mx-1.my-3.row
+
+          div.col-sm-2
+
+            div(data-hook="view-prior-method")=this.model.priorMethod
+
+          div.col-sm-10
+
+            div(data-hook="view-summary-stats")=this.model.summaryStats
 
         div(data-hook="view-parameter-space-container")

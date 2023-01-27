@@ -53,7 +53,6 @@ module.exports = View.extend({
     if(this.inferenceSettingsView) {
       this.inferenceSettingsView.remove();
     }
-    console.log(this.stochssModel)
     this.inferenceSettingsView = new InferenceSettingsView({
       model: this.model.inferenceSettings,
       stochssModel: this.stochssModel,

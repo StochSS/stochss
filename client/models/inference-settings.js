@@ -21,7 +21,7 @@ let InferenceParameters = require('./inference-parameters');
 let State = require('ampersand-state');
 
 module.exports = State.extend({
-  Props: {
+  props: {
     obsData: 'string',
     priorMethod: 'string',
     summaryStats: 'string'
