@@ -38,5 +38,17 @@ module.exports = Collection.extend({
   },
   removeInferenceParameter: function (variable) {
     this.remove(variable);
+  },
+  updateVariables: function (parameters) {
+    this.forEach((variable) => {
+      let parameter = parameters.filter((parameter) => {
+        return parameter.compID === variable.paramID;
+      })[0];
+      if(parameter === undefined) {
+        this.removeVariable(variable);
+      }else{
+        variable.updateVariable(variable);
+      }
+    });
   }
 });

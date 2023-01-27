@@ -18,28 +18,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 //support files
 let app = require('../../app');
-let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
-let SelectView = require('ampersand-select-view');
-// let ParameterView = require('./sweep-parameter-view');
+let InferenceParametersView = require('./inference-parameters-view');
 //templates
 let template = require('../templates/inferenceSettingsView.pug');
 
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse]' :  'changeCollapseButtonText',
-    'click [data-hook=add-mi-parameter]' : 'handleAddParameterClick'
+    'click [data-hook=collapse]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
-    this.tooltips = Tooltips.parameterSweepSettings;
     this.stochssModel = attrs.stochssModel;
-    if(!this.readOnly) {
-      this.model.updateVariables(this.stochssModel.parameters);
-    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -53,58 +46,34 @@ module.exports = View.extend({
       $(this.queryByHook(this.model.elementID + '-edit-inference-settings')).removeClass('active');
       $(this.queryByHook(this.model.elementID + '-view-inference-settings')).addClass('active');
     }else{
-      this.model.parameters.on("add remove", () => {
-        let disable = this.model.parameters.length >= this.stochssModel.parameters.length;
-        $(this.queryByHook("add-mi-parameter")).prop("disabled", disable);
-      }, this)
-      // this.renderEditSweepParameters();
+      this.renderEditParameterSpace();
     }
-    // this.renderViewSweepParameters();
+    this.renderViewParameterSpace();
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
-  getParameter: function () {
-    let parameters = this.model.parameters.map((param) => { return param.paramID; });
-    let target = this.stochssModel.parameters.filter((param) => {
-      return !parameters.includes(param.compID);
-    })[0];
-    return target;
+  renderEditParameterSpace: function () {
+    if(this.editParameterSpace) {
+      this.editParameterSpace.remove();
+    }
+    this.editParameterSpace = new InferenceParametersView({
+      collection: this.model.parameters,
+      stochssModel: this.stochssModel
+    });
+    let hook = "edit-parameter-space-container";
+    app.registerRenderSubview(this, this.editParameterSpace, hook);
   },
-  handleAddParameterClick: function (e) {
-    let target = this.getParameter();
-    this.model.parameters.addInferenceParameter(target.compID, target.name);
-    // this.renderViewSweepParameters();
-  },
-  // renderEditSweepParameters: function () {
-  //   if(this.editSweepParameters) {
-  //     this.editSweepParameters.remove();
-  //   }
-  //   let options = {"viewOptions": {
-  //     parent: this,
-  //     stochssParams: this.stochssModel.parameters
-  //   }}
-  //   this.editSweepParameters = this.renderCollection(
-  //     this.model.parameters,
-  //     ParameterView,
-  //     this.queryByHook("ps-parameter-collection"),
-  //     options
-  //   );
-  // },
-  // renderViewSweepParameters: function () {
-  //   if(this.viewSweepParameters) {
-  //     this.viewSweepParameters.remove();
-  //   }
-  //   let options = {"viewOptions": {
-  //     parent: this,
-  //     stochssParams: this.stochssModel.parameters,
-  //     viewMode: true
-  //   }}
-  //   this.viewSweepParameters = this.renderCollection(
-  //     this.model.parameters,
-  //     ParameterView,
-  //     this.queryByHook("view-sweep-parameters"),
-  //     options
-  //   );
-  // }
+  renderViewParameterSpace: function () {
+    if(this.viewParameterSpace) {
+      this.viewParameterSpace.remove();
+    }
+    this.viewParameterSpace = new InferenceParametersView({
+      collection: this.model.parameters,
+      readOnly: true,
+      stochssModel: this.stochssModel
+    });
+    let hook = "view-parameter-space-container";
+    app.registerRenderSubview(this, this.viewParameterSpace, hook);
+  }
 });

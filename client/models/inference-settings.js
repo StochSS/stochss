@@ -42,17 +42,5 @@ module.exports = State.extend({
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
-  },
-  updateVariables: function (parameters) {
-    this.parameters.forEach((variable) => {
-      let parameter = parameters.filter((parameter) => {
-        return parameter.compID === variable.paramID;
-      })[0];
-      if(parameter === undefined) {
-        this.removeVariable(variable);
-      }else{
-        variable.updateVariable(variable);
-      }
-    });
   }
 });
