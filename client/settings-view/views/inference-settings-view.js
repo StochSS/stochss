@@ -59,7 +59,8 @@ module.exports = View.extend({
     }
     this.editParameterSpace = new InferenceParametersView({
       collection: this.model.parameters,
-      stochssModel: this.stochssModel
+      stochssModel: this.stochssModel,
+      priorMethod: this.model.priorMethod
     });
     let hook = "edit-parameter-space-container";
     app.registerRenderSubview(this, this.editParameterSpace, hook);
@@ -71,7 +72,8 @@ module.exports = View.extend({
     this.viewParameterSpace = new InferenceParametersView({
       collection: this.model.parameters,
       readOnly: true,
-      stochssModel: this.stochssModel
+      stochssModel: this.stochssModel,
+      priorMethod: this.model.priorMethod
     });
     let hook = "view-parameter-space-container";
     app.registerRenderSubview(this, this.viewParameterSpace, hook);

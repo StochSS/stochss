@@ -1,0 +1,26 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-3
+
+      div(data-hook=this.model.elementID + "-sweep-target")
+
+    div.col-sm-3
+
+      div(data-hook=this.model.elementID + "-target-value")=this.parameter.expression
+
+    div.col-sm-2
+
+      div(data-hook=this.model.elementID + "-target-min")
+
+    div.col-sm-2
+
+      div(data-hook=this.model.elementID + "-target-max")
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-remove") X

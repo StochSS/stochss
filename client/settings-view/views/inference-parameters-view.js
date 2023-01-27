@@ -20,10 +20,10 @@ let $ = require('jquery');
 let Tooltips = require('../../tooltips');
 //views
 let View = require('ampersand-view');
-// let ParameterView = require('./sweep-parameter-view');
+let UniformParameterView = require('./uniform-parameter-view');
 //templates
-let editTemplate = require('../templates/editUniformParameters.pug');
-let viewTemplate = require('../templates/viewUniformParameters.pug');
+let editUniformTemplate = require('../templates/editUniformParameters.pug');
+let viewUniformTemplate = require('../templates/viewUniformParameters.pug');
 
 module.exports = View.extend({
   events: {
@@ -34,21 +34,26 @@ module.exports = View.extend({
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.parameterSweepSettings;
     this.stochssModel = attrs.stochssModel;
+    this.priorMethod = attrs.priorMethod;
     if(!this.readOnly) {
       this.collection.updateVariables(this.stochssModel.parameters);
     }
   },
   render: function () {
-  	this.template = this.readOnly ? viewTemplate : editTemplate;
+  	// if(this.priorMethod === "Uniform Prior") {
+  	// 	this.template = this.readOnly ? viewUniformTemplate : editUniformTemplate;
+  	// }
+  	this.template = this.readOnly ? viewUniformTemplate : editUniformTemplate;
     View.prototype.render.apply(this, arguments);
     if(!this.readOnly) {
       this.collection.on("add remove", () => {
         let disable = this.collection.length >= this.stochssModel.parameters.length;
         $(this.queryByHook("add-mi-parameter")).prop("disabled", disable);
       }, this)
-      // this.renderEditSweepParameters();
+      this.renderEditInferenceParameter();
+    }else{
+    	this.renderViewInferenceParameter();
     }
-    // this.renderViewSweepParameters();
   },
   getParameter: function () {
     let parameters = this.collection.map((param) => { return param.paramID; });
@@ -60,37 +65,52 @@ module.exports = View.extend({
   handleAddParameterClick: function (e) {
     let target = this.getParameter();
     this.collection.addInferenceParameter(target.compID, target.name);
-    // this.renderViewSweepParameters();
+    this.updateTargetOptions();
   },
-  // renderEditSweepParameters: function () {
-  //   if(this.editSweepParameters) {
-  //     this.editSweepParameters.remove();
-  //   }
-  //   let options = {"viewOptions": {
-  //     parent: this,
-  //     stochssParams: this.stochssModel.parameters
-  //   }}
-  //   this.editSweepParameters = this.renderCollection(
-  //     this.model.parameters,
-  //     ParameterView,
-  //     this.queryByHook("ps-parameter-collection"),
-  //     options
-  //   );
-  // },
-  // renderViewSweepParameters: function () {
-  //   if(this.viewSweepParameters) {
-  //     this.viewSweepParameters.remove();
-  //   }
-  //   let options = {"viewOptions": {
-  //     parent: this,
-  //     stochssParams: this.stochssModel.parameters,
-  //     viewMode: true
-  //   }}
-  //   this.viewSweepParameters = this.renderCollection(
-  //     this.model.parameters,
-  //     ParameterView,
-  //     this.queryByHook("view-sweep-parameters"),
-  //     options
-  //   );
-  // }
+  renderEditInferenceParameter: function () {
+    if(this.editInferenceParameter) {
+      this.editInferenceParameter.remove();
+    }
+    let options = {"viewOptions": {
+      parent: this,
+      stochssParams: this.stochssModel.parameters
+    }}
+    // if(this.priorMethod === "Uniform Prior") {
+  	// 	var inferenceParameterView = UniformParameterView;
+  	// }
+  	var inferenceParameterView = UniformParameterView;
+    this.editInferenceParameter = this.renderCollection(
+      this.collection,
+      inferenceParameterView,
+      this.queryByHook("edit-mi-parameter-collection"),
+      options
+    );
+  },
+  renderViewInferenceParameter: function () {
+    if(this.viewInferenceParameter) {
+      this.viewInferenceParameter.remove();
+    }
+    let options = {"viewOptions": {
+      parent: this, viewMode: true,
+      stochssParams: this.stochssModel.parameters
+    }}
+    // if(this.priorMethod === "Uniform Prior") {
+  	// 	var inferenceParameterView = UniformParameterView;
+  	// }
+  	var inferenceParameterView = UniformParameterView;
+    this.viewInferenceParameter = this.renderCollection(
+      this.collection,
+      inferenceParameterView,
+      this.queryByHook("view-mi-parameter-collection"),
+      options
+    );
+  },
+  updateTargetOptions: function () {
+  	this.editInferenceParameter.views.forEach((view) => {
+  		view.renderTargetSelectView();
+  	});
+  },
+  updateViewer: function () {
+  	this.parent.renderViewParameterSpace();
+  }
 });

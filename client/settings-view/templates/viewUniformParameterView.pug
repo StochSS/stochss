@@ -1,0 +1,16 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-3
+
+      div.pl-2=this.model.name
+
+    div.col-sm-3=this.parameter.expression
+
+    div.col-sm-3=this.model.min
+
+    div.col-sm-3=this.model.max
