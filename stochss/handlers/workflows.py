@@ -27,9 +27,9 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
-                  StochSSParamSweepNotebook, StochSSSciopeNotebook, StochSSAPIError, report_error, \
-                  report_critical_error
+from .util import StochSSFolder, StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
+                  StochSSWorkflow, StochSSParamSweepNotebook, StochSSSciopeNotebook, \
+                  StochSSAPIError, report_error, report_critical_error
 
 log = logging.getLogger('stochss')
 
@@ -500,6 +500,74 @@ class DownloadCSVZipAPIHandler(APIHandler):
             else:
                 csv_data = job.get_full_csvzip_from_results(name=name)
             self.write(csv_data)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
+        self.finish()
+
+
+class ImportObsDataAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for importing observed data from remote file.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Imports observed data from a file.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        dirname = os.path.dirname(self.request.body_arguments['path'][0].decode())
+        if dirname == '.':
+            dirname = ""
+        elif ".wkgp" in dirname:
+            dirname = os.path.dirname(dirname)
+        data_file = self.request.files['datafile'][0]
+        log.info(f"Importing observed data: {data_file['filename']}")
+        try:
+            folder = StochSSFolder(path=dirname)
+            data_resp = folder.upload('file', data_file['filename'], data_file['body'])
+            resp = {'obsDataPath': data_resp['path'], 'obsDataFile': data_resp['file']}
+            log.info("Successfully uploaded observed data")
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
+        self.finish()
+
+
+class LoadObsDataFiles(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting observed data files.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get observed data files on disc for file selections.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        target_ext = self.get_query_argument(name="ext").split(',')
+        try:
+            folder = StochSSFolder(path="")
+            test = lambda ext, root, file: bool(
+                "trash" in root.split("/") or file.startswith('.') or \
+                'wkfl' in root or root.startswith('.')
+            )
+            data_files = folder.get_file_list(ext=target_ext, test=test)
+            resp = {'obsDataFiles': data_files}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
         except Exception as err:
