@@ -392,8 +392,9 @@ class StochSSNotebook(StochSSBase):
         return index + 1
 
     def __create_spatial_geometry_cells(self, cells, index):
+        exempt_formula = ("", "True", "on_boundary", "not on_boundary")
         shapes = list(filter(
-            lambda shape: shape['type'] == "Standard" and shape['formula'] not in ("", "True"),
+            lambda shape, exempt=exempt_formula: shape['type'] == "Standard" and shape['formula'] not in exempt,
             self.s_model['domain']['shapes']
         ))
         actions = list(filter(
@@ -550,12 +551,9 @@ class StochSSNotebook(StochSSBase):
                     nb_domain.insert(index, '\n'.join(geometries))
                     index += 1
                 for i, s_act in enumerate(actions):
-                    args = s_act['filename']
+                    args = f"os.path.join(home, '{s_act['filename']}')"
                     if s_act['type'] != "StochSS Domain" and s_act['subdomainFile'] != "":
-                        args = '\n'.join([
-                            f"os.path.join(home, '{args}'),",
-                            f"{pad*2}subdomain_file=os.path.join(home, '{s_act['subdomainFile']}')"
-                        ])
+                        args = f"{args},\n{pad*2}subdomain_file=os.path.join(home, '{s_act['subdomainFile']}')"
                     nb_latt = lat_tmp.replace("__NAME__", f"ipa_lattice{i+1}")
                     nb_latt = nb_latt.replace("__CLASS__", class_map[s_act['type']]).replace("__ARGS__", args)
                     lattices.append(nb_latt)
