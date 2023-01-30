@@ -253,6 +253,7 @@ module.exports = View.extend({
     let actions = this.collection;
     let enabled = this.model.enable;
     actions.removeAction(this.model);
+    actions.parent.trigger('update-shape-deps');
     if(enabled) {
       actions.parent.trigger('update-plot-preview');
     }
@@ -533,6 +534,7 @@ module.exports = View.extend({
     this.hideDetails();
     this.model.scope = e.target.value;
     this.displayDetails();
+    this.toggleEnable();
     this.updatePreviewPlot();
   },
   selectActionType: function (e) {
@@ -553,6 +555,7 @@ module.exports = View.extend({
       );
       this.renderActionFileSelects();
     }
+    this.toggleEnable();
     this.updatePreviewPlot();
   },
   selectFileLocation: function (e) {
@@ -660,8 +663,11 @@ module.exports = View.extend({
     $(this.queryByHook("imf-in-progress")).css("display", "inline-block");
   },
   toggleEnable: function () {
-    $(this.queryByHook("enable-action")).prop("disabled", this.model.shape === "");
-    
+    let noShape = this.model.shape === "";
+    let mltPart = this.model.scope === "Multi Particle";
+    let noImprt = ["Fill Action", "Set Action", "Remove Action"].includes(this.model.type);
+    let disable = noShape && mltPart && noImprt
+    $(this.queryByHook("enable-action")).prop("disabled", disable);
   },
   toggleImportFiles: function (e) {
     let classes = $(this.queryByHook('collapseImportFiles')).attr("class").split(/\s+/);
