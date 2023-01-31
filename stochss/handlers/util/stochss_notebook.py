@@ -85,7 +85,7 @@ class StochSSNotebook(StochSSBase):
         return names_length + 2 + len(name), None
 
     @classmethod
-    def __build_geometry(cls, name, formula):
+    def __build_geometry(cls, formula, name=None, c_name=None):
         pad = '    '
         c_name = name.title().replace("_", "")
         cell_str = "\n".join([
@@ -373,7 +373,8 @@ class StochSSNotebook(StochSSBase):
                 "", f"{pad}# Define Domain Type IDs as constants of the Model", "", f"{pad}# Domain",
                 f"{pad}domain = spatialpy.Domain(", f"{pad*2}0, {xlim}, {ylim},",
                 f"{pad*2}{zlim}, rho0={rho0}, c0={c_0}, P0={p_0}, gravity={gravity}", f"{pad})", "",
-                f"{pad}model.add_domain(domain)", "", f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
+                f"{pad}model.add_domain(domain, allow_all_types=True)", "",
+                f"{pad}model.staticDomain = {self.s_model['domain']['static']}"
             ]
             d_index = self.__create_spatial_shapes(nb_domain, 8)
             d_index = self.__create_spatial_transformations(nb_domain, d_index)
@@ -406,14 +407,14 @@ class StochSSNotebook(StochSSBase):
                 cells.insert(index, nbf.new_markdown_cell("***\n## Geometries\n***"))
                 index += 1
                 for s_shape in shapes:
-                    cells.insert(index, self.__build_geometry(s_shape['name'], s_shape['formula']))
+                    cells.insert(index, self.__build_geometry(s_shape['formula'], name=s_shape['name']))
                     index += 1
                 for i, s_act in enumerate(actions):
                     p_x = s_act['point']['x']
                     p_y = s_act['point']['y']
                     p_z = s_act['point']['z']
                     formula = f"x == {p_x} and y == {p_y} and z == {p_z}"
-                    cells.insert(index, self.__build_geometry(f"SPAGeometry{i + 1}", formula))
+                    cells.insert(index, self.__build_geometry(formula, c_name=f"SPAGeometry{i + 1}"))
                     index += 1
             except KeyError as err:
                 message = "Shapes or actions are not properly formatted or "

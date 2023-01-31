@@ -200,10 +200,12 @@ class StochSSSpatialModel(StochSSBase):
                         domain.add_point(point, **kwargs)
                 elif action['type'] in ('XML Mesh', 'Mesh IO', 'StochSS Domain'):
                     lattices = {'XML Mesh': XMLMeshLattice, 'Mesh IO': MeshIOLattice, 'StochSS Domain': StochSSLattice}
+                    filename = os.path.join(self.user_dir, action['subdomainFile'])
                     if action['type'] == "StochSS Domain" or action['subdomainFile'] == "":
-                        lattice = lattices[action['type']](action['filename'])
+                        lattice = lattices[action['type']](filename)
                     else:
-                        lattice = lattices[action['type']](action['filename'], subdomain_file=action['subdomainFile'])
+                        subdomain_file = os.path.join(self.user_dir, action['subdomainFile'])
+                        lattice = lattices[action['type']](filename, subdomain_file=subdomain_file)
                     _ = domain.add_fill_action(
                         lattice=lattice, enable=action['enable'], apply_action=action['enable'], **kwargs
                     )
