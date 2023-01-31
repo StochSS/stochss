@@ -300,7 +300,7 @@ class StochSSNotebook(StochSSBase):
                             geometry = f"geometry={s_act['shape']}_geom, "
                         else:
                             geometry = f"geometry={s_act['transformation']}, "
-                            actions.append(f"{pad}{geometry}.geometry = {s_act['shape']}_geom")
+                            actions.append(f"{pad}{s_act['transformation']}.geometry = {s_act['shape']}_geom")
                         args = args.replace("__GEOMETRY__", geometry)
                         nb_act = tmp.replace("__FUNCTION__", func_map[s_act['type']]).replace("__ARGS__", args)
                     actions.append(nb_act)
