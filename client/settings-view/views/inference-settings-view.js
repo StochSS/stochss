@@ -70,6 +70,7 @@ module.exports = View.extend({
       $(this.queryByHook(this.model.elementID + '-view-inference-settings')).addClass('active');
     }else{
       this.renderEditParameterSpace();
+      this.renderObsDataSelects();
     }
     this.renderViewParameterSpace();
   },
