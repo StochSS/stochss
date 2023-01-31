@@ -284,7 +284,7 @@ class StochSSSpatialModel(StochSSBase):
             if model is None:
                 self.__convert_types(domain, type_ids)
                 return domain
-            model.add_domain(domain)
+            model.add_domain(domain, allow_all_types=True)
             self.__convert_types(model.domain, type_ids)
             model.staticDomain = self.model['domain']['static']
             return None

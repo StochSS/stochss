@@ -87,7 +87,8 @@ class StochSSNotebook(StochSSBase):
     @classmethod
     def __build_geometry(cls, formula, name=None, c_name=None):
         pad = '    '
-        c_name = name.title().replace("_", "")
+        if c_name is None:
+            c_name = name.title().replace("_", "")
         cell_str = "\n".join([
             f"class {c_name}(spatialpy.Geometry):", f"{pad}def __init__(self):",
             f"{pad * 2}pass", "", f"{pad}def inside(self, point, on_boundary):",
