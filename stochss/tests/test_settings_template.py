@@ -45,8 +45,11 @@ class TestWorkflowSettingsTemplate(unittest.TestCase):
         model_path = "client/models/settings.js"
 
         with open(model_path, "r") as model_file:
-            children = model_file.read().split("children: {").pop().split('}')[0].split(',')
-            model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], children)))
+            data = model_file.read()
+            props = data.split("props: {").pop().split("}")[0].split(",")
+            children = data.split("children: {").pop().split('}')[0].split(',')
+            model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
+            model_keys.extend(sorted(list(map(lambda item: item.strip().split(':')[0], children))))
 
         self.assertEqual(template_keys, model_keys)
 
@@ -114,3 +117,23 @@ class TestWorkflowSettingsTemplate(unittest.TestCase):
             tspan_settings_keys = sorted(list(map(lambda item: item.strip().split(':')[0], data)))
 
         self.assertEqual(template_keys, tspan_settings_keys)
+
+
+    def test_workflow_inference_settings_elements(self):
+        '''
+        Check if the inference settings in the settings template has
+        all of the properties currently in the inference settings model.
+        '''
+        template_keys = sorted(list(self.template['inferenceSettings'].keys()))
+        tspan_settings_path = "client/models/inference-settings.js"
+
+        with open(tspan_settings_path, "r") as tspan_settings_file:
+            data = tspan_settings_file.read()
+            props = data.split("props: {").pop().split('}')[0].split(',')
+            collections = data.split("collections: {").pop().split('}')[0].split(',')
+            inf_settings_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
+            inf_settings_keys.extend(
+                sorted(list(map(lambda item: item.strip().split(':')[0], collections)))
+            )
+
+        self.assertEqual(template_keys, inf_settings_keys)
