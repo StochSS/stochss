@@ -51,6 +51,7 @@ class TestWorkflowSettingsTemplate(unittest.TestCase):
             model_keys = sorted(list(map(lambda item: item.strip().split(':')[0], props)))
             model_keys.extend(sorted(list(map(lambda item: item.strip().split(':')[0], children))))
 
+        model_keys.sort()
         self.assertEqual(template_keys, model_keys)
 
 
