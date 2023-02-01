@@ -591,7 +591,7 @@ class StochSSSpatialModel(StochSSBase):
         return entry
 
     @classmethod
-    def __get_trace_data(cls, particles, name="", index=None):
+    def __get_trace_data(cls, particles, name="", index=None, dimensions=3):
         common_rgb_values = [
             '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2', '#7f7f7f',
             '#bcbd22', '#17becf', '#ff0000', '#00ff00', '#0000ff', '#ffff00', '#00ffff', '#ff00ff',
@@ -613,8 +613,13 @@ class StochSSSpatialModel(StochSSBase):
         marker = {"size":5}
         if index is not None:
             marker["color"] = common_rgb_values[(index) % len(common_rgb_values)]
-        return plotly.graph_objs.Scatter3d(ids=ids, x=x_data, y=y_data, z=z_data,
-                                           name=name, mode="markers", marker=marker)
+        if dimensions == 2:
+            return plotly.graph_objs.Scatter(
+                ids=ids, x=x_data, y=y_data, name=name, mode="markers", marker=marker
+            )
+        return plotly.graph_objs.Scatter3d(
+            ids=ids, x=x_data, y=y_data, z=z_data, name=name, mode="markers", marker=marker
+        )
 
     def __load_domain_from_file(self, path):
         try:
@@ -892,7 +897,7 @@ class StochSSSpatialModel(StochSSBase):
                 traces = list(filter(t_test, fig['data']))
                 if len(traces) == 0:
                     fig['data'].insert(index, self.__get_trace_data(
-                        particles=[], name=d_type['name'], index=index
+                        particles=[], name=d_type['name'], index=index, dimensions=domain.dimensions
                     ))
                 else:
                     particles = list(filter(
