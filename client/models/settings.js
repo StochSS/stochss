@@ -25,7 +25,7 @@ let ParameterSweepSettings = require('./parameter-sweep-settings');
 
 module.exports = State.extend({
   props: {
-    template_veersion: 'number'
+    template_version: 'number'
   },
   children: {
   	timespanSettings: TimespanSettings,
