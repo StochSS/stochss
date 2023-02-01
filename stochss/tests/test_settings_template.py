@@ -136,4 +136,5 @@ class TestWorkflowSettingsTemplate(unittest.TestCase):
                 sorted(list(map(lambda item: item.strip().split(':')[0], collections)))
             )
 
+        inf_settings_keys.sort()
         self.assertEqual(template_keys, inf_settings_keys)
