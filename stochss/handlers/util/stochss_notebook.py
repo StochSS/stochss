@@ -543,6 +543,8 @@ class StochSSNotebook(StochSSBase):
                     geometries.append("")
                 items = [' and ', ' or ', ' not ', '(', ')']
                 for name, formula in comb_geoms.items():
+                    if formula.startswith("not "):
+                        formula = formula.replace("not ", "")
                     for item in items:
                         formula = formula.replace(item, " ")
                     deps = formula.split(" ")

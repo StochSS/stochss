@@ -412,6 +412,8 @@ class StochSSSpatialModel(StochSSBase):
             items = [' and ', ' or ', ' not ', '(', ')']
             for name in comb_geoms:
                 formula = geometries[name].formula
+                if formula.startswith("not "):
+                    formula = formula.replace("not ", "")
                 for item in items:
                     formula = formula.replace(item, " ")
                 formula = formula.split(" ")
