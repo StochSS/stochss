@@ -207,7 +207,7 @@ class StochSSNotebook(StochSSBase):
                         names = n_names
                     reactants = self.__create_stoich_species(stoich_species=s_reaction['reactants'])
                     products = self.__create_stoich_species(stoich_species=s_reaction['products'])
-                    if s_reaction['rate'] != {}:
+                    if s_reaction['massaction']:
                         nb_reac = tmp.replace("__L3____L4__", "")
                         nb_reac = nb_reac.replace("__RATE__", f" rate='{s_reaction['rate']['name']}',")
                     else:
