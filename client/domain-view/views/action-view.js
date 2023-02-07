@@ -598,7 +598,7 @@ module.exports = View.extend({
       if(this.typeFiles.paths[value].length > 1) {
         msgDisplay = "block";
         contDisplay = "inline-block";
-        this.renderMeshLocationSelectView(value);
+        this.renderTypeLocationSelectView(value);
         this.model.subdomainFile = "";
       }else{
         this.model.subdomainFile = this.typeFiles.paths[value][0];
