@@ -39,6 +39,23 @@ def report_error(handler, log, err):
     error['Traceback'] = trace
     handler.write(error)
 
+def report_critical_error(handler, log, err):
+    '''
+    Report a critical stochss error to the front end.
+
+    Attributes
+    ----------
+    handler : obj
+        Jupyter Notebook API Handler
+    log : obj
+        StochSS log
+    '''
+    handler.set_status(500)
+    error = {"Reason":"Uncaught Critical Error", "Message":str(err)}
+    trace = traceback.format_exc()
+    log.error("Exception information: %s\n%s", error, trace)
+    error['Traceback'] = trace
+    handler.write(error)
 
 class StochSSAPIError(Exception):
     '''
