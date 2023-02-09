@@ -28,7 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSFolder, StochSSProject, StochSSModel, StochSSSpatialModel, \
-                  StochSSAPIError, report_error
+                  StochSSAPIError, report_error, report_critical_error
 
 log = logging.getLogger('stochss')
 
@@ -57,6 +57,8 @@ class LoadProjectBrowserAPIHandler(APIHandler):
             self.write(data)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -85,6 +87,8 @@ class LoadProjectAPIHandler(APIHandler):
             self.write(s_project)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -115,6 +119,8 @@ class NewProjectAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -132,7 +138,6 @@ class NewModelAPIHandler(APIHandler):
         Attributes
         ----------
         '''
-        log.setLevel(logging.DEBUG)
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug(f"Path to the project: {path}")
@@ -146,7 +151,8 @@ class NewModelAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        log.setLevel(logging.WARNING)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -178,6 +184,8 @@ class AddExistingModelAPIHandler(APIHandler):
             self.write(data)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -207,6 +215,8 @@ class AddExistingModelAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -243,6 +253,8 @@ class ExtractModelAPIHandler(APIHandler):
             self.write(message)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -274,6 +286,8 @@ class ExtractWorkflowAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -303,6 +317,8 @@ class ProjectMetaDataAPIHandler(APIHandler):
             log.info("Successfully saved the metadata")
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -361,6 +377,8 @@ class UpdateAnnotationAPIHandler(APIHandler):
             log.info("Successfully saved the annotation")
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -385,4 +403,6 @@ class UpadteProjectAPIHandler(APIHandler):
             proj.update_project_format()
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
