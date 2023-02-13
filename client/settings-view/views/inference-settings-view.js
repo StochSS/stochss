@@ -123,7 +123,7 @@ module.exports = View.extend({
     app.registerRenderSubview(this, this.editParameterSpace, hook);
   },
   renderObsDataSelects: function () {
-    let queryStr = "?ext=.txt,.csv"
+    let queryStr = "?ext=.obsd,.csv"
     let endpoint = `${path.join(app.getApiPath(), 'workflow/obs-data-files')}${queryStr}`;
     app.getXHR(endpoint, {success: (err, response, body) => {
       this.obsDataFiles = body.obsDataFiles;

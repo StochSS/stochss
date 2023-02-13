@@ -531,7 +531,13 @@ class ImportObsDataAPIHandler(APIHandler):
         log.info(f"Importing observed data: {data_file['filename']}")
         try:
             folder = StochSSFolder(path=dirname)
-            data_resp = folder.upload('file', data_file['filename'], data_file['body'])
+            if data_file['filename'].endswith(".zip"):
+                new_name = data_file['filename'].replace(".zip", ".obsd")
+            else:
+                new_name = None
+            data_resp = folder.upload(
+                'file', data_file['filename'], data_file['body'], new_name=new_name
+            )
             resp = {'obsDataPath': data_resp['path'], 'obsDataFile': data_resp['file']}
             log.info("Successfully uploaded observed data")
             self.write(resp)
