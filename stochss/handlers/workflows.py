@@ -568,9 +568,9 @@ class LoadObsDataFiles(APIHandler):
             folder = StochSSFolder(path="")
             test = lambda ext, root, file: bool(
                 "trash" in root.split("/") or file.startswith('.') or \
-                'wkfl' in root or root.startswith('.')
+                'wkfl' in root or root.startswith('.') or root.endswith("obsd")
             )
-            data_files = folder.get_file_list(ext=target_ext, test=test)
+            data_files = folder.get_file_list(ext=target_ext, test=test, inc_folders=True)
             resp = {'obsDataFiles': data_files}
             log.debug(f"Response: {resp}")
             self.write(resp)
