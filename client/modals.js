@@ -250,6 +250,27 @@ let templates = {
         </div>
       </div>
     </div>`
+  },
+  previewPlot : (title) => {
+    return `
+      <div id=modal-preview-plot class="modal" tabindex="-1" role="dialog">
+        <div class="modal-dialog preview-plot" role="document">
+          <div class="modal-content preview-plot">
+            <div class="modal-header">
+              <h5 class="modal-title"> ${title} </h5>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div id=modal-plot-container></div>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary box-shadow close-btn" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>`
   }
 }
 
@@ -511,5 +532,8 @@ module.exports = {
     let message = `StochSS ${fileType}s have a new format.  Would you like to update this ${target} to the new format?`;
 
     return templates.confirmation_with_message(modalID, title, message);
+  },
+  obsPreviewHtml: (title) => {
+    return templates.previewPlot(title);
   }
 }

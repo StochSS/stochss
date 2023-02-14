@@ -19,6 +19,8 @@ let $ = require('jquery');
 let path = require('path');
 //support files
 let app = require('../../app');
+let modals = require('../../modals');
+let Plotly = require('plotly.js-dist');
 //views
 let View = require('ampersand-view');
 let InputView = require('../../views/input');
@@ -29,6 +31,14 @@ let template = require('../templates/inferenceSettingsView.pug');
 
 module.exports = View.extend({
   template: template,
+  bindings: {
+    'model.obsData' : {
+      type: function (el, value, previousValue) {
+        el.disabled = value == "";
+      },
+      hook: 'preview-obs-data'
+    }
+  },
   events: {
     'change [data-hook=prior-method]' : 'setPriorMethod',
     'change [data-hook=summary-statistics]' : 'updateSummaryStatsView',
@@ -38,7 +48,8 @@ module.exports = View.extend({
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'click [data-hook=collapseImportObsData]' : 'toggleImportFiles',
     'click [data-hook=collapseUploadObsData]' : 'toggleUploadFiles',
-    'click [data-hook=import-obs-data-file]' : 'handleImportObsData'
+    'click [data-hook=import-obs-data-file]' : 'handleImportObsData',
+    'click [data-hook=preview-obs-data]' : 'handlePreviewObsData'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -46,6 +57,7 @@ module.exports = View.extend({
     this.stochssModel = attrs.stochssModel;
     this.obsDataFiles = null;
     this.obsDataFile = null;
+    this.obsFig = null;
     this.chevrons = {
       hide: `
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512">
@@ -101,6 +113,7 @@ module.exports = View.extend({
     app.postXHR(endpoint, formData, {
       success: (err, response, body) => {
         body = JSON.parse(body);
+        this.obsFig = null;
         this.model.obsData = path.join(body.obsDataPath, body.obsDataFile);
         this.completeAction();
         $(this.queryByHook('collapseUploadObsData')).click();
@@ -111,6 +124,27 @@ module.exports = View.extend({
         this.errorAction(body.Message);
       }
     }, false);
+  },
+  handlePreviewObsData: function () {
+    if(this.obsFig !== null) {
+      this.previewObsData();
+    }else{
+      let queryStr = `?path=${this.model.obsData}`
+      let endpoint = `${path.join(app.getApiPath(), 'workflow/preview-obs-data')}${queryStr}`;
+      app.getXHR(endpoint, {success: (err, response, body) => {
+        this.obsFig = body.figure;
+        this.previewObsData();
+      }});
+    }
+  },
+  previewObsData: function () {
+    if(document.querySelector('#modal-preview-plot')) {
+      document.querySelector('#modal-preview-plot').remove();
+    }
+    let modal = $(modals.obsPreviewHtml(this.model.obsData.split('/').pop())).modal();
+    let plotEl = document.querySelector('#modal-preview-plot #modal-plot-container');
+    console.log(plotEl)
+    Plotly.newPlot(plotEl, this.obsFig);
   },
   renderEditParameterSpace: function () {
     if(this.editParameterSpace) {
@@ -161,7 +195,7 @@ module.exports = View.extend({
     if(this.obsDataLocationSelectView) {
       this.obsDataLocationSelectView.remove();
     }
-    let value = Boolean(this.model.obsData) ? this.model.obsData : "";
+    let value = this.model.obsData !== "" ? this.model.obsData : "";
     this.obsDataLocationSelectView = new SelectView({
       name: 'obs-data-locations',
       required: true,
@@ -197,6 +231,7 @@ module.exports = View.extend({
     this.renderViewParameterSpace();
   },
   selectObsDataFile: function (e) {
+    this.obsFig = null;
     let value = e.target.value;
     var msgDisplay = "none";
     var contDisplay = "none";
@@ -204,8 +239,8 @@ module.exports = View.extend({
       if(this.obsDataFiles.paths[value].length > 1) {
         msgDisplay = "block";
         contDisplay = "inline-block";
-        this.renderObsDataLocationSelectView(value);
         this.model.obsData = "";
+        this.renderObsDataLocationSelectView(value);
       }else{
         this.model.obsData = this.obsDataFiles.paths[value][0];
       }
@@ -216,6 +251,7 @@ module.exports = View.extend({
     $(this.queryByHook("obs-data-location-container")).css("display", contDisplay);
   },
   selectObsDataLocation: function (e) {
+    this.obsFig = null;
     this.model.obsData = e.target.value ? e.target.value : "";
   },
   startAction: function () {

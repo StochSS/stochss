@@ -118,7 +118,7 @@ div#inference-settings.card
 
                     div.inline.mr-3
 
-                      span.inline(for="obs-data-file-select")=`Please specify a file to upload: `
+                      span.inline(for="obs-data-file-select")=`Please specify a file: `
 
                       div.inline(id="obs-data-file-select" data-hook="obs-data-file-select")
 
@@ -127,6 +127,10 @@ div#inference-settings.card
                       span.inline.mr-2(for="obs-data-location-select") Location:
 
                       div.inline(id="obs-data-location-select" data-hook="obs-data-location-select")
+
+                    div.inline
+
+                      button.btn.btn-outline-secondary.box-shadow(data-hook="preview-obs-data") Preview
 
       div.tab-pane(id=this.model.elementID + "-view-inference-settings" data-hook=this.model.elementID + "-view-inference-settings")
 
