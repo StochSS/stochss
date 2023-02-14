@@ -17,12 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import csv
 import json
 import shutil
 import datetime
 import traceback
 
 import numpy
+import plotly
+import plotly.graph_objs as go
 
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
@@ -75,6 +78,57 @@ class StochSSWorkflow(StochSSBase):
         else:
             self.workflow['settings'] = None
 
+    @classmethod
+    def __get_csv_data(cls, path):
+        with open(path, "r", newline="", encoding="utf-8") as csv_fd:
+            csv_reader = csv.reader(csv_fd, delimiter=",")
+            rows = []
+            headers = None
+            for i, row in enumerate(csv_reader):
+                if i == 0:
+                    if len(row) > 0:
+                        headers = row[1:]
+                else:
+                    rows.append(row)
+            data = numpy.array(rows).swapaxes(0, 1)
+            time = data[0].astype("float")
+            obs_data = data[1:].astype("float")
+            if headers is None:
+                headers = [f"obs{i+1}" for i in range(len(obs_data))]
+        return headers, time, obs_data
+
+    def __get_obs_trace(self, path, traces, f_ndx=None):
+        if path.endswith(".obsd"):
+            for ndx, file in enumerate(os.listdir(path)):
+                traces = self.__get_obs_trace(os.path.join(path, file), traces, f_ndx=ndx)
+            return traces
+        if path.endswith(".csv"):
+            common_rgb_values = [
+                '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
+                '#7f7f7f', '#bcbd22', '#17becf', '#ff0000', '#00ff00', '#0000ff', '#ffff00',
+                '#00ffff', '#ff00ff', '#800000', '#808000', '#008000', '#800080', '#008080',
+                '#000080', '#ff9999', '#ffcc99', '#ccff99', '#cc99ff', '#ffccff', '#62666a',
+                '#8896bb', '#77a096', '#9d5a6c', '#9d5a6c', '#eabc75', '#ff9600', '#885300',
+                '#9172ad', '#a1b9c4', '#18749b', '#dadecf', '#c5b8a8', '#000117', '#13a8fe',
+                '#cf0060', '#04354b', '#0297a0', '#037665', '#eed284', '#442244',
+                '#ffddee', '#702afb'
+            ]
+            headers, time, data = self.__get_csv_data(path)
+            for i, obs in enumerate(data):
+                line_dict = {"color": common_rgb_values[(i-1)%len(common_rgb_values)]}
+                if f_ndx is not None and f_ndx > 0:
+                    traces.append(go.Scatter(
+                        x=time, y=obs, mode="lines", name=headers[i], line=line_dict,
+                        legendgroup=headers[i], showlegend=False
+                    ))
+                else:
+                    traces.append(go.Scatter(
+                        x=time, y=obs, mode="lines", name=headers[i], line=line_dict,
+                        legendgroup=headers[i]
+                    ))
+            return traces
+        self.log("warning", f"Observed data file found that is not a CSV file.\n\t File: {path}")
+        return traces
 
     def __get_old_wkfl_data(self):
         job = StochSSJob(path=self.path)
@@ -367,6 +421,24 @@ class StochSSWorkflow(StochSSBase):
                 self.workflow['models'] = models
         return self.workflow
 
+    def preview_obs_data(self, path):
+        '''
+        Preview the observed data for inference workflow.
+
+        Attributes
+        ----------
+        path : str
+            Path to the observed data.
+        '''
+        traces = self.__get_obs_trace(path, [])
+        if not traces:
+            raise Exception("No observed data found.")
+
+        layout = go.Layout(
+            showlegend=True, title="Observed Data", xaxis_title="Time", yaxis_title="Value"
+        )
+        fig = {"data": traces, "layout": layout, "config": {"responsive": True}}
+        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
 
     def save(self, new_settings, mdl_path):
         '''
