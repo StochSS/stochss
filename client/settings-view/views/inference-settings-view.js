@@ -33,6 +33,8 @@ module.exports = View.extend({
     'change [data-hook=prior-method]' : 'setPriorMethod',
     'change [data-hook=summary-statistics]' : 'updateSummaryStatsView',
     'change [data-hook=obs-data-file]' : 'setObsDataFile',
+    'change [data-hook=obs-data-file-select]' : 'selectObsDataFile',
+    'change [data-hook=obs-data-location-select]' : 'selectObsDataLocation',
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'click [data-hook=collapseImportObsData]' : 'toggleImportFiles',
     'click [data-hook=collapseUploadObsData]' : 'toggleUploadFiles',
@@ -155,7 +157,7 @@ module.exports = View.extend({
       $(this.queryByHook("obs-data-location-container")).css("display", "inline-block");
     }
   },
-  renderObsDataLocationSelectView: function () {
+  renderObsDataLocationSelectView: function (index) {
     if(this.obsDataLocationSelectView) {
       this.obsDataLocationSelectView.remove();
     }
@@ -187,13 +189,34 @@ module.exports = View.extend({
   setObsDataFile: function (e) {
     this.obsDataFile = e.target.files[0];
     $(this.queryByHook("import-obs-data-file")).prop('disabled', !this.obsDataFile);
-    console.log(this.obsDataFile)
   },
   setPriorMethod: function (e) {
     this.model.priorMethod = e.target.value;
     $(this.queryByHook("view-prior-method")).text(this.model.priorMethod);
     this.renderEditParameterSpace();
     this.renderViewParameterSpace();
+  },
+  selectObsDataFile: function (e) {
+    let value = e.target.value;
+    var msgDisplay = "none";
+    var contDisplay = "none";
+    if(value) {
+      if(this.obsDataFiles.paths[value].length > 1) {
+        msgDisplay = "block";
+        contDisplay = "inline-block";
+        this.renderObsDataLocationSelectView(value);
+        this.model.obsData = "";
+      }else{
+        this.model.obsData = this.obsDataFiles.paths[value][0];
+      }
+    }else{
+      this.model.obsData = "";
+    }
+    $(this.queryByHook("obs-data-location-message")).css('display', msgDisplay);
+    $(this.queryByHook("obs-data-location-container")).css("display", contDisplay);
+  },
+  selectObsDataLocation: function (e) {
+    this.model.obsData = e.target.value ? e.target.value : "";
   },
   startAction: function () {
     $(this.queryByHook("iodf-complete")).css("display", "none");
