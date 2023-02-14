@@ -579,3 +579,31 @@ class LoadObsDataFiles(APIHandler):
         except Exception as err:
             report_critical_error(self, log, err)
         self.finish()
+
+class PreviewOBSDataAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for previewing observed data.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Preview the observed data files.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        try:
+            wkfl = StochSSWorkflow(path="")
+            resp = {"figure": wkfl.preview_obs_data(path)}
+            wkfl.print_logs(log)
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
+        self.finish()

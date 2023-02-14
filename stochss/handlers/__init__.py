@@ -115,6 +115,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/update-format\/?", UpadteWorkflowAPIHandler),
         (r"/stochss/api/workflow/import-obs-data\/?", ImportObsDataAPIHandler),
         (r"/stochss/api/workflow/obs-data-files\/?", LoadObsDataFiles),
+        (r"/stochss/api/workflow/preview-obs-data\/?", PreviewOBSDataAPIHandler),
         (r"/stochss/api/job/presentation\/?", JobPresentationAPIHandler),
         (r"/stochss/api/job/csv\/?", DownloadCSVZipAPIHandler)
     ]
