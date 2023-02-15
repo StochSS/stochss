@@ -329,22 +329,10 @@ module.exports = View.extend({
       success: (err, response, body) => {
         this.plot = body.fig;
         this.model.particles = new Particles(body.particles);
-        let particleCounts = {};
-        this.model.particles.forEach((particle) => {
-          if(particleCounts[particle.type]) {
-            particleCounts[particle.type] += 1;
-          }else{
-            particleCounts[particle.type] = 1;
-          }
-        });
-        this.model.types.forEach((type) => {
-          type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
-        });
+        this.typesView.updateParticleCounts(this.model.particles);
         if(this.readOnly) {
           this.renderTypesQuickview();
         }
-        this.typesView.renderEditTypeView();
-        this.typesView.renderViewTypeView();
         if(resetFigure) {
           this.resetFigure();
           this.completeAction("upp");

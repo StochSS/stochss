@@ -110,5 +110,23 @@ module.exports = View.extend({
     this.collection.forEach((type) => {
       type.inUse = deps.includes(type.name);
     });
+  },
+  updateParticleCounts: function (particles) {
+    let particleCounts = {};
+    particles.forEach((particle) => {
+      if(particleCounts[particle.type]) {
+        particleCounts[particle.type] += 1;
+      }else{
+        particleCounts[particle.type] = 1;
+      }
+    });
+    this.collection.forEach((type) => {
+      type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
+    });
+    $(this.queryByHook('unassigned-type-count')).text(this.collection.models[0].numParticles);
+    this.renderEditTypeView();
+    this.renderViewTypeView();
+    this.collection.parent.updateValid();
+    this.toggleDomainError();
   }
 });

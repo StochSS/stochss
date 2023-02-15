@@ -78,6 +78,7 @@ module.exports = State.extend({
     });
   },
   validateModel: function () {
+    if(this.types.models[0].numParticles > 0) { return false; }
     return true;
   },
   updateValid: function () {
