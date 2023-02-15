@@ -789,13 +789,14 @@ class StochSSSpatialModel(StochSSBase):
         message = f"{self.get_file()} was successfully convert to {m_file}!"
         return {"Message":message, "File":m_file}, {"model":s_model, "path":m_path}
 
-    def convert_to_spatialpy(self):
+    def convert_to_spatialpy(self, include_model_settings=False):
         '''Convert a spatial model to a spatialpy model. '''
         if self.model is None:
             _ = self.load()
         name = self.get_name()
         s_model = Model(name=name)
-        self.__convert_model_settings(model=s_model)
+        if include_model_settings:
+            self.__convert_model_settings(model=s_model)
         types = sorted(self.model['domain']['types'], key=lambda d_type: d_type['typeID'])
         type_ids = {d_type['typeID']: d_type['name'] for d_type in types}
         self.__convert_domain(model=s_model, type_ids=type_ids)
@@ -920,7 +921,7 @@ class StochSSSpatialModel(StochSSBase):
         ''' Get the needed data for converting to notebook. '''
         file = f"{self.get_name()}.ipynb"
         path = os.path.join(self.get_dir_name(), file)
-        s_model = self.convert_to_spatialpy()
+        s_model = self.convert_to_spatialpy(include_model_settings=True)
         self.model['path'] = self.get_file()
         return {"path":path, "new":True, "models":{"s_model":self.model, "model":s_model}}
 
