@@ -3,11 +3,6 @@ FROM jupyter/minimal-notebook:612aa5710bf9
 ARG STOCHSS_PIP_EDITABLE
 ARG JUPYTER_CONFIG_DIR
 
-USER jovyan
-
-RUN npm install
-
-RUN npm run webpack
 
 USER root
 
@@ -22,6 +17,10 @@ USER jovyan
 COPY --chown=jovyan:users requirements.txt .
 
 RUN python -m pip install --no-cache-dir -r requirements.txt
+
+COPY --chown=jovyan:users package.json /stochss  
+
+RUN npm install
 
 COPY --chown=jovyan:users public_models/ /home/jovyan/Examples
 
@@ -40,5 +39,7 @@ COPY --chown=jovyan:users jupyter_notebook_config.py $JUPYTER_CONFIG_DIR/jupyter
 RUN pip install --no-cache-dir -e .
 
 RUN rm -r /home/jovyan/work
+
+RUN npm run webpack
 
 WORKDIR /home/jovyan
