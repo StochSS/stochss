@@ -49,7 +49,8 @@ module.exports = State.extend({
     def_type_id: 'number',
     directory: 'string',
     dirname: 'string',
-    particles: 'object'
+    particles: 'object',
+    error: 'object'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
@@ -78,7 +79,18 @@ module.exports = State.extend({
     });
   },
   validateModel: function () {
-    if(this.types.models[0].numParticles > 0) { return false; }
+    if(this.types.models[0].numParticles > 0) {
+      this.error = {"type":"types"};
+      return false;
+    }
+    if(this.actions.length <= 0) {
+      this.error = {"type":"actions"};
+      return false;
+    }
+    if(this.particles && this.particles.length <= 0) {
+      this.error = {"type":"actions"};
+      return false;
+    }
     return true;
   },
   updateValid: function () {

@@ -62,6 +62,13 @@ module.exports = View.extend({
     this.collection.parent.trigger('update-particle-type-options', {currName: name});
     this.collection.parent.actions.trigger('update-type-options', {currName: name});
   },
+  openSection: function () {
+    if(!$(this.queryByHook("domain-types-section")).hasClass("show")) {
+      let typesCollapseBtn = $(this.queryByHook("collapse-domain-types"));
+      typesCollapseBtn.click();
+      typesCollapseBtn.html('-');
+    }
+  },
   renderEditTypeView: function () {
     if(this.editTypeView) {
       this.editTypeView.remove();

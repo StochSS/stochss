@@ -251,6 +251,7 @@ let ModelEditor = PageView.extend({
   },
   handleSimulateClick: function (e) {
     let errorMsg = $(this.queryByHook("error-detected-msg"));
+    this.model.updateValid();
     if(!this.model.valid) {
       this.displayError(errorMsg, e);
     }else{
