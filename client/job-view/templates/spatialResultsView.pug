@@ -20,21 +20,47 @@ div#workflow-results.card
 
           div(id="title" data-hook="title")
 
-      div.inline.horizontal-space
+      div.mx-1.row.head.align-items-baseline
 
-        span.inline(for="target-of-interest") Target of Interest:
+        div.col-sm-2
 
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.spatialTarget) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+          h6.inline <b>Target of Interest</b>
 
-        div.inline(id="target-of-interest" data-hook="target-of-interest-list")
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.spatialTarget) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-      div.inline.horizontal-space.hidden(data-hook="job-results-mode")
+        div.col-sm-4.hidden(data-hook="job-results-mode-header")
+  
+          h6.inline <b>Mode</b>
 
-        span.inline(for="target-of-interest") Mode:
+          div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.mode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
 
-        div.tooltip-icon(data-html="true" data-toggle="tooltip" title=this.tooltips.mode) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
+        div.col-sm-6.hidden(data-hook="spatial-trajectory-header")
 
-        div.inline(id="target-mode" data-hook="target-mode-list")
+          h6
+
+            div.inline.mr-2 <b>Trajectory</b>:
+
+            div.inline(data-hook="trajectory-index-value")=this.trajectoryIndex
+
+      div.mx-1.my-3.row
+
+        div.col-sm-2
+
+          div.inline(id="target-of-interest" data-hook="target-of-interest-list")
+
+        div.col-sm-4.hidden(data-hook="job-results-mode-container")
+
+          div.inline(id="target-mode" data-hook="target-mode-list")
+
+        div.col-sm-6.hidden(data-hook="spatial-trajectory-container")
+
+          input.custom-range(
+            type="range"
+            min="1"
+            max=`${this.model.settings.simulationSettings.realizations}`
+            value=this.trajectoryIndex
+            data-hook="trajectory-index-slider"
+          )
 
       div.card
 
