@@ -50,8 +50,14 @@ module.exports = View.extend({
       this.renderEditTypeView();
       this.collection.on("update-inuse", this.updateInUse, this);
       this.collection.parent.trigger('update-type-deps');
+      this.toggleTypesCollectionError("ev");
+      this.collection.on('add remove', () => {
+        this.toggleTypesCollectionError("ev");
+        this.toggleTypesCollectionError("vv");
+      }, this);
     }
     this.toggleDomainError();
+    this.toggleTypesCollectionError("vv");
     this.renderViewTypeView();
   },
   changeCollapseButtonText: function (e) {
@@ -103,8 +109,18 @@ module.exports = View.extend({
     );
   },
   toggleDomainError: function () {
-    let errorMsg = $(this.queryByHook('domain-error'))
-    if(!this.collection.parent.valid) {
+    let errorMsg = $(this.queryByHook('domain-error'));
+    if(this.collection.models[0].numParticles > 0) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
+    }
+  },
+  toggleTypesCollectionError: function (viewCode) {
+    let errorMsg = $(this.queryByHook(`${viewCode}-types-collection-error`));
+    if(this.collection.length == 1) {
       errorMsg.addClass('component-invalid');
       errorMsg.removeClass('component-valid');
     }else{

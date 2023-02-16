@@ -79,7 +79,7 @@ module.exports = State.extend({
     });
   },
   validateModel: function () {
-    if(this.types.models[0].numParticles > 0) {
+    if(!this.types.validateCollection()) {
       this.error = {"type":"types"};
       return false;
     }

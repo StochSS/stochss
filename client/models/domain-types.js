@@ -45,6 +45,8 @@ module.exports = Collection.extend({
     this.remove(type);
   },
   validateCollection: function () {
+    if(this.models[0].numParticles > 0) { return false; }
+    if(this.length <= 1) { return false; }
     return true;
   }
 });
