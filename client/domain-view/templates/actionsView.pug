@@ -53,6 +53,10 @@ div#domain-actions-editor.card
 
         div.my-3(data-hook="edit-actions-list")
 
+        div(data-hook="ev-actions-collection-error")
+
+          p.text-danger Domains must have at least one enabled action that creates particles (<b>'Fill Action'</b> or <b>'Import Action'</b>).
+
         div.dropdown
 
           button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addActionBtn(
@@ -86,3 +90,7 @@ div#domain-actions-editor.card
           div.col-sm-4: h6 <b>Enable</b>
 
         div.mt-3(data-hook="view-actions-list")
+
+        div(data-hook="vv-actions-collection-error")
+
+          p.text-danger Domains must have at least one enabled action that creates particles (<b>'Fill Action'</b> or <b>'Import Action'</b>).

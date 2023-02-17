@@ -83,11 +83,7 @@ module.exports = State.extend({
       this.error = {"type":"types"};
       return false;
     }
-    if(this.actions.length <= 0) {
-      this.error = {"type":"actions"};
-      return false;
-    }
-    if(this.particles && this.particles.length <= 0) {
+    if(!this.actions.validateCollection()) {
       this.error = {"type":"actions"};
       return false;
     }
