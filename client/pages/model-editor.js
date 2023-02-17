@@ -151,6 +151,7 @@ let ModelEditor = PageView.extend({
       setTimeout(() => {
         let inputErrors = this.queryAll(".input-invalid");
         let componentErrors = this.queryAll(".component-invalid");
+        console.log(inputErrors, componentErrors)
         if(componentErrors.length > 0) {
           componentErrors[0].scrollIntoView({'block':"center"});
         }else if(inputErrors.length > 0) {
@@ -307,7 +308,7 @@ let ModelEditor = PageView.extend({
       tspnCollapseBtn.click();
       tspnCollapseBtn.html('-');
     }
-    this.switchToEditTab(this.modelSettings, "timespan");
+    app.switchToEditTab(this.modelSettings, "timespan");
   },
   plotResults: function (data) {
     this.ran(true);

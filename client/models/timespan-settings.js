@@ -39,9 +39,10 @@ module.exports = State.extend({
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
   },
-  validate: function () {
-    if(this.endSim === "" || isNaN(this.endSim)) return false;
-    if(this.timeStep === "" || isNaN(this.timeStep)) return false;
+  validate: function (isSpatial) {
+    if(this.endSim === "" || isNaN(this.endSim)) { return false; }
+    if(this.timeStep === "" || isNaN(this.timeStep)) { return false; }
+    if(isSpatial && this.timestepSize > this.timeStep) { return false; }
     return true;
   }
 });

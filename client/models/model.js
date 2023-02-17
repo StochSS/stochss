@@ -114,7 +114,7 @@ module.exports = Model.extend({
       this.error = {"type":"volume"};
       return false;
     };
-    if(this.modelSettings.validate() === false) {
+    if(this.modelSettings.validate(this.is_spatial) === false) {
       this.error = {"type":"timespan"};
       return false;
     };

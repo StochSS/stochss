@@ -52,35 +52,38 @@ div#preview-settings.card
 
           div.col-sm-3(data-hook="time-units")
 
-          div.col-sm-6
+          div.col-sm-6.hidden(data-hook="timestep-size-container")
 
-            if this.isSpatial
-              div
+            div
 
-                div.row
+              div.row
 
-                  div.col-sm-1
-                    
-                    span.inline 1
+                div.col-sm-1
+                  
+                  span.inline 1
 
-                  div.col-sm-8
+                div.col-sm-8
 
-                    span.mr-2.inline Current Value: 
+                  span.mr-2.inline Current Value: 
 
-                    div.inline(data-hook="timestep-size-value")
+                  div.inline(data-hook="timestep-size-value")
 
-                  div.col-sm-3.d-flex.justify-content-end
+                div.col-sm-3.d-flex.justify-content-end
 
-                    span.inline 1e-5
+                  span.inline 1e-5
 
-                input.custom-range(
-                  type="range"
-                  min="0"
-                  max="5"
-                  step="1"
-                  value=this.tssValue
-                  data-hook="timestep-size-slider"
-                )
+              input.custom-range(
+                type="range"
+                min="0"
+                max="5"
+                step="1"
+                value=this.tssValue
+                data-hook="timestep-size-slider"
+              )
+
+            div(data-hook="timestep-size-error")
+
+              p.text-danger <b>'Timestep Size'</b> can't be greater than <b>'Sample Frequency'</b>.
 
       div.tab-pane(id=this.model.elementID + "-view-timespan" data-hook=this.model.elementID + "-view-timespan")
 
