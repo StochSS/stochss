@@ -337,9 +337,11 @@ module.exports = View.extend({
         this.plot = body.fig;
         this.model.particles = new Particles(body.particles);
         this.typesView.updateParticleCounts(this.model.particles);
-        this.actionsView.toggleActionsCollectionError("ev");
+        this.actionsView.toggleActionsCollectionError("vv");
         if(this.readOnly) {
           this.renderTypesQuickview();
+        }else{
+          this.actionsView.toggleActionsCollectionError("ev");
         }
         if(resetFigure) {
           this.resetFigure();
