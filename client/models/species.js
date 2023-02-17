@@ -58,13 +58,13 @@ module.exports = Collection.extend({
   },
   validateCollection: function (isSpatial) {
     if(this.length <= 0 && !isSpatial) {
-      this.parent.error = {'type':'species'}
+      this.parent.error = {'type':'species'};
       return false;
     }
     for(var i = 0; i < this.length; i++) {
-      if(!this.models[i].validateComponent()) {
-        this.parent.error = {'id':this.models[i].compID,'type':'species'}
-        return false
+      if(!this.models[i].validateComponent(isSpatial)) {
+        this.parent.error = {'id':this.models[i].compID,'type':'species'};
+        return false;
       }
     }
     return true;

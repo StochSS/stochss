@@ -96,32 +96,33 @@ module.exports = Model.extend({
     this.rules.on('add change remove', this.updateValid, this);
   },
   validateModel: function () {
-    if(!this.species.validateCollection(this.is_spatial)) return false;
-    if(!this.parameters.validateCollection()) return false;
-    if(!this.reactions.validateCollection()) return false;
-    if(!this.eventsCollection.validateCollection()) return false;
-    if(!this.rules.validateCollection()) return false;
+    if(this.is_spatial && this.domain.validateModel() === false) {
+      this.error = {"type":"domain"};
+      return false;
+    };
+    if(!this.species.validateCollection(this.is_spatial)) { return false; }
+    // if(this.is_spatial && !this.initialConditions.validateCollection()){ return false; }
+    if(!this.parameters.validateCollection()) { return false; }
+    if(!this.reactions.validateCollection()) { return false; }
+    if(!this.eventsCollection.validateCollection()) { return false; }
+    if(!this.rules.validateCollection()) { return false; }
     if(!this.is_spatial && this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
-      this.error = {"type":"process"}
+      this.error = {"type":"process"};
       return false;
     }
     if(!this.volume === "" || isNaN(this.volume)) {
-      this.error = {"type":"volume"}
-      return false
-    };
-    if(this.is_spatial && this.domain.validateModel() === false) {
-      this.error = {"type":"domain"}
-      return false
+      this.error = {"type":"volume"};
+      return false;
     };
     if(this.modelSettings.validate() === false) {
-      this.error = {"type":"timespan"}
-      return false
+      this.error = {"type":"timespan"};
+      return false;
     };
     return true;
   },
   updateValid: function () {
-    this.error = {}
-    this.valid = this.validateModel()
+    this.error = {};
+    this.valid = this.validateModel();
   },
   getDefaultID: function () {
     var id = this.defaultID;
