@@ -22,6 +22,7 @@ var Specie = require('./specie');
 
 module.exports = State.extend({
   props: {
+    compID: 'number',
     icType: 'string',
     annotation: 'string',
     count: 'any',
@@ -71,5 +72,9 @@ module.exports = State.extend({
       if(checks[attribute]) { return true; }
     }
     return false;
+  },
+  validateComponent: function () {
+    if(this.icType !== "Place" && this.types.length <= 0) { return false; }
+    return true;
   }
 });

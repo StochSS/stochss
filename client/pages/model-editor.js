@@ -138,7 +138,10 @@ let ModelEditor = PageView.extend({
     }, 5000);
   },
   focusOnError: function (e) {
-    let mdlSections = ["species", "parameter", "reaction", "process", "event", "rule", "volume", "domain"];
+    let mdlSections = [
+      "species", "parameter", "reaction", "process", "event",
+      "rule", "volume", "domain", "initialCondition"
+    ];
     if(this.model.error) {
       if(this.model.error.type === "timespan") {
         this.openTimespanSection();

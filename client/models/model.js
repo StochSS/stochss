@@ -101,7 +101,7 @@ module.exports = Model.extend({
       return false;
     };
     if(!this.species.validateCollection(this.is_spatial)) { return false; }
-    // if(this.is_spatial && !this.initialConditions.validateCollection()){ return false; }
+    if(this.is_spatial && !this.initialConditions.validateCollection()) { return false; }
     if(!this.parameters.validateCollection()) { return false; }
     if(!this.reactions.validateCollection(this.is_spatial)) { return false; }
     if(!this.eventsCollection.validateCollection()) { return false; }
