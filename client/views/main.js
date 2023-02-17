@@ -73,7 +73,6 @@ module.exports = View.extend({
       $("#presentation-nav-link").css("display", "none");
     }
     this.setupUserLogs();
-    this.getExampleLibrary();
     return this;
   },
   addNewLogBlock: function () {
@@ -191,17 +190,8 @@ module.exports = View.extend({
     stamp += (minutes < 10 ? '0' + minutes : minutes) + ":";
     return log.replace(time, stamp);
   },
-  getExampleLibrary: function () {
-    let endpoint = path.join(app.getApiPath(), "example-library");
-    app.getXHR(endpoint, {
-      success: (err, response, body) => {
-        $("#exampleLibraryDropdown").html(body);
-      }
-    });
-  },
   handleNewPage: function (view) {
     this.pageSwitcher.set(view);
-    //this.updateActiveNav();
   },
 
   handleLinkClick: function (e) {
