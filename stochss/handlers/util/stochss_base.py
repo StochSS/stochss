@@ -50,27 +50,55 @@ class StochSSBase():
         self.logs = []
 
     def __build_example_html(self, exm_data, home):
-        row = "<div class='row'>__CONTENTS__</div>"
-        entry = "__ALERT__' href='__OPEN_LINK__' role='button' style='width: 100%'>__NAME__</a>"
-        entry_a = f"<a class='btn box-shadow btn-outline-{entry}"
+        section = "<div>__ROWS__</div>"
+        row = "<div class='mx-1'><div class='row'>__COLUMNS__</div></div>"
+
+        name = "<div class='col-sm-3'><h6><b>__NAME__</b></h6></div>"
+        desciption = "<div class='col-sm-5'><p>__DESCRIPTION__</p></div>"
+
+        navto_classes = "class='btn full-btn btn-outline-primary box-shadow__STATUS__'"
+        navto_link = "/stochss/project/manager?path=Examples/__NAME__.proj"
+        navto_a = f"<a {navto_classes} href='{navto_link}' role='button'>Open</a>"
+        navto = f"<div class='col-sm-2'>{navto_a}</div>"
+
+        upload_classes = "class='btn full-btn btn-outline-__ALERT__ box-shadow'"
+        upload_link = f"{home}?open=__OPEN_LINK__"
+        upload_a = f"<a {upload_classes} href='{upload_link}' role='button'>__TITLE__</a>"
+        upload = f"<div class='col-sm-2'>{upload_a}</div>"
 
         # Well Mixed Examples
         wm_list = []
         for entry in exm_data['Well-Mixed']:
-            exm_a = entry_a.replace("__ALERT__", entry['alert'])
-            exm_a = exm_a.replace("__OPEN_LINK__", f"{home}?open={entry['open_link']}")
-            exm_a = exm_a.replace("__NAME__", entry['name'])
-            wm_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
-        well_mixed = row.replace("__CONTENTS__", ''.join(wm_list))
+            desc = entry['description'] if 'description' in entry else "TODO"
+            nav_status = "" if entry['alert'] == "primary" else " disabled"
+            imp_title = "Update" if entry['alert'] == "primary" else "Import"
+
+            exm_name = name.replace("__NAME__", entry['name'])
+            exm_desc = desciption.replace("__DESCRIPTION__", desc)
+            exm_nav = navto.replace("__NAME__", entry['name']).replace("__STATUS__", nav_status)
+            exm_imp = upload.replace("__ALERT__", entry['alert']).replace("__TITLE__", imp_title)
+            exm_imp = exm_imp.replace("__OPEN_LINK__", entry['open_link'])
+
+            columns = f"{exm_name}{exm_desc}{exm_nav}{exm_imp}"
+            wm_list.append(row.replace("__COLUMNS__", columns))
+        well_mixed = section.replace("__ROWS__", "<hr class='mx-1'>".join(wm_list))
 
         # Spatial Examples
         s_list = []
         for entry in exm_data['Spatial']:
-            exm_a = entry_a.replace("__ALERT__", entry['alert'])
-            exm_a = exm_a.replace("__OPEN_LINK__", f"{home}?open={entry['open_link']}")
-            exm_a = exm_a.replace("__NAME__", entry['name'])
-            s_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
-        spatial = row.replace("__CONTENTS__", ''.join(s_list))
+            desc = entry['description'] if 'description' in entry else "TODO"
+            nav_status = "" if entry['alert'] == "primary" else " disabled"
+            imp_title = "Update" if entry['alert'] == "primary" else "Import"
+
+            exm_name = name.replace("__NAME__", entry['name'])
+            exm_desc = desciption.replace("__DESCRIPTION__", desc)
+            exm_nav = navto.replace("__NAME__", entry['name']).replace("__STATUS__", nav_status)
+            exm_imp = upload.replace("__ALERT__", entry['alert']).replace("__TITLE__", imp_title)
+            exm_imp = exm_imp.replace("__OPEN_LINK__", entry['open_link'])
+
+            columns = f"{exm_name}{exm_desc}{exm_nav}{exm_imp}"
+            s_list.append(row.replace("__COLUMNS__", columns))
+        spatial = section.replace("__ROWS__", "<hr class='mx-1'>".join(s_list))
 
         return {"wellMixed": well_mixed, "spatial": spatial}
 
