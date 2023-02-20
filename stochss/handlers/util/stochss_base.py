@@ -53,58 +53,50 @@ class StochSSBase():
         section = "<div>__ROWS__</div>"
         row = "<div class='mx-1'><div class='row'>__COLUMNS__</div></div>"
 
-        name = "<div class='col-sm-3'><h6><b>__NAME__</b></h6></div>"
-        desciption = "<div class='col-sm-5'><p>__DESCRIPTION__</p></div>"
-
-        navto_classes = "class='btn full-btn btn-outline-primary box-shadow__STATUS__'"
-        navto_a = f"<a {navto_classes} href='__NAV_LINK__' role='button'>__TITLE__</a>"
-        navto = f"<div class='col-sm-2'>{navto_a}</div>"
-
-        upload_classes = "class='btn full-btn btn-outline-__ALERT__ box-shadow'"
-        upload_link = f"{home}?open=__OPEN_LINK__"
-        upload_a = f"<a {upload_classes} href='{upload_link}' role='button'>__TITLE__</a>"
-        upload = f"<div class='col-sm-2'>{upload_a}</div>"
-
         # Well Mixed Examples
         wm_list = []
         for entry in exm_data['Well-Mixed']:
-            desc = entry['description'] if 'description' in entry else "TODO"
-            nav_status = "" if entry['alert'] == "primary" else " disabled"
-            imp_title = "Update" if entry['alert'] == "primary" else "Import"
-            nav_title = "Error!" if entry['alert'] == "danger" else "Open"
-            navto_link = "#" if entry['alert'] == "danger" else \
-                                "/stochss/project/manager?path=Examples/__NAME__.proj"
-
-            exm_name = name.replace("__NAME__", entry['name'])
-            exm_desc = desciption.replace("__DESCRIPTION__", desc)
-            exm_nav = navto.replace("__NAME__", entry['name']).replace("__STATUS__", nav_status)
-            exm_nav = exm_nav.replace("__TITLE__", nav_title).replace("__NAV_LINK__", navto_link)
-            exm_imp = upload.replace("__ALERT__", entry['alert']).replace("__TITLE__", imp_title)
-            exm_imp = exm_imp.replace("__OPEN_LINK__", entry['open_link'])
-
-            columns = f"{exm_name}{exm_desc}{exm_nav}{exm_imp}"
+            columns = self.__build_html_entry(entry, home)
             wm_list.append(row.replace("__COLUMNS__", columns))
         well_mixed = section.replace("__ROWS__", "<hr class='mx-1'>".join(wm_list))
 
         # Spatial Examples
         s_list = []
         for entry in exm_data['Spatial']:
-            desc = entry['description'] if 'description' in entry else "TODO"
-            nav_status = "" if entry['alert'] == "primary" else " disabled"
-            imp_title = "Update" if entry['alert'] == "primary" else "Import"
-
-            exm_name = name.replace("__NAME__", entry['name'])
-            exm_desc = desciption.replace("__DESCRIPTION__", desc)
-            exm_nav = navto.replace("__NAME__", entry['name']).replace("__STATUS__", nav_status)
-            exm_nav = exm_nav.replace("__TITLE__", nav_title).replace("__NAV_LINK__", navto_link)
-            exm_imp = upload.replace("__ALERT__", entry['alert']).replace("__TITLE__", imp_title)
-            exm_imp = exm_imp.replace("__OPEN_LINK__", entry['open_link'])
-
-            columns = f"{exm_name}{exm_desc}{exm_nav}{exm_imp}"
+            columns = self.__build_html_entry(entry, home)
             s_list.append(row.replace("__COLUMNS__", columns))
         spatial = section.replace("__ROWS__", "<hr class='mx-1'>".join(s_list))
 
         return {"wellMixed": well_mixed, "spatial": spatial}
+
+    @classmethod
+    def __build_html_entry(cls, entry, home):
+        desc = entry['description'] if 'description' in entry else "TODO"
+
+        nav_alert = "secondary" if entry['alert'] == "success" else entry['alert']
+        nav_status = "" if entry['alert'] == "primary" else " disabled"
+        nav_link = f"/stochss/project/manager?path=Examples/{entry['name']}.proj"
+        nav_title = "Error!" if entry['alert'] == "danger" else "Open"
+        nav_classes = f"class='btn full-btn btn-outline-{nav_alert} box-shadow{nav_status}'"
+        nav_a = f"<a {nav_classes} href='{nav_link}' role='button'>{nav_title}</a>"
+
+        imp_alert = "success" if entry['alert'] == "danger" else entry['alert']
+        imp_link = f"{home}?open={entry['open_link']}"
+        imp_title = "Update" if entry['alert'] == "primary" else "Import"
+        imp_classes = f"class='btn full-btn btn-outline-{imp_alert} box-shadow'"
+        imp_a = f"<a {imp_classes} href='{imp_link}' role='button'>{imp_title}</a>"
+
+        mod_label = "Added" if entry['alert'] == "success" else "Last Updated"
+        mod_date = entry['mod_date'] if "mod_date" in entry else "TODO"
+
+        return "".join([
+            f"<div class='col-sm-3'><h6><b>{entry['name']}</b></h6></div>"
+            f"<div class='col-sm-5'><p>{desc}</p></div>",
+            "<div class='col-sm-4'><div class='row'>",
+            f"<div class='col-sm-6'>{nav_a}</div>",
+            f"<div class='col-sm-6'>{imp_a}</div>",
+            f"<div class='ml-5 mr-1 mt-3'>{mod_label}: {mod_date}</div></div></div>"
+        ])
 
     def __get_entry(self, entries, name):
         for entry in entries:
