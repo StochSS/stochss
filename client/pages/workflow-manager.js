@@ -103,9 +103,9 @@ let WorkflowManager = PageView.extend({
   },
   clickStartJobHandler: function (e) {
     this.saving();
-    if(e.target.dataset['compute-env'] === "local") {
+    if(e.target.dataset['computeenv'] === "local") {
       this.startJob()
-    }else if(e.target.dataset['compute-env'] === "aws") {
+    }else if(e.target.dataset['computeenv'] === "aws") {
       let endpoint = path.join(app.getApiPath(), 'aws/job-config-check');
       app.getXHR(endpoint, {
         success: (err, response, body) => {
