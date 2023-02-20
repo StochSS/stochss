@@ -87,7 +87,7 @@ class StochSSBase():
         imp_a = f"<a {imp_classes} href='{imp_link}' role='button'>{imp_title}</a>"
 
         mod_label = "Added" if entry['alert'] == "success" else "Last Updated"
-        mod_date = entry['mod_date'] if "mod_date" in entry else "TODO"
+        mod_date = entry['mod_time'] if entry['mod_time'] is not None else "TODO"
 
         return "".join([
             f"<div class='col-sm-3'><h6><b>{entry['name']}</b></h6></div>"
