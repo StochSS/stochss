@@ -57,8 +57,7 @@ class StochSSBase():
         desciption = "<div class='col-sm-5'><p>__DESCRIPTION__</p></div>"
 
         navto_classes = "class='btn full-btn btn-outline-primary box-shadow__STATUS__'"
-        navto_link = "/stochss/project/manager?path=Examples/__NAME__.proj"
-        navto_a = f"<a {navto_classes} href='{navto_link}' role='button'>Open</a>"
+        navto_a = f"<a {navto_classes} href='__NAV_LINK__' role='button'>__TITLE__</a>"
         navto = f"<div class='col-sm-2'>{navto_a}</div>"
 
         upload_classes = "class='btn full-btn btn-outline-__ALERT__ box-shadow'"
@@ -72,10 +71,14 @@ class StochSSBase():
             desc = entry['description'] if 'description' in entry else "TODO"
             nav_status = "" if entry['alert'] == "primary" else " disabled"
             imp_title = "Update" if entry['alert'] == "primary" else "Import"
+            nav_title = "Error!" if entry['alert'] == "danger" else "Open"
+            navto_link = "#" if entry['alert'] == "danger" else \
+                                "/stochss/project/manager?path=Examples/__NAME__.proj"
 
             exm_name = name.replace("__NAME__", entry['name'])
             exm_desc = desciption.replace("__DESCRIPTION__", desc)
             exm_nav = navto.replace("__NAME__", entry['name']).replace("__STATUS__", nav_status)
+            exm_nav = exm_nav.replace("__TITLE__", nav_title).replace("__NAV_LINK__", navto_link)
             exm_imp = upload.replace("__ALERT__", entry['alert']).replace("__TITLE__", imp_title)
             exm_imp = exm_imp.replace("__OPEN_LINK__", entry['open_link'])
 
@@ -93,6 +96,7 @@ class StochSSBase():
             exm_name = name.replace("__NAME__", entry['name'])
             exm_desc = desciption.replace("__DESCRIPTION__", desc)
             exm_nav = navto.replace("__NAME__", entry['name']).replace("__STATUS__", nav_status)
+            exm_nav = exm_nav.replace("__TITLE__", nav_title).replace("__NAV_LINK__", navto_link)
             exm_imp = upload.replace("__ALERT__", entry['alert']).replace("__TITLE__", imp_title)
             exm_imp = exm_imp.replace("__OPEN_LINK__", entry['open_link'])
 
@@ -165,7 +169,10 @@ class StochSSBase():
                         entry = self.__get_entry(
                             exm_data['Spatial'], exm_data['Name-Mappings'][example]
                         )
-                    entry['alert'] = "primary"
+                    if example == "Example SIR Epidemic Project.proj":
+                        entry['alert'] = "danger"
+                    else:
+                        entry['alert'] = "primary"
 
     def add_presentation_name(self, file, name):
         '''
