@@ -71,7 +71,6 @@ class StochSSBase():
         return {"wellMixed": well_mixed, "spatial": spatial}
 
     @classmethod
-<<<<<<< HEAD
     def __build_html_entry(cls, entry, home):
         desc = entry['description'] if 'description' in entry else "TODO"
 
@@ -100,10 +99,8 @@ class StochSSBase():
             f"<div class='ml-5 mr-1 mt-3'>{mod_label}: {mod_date}</div></div></div>"
         ])
 
-    def __get_entry(self, entries, name):
-=======
+    @classmethod
     def __get_entry(cls, entries, name):
->>>>>>> dbd4324d10bf85c258e2a85ff116de5b4f6c7b29
         for entry in entries:
             if entry['name'] == name:
                 return entry
