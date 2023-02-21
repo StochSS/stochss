@@ -48,6 +48,8 @@ module.exports = View.extend({
       $(this.queryByHook('view-domain-types')).addClass('active');
     }else{
       this.renderEditTypeView();
+      this.collection.on("update-inuse", this.updateInUse, this);
+      this.collection.parent.trigger('update-type-deps');
     }
     this.toggleDomainError();
     this.renderViewTypeView();
@@ -57,7 +59,8 @@ module.exports = View.extend({
   },
   handleAddDomainType: function () {
     let name = this.collection.addType();
-    this.parent.addType(name);
+    this.collection.parent.trigger('update-particle-type-options', {currName: name});
+    this.collection.parent.actions.trigger('update-type-options', {currName: name});
   },
   renderEditTypeView: function () {
     if(this.editTypeView) {
@@ -101,5 +104,29 @@ module.exports = View.extend({
       errorMsg.addClass('component-valid');
       errorMsg.removeClass('component-invalid');
     }
+  },
+  updateInUse: function ({deps=null}={}) {
+    if(deps === null) { return; }
+    this.collection.forEach((type) => {
+      type.inUse = deps.includes(type.name);
+    });
+  },
+  updateParticleCounts: function (particles) {
+    let particleCounts = {};
+    particles.forEach((particle) => {
+      if(particleCounts[particle.type]) {
+        particleCounts[particle.type] += 1;
+      }else{
+        particleCounts[particle.type] = 1;
+      }
+    });
+    this.collection.forEach((type) => {
+      type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
+    });
+    $(this.queryByHook('unassigned-type-count')).text(this.collection.models[0].numParticles);
+    this.renderEditTypeView();
+    this.renderViewTypeView();
+    this.collection.parent.updateValid();
+    this.toggleDomainError();
   }
 });

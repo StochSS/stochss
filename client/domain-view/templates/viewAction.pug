@@ -1,0 +1,160 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-4
+
+      div.pl-2=this.model.type
+
+    div.col-sm-4
+
+      div.pl-2=this.model.priority
+
+    div.col-sm-4
+
+      input(type="checkbox" checked=this.model.enable disabled)
+
+  hr
+
+  div
+
+    div.mb-3.mx-1.row.align-items-baseline
+
+      div.col-sm-4.pl-0.hidden(data-hook="action-scope")
+
+        h5.inline.mr-2 Scope:
+
+        div.inline=this.model.scope
+
+      div.col-sm-4.hidden(data-hook="multi-particle-shape")
+
+        h5.inline.mr-2 Shape:
+
+        div.inline=this.model.shape ? this.model.shape : 'None'
+
+      div.col-sm-4.hidden(data-hook="multi-particle-transformation")
+
+        h5.inline.mr-2 Transformation:
+
+        div.inline=this.model.transformation ? this.model.transformation : 'None'
+
+  div.hidden(data-hook="single-particle-scope")
+
+    div
+
+      h5.inline.mr-2 Current Location:
+
+      span.inline.mr-2 (x:
+
+      div.inline=this.model.point.x
+
+      span.inline.mr-2 , y:
+
+      div.inline=this.model.point.y
+
+      span.inline.mr-2 , z:
+
+      div.inline=this.model.point.z
+
+      span.inline )
+
+    div.hidden(data-hook="new-location")
+
+      h5.inline.mr-2 New Location:
+
+      span.inline.mr-2 (x:
+
+      div.inline=this.model.newPoint.x
+
+      span.inline.mr-2 , y:
+
+      div.inline=this.model.newPoint.y
+
+      span.inline.mr-2 , z:
+
+      div.inline=this.model.newPoint.z
+
+      span.inline )
+
+  div.hidden(data-hook="particle-properties")
+
+    h4 Particle Properties
+
+    div
+
+      h5.inline.mr-2 Type:
+
+      div.inline=this.model.collection.parent.types.get(this.model.typeID, 'typeID').name
+
+    div
+
+      hr
+
+      div.mb-3.mx-1.row.head.align-items-baseline
+
+        div.col-sm-2
+
+          h6.inline <b>Mass</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Volume</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Density</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Viscosity</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Speed of Sound</b>
+
+        div.col-sm-2
+
+          h6.inline <b>Fixed</b>
+
+      div.row
+
+        div.col-sm-2
+
+          div.pl-2=this.model.mass
+
+        div.col-sm-2
+
+          div=this.model.vol
+
+        div.col-sm-2
+
+          div=this.model.rho
+
+        div.col-sm-2
+
+          div=this.model.nu
+
+        div.col-sm-2
+
+          div=this.model.c
+
+        div.col-sm-2
+
+          input(type="checkbox" checked=this.model.fixed disabled)
+
+  div.hidden(data-hook="import-properties")
+
+    div
+
+      h6.mr-2.inline <b>Filename</b>:
+
+      div.inline=this.model.filename ? `'${this.model.filename}'` : 'None'
+
+    div.hidden(data-hook="type-descriptions-prop")
+
+      h6.mr-2.inline <b>Type Descriptions</b>:
+
+      div.inline=this.model.subdomainFile ? `'${this.model.subdomainFile}'` : 'None'

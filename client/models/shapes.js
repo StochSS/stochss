@@ -16,33 +16,48 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+let _ = require('underscore');
 //models
-let Type = require('./domain-type');
+let Shape = require('./shape');
 //collections
-var Collection = require('ampersand-collection');
+let Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
-  model: Type,
-  indexes: ['typeID'],
-  addType: function () {
-    let id = this.parent.getDefaultTypeID();
-    let name = String(id);
-    let type = new Type({
-        c: 10,
-        fixed: false,
-        mass: 1.0,
-        name: name,
-        nu: 0.0,
-        rho: 1.0,
-        typeID: id,
-        volume: 1.0
+  model: Shape,
+  indexes: ['name'],
+  addShape: function (type) {
+    let name = this.getDefaultName();
+    let shape = new Shape({
+      deltar: 0,
+      deltas: 0,
+      deltax: 0,
+      deltay: 0,
+      deltaz: 0,
+      depth: 0,
+      fillable: false,
+      formula: '',
+      height: 0,
+      lattice: type,
+      length: 0,
+      name: name,
+      radius: 0,
+      type: 'Standard'
     });
-    type.selected = true;
-    this.add(type);
+    this.add(shape);
     return name;
   },
-  removeType: function (type) {
-    this.remove(type);
+  getDefaultName: function () {
+    var i = this.length + 1;
+    var name = `shape${i}`;
+    var names = this.map((shape) => { return shape.name; });
+    while(_.contains(names, name)) {
+      i += 1;
+      name = `shape${i}`;
+    }
+    return name;
+  },
+  removeShape: function (shape) {
+    this.remove(shape);
   },
   validateCollection: function () {
     return true;

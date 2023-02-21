@@ -16,11 +16,15 @@ div#domain-types-editor.card
 
           a.nav-link.tab(data-hook="domain-types-view-tab" data-toggle="tab" href="#view-domain-types") View
 
-    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-types-section" data-hook="collapse-domain-types") -
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#domain-types-section" data-hook="collapse-domain-types") +
 
-  div.collapse.show(id="domain-types-section" data-hook="domain-types-section")
+  div.card-body
+    p.mb-0
+     | Classifications of matter within the domain.  Types can have different properties (mass, volume, etc...), and can be set as movable or Fixed.
 
-    div.card-body.tab-content
+    div.collapse.tab-content(id="domain-types-section" data-hook="domain-types-section")
+
+      hr
 
       div
 
@@ -42,13 +46,17 @@ div#domain-types-editor.card
 
             h6.inline <b>Edit</b>
 
-          div.col-sm-3
+          div.col-sm-5
 
             h6.inline <b>Name</b>
 
-          div.col-sm-8
+          div.col-sm-4
 
             h6.inline <b>Number of Particles</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Remove</b>
 
         div.my-3(data-hook="edit-domain-types-list")
 
@@ -66,7 +74,7 @@ div#domain-types-editor.card
 
           div.col-sm-3
 
-            h6.inline <b>Numbe of Particles</b>
+            h6.inline <b>Number of Particles</b>
 
           div.col-sm-6
 

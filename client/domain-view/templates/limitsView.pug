@@ -16,11 +16,14 @@ div#domain-limits-editor.card
 
           a.nav-link.tab(data-hook="domain-limits-view-tab" data-toggle="tab" href="#view-domain-limits") View
 
-    button.btn.btn-ouline-collapse(data-toggle="collapse" data-target="#domain-limits-section" data-hook="collapse-domain-limits") -
+    button.btn.btn-ouline-collapse(data-toggle="collapse" data-target="#domain-limits-section" data-hook="collapse-domain-limits") +
 
-  div.collapse.show(id="domain-limits-section" data-hook="domain-limits-section")
+  div.card-body
 
-    div.card-body.tab-content
+    p.mb-0
+     | Visualization limits for the domain.
+
+    div.collapse.tab-content(id="domain-limits-section" data-hook="domain-limits-section")
 
       div.tab-pane.active(id="edit-domain-limits" data-hook="edit-domain-limits")
 
