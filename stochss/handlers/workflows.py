@@ -292,7 +292,7 @@ class WorkflowNotebookHandler(APIHandler):
         log.debug(f"Path to the model/workflow: {path}")
         wkfl_type = self.get_query_argument(name="type")
         log.debug(f"Type of workflow: {wkfl_type}")
-        compute = self.get_query_argument(name="compute")
+        compute = self.get_query_argument(name="compute", default=None)
         log.debug(f"Compute Environment: {compute}")
         try:
             if path.endswith(".mdl"):
@@ -306,8 +306,8 @@ class WorkflowNotebookHandler(APIHandler):
             if "type" in kwargs:
                 wkfl_type = kwargs['type']
                 results = kwargs['results']
-                kwargs = kwargs['kwargs']
                 compute = kwargs['compute_env']
+                kwargs = kwargs['kwargs']
                 log.info(f"Converting {file_obj.get_file()} to notebook")
             else:
                 results = None

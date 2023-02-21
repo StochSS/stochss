@@ -269,7 +269,7 @@ class StochSSNotebook(StochSSBase):
             nb_run.append(nb_res)
         else:
             nb_load_res = [
-                f"# {nr_res}", f"path = '{results}'",
+                f"# {nb_res}", f"path = '{results}'",
                 "with open(os.path.join(os.path.expanduser('~'), path), 'rb') as results_file:",
                 "    results = pickle.load(results_file)"
             ]
