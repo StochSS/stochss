@@ -36,6 +36,7 @@ class StochSSBase():
     '''
     user_dir = os.path.expanduser("~") # returns the path to the users home directory
     TEMPLATE_VERSION = 1
+    DOMAIN_TEMPLATE_VERSION = 2
 
     def __init__(self, path):
         '''
@@ -70,6 +71,7 @@ class StochSSBase():
         return {"wellMixed": well_mixed, "spatial": spatial}
 
     @classmethod
+<<<<<<< HEAD
     def __build_html_entry(cls, entry, home):
         desc = entry['description'] if 'description' in entry else "TODO"
 
@@ -99,12 +101,16 @@ class StochSSBase():
         ])
 
     def __get_entry(self, entries, name):
+=======
+    def __get_entry(cls, entries, name):
+>>>>>>> dbd4324d10bf85c258e2a85ff116de5b4f6c7b29
         for entry in entries:
             if entry['name'] == name:
                 return entry
         return None
 
-    def __get_from_remote(self):
+    @classmethod
+    def __get_from_remote(cls):
         p_path = "/stochss/.proxies.txt"
         rel_path = "https://raw.githubusercontent.com/StochSS/StochSS_Example_Library/main/example_data.json"
         if os.path.exists(p_path):
@@ -289,7 +295,7 @@ class StochSSBase():
         as_string : bool
             Indicates whether or not to return the template in string format
         '''
-        path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+        path = '/stochss/stochss_templates/modelTemplate.json'
         self.log("debug", f"Using model template at: {path}")
         try:
             with open(path, 'r', encoding="utf-8") as template:

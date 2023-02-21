@@ -27,6 +27,10 @@ img.quickstart {
   margin: 2em auto;
 }
 
+svg {
+  pointer-events: none;
+}
+
 .page {
   padding-bottom: 150px;
 }
@@ -43,7 +47,7 @@ img.quickstart {
 
 .user-logs {
   white-space: nowrap;
-  max-height: 250px;
+  max-height: 335px;
   padding: 5px;
   margin-top: 10px;
   width: 135%;
@@ -196,8 +200,23 @@ a.anchor {
   white-space: normal;
 }
 
+.dropdown-menu li {
+  position: relative;
+}
+
 .dropdown-menu li:hover {
     cursor: pointer;
+}
+
+.dropdown-menu .dropdown-submenu {
+  display: none;
+  position: absolute;
+  left: 100%;
+  top: -7px;
+}
+
+.dropdown-menu > li:hover > .dropdown-submenu {
+  display: block;
 }
 
 .name {
