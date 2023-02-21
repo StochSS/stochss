@@ -17,10 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
 //models
-var State = require('ampersand-state');
+let State = require('ampersand-state');
 //collections
+let Shapes = require('./shapes');
+let Actions = require('./actions');
 let Types = require('./domain-types');
-let Particles = require('./particles');
+let Transformations = require('./transformations');
 
 module.exports = State.extend({
   props: {
@@ -37,36 +39,26 @@ module.exports = State.extend({
     template_version: 'number'
   },
   collections: {
-    types: Types,
-    particles: Particles
+    actions: Actions,
+    shapes: Shapes,
+    transformations: Transformations,
+    types: Types
   },
   session: {
     def_particle_id: 'number',
     def_type_id: 'number',
     directory: 'string',
-    dirname: 'string'
+    dirname: 'string',
+    particles: 'object'
   },
   initialize: function (attrs, options) {
     State.prototype.initialize.apply(this, arguments)
-    this.particles.on('add change remove', this.updateValid, this);
-    this.def_particle_id = this.particles.length;
     this.def_type_id = this.types.length;
-    let self = this;
-    this.particles.forEach(function (particle) {
-      if(particle.particle_id >= self.def_particle_id) {
-        self.def_particle_id = particle.particle_id + 1;
+    this.types.forEach((type) => {
+      if(type.typeID >= this.def_type_id) {
+        this.def_type_id = type.typeID + 1;
       }
     });
-    this.types.forEach(function (type) {
-      if(type.typeID >= self.def_type_id) {
-        self.def_type_id = type.typeID + 1;
-      }
-    });
-  },
-  getDefaultID: function () {
-    let id = this.def_particle_id;
-    this.def_particle_id += 1;
-    return id;
   },
   getDefaultTypeID: function () {
     let id = this.def_type_id;
@@ -84,14 +76,9 @@ module.exports = State.extend({
         type.typeID = id;
       }
     });
-    this.particles.forEach((particle) => {
-      if(particle.type > oldType) {
-        particle.type -= 1;
-      }
-    });
   },
   validateModel: function () {
-    if(!this.particles.validateCollection()) return false;
+    if(this.types.models[0].numParticles > 0) { return false; }
     return true;
   },
   updateValid: function () {

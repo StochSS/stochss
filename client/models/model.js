@@ -109,7 +109,7 @@ module.exports = Model.extend({
       this.error = {"type":"volume"}
       return false
     };
-    if(this.domain.validateModel() === false) {
+    if(this.is_spatial && this.domain.validateModel() === false) {
       this.error = {"type":"domain"}
       return false
     };
