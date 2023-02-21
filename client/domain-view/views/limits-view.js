@@ -74,7 +74,12 @@ module.exports = View.extend({
       required: true,
       name: 'x-lim-min',
       valueType: 'number',
-      value: this.model.x_lim[0] || 0
+      value: this.model.x_lim[0] || 0,
+      tests: [(value) => {
+        if(value > this.model.x_lim[1]) {
+          return "X-Min cannot be greater than X-Max";
+        }
+      }]
     });
     app.registerRenderSubview(this, this.xMinLimitInputView, "x-lim-min");
   },
@@ -87,7 +92,12 @@ module.exports = View.extend({
       required: true,
       name: 'y-lim-min',
       valueType: 'number',
-      value: this.model.y_lim[0] || 0
+      value: this.model.y_lim[0] || 0,
+      tests: [(value) => {
+        if(value > this.model.y_lim[1]) {
+          return "Y-Min cannot be greater than Y-Max";
+        }
+      }]
     });
     app.registerRenderSubview(this, this.yMinLimitInputView, "y-lim-min");
   },
@@ -100,7 +110,12 @@ module.exports = View.extend({
       required: true,
       name: 'z-lim-min',
       valueType: 'number',
-      value: this.model.z_lim[0] || 0
+      value: this.model.z_lim[0] || 0,
+      tests: [(value) => {
+        if(value > this.model.z_lim[1]) {
+          return "Z-Min cannot be greater than Z-Max";
+        }
+      }]
     });
     app.registerRenderSubview(this, this.zMinLimitInputView, "z-lim-min");
   },
@@ -113,7 +128,12 @@ module.exports = View.extend({
       required: true,
       name: 'x-lim-max',
       valueType: 'number',
-      value: this.model.x_lim[1] || 0
+      value: this.model.x_lim[1] || 0,
+      tests: [(value) => {
+        if(value < this.model.x_lim[0]) {
+          return "X-Max cannot be less than X-Min";
+        }
+      }]
     });
     app.registerRenderSubview(this, this.xMaxLimitInputView, "x-lim-max");
   },
@@ -126,7 +146,12 @@ module.exports = View.extend({
       required: true,
       name: 'y-lim-max',
       valueType: 'number',
-      value: this.model.y_lim[1] || 0
+      value: this.model.y_lim[1] || 0,
+      tests: [(value) => {
+        if(value < this.model.y_lim[0]) {
+          return "Y-Max cannot be less than Y-Min";
+        }
+      }]
     });
     app.registerRenderSubview(this, this.yMaxLimitInputView, "y-lim-max");
   },
@@ -139,7 +164,12 @@ module.exports = View.extend({
       required: true,
       name: 'z-lim-max',
       valueType: 'number',
-      value: this.model.z_lim[1] || 0
+      value: this.model.z_lim[1] || 0,
+      tests: [(value) => {
+        if(value < this.model.z_lim[0]) {
+          return "Z-Max cannot be less than Z-Min";
+        }
+      }]
     });
     app.registerRenderSubview(this, this.zMaxLimitInputView, "z-lim-max");
   },

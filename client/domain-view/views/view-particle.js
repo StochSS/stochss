@@ -24,6 +24,6 @@ let template = require('../templates/viewParticle.pug');
 module.exports = View.extend({
   template: template,
   initialize: function (attrs, options) {
-    this.type = this.model.collection.parent.types.get(this.model.type, "typeID").name;
+    this.type = this.parent.model.types.get(this.model.type, "typeID").name;
   }
 });

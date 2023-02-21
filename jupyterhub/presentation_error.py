@@ -117,6 +117,47 @@ class FileNotJSONFormatError(StochSSAPIError):
         '''
         super().__init__(406, "File Data Not JSON Format", msg, trace)
 
+class StochSSModelFormatError(StochSSAPIError):
+    '''
+    ################################################################################################
+    StochSS Model Not In Proper Format
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the model does not meet the current format requirements
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "StochSS Model Not In Proper Format", msg, trace)
+
+class DomainUpdateError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain File Can't Be Updated
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the domain file can't be updated as it may be a
+        dependency of another doamin or a spatial model.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(405, "Domain File Can't Be Updated.", msg, trace)
+
 ####################################################################################################
 # Job Errors
 ####################################################################################################

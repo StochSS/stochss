@@ -10,19 +10,20 @@
 		"timestepSize": 1e-5
 	},
 	"domain": {
-		"size": null,
-        "rho_0": 1.0,
-        "c_0": 10,
-        "p_0": 100.0,
-        "gravity": [0, 0, 0],
-        "x_lim": [0, 0],
-        "y_lim": [0, 0],
-        "z_lim": [0, 0],
-        "static": true,
-        "boundary_condition": {
+        "actions": [],
+		"boundary_condition": {
         	"reflect_x": true,
         	"reflect_y": true,
         	"reflect_z": true},
+        "c_0": 10,
+        "gravity": [0, 0, 0],
+        "p_0": 100.0,
+        "rho_0": 1.0,
+        "shapes": [],
+        "size": null,
+        "static": true,
+        "template_version": 2,
+        "transformations": [],
         "types": [
             {
                 "c":10,
@@ -35,8 +36,9 @@
                 "volume":1.0
             }
         ],
-        "particles": [],
-        "template_version": 1
+        "x_lim": [0, 0],
+        "y_lim": [0, 0],
+        "z_lim": [0, 0]
     },
 	"species": [],
     "initialConditions": [],
