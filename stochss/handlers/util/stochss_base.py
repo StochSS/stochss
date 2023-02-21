@@ -130,12 +130,16 @@ class StochSSBase():
             entry['alert'] = "success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Well-Mixed'], entry['name'])
+                if old_entry is None:
+                    continue
                 entry['mod_time'] = old_entry['mod_time']
                 entry['umd5_sum'] = old_entry['umd5_sum']
         for entry in exm_data['Spatial']:
             entry['alert'] = "success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Spatial'], entry['name'])
+                if old_entry is None:
+                    continue
                 entry['mod_time'] = old_entry['mod_time']
                 entry['umd5_sum'] = old_entry['umd5_sum']
 
@@ -164,6 +168,8 @@ class StochSSBase():
                         entry = self.__get_entry(
                             exm_data['Spatial'], exm_data['Name-Mappings'][example]
                         )
+                    if entry is None:
+                        continue
                     if example == "Example SIR Epidemic Project.proj":
                         entry['alert'] = "danger"
                     else:
