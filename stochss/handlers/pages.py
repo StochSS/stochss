@@ -394,6 +394,8 @@ class LoadUserSettings(APIHandler):
             return True
 
         if check_env_data(data):
+            if not os.path.exists(".aws"):
+                os.mkdir(".aws")
             with open(".aws/awsec2.env", "w", encoding="utf-8") as env_fd:
                 contents = "\n".join([
                     f"AWS_DEFAULT_REGION={data['settings']['awsRegion']}",
