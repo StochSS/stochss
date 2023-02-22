@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,39 +15,48 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-//collections
-let SummaryStats = require('./summary-stats');
-let InferenceParameters = require('./inference-parameters');
 //models
 let State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
-    obsData: 'string',
-    priorMethod: 'string',
-    summaryStatsType: 'string'
-  },
-  collections: {
-    parameters: InferenceParameters,
-    summaryStats: SummaryStats
+    args: 'object',
+    formula: 'string',
+    name: 'string'
   },
   derived: {
     elementID: {
-      deps: ["parent"],
+      deps: ["collection"],
       fn: function () {
-        if(this.parent) {
-          return this.parent.elementID + "IS-";
+        if(this.collection) {
+          return "ISS" + (this.collection.indexOf(this) + 1);
         }
-        return "IS-"
+        return "ISS-"
+      }
+    },
+    argsDisplay: {
+      deps: ["args"],
+      fn: function () {
+        if([undefined, null].includes(this.args)) { return "None"; }
+        let argStrs = [];
+        this.args.forEach((arg) => {
+          argStrs.push(JSON.stringify(arg));
+        });
+        console.log(argStrs.join())
+        return argStrs.join();
       }
     }
   },
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
-  resetNewSummaryStats: function () {
-    let summaryStats = this.summaryStats;
-    this.summaryStats = new SummaryStats();
-    return summaryStats;
+  setArgs: function (argStr) {
+    let argStrs = argStr.replace(/ /g, '').split(',');
+    let args = [];
+    argStrs.forEach((arg) => {
+      args.push(JSON.parse(arg));
+    });
+    this.args = args;
+    console.log(this.args)
   }
 });
