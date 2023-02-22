@@ -1,35 +1,51 @@
 {
-    "inferenceSettings":{
+    "inferenceSettings": {
         "obsData": "",
         "parameters": [],
         "priorMethod": "Uniform Prior",
-        "summaryStatsType": "minimal",
         "summaryStats": [
-            {"sum_values": null},
-            {"median": null},
-            {"mean": null},
-            {"length": null},
-            {"standard_deviation": null},
-            {"variance": null},
-            {"maximum": null},
-            {"minimum": null}
+            {
+                "sum_values": null
+            },
+            {
+                "median": null
+            },
+            {
+                "mean": null
+            },
+            {
+                "length": null
+            },
+            {
+                "standard_deviation": null
+            },
+            {
+                "variance": null
+            },
+            {
+                "maximum": null
+            },
+            {
+                "minimum": null
+            }
         ],
+        "summaryStatsType": "minimal"
     },
-    "parameterSweepSettings":{
+    "parameterSweepSettings": {
         "parameters": [],
         "speciesOfInterest": {}
     },
-    "resultsSettings":{
+    "resultsSettings": {
         "mapper": "final",
-        "reducer": "avg",
-        "outputs": []
+        "outputs": [],
+        "reducer": "avg"
     },
     "simulationSettings": {
-        "isAutomatic": true,
-        "relativeTol": 1e-3,
-        "absoluteTol": 1e-6,
-        "realizations": 100,
+        "absoluteTol": 1e-06,
         "algorithm": "SSA",
+        "isAutomatic": true,
+        "realizations": 100,
+        "relativeTol": 0.001,
         "seed": -1,
         "tauTol": 0.03
     },
@@ -37,6 +53,6 @@
     "timespanSettings": {
         "endSim": 20,
         "timeStep": 0.05,
-        "timestepSize": 1e-5
+        "timestepSize": 1e-05
     }
 }
