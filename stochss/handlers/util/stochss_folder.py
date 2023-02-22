@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -81,8 +81,10 @@ class StochSSFolder(StochSSBase):
         response = requests.get(remote_path, allow_redirects=True, proxies=proxies)
         body = response.content
         if "download_presentation" in remote_path:
-            if ext in ("mdl", "smdl"):
+            if ext =="mdl":
                 file = f"{json.loads(body)['name']}.{ext}"
+            elif ext == "smdl":
+                file = f"{json.loads(body)['model']['name']}.{ext}"
             elif ext == "ipynb":
                 file = json.loads(body)['file']
                 body = json.dumps(json.loads(body)['notebook'])
@@ -199,7 +201,7 @@ class StochSSFolder(StochSSBase):
                     zip_file.write(body)
                 try:
                     with zipfile.ZipFile(ext_path, 'r') as zip_file:
-                        members = set([name.split('/')[0] for name in zip_file.namelist()])
+                        members = {name.split('/')[0] for name in zip_file.namelist()}
                         for name in members:
                             if "Examples" in path:
                                 m_path = self.get_new_path(dst_path=os.path.join("Examples", name))
@@ -228,9 +230,24 @@ class StochSSFolder(StochSSBase):
 
 
     def __upload_model(self, file, body, new_name=None):
-        is_valid, error = self.__validate_model(body, file)
+        try:
+            model = json.loads(body)
+            if "files" in model:
+                for entry in model['files'].values():
+                    if not entry['dwn_path'].startswith(self.user_dir):
+                        entry['dwn_path'] = os.path.join(self.user_dir, entry['dwn_path'])
+                    if not os.path.exists(os.path.dirname(entry['dwn_path'])):
+                        os.makedirs(os.path.dirname(entry['dwn_path']))
+                    with open(entry['dwn_path'], "w", encoding="utf-8") as entry_fd:
+                        entry_fd.write(entry['body'])
+                model = model['model']
+            is_valid, error = self.__validate_model(model, file)
+        except json.decoder.JSONDecodeError:
+            error = [f"The file {file} is not in JSON format."]
+            is_valid =  False
+
         if is_valid:
-            ext = "smdl" if json.loads(body)['is_spatial'] else "mdl"
+            ext = "smdl" if model['is_spatial'] else "mdl"
         else:
             ext = "json"
         if new_name is not None:
@@ -247,7 +264,9 @@ class StochSSFolder(StochSSBase):
             path = os.path.join(wkgp_path, file)
         else:
             path = os.path.join(self.path, file)
-        new_file = StochSSFile(path=path, new=True, body=body)
+        if not isinstance(model, str):
+            model = json.dumps(model, sort_keys=True, indent=4)
+        new_file = StochSSFile(path=path, new=True, body=model)
         file = new_file.get_file()
         dirname = new_file.get_dir_name()
         if is_valid:
@@ -286,12 +305,6 @@ class StochSSFolder(StochSSBase):
 
     @classmethod
     def __validate_model(cls, body, file):
-        try:
-            body = json.loads(body)
-        except json.decoder.JSONDecodeError:
-            message = [f"The file {file} is not in JSON format."]
-            return False, message
-
         keys = ["species", "parameters", "reactions", "eventsCollection",
                 "rules", "functionDefinitions"]
         for key in body.keys():
@@ -640,7 +653,7 @@ class StochSSFolder(StochSSBase):
                 zip_file.write(body)
             try:
                 with zipfile.ZipFile(ext_path, 'r') as zip_file:
-                    members = set([name.split('/')[0] for name in zip_file.namelist()])
+                    members = {name.split('/')[0] for name in zip_file.namelist()}
                     for name in members:
                         if "github.com/StochSS/StochSS_Example_Library/raw/" in remote_path:
                             mem_path = self.get_new_path(dst_path=os.path.join("Examples", name))

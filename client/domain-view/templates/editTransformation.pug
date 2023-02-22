@@ -1,0 +1,264 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-1
+
+      div.pl-3
+
+        input(type="checkbox" data-hook="select-transformation" data-toggle="collapse" data-target="#collapse-transformation-details" + this.model.cid)
+
+    div.col-sm-3
+
+      div.pl-2(data-hook="input-name-container")
+
+    div.col-sm-6
+
+      div.pl-2(data-hook="select-type-container")
+
+    div.col-sm-2
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X
+
+  div-mx-1.pl-2(data-hook="transformation-details")
+
+    div.collapse(id="collapse-transformation-details" + this.model.cid)
+
+      div
+
+        h6.inline.mr-3 <b>Nested Transformation</b>:
+
+        div.inline(data-hook="transformation-select-container")
+
+      div.hidden(data-hook="vector-transformation-props")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-9
+
+            h6 <b>Vector</b>
+
+          div.col-sm-3.hidden(data-hook="rotation-angle-header")
+
+            h6 <b>Angle</b> (deg)
+
+        div.mx-1.mt-3.row
+
+          div.col-sm-9
+
+            div
+
+              span.inline [(x:
+
+              div.inline(data-hook="vector-point1-x-container" data-target="vector-point1" data-name="x" style="width: 25%")
+
+              span.inline.mr-2 , y:
+
+              div.inline(data-hook="vector-point1-y-container" data-target="vector-point1" data-name="y" style="width: 25%")
+
+              span.inline.mr-2 , z:
+
+              div.inline(data-hook="vector-point1-z-container" data-target="vector-point1" data-name="z" style="width: 25%")
+
+              span.inline ),
+
+            div.pl-2
+
+              span.inline (x:
+
+              div.inline(data-hook="vector-point2-x-container" data-target="vector-point2" data-name="x" style="width: 25%")
+
+              span.inline.mr-2 , y:
+
+              div.inline(data-hook="vector-point2-y-container" data-target="vector-point2" data-name="y" style="width: 25%")
+
+              span.inline.mr-2 , z:
+
+              div.inline(data-hook="vector-point2-z-container" data-target="vector-point2" data-name="z" style="width: 25%")
+
+              span.inline )]
+
+          div.col-sm-3.hidden(data-hook="rotation-angle-prop")
+
+            div(data-hook="rotation-angle-container")
+
+      div.accordion.hidden(id="reflectProps" + this.model.cid data-hook="reflect-transformation-props")
+
+        hr
+
+        div.mx-1.my-3.row.align-items-baseline
+
+          div.col-sm-2
+
+            h6 <b>Point 1</b>
+
+          div.col-sm-10
+
+            div
+
+              span.inline (x:
+
+              div.inline(data-hook="point1-x-container" data-target="reflect-point1" data-name="x" style="width: 25%")
+
+              span.inline.mr-2 , y:
+
+              div.inline(data-hook="point1-y-container" data-target="reflect-point1" data-name="y" style="width: 25%")
+
+              span.inline.mr-2 , z:
+
+              div.inline(data-hook="point1-z-container" data-target="reflect-point1" data-name="z" style="width: 25%")
+
+              span.inline )
+
+        div.card
+
+          div.card-header(id="pointNormalHeader" + this.model.cid)
+
+            h3.mb-0.inline Point Normal Method
+
+            button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapsePointNormal" + this.model.cid data-hook="collapsePointNormal" aria-expanded="false" aria-controls="collapsePointNormal" style="float: right") 
+
+              div(data-hook="point-normal-chevron")
+
+                svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512")
+
+                  path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
+
+          div.collapse(id="collapsePointNormal" + this.model.cid aria-labelledby="pointNormalHeader" + this.model.cid data-parent="#reflectProps" + this.model.cid)
+
+            div.card-body.px-0
+
+              div.mx-1.mt-3.row.align-items-baseline
+
+                div.col-sm-2
+
+                  h6 <b>Normal</b>
+
+                div.col-sm-10
+
+                  div
+
+                    span.inline (x:
+
+                    div.inline(data-hook="normal-x-container" data-target="reflect-normal" data-name="x" style="width: 25%")
+
+                    span.inline.mr-2 , y:
+
+                    div.inline(data-hook="normal-y-container" data-target="reflect-normal" data-name="y" style="width: 25%")
+
+                    span.inline.mr-2 , z:
+
+                    div.inline(data-hook="normal-z-container" data-target="reflect-normal" data-name="z" style="width: 25%")
+
+                    span.inline )
+
+        div.card
+
+          div.card-header(id="threePointHeader" + this.model.cid)
+
+            h3.mb-0.inline Three Point Method
+
+            button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseThreePoint" + this.model.cid data-hook="collapseThreePoint" aria-expanded="false" aria-controls="collapseThreePoint" style="float: right")
+
+              div(data-hook="three-point-chevron")
+
+                svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512")
+
+                  path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
+
+          div.collapse(id="collapseThreePoint" + this.model.cid aria-labelledby="threePointHeader" + this.model.cid data-parent="#reflectProps" + this.model.cid)
+
+            div.card-body.px-0
+
+              div.mx-1.mt-3.row.align-items-baseline
+
+                div.col-sm-2
+
+                  h6 <b>Point 2</b>
+
+                div.col-sm-10
+
+                  div
+
+                    span.inline (x:
+
+                    div.inline(data-hook="point2-x-container" data-target="reflect-point2" data-name="x" style="width: 25%")
+
+                    span.inline.mr-2 , y:
+
+                    div.inline(data-hook="point2-y-container" data-target="reflect-point2" data-name="y" style="width: 25%")
+
+                    span.inline.mr-2 , z:
+
+                    div.inline(data-hook="point2-z-container" data-target="reflect-point2" data-name="z" style="width: 25%")
+
+                    span.inline )
+
+              hr
+
+              div.mx-1.mt-3.row.align-items-baseline
+
+                div.col-sm-2
+
+                  h6 <b>Point 3</b>
+
+                div.col-sm-10
+
+                  div
+
+                    span.inline (x:
+
+                    div.inline(data-hook="point3-x-container" data-target="reflect-point3" data-name="x" style="width: 25%")
+
+                    span.inline.mr-2 , y:
+
+                    div.inline(data-hook="point3-y-container" data-target="reflect-point3" data-name="y" style="width: 25%")
+
+                    span.inline.mr-2 , z:
+
+                    div.inline(data-hook="point3-z-container" data-target="reflect-point3" data-name="z" style="width: 25%")
+
+                    span.inline )
+
+      div.hidden(data-hook="scale-transformation-props")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-3
+
+            h6 <b>Factor</b>
+
+          div.col-sm-9
+
+            h6 <b>Center</b>
+
+        div.mx-1.mt-3.row
+
+          div.col-sm-3
+
+            div(data-hook="scale-factor-container")
+
+          div.col-sm-9
+
+            div
+
+              span.inline (x:
+
+              div.inline(data-hook="center-x-container" data-target="scale-center" data-name="x" style="width: 25%")
+
+              span.inline.mr-2 , y:
+
+              div.inline(data-hook="center-y-container" data-target="scale-center" data-name="y" style="width: 25%")
+
+              span.inline.mr-2 , z:
+
+              div.inline(data-hook="center-z-container" data-target="scale-center" data-name="z" style="width: 25%")
+
+              span.inline )

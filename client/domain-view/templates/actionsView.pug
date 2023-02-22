@@ -1,0 +1,88 @@
+div#domain-actions-editor.card
+
+  div.card-header.pb-0
+
+    h3.inline.mr-3 Actions
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="actions-selection-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook="actions-edit-tab" data-toggle="tab" href="#edit-actions") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook="actions-view-tab" data-toggle="tab" href="#view-actions") View
+
+    button.btn.btn-outline-collapse.inline(data-toggle="collapse" data-target="#collapse-actions" data-hook="collapse") +
+
+  div.card-body
+
+    p.mb-0
+     | Actions define changes to the particle state of a Shape/region.  These changes can include the adding and removing of particles, setting particle properties, and importing particles from mesh/domain files.
+
+    div.collapse.tab-content(id="collapse-actions" data-hook="actions-list-container")
+
+      div.tab-pane.active(id="edit-actions" data-hook="edit-actions")
+
+        hr
+
+        div.mb-3.mx-1.row.head.align-items-baseline
+
+          div.col-sm-1
+
+            h6.inline <b>Edit</b>
+
+          div.col-sm-4
+
+            h6.inline <b>Type</b>
+
+          div.col-sm-3
+
+            h6.inline <b>Priority</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Enable</b>
+
+          div.col-sm-2
+
+            h6.inline <b>Remove</b>
+
+        div.my-3(data-hook="edit-actions-list")
+
+        div.dropdown
+
+          button.btn.btn-outline-primary.dropdown-toggle.box-shadow#addActionBtn(
+            data-hook="add-action",
+            data-toggle="dropdown",
+            aria-haspopup="true",
+            aria-expanded="false",
+            type="button"
+          ) Add Action <span class="caret"></span>
+
+          ul.dropdown-menu(aria-labelledby="addActionBtn")
+            li.dropdown-item(data-hook="fill-action" data-name="Fill Action") Fill Action
+            li.dropdown-item(data-hook="set-action" data-name="Set Action") Set Action
+            li.dropdown-item(data-hook="remove-action" data-name="Remove Action") Remove Action
+            li.dropdown-item(href="#") Import Action &raquo;
+              ul.dropdown-menu.dropdown-submenu
+                li.dropdown-item(data-hook="xml-mesh-action" data-name="XML Mesh") XML Mesh
+                li.dropdown-item(data-hook="mesh-io-action" data-name="Mesh IO") Mesh IO
+                li.dropdown-item(data-hook="stochss-domain-action" data-name="StochSS Domain") StochSS Domain
+
+      div.tab-pane(id="view-actions" data-hook="view-actions")
+
+        hr
+
+        div.mx-1.row.head.align-items-baseline
+
+          div.col-sm-4: h6 <b>Type</b>
+
+          div.col-sm-4: h6 <b>Priority</b>
+
+          div.col-sm-4: h6 <b>Enable</b>
+
+        div.mt-3(data-hook="view-actions-list")

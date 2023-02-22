@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -36,7 +36,11 @@ class StochSSBase():
     '''
     user_dir = os.path.expanduser("~") # returns the path to the users home directory
     TEMPLATE_VERSION = 1
+<<<<<<< HEAD
     SETTINGS_TEMPLATE_VERSION = 1
+=======
+    DOMAIN_TEMPLATE_VERSION = 2
+>>>>>>> 1e296b8bf538a24466440cfc96bb8119f59807f2
 
     def __init__(self, path):
         '''
@@ -50,7 +54,8 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
-    def __build_example_html(self, exm_data, home):
+    @classmethod
+    def __build_example_html(cls, exm_data, home):
         row = "<div class='row'>__CONTENTS__</div>"
         entry = "__ALERT__' href='__OPEN_LINK__' role='button' style='width: 100%'>__NAME__</a>"
         entry_a = f"<a class='btn box-shadow btn-outline-{entry}"
@@ -75,13 +80,15 @@ class StochSSBase():
 
         return {"wellMixed": well_mixed, "spatial": spatial}
 
-    def __get_entry(self, entries, name):
+    @classmethod
+    def __get_entry(cls, entries, name):
         for entry in entries:
             if entry['name'] == name:
                 return entry
         return None
 
-    def __get_from_remote(self):
+    @classmethod
+    def __get_from_remote(cls):
         p_path = "/stochss/.proxies.txt"
         rel_path = "https://raw.githubusercontent.com/StochSS/StochSS_Example_Library/main/example_data.json"
         if os.path.exists(p_path):
@@ -263,7 +270,7 @@ class StochSSBase():
         as_string : bool
             Indicates whether or not to return the template in string format
         '''
-        path = '/stochss/stochss_templates/nonSpatialModelTemplate.json'
+        path = '/stochss/stochss_templates/modelTemplate.json'
         self.log("debug", f"Using model template at: {path}")
         try:
             with open(path, 'r', encoding="utf-8") as template:

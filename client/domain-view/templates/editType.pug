@@ -11,31 +11,17 @@ div.mx-1
 
         input(type="checkbox" data-hook="select" data-toggle="collapse" data-target="#collapse-type-details" + this.model.typeID)
 
-    div.col-sm-3
+    div.col-sm-5
 
       div(data-hook="type-name" data-target=this.model.typeID)
 
-    div.col-sm-3
+    div.col-sm-4
 
       div=this.model.numParticles
 
-    div.col-sm-3
-
-      button.btn.btn-outline-secondary.box-shadow(data-type=this.model.typeID data-hook='unassign-all') Un-Assign Particles
-
     div.col-sm-2
 
-      button.btn.btn-outline-secondary.box-shadow.dropdown-toggle(
-        id="delete-domain-type",
-        data-toggle="dropdown",
-        aria-haspopup="true",
-        aria-expanded="false",
-        type="button"
-      ) Delete <span class="caret"></span>
-
-      ul.dropdown-menu(aria-labelledby="delete-domain-type")
-        li.dropdown-item(data-hook="delete-type" data-type=this.model.typeID) Type
-        li.dropdown-item(data-hook="delete-all" data-type=this.model.typeID) Type and Particles
+      button.btn.btn-outline-secondary.box-shadow(data-hook="remove") X
 
   div-mx-1.pl-2(data-hook="type-details")
 
@@ -94,35 +80,3 @@ div.mx-1
         div.col-sm-2
 
           input(type="checkbox" data-hook="td-fixed")
-
-      hr
-
-      div.row.align-items-baseline
-
-        div.col-sm-10.align-items-baseline
-
-          h6.inline <b>Geometry</b>:
-
-          div.tooltip-icon.mr-3(data-html="true" data-toggle="tooltip" title=this.tooltips.geometry) <sup><svg aria-hidden="true" focusable="false" data-prefix="fas" data-icon="info" class="svg-inline--fa fa-info fa-w-6" role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 512"><path fill="currentColor" d="M20 424.229h20V279.771H20c-11.046 0-20-8.954-20-20V212c0-11.046 8.954-20 20-20h112c11.046 0 20 8.954 20 20v212.229h20c11.046 0 20 8.954 20 20V492c0 11.046-8.954 20-20 20H20c-11.046 0-20-8.954-20-20v-47.771c0-11.046 8.954-20 20-20zM96 0C56.235 0 24 32.235 24 72s32.235 72 72 72 72-32.235 72-72S135.764 0 96 0z"></path></svg></sup>
-
-          div.inline(style="width: 80%")
-
-            div(id="type-geometry" data-hook="type-geometry")
-
-        div.col-sm-2
-
-          button.btn.btn-outline-secondary.box-shadow(data-hook="apply-geometry") Apply
-
-      div.mdl-edit-btn.saving-status.inline(data-hook="tg-in-progress-" + this.model.typeID)
-
-        div.spinner-grow.mr-2
-
-        span Applying type to particles ...
-
-      div.mdl-edit-btn.saved-status.inline(data-hook="tg-complete-" + this.model.typeID)
-
-        span Type successfully applied
-
-      div.mdl-edit-btn.save-error-status(data-hook="tg-error-" + this.model.typeID)
-
-        span(data-hook="tg-action-error-" + this.model.typeID)
