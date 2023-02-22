@@ -3,7 +3,17 @@
         "obsData": "",
         "parameters": [],
         "priorMethod": "Uniform Prior",
-        "summaryStats": ""
+        "summaryStatsType": "minimal",
+        "summaryStats": [
+            {"sum_values": null},
+            {"median": null},
+            {"mean": null},
+            {"length": null},
+            {"standard_deviation": null},
+            {"variance": null},
+            {"maximum": null},
+            {"minimum": null}
+        ],
     },
     "parameterSweepSettings":{
         "parameters": [],
