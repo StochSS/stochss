@@ -50,7 +50,19 @@ div#inference-settings.card
 
           h4 Summary Statistics
 
-          p.hidden(data-hook="tsfresh-docs-link") See <a href="https://tsfresh.readthedocs.io/en/latest/api/tsfresh.feature_extraction.html#module-tsfresh.feature_extraction.feature_calculators" target="_blank">TSFresh Documentation</a> for a full list of supported feature calculators.
+          hr
+
+          div.mr-3.inline
+
+            span.mr-2.inline(for="#summaryStatsTypeSelect")
+
+              h6 <b>Summary Statistics Type</b>:
+
+            div.inline(id="summaryStatsTypeSelect" data-hook="summary-stats-type-select")
+
+          div.inline.hidden(data-hook="tsfresh-docs-link")
+
+            p See <a href="https://tsfresh.readthedocs.io/en/latest/api/tsfresh.feature_extraction.html#module-tsfresh.feature_extraction.feature_calculators" target="_blank">TSFresh documentation</a> for a full list of supported feature calculators.
 
           div(data-hook="edit-summary-stats-container")
 

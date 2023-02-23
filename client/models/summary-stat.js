@@ -56,7 +56,7 @@ module.exports = State.extend({
       let argStrs = argStr.replace(/ /g, '').split(',');
       let args = [];
       argStrs.forEach((arg) => {
-        args.push(JSON.parse(arg));
+        args.push(JSON.parse(arg.replace(/'/g, '"')));
       });
       this.args = args;
     }

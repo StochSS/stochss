@@ -41,7 +41,7 @@ module.exports = View.extend({
     }
   },
   events: {
-    'change [data-hook=prior-method]' : 'setPriorMethod',
+    'change [data-hook=summary-stats-type-select]' : 'setSummaryStatsType',
     'change [data-hook=summary-statistics]' : 'updateSummaryStatsView',
     'change [data-hook=obs-data-file]' : 'setObsDataFile',
     'change [data-hook=obs-data-file-select]' : 'selectObsDataFile',
@@ -167,10 +167,6 @@ module.exports = View.extend({
     if(this.editSummaryStats) {
       this.editSummaryStats.remove();
     }
-    // This block is for testing only
-    // this.summaryStatCollections[this.model.summaryStatsType] = this.model.resetSummaryStats();
-    // this.model.summaryStatsType = "custom";
-    // End testing block
     this.editSummaryStats = new SummaryStatsView({
       collection: this.model.summaryStats,
       summariesType: this.model.summaryStatsType
@@ -256,11 +252,19 @@ module.exports = View.extend({
     this.obsDataFile = e.target.files[0];
     $(this.queryByHook("import-obs-data-file")).prop('disabled', !this.obsDataFile);
   },
-  setPriorMethod: function (e) {
-    this.model.priorMethod = e.target.value;
-    $(this.queryByHook("view-prior-method")).text(this.model.priorMethod);
-    this.renderEditParameterSpace();
-    this.renderViewParameterSpace();
+  setSummaryStatsType: function (e) {
+    if(this.summaryStatCollections[e.target.value] === null) {
+      var summaryStats = this.model.resetSummaryStats();
+    }else{
+      var summaryStats = this.model.summaryStats;
+      this.model.summaryStats = this.summaryStatCollections[e.target.value];
+    }
+    this.summaryStatCollections[this.model.summaryStatsType] = summaryStats;
+    this.model.summaryStatsType = e.target.value;
+    let display = e.target.value === "custom" ? "inline-block" : "none";
+    $(this.queryByHook("tsfresh-docs-link")).css("display", display);
+    this.renderEditSummaryStats();
+    this.renderViewSummaryStats();
   },
   selectObsDataFile: function (e) {
     this.obsFig = null;
@@ -315,18 +319,18 @@ module.exports = View.extend({
   },
   updateValid: function (e) {},
   subviews: {
-    priorMethodView: {
-      hook: "prior-method",
+    summaryStatsTypeView: {
+      hook: "summary-stats-type-select",
       prepareView: function (el) {
         let options = [
-          "Uniform Prior"//, "Gaussian Prior"
+          ["identity", "Identity"], ["minimal", "TSFresh Minimal"], ["custom", "Custom TSFresh"]
         ]
         return new SelectView({
-          name: 'prior-method',
+          name: 'summary-statistics-type',
           required: true,
           eagerValidate: true,
           options: options,
-          value: this.model.priorMethod
+          value: this.model.summaryStatsType
         });
       }
     },
