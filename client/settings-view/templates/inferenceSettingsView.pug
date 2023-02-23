@@ -46,15 +46,19 @@ div#inference-settings.card
 
             div(data-hook="summary-statistics")
 
-        div(data-hook="edit-parameter-space-container")
+        h4 Summary Statistics
 
-        div.mt-3.accordion(id="obs-data-section" data-hook="obs-data-section")
+        div(data-hook="edit-summary-stats-container")
+
+        div.my-3(data-hook="edit-parameter-space-container")
+
+        div.accordion(id="obs-data-section" data-hook="obs-data-section")
 
           div.card
 
             div.card-header(id="importObsDataHeader")
 
-              h3.mb-0.inline="Import Observed Data File"
+              h4.mb-0.inline="Import Observed Data File"
 
               button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseImportObsData" data-hook="collapseImportObsData" aria-expanded="false" aria-controls="collapseImportObsData" style="float: right") 
 
@@ -96,7 +100,7 @@ div#inference-settings.card
 
             div.card-header(id="uploadObsDataHeader")
 
-              h3.mb-0.inline="Select Observed Data File"
+              h4.mb-0.inline="Select Observed Data File"
 
               button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseUploadObsData" data-hook="collapseUploadObsData" aria-expanded="false" aria-controls="collapseUploadObsData" style="float: right")
 
@@ -155,5 +159,9 @@ div#inference-settings.card
           div.col-sm-10
 
             div(data-hook="view-summary-stats")=this.model.summaryStats
+
+        h4 Summary Statistics
+
+        div.mb-3(data-hook="view-summary-stats-container")
 
         div(data-hook="view-parameter-space-container")

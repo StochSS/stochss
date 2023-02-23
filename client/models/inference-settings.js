@@ -45,7 +45,7 @@ module.exports = State.extend({
   initialize: function(attrs, options) {
     State.prototype.initialize.apply(this, arguments);
   },
-  resetNewSummaryStats: function () {
+  resetSummaryStats: function () {
     let summaryStats = this.summaryStats;
     this.summaryStats = new SummaryStats();
     return summaryStats;

@@ -25,6 +25,7 @@ let Plotly = require('plotly.js-dist');
 let View = require('ampersand-view');
 let InputView = require('../../views/input');
 let SelectView = require('ampersand-select-view');
+let SummaryStatsView = require('./summary-stats-view');
 let InferenceParametersView = require('./inference-parameters-view');
 //templates
 let template = require('../templates/inferenceSettingsView.pug');
@@ -70,6 +71,9 @@ module.exports = View.extend({
         </svg>
       `
     }
+    this.summaryStatCollections = {
+      identity: null, minimal: null, custom: null
+    }
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -83,9 +87,11 @@ module.exports = View.extend({
       $(this.queryByHook(this.model.elementID + '-edit-inference-settings')).removeClass('active');
       $(this.queryByHook(this.model.elementID + '-view-inference-settings')).addClass('active');
     }else{
+      this.renderEditSummaryStats();
       this.renderEditParameterSpace();
       this.renderObsDataSelects();
     }
+    this.renderViewSummaryStats();
     this.renderViewParameterSpace();
   },
   changeCollapseButtonText: function (e) {
@@ -143,7 +149,6 @@ module.exports = View.extend({
     }
     let modal = $(modals.obsPreviewHtml(this.model.obsData.split('/').pop())).modal();
     let plotEl = document.querySelector('#modal-preview-plot #modal-plot-container');
-    console.log(plotEl)
     Plotly.newPlot(plotEl, this.obsFig);
   },
   renderEditParameterSpace: function () {
@@ -157,6 +162,21 @@ module.exports = View.extend({
     });
     let hook = "edit-parameter-space-container";
     app.registerRenderSubview(this, this.editParameterSpace, hook);
+  },
+  renderEditSummaryStats: function () {
+    if(this.editSummaryStats) {
+      this.editSummaryStats.remove();
+    }
+    // This block is for testing only
+    this.model.summaryStatsType = "identity";
+    this.summaryStatCollections[this.model.summaryStatsType] = this.model.resetSummaryStats();
+    // End testing block
+    this.editSummaryStats = new SummaryStatsView({
+      collection: this.model.summaryStats,
+      summariesType: this.model.summaryStatsType
+    });
+    let hook = "edit-summary-stats-container";
+    app.registerRenderSubview(this, this.editSummaryStats, hook);
   },
   renderObsDataSelects: function () {
     let queryStr = "?ext=.obsd,.csv"
@@ -219,6 +239,18 @@ module.exports = View.extend({
     });
     let hook = "view-parameter-space-container";
     app.registerRenderSubview(this, this.viewParameterSpace, hook);
+  },
+  renderViewSummaryStats: function () {
+    if(this.viewSummaryStats) {
+      this.viewSummaryStats.remove();
+    }
+    this.viewSummaryStats = new SummaryStatsView({
+      collection: this.model.summaryStats,
+      summariesType: this.model.summaryStatsType,
+      readOnly: true
+    });
+    let hook = "view-summary-stats-container";
+    app.registerRenderSubview(this, this.viewSummaryStats, hook);
   },
   setObsDataFile: function (e) {
     this.obsDataFile = e.target.files[0];
