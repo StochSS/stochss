@@ -25,13 +25,13 @@ module.exports = Collection.extend({
   model: SummaryStat,
   addSummaryStat: function ({name=null}={}) {
     if(name === null) {
-      name = getDefaultName();
+      name = this.getDefaultName();
     }
     let summaryStat = new SummaryStat({
       formula: '',
       name: name
     });
-    summaryStat.setArgs(null);
+    summaryStat.setArgs("");
     this.add(summaryStat);
   },
   getDefaultName: function () {

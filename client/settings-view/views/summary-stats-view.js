@@ -26,7 +26,9 @@ let editIdentityTemplate = require('../templates/editIdentitySummaryStats.pug');
 let viewIdentityTemplate = require('../templates/viewIdentitySummaryStats.pug');
 
 module.exports = View.extend({
-  events: {},
+  events: {
+    'click [data-hook=add-identity-summary-stat]' : 'addSummaryStatistic'
+  },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
@@ -44,6 +46,11 @@ module.exports = View.extend({
       this.renderEditSummaryStat();
     }else{
     	this.renderViewSummaryStat();
+    }
+  },
+  addSummaryStatistic: function () {
+    if(this.summariesType === "identity") {
+      this.collection.addSummaryStat();
     }
   },
   renderEditSummaryStat: function () {
