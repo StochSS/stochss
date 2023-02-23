@@ -23,6 +23,7 @@ let Collection = require('ampersand-collection');
 
 module.exports = Collection.extend({
   model: SummaryStat,
+  indexes: ['name'],
   addSummaryStat: function ({name=null}={}) {
     if(name === null) {
       name = this.getDefaultName();
