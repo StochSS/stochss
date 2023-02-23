@@ -42,7 +42,6 @@ module.exports = State.extend({
         this.args.forEach((arg) => {
           argStrs.push(JSON.stringify(arg));
         });
-        console.log(argStrs.join())
         return argStrs.join();
       }
     }
@@ -61,6 +60,5 @@ module.exports = State.extend({
       });
       this.args = args;
     }
-    console.log(this.args)
   }
 });
