@@ -5,28 +5,44 @@
         "priorMethod": "Uniform Prior",
         "summaryStats": [
             {
-                "sum_values": null
+                "name": "sum_values",
+                "args": null,
+                "formula": ""
             },
             {
-                "median": null
+                "name": "median",
+                "args": null,
+                "formula": ""
             },
             {
-                "mean": null
+                "name": "mean",
+                "args": null,
+                "formula": ""
             },
             {
-                "length": null
+                "name": "length",
+                "args": null,
+                "formula": ""
             },
             {
-                "standard_deviation": null
+                "name": "standard_deviation",
+                "args": null,
+                "formula": ""
             },
             {
-                "variance": null
+                "name": "variance",
+                "args": null,
+                "formula": ""
             },
             {
-                "maximum": null
+                "name": "maximum",
+                "args": null,
+                "formula": ""
             },
             {
-                "minimum": null
+                "name": "minimum",
+                "args": null,
+                "formula": ""
             }
         ],
         "summaryStatsType": "minimal"
