@@ -168,8 +168,8 @@ module.exports = View.extend({
       this.editSummaryStats.remove();
     }
     // This block is for testing only
-    this.model.summaryStatsType = "identity";
     this.summaryStatCollections[this.model.summaryStatsType] = this.model.resetSummaryStats();
+    this.model.summaryStatsType = "custom";
     // End testing block
     this.editSummaryStats = new SummaryStatsView({
       collection: this.model.summaryStats,

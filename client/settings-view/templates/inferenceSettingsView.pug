@@ -46,9 +46,13 @@ div#inference-settings.card
 
             div(data-hook="summary-statistics")
 
-        h4 Summary Statistics
+        div
 
-        div(data-hook="edit-summary-stats-container")
+          h4 Summary Statistics
+
+          p.hidden(data-hook="tsfresh-docs-link") See <a href="https://tsfresh.readthedocs.io/en/latest/api/tsfresh.feature_extraction.html#module-tsfresh.feature_extraction.feature_calculators" target="_blank">TSFresh Documentation</a> for a full list of supported feature calculators.
+
+          div(data-hook="edit-summary-stats-container")
 
         div.my-3(data-hook="edit-parameter-space-container")
 

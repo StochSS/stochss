@@ -22,12 +22,13 @@ let tests = require('../../views/tests');
 let InputView = require('../../views/input');
 let View = require('ampersand-view');
 //templates
-let editTemplate = require('../templates/editIdentitySummaryStatView.pug');
-let viewTemplate = require('../templates/viewIdentitySummaryStatView.pug');
+let editTemplate = require('../templates/editCustomSummaryStatView.pug');
+let viewTemplate = require('../templates/viewCustomSummaryStatView.pug');
 
 module.exports = View.extend({
   events: {
     'change [data-target=identity-property]' : 'updateViewer',
+    'change [data-hook=summary-stat-args]' : 'setCalculatorArgs',
     'click [data-hook=remove]' : 'removeSummaryStat'
   },
   initialize: function (attrs, options) {
@@ -40,6 +41,10 @@ module.exports = View.extend({
   },
   removeSummaryStat: function () {
     this.model.collection.removeSummaryStat(this.model);
+  },
+  setCalculatorArgs: function (e) {
+    this.model.setArgs(e.target.value);
+    this.updateViewer();
   },
   update: function () {},
   updateValid: function () {},
@@ -57,21 +62,21 @@ module.exports = View.extend({
           modelKey: 'name',
           tests: tests.nameTests,
           valueType: 'string',
-          value: this.model.name
+          value: this.model.name,
+          placeholder: "-- i.e. autocorrelation --"
         });
       }
     },
     formulaInputView: {
-      hook: "summary-stat-formula",
+      hook: "summary-stat-args",
       prepareView: function (el) {
         return new InputView({
           parent: this,
           required: false,
-          name: 'observable-calculator',
-          modelKey: 'formula',
+          name: 'summary-calculator-args',
           valueType: 'string',
-          value: this.model.formula,
-          placeholder: "-- i.e. Juvenile + Susceptible + Exposed + Infected + Diseased --"
+          value: this.model.argsDisplay === "None" ? "" : this.model.argsDisplay,
+          placeholder: '-- i.e. Requires arguments: {"lag":1} or leave blank if no arguments are required --'
         });
       }
     }

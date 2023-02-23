@@ -161,6 +161,17 @@ module.exports = {
     
     steps: "The number of steps used to determine the sweep values across the sweep range."
   },
+  summaryStats: {
+    customArgs: "Arguments to the TSFresh feature calculator.<br><li>Leave the feild empty if no arguments are required.</li>" +
+                '<li>To run once provide a single dictionary.  i.e. {"lag":1}</li>' +
+                '<li>To run multiple times provide a list of dictionaries.  i.e. {"lag":1},{"lag":2}</li>',
+
+    customName: "Name of the TSFresh feature calculator.",
+
+    identityFormula: "An expression that is evaluable within a python environment and a namespace comprised of the model's species.",
+
+    identityName: "Name of the observable data.",
+  },
   jobResults: {
     species: "The variables to view sweep data for",
 
