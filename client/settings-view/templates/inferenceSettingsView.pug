@@ -24,28 +24,6 @@ div#inference-settings.card
 
       div.tab-pane.active(id=this.model.elementID + "-edit-inference-settings" data-hook=this.model.elementID + "-edit-inference-settings")
 
-        hr
-
-        div.mx-1.row.head.align-items-baseline
-
-          div.col-sm-2
-
-            h6 <b>Prior Method</b>
-
-          div.col-sm-10
-
-            h6.inline <b>Summary Statistics</b>
-
-        div.mx-1.my-3.row
-
-          div.col-sm-2
-
-            div(data-hook="prior-method")
-
-          div.col-sm-10
-
-            div(data-hook="summary-statistics")
-
         div
 
           h4 Summary Statistics
@@ -153,28 +131,6 @@ div#inference-settings.card
                       button.btn.btn-outline-secondary.box-shadow(data-hook="preview-obs-data") Preview
 
       div.tab-pane(id=this.model.elementID + "-view-inference-settings" data-hook=this.model.elementID + "-view-inference-settings")
-
-        hr
-
-        div.mx-1.row.head.align-items-baseline
-
-          div.col-sm-2
-
-            h6 <b>Prior Method</b>
-
-          div.col-sm-10
-
-            h6.inline <b>Summary Statistics</b>
-
-        div.mx-1.my-3.row
-
-          div.col-sm-2
-
-            div(data-hook="view-prior-method")=this.model.priorMethod
-
-          div.col-sm-10
-
-            div(data-hook="view-summary-stats")=this.model.summaryStats
 
         h4 Summary Statistics
 

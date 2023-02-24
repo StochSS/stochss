@@ -42,7 +42,6 @@ module.exports = View.extend({
   },
   events: {
     'change [data-hook=summary-stats-type-select]' : 'setSummaryStatsType',
-    'change [data-hook=summary-statistics]' : 'updateSummaryStatsView',
     'change [data-hook=obs-data-file]' : 'setObsDataFile',
     'change [data-hook=obs-data-file-select]' : 'selectObsDataFile',
     'change [data-hook=obs-data-location-select]' : 'selectObsDataLocation',
@@ -315,9 +314,6 @@ module.exports = View.extend({
     }
   },
   update: function (e) {},
-  updateSummaryStatsView: function (e) {
-    $(this.queryByHook("view-summary-stats")).text(this.model.summaryStats ? this.model.summaryStats : 'None')
-  },
   updateValid: function (e) {},
   subviews: {
     summaryStatsTypeView: {
@@ -332,19 +328,6 @@ module.exports = View.extend({
           eagerValidate: true,
           options: options,
           value: this.model.summaryStatsType
-        });
-      }
-    },
-    summaryStatsView: {
-      hook: "summary-statistics",
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: false,
-          name: 'summary-statistics',
-          modelKey: 'summaryStats',
-          valueType: 'string',
-          value: this.model.summaryStats
         });
       }
     }
