@@ -232,7 +232,8 @@ let userSettings = PageView.extend({
           name: 'aws-region',
           modelKey: 'awsRegion',
           valueType: 'string',
-          value: this.model.awsRegion
+          value: this.model.awsRegion,
+          placeholder: "-- i.e. us-east-2 --"
         });
       }
     },
