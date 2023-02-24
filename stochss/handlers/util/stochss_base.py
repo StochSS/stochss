@@ -28,6 +28,7 @@ import dotenv
 import requests
 
 from stochss_compute.cloud import EC2Cluster, EC2LocalConfig
+from stochss_compute.cloud.exceptions import EC2Exception
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
                             FileNotJSONFormatError
@@ -244,7 +245,6 @@ class StochSSBase():
         # Configure the AWS cluster
         local_config = EC2LocalConfig(key_dir=key_dir, status_file=s_path)
         cluster = EC2Cluster(local_config=local_config)
-        # cluster = EC2Cluster(status_file=s_path)
         return cluster
 
     @classmethod
@@ -478,6 +478,8 @@ class StochSSBase():
         try:
             cluster = self.get_aws_cluster(instance=instance)
             cluster.launch_single_node_instance(instance)
+        except EC2Exception:
+            pass
         except Exception:
             cluster.clean_up()
 
