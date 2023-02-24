@@ -93,6 +93,7 @@ module.exports = View.extend({
     }
     this.renderViewSummaryStats();
     this.renderViewParameterSpace();
+    console.log(this.model.customCalculators)
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -169,7 +170,8 @@ module.exports = View.extend({
     }
     this.editSummaryStats = new SummaryStatsView({
       collection: this.model.summaryStats,
-      summariesType: this.model.summaryStatsType
+      summariesType: this.model.summaryStatsType,
+      customCalculators: this.model.customCalculators
     });
     let hook = "edit-summary-stats-container";
     app.registerRenderSubview(this, this.editSummaryStats, hook);

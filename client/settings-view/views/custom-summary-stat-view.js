@@ -34,6 +34,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.viewMode = attrs.viewMode ? attrs.viewMode : false;
+    this.customCalculators = attrs.customCalculators ? attrs.customCalculators : null;
   },
   render: function (attrs, options) {
     this.template = this.viewMode ? viewTemplate : editTemplate;
@@ -49,7 +50,7 @@ module.exports = View.extend({
   update: function () {},
   updateValid: function () {},
   updateViewer: function () {
-    this.parent.updateViewer();
+      this.parent.parent.updateViewer();
   },
   subviews: {
     nameInputView: {
@@ -61,6 +62,11 @@ module.exports = View.extend({
           name: 'observable-name',
           modelKey: 'name',
           tests: tests.nameTests,
+          changeTests: [(text) => {
+            if(!this.customCalculators.includes(text)) {
+              return "This feature calculator is not currently supported."
+            }
+          }],
           valueType: 'string',
           value: this.model.name,
           placeholder: "-- i.e. autocorrelation --"
@@ -74,6 +80,13 @@ module.exports = View.extend({
           parent: this,
           required: false,
           name: 'summary-calculator-args',
+          changeTests: [(text) => {
+            try{
+              this.model.setArgs(text, {dryRun: true});
+            }catch(error) {
+              return `Args must be in one of the following formats '{"lag": 1}' or '{"lag": 1},{"lag": 2}'.`
+            }
+          }],
           valueType: 'string',
           value: this.model.argsDisplay === "None" ? "" : this.model.argsDisplay,
           placeholder: '-- i.e. Requires arguments: {"lag":1} or leave blank if no arguments are required --'

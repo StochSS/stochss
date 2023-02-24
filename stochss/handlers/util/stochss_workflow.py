@@ -189,6 +189,10 @@ class StochSSWorkflow(StochSSBase):
                 self.workflow['model'] = settings['model']
                 self.workflow['settings'] = settings['settings']
                 self.workflow['type'] = settings['type']
+                if settings['type'] == "Model Inference":
+                    from tsfresh.feature_extraction.settings import EfficientFCParameters # pylint: disable=import-outside-toplevel
+                    feature_calculators = list(EfficientFCParameters().keys())
+                    self.workflow['settings']['inferenceSettings']['customCalculators'] = feature_calculators
         except FileNotFoundError as err:
             message = f"Could not find the settings file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc) from err

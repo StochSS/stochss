@@ -40,6 +40,7 @@ module.exports = View.extend({
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
     this.tooltips = Tooltips.summaryStats;
     this.summariesType = attrs.summariesType;
+    this.customCalculators = attrs.customCalculators;
   },
   render: function () {
   	if(this.summariesType === "identity") {
@@ -75,10 +76,12 @@ module.exports = View.extend({
       }else if(this.summariesType === "custom"){
         var summaryStatView = CustomSummaryStatView;
       }
+      let options = {"viewOptions": { customCalculators: this.customCalculators }};
       this.editSummaryStat = this.renderCollection(
         this.collection,
         summaryStatView,
         this.queryByHook("edit-summary-stat-collection"),
+        options
       );
     }
   },

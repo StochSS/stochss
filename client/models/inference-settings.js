@@ -31,6 +31,9 @@ module.exports = State.extend({
     parameters: InferenceParameters,
     summaryStats: SummaryStats
   },
+  session: {
+    customCalculators: 'object'
+  },
   derived: {
     elementID: {
       deps: ["parent"],
