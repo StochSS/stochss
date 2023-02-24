@@ -78,6 +78,13 @@ let userSettings = PageView.extend({
       $(this.queryByHook('aws-config-msg')).css('display', 'block');
     }
   },
+  completeAction: function () {
+    $(this.queryByHook("usa-in-progress")).css("display", "none");
+    $(this.queryByHook("usa-complete")).css("display", "inline-block");
+    setTimeout(() => {
+      $(this.queryByHook("usa-complete")).css("display", "none");
+    }, 5000);
+  },
   disables: function (btnType, status) {
     let disables = {
       instance: !['not configured', 'not launched', 'terminated'].includes(status),
@@ -87,12 +94,23 @@ let userSettings = PageView.extend({
     }
     return disables[btnType];
   },
+  errorAction: function (action) {
+    $(this.queryByHook("usa-in-progress")).css("display", "none");
+    $(this.queryByHook("usa-action-error")).text(action);
+    $(this.queryByHook("usa-error")).css("display", "block");
+  },
   handleApplyUserSettings: function ({cb=null}={}) {
+    this.startAction();
     if(cb === null) {
       if(this.path === null) {
-        cb = () => { this.refreshAWSStatus(); }
+        cb = () => {
+          this.completeAction();
+          this.refreshAWSStatus();
+        }
       }else{
-        cb = () => { window.location.href = this.path }
+        cb = () => {
+          window.location.href = this.path;
+        }
       }
     }
     let options = this.secretKey !== null ? {secretKey: this.secretKey} : {};
@@ -181,6 +199,11 @@ let userSettings = PageView.extend({
     });
     let hook = "aws-instancetype-container";
     app.registerRenderSubview(this, this.awsInstanceTypesView, hook);
+  },
+  startAction: function () {
+    $(this.queryByHook("usa-complete")).css("display", "none");
+    $(this.queryByHook("usa-error")).css("display", "none");
+    $(this.queryByHook("usa-in-progress")).css("display", "inline-block");
   },
   terminateAWSCluster: function () {
     let endpoint = path.join(app.getApiPath(), 'aws/terminate-cluster');

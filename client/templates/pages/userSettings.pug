@@ -126,3 +126,17 @@ section.page
         button.btn.btn-primary.box-shadow(data-hook="apply-user-settings") Apply
       else
         button.btn.btn-primary.box-shadow(data-hook="apply-user-settings") Apply & Continue
+
+      div.mdl-edit-btn.saving-status.inline(data-hook="usa-in-progress")
+
+        div.spinner-grow.mr-2
+
+        span Applying settings ...
+
+      div.mdl-edit-btn.saved-status.inline(data-hook="usa-complete")
+
+        span Settings successfully applied
+
+      div.mdl-edit-btn.save-error-status(data-hook="usa-error")
+
+        span(data-hook="usa-action-error")
