@@ -50,11 +50,10 @@ module.exports = State.extend({
     State.prototype.initialize.apply(this, arguments);
   },
   setArgs: function (argStr, {dryRun=false}={}) {
-    if(argStr === "") {
-      args = null;
-    }else{
+    var args = null
+    if(argStr !== "") {
       let argStrs = argStr.replace(/ /g, '').split(',');
-      let args = [];
+      args = [];
       argStrs.forEach((arg) => {
         args.push(JSON.parse(arg.replace(/'/g, '"')));
       });

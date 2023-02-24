@@ -44,7 +44,11 @@ module.exports = View.extend({
   update: function () {},
   updateValid: function () {},
   updateViewer: function () {
-    this.parent.updateViewer();
+    try{
+      this.parent.updateViewer();
+    }catch(error){
+      this.parent.parent.updateViewer();
+    }
   },
   subviews: {
     nameInputView: {

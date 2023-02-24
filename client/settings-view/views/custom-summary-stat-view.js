@@ -27,7 +27,7 @@ let viewTemplate = require('../templates/viewCustomSummaryStatView.pug');
 
 module.exports = View.extend({
   events: {
-    'change [data-target=identity-property]' : 'updateViewer',
+    'change [data-target=custom-property]' : 'updateViewer',
     'change [data-hook=summary-stat-args]' : 'setCalculatorArgs',
     'click [data-hook=remove]' : 'removeSummaryStat'
   },
@@ -50,7 +50,11 @@ module.exports = View.extend({
   update: function () {},
   updateValid: function () {},
   updateViewer: function () {
+    try{
+      this.parent.updateViewer();
+    }catch(error){
       this.parent.parent.updateViewer();
+    }
   },
   subviews: {
     nameInputView: {

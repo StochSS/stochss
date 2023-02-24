@@ -93,7 +93,6 @@ module.exports = View.extend({
     }
     this.renderViewSummaryStats();
     this.renderViewParameterSpace();
-    console.log(this.model.customCalculators)
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
