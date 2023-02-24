@@ -40,6 +40,8 @@ section.page
 
         h3 Credentials
 
+        p See <a href="https://stochss.github.io/stochss-compute/docs/_build/html/tutorials/aws/aws.html#aws-configuration" target="_blank">AWS Configuration Documentation</a> for details on where your credetials can be found.
+
       div.my-3.mx-1.row.head.align-items-baseline
 
         div.col-sm-3
@@ -124,3 +126,17 @@ section.page
         button.btn.btn-primary.box-shadow(data-hook="apply-user-settings") Apply
       else
         button.btn.btn-primary.box-shadow(data-hook="apply-user-settings") Apply & Continue
+
+      div.mdl-edit-btn.saving-status.inline(data-hook="usa-in-progress")
+
+        div.spinner-grow.mr-2
+
+        span Applying settings ...
+
+      div.mdl-edit-btn.saved-status.inline(data-hook="usa-complete")
+
+        span Settings successfully applied
+
+      div.mdl-edit-btn.save-error-status(data-hook="usa-error")
+
+        span(data-hook="usa-action-error")
