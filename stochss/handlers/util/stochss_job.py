@@ -50,11 +50,11 @@ class StochSSJob(StochSSBase):
     '''
 
     TYPES = {
-        "gillespy":"_ES", "spatial":"_SES", "parameterSweep":"_PS"
+        "gillespy":"_ES", "spatial":"_SES", "parameterSweep":"_PS", "inference":"_MI"
     }
     TITLES = {
         "gillespy":"Ensemble Simulation", "spatial":"Spatial Ensemble Simulation",
-        "parameterSweep":"Parameter Sweep"
+        "parameterSweep":"Parameter Sweep", "inference":"Model Inference"
     }
 
     def __init__(self, path, new=False, data=None):

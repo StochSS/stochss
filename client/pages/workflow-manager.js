@@ -106,7 +106,8 @@ let WorkflowManager = PageView.extend({
     let types = {
       "Ensemble Simulation": "gillespy",
       "Parameter Sweep": "parameterSweep",
-      "Spatial Ensemble Simulation": "spatial"
+      "Spatial Ensemble Simulation": "spatial",
+      "Model Inference": "inference"
     };
     let data = {
       "settings": this.model.settings.toJSON(), "mdl_path": this.model.model,
