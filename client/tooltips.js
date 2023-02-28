@@ -153,13 +153,22 @@ module.exports = {
 
     variable: "The parameter(s) to sweep through.",
     
-    value: "The current value for the parameter you with to sweep through.",
+    value: "The current value for the parameter you wish to sweep through.",
     
     min: "The initial value of the sweep range.  Defaults to half of the current value.",
     
     max: "The final value of the sweep range.  Defaults to 1.5 times the current value.",
     
     steps: "The number of steps used to determine the sweep values across the sweep range."
+  },
+  inferenceSettings: {
+    variable: "The parameter(s) to infer.",
+    
+    value: "The current value for the parameter you wish to infer.",
+    
+    min: "The lower bound of the parameter/dimension.  Defaults to half of the current value.",
+    
+    max: "The upper bound of the parameter/dimension.  Defaults to 1.5 times the current value."
   },
   summaryStats: {
     customArgs: "Arguments to the TSFresh feature calculator.<br><li>Leave the feild empty if no arguments are required.</li>" +

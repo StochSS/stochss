@@ -32,7 +32,7 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
-    this.tooltips = Tooltips.parameterSweepSettings;
+    this.tooltips = Tooltips.inferenceSettings;
     this.stochssModel = attrs.stochssModel;
     this.priorMethod = attrs.priorMethod;
     if(!this.readOnly) {
