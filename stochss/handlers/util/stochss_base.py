@@ -631,5 +631,5 @@ class StochSSBase():
 
         script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
         exec_cmd = [f"{script}", "-sv"]
-        with subprocess.Popen(exec_cmd):
-            print("Updating the status of AWS")
+        print("Updating the status of AWS")
+        process = subprocess.Popen(exec_cmd)
