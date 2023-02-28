@@ -74,7 +74,7 @@ class ModelInference(StochSSJob):
         for parameter in self.settings['inferenceSettings']['parameters']:
             dmin.append(parameter['min'])
             dmax.append(parameter['max'])
-        return uniform_prior.UniformPrior(dmin, dmax)
+        return uniform_prior.UniformPrior(numpy.array(dmin, dtype="float"), numpy.array(dmax, dtype="float"))
 
     def __get_run_settings(self):
         solver_map = {"ODE":self.g_model.get_best_solver_algo("ODE"),
