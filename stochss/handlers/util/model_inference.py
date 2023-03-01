@@ -29,6 +29,7 @@ import gillespy2
 from sciope.inference import smc_abc
 from sciope.utilities.priors import uniform_prior
 from sciope.utilities.summarystats import auto_tsfresh, identity
+from sciope.utilities.epsilonselectors import RelativeEpsilonSelector
 
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSJobError, StochSSJobResultsError
@@ -67,6 +68,13 @@ class ModelInference(StochSSJob):
                     rows.append(row)
             data = numpy.array(rows).swapaxes(0, 1).astype("float")
         return data
+
+    def __get_infer_args(self):
+        settings = self.settings['inferenceSettings']
+        eps_selector = RelativeEpsilonSelector(20, max_rounds=settings['numEpochs'])
+        args = [settings['num_samples'], settings['batchSize']]
+        kwargs = {"eps_selector": eps_selector, "chunk_size": settings['chunkSize']}
+        return args, kwargs
 
     def __get_prior_function(self):
         dmin = []
@@ -168,7 +176,8 @@ class ModelInference(StochSSJob):
         smc_abc_inference = smc_abc.SMCABC(
             obs_data, sim=self.simulator, prior_function=prior, summaries_function=summaries.compute
         )
-        results = smc_abc_inference.infer(num_samples=100, batch_size=10)
+        infer_args, infer_kwargs = self.__get_infer_args()
+        results = smc_abc_inference.infer(*infer_args, **infer_kwargs)
         if verbose:
             log.info("The model inference has completed")
             log.info("Storing the results as pickle.")
