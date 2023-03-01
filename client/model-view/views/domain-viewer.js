@@ -162,6 +162,7 @@ module.exports = View.extend({
       domainCollapseBtn.html('-');
     }
     app.switchToEditTab(this, "domain");
+    this.domainView.displayError();
   },
   renderDomainFileSelectView: function () {
     if(this.domainFileSelectView) {

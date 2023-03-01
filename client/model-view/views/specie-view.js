@@ -102,8 +102,10 @@ module.exports = View.extend({
     this.updateInputValidation();
     if(!this.viewMode){
       this.model.on('change', _.bind(this.updateViewer, this));
+      this.model.on('types-changed', this.toggleRestrictToError, this);
       if(this.parent.spatial) {
         this.renderTypes();
+        this.toggleRestrictToError();
       }
     }
   },
@@ -169,6 +171,16 @@ module.exports = View.extend({
     this.model.isSwitchTol = $(this.queryByHook('switching-tol')).is(":checked");
     this.updateInputValidation();
     this.toggleSwitchingSettingsInput();
+  },
+  toggleRestrictToError: function () {
+    let errorMsg = $(this.queryByHook("restict-to-error"));
+    if(this.model.types.length <= 0) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
+    }
   },
   toggleSwitchingSettings: function () {
     if(this.model.mode === "dynamic"){

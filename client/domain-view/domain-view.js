@@ -142,6 +142,13 @@ module.exports = View.extend({
       $(this.queryByHook(`${prefix}-complete`)).css('display', 'none');
     }, 5000);
   },
+  displayError: function () {
+    let views = {
+      types: this.typesView,
+      actions: this.actionsView
+    }
+    views[this.model.error.type].openSection();
+  },
   displayFigure: function () {
     if(this.model.particles.length > 0) {
       $(this.elements.figureEmpty).css('display', 'none');
@@ -330,8 +337,11 @@ module.exports = View.extend({
         this.plot = body.fig;
         this.model.particles = new Particles(body.particles);
         this.typesView.updateParticleCounts(this.model.particles);
+        this.actionsView.toggleActionsCollectionError("vv");
         if(this.readOnly) {
           this.renderTypesQuickview();
+        }else{
+          this.actionsView.toggleActionsCollectionError("ev");
         }
         if(resetFigure) {
           this.resetFigure();

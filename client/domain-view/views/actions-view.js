@@ -55,11 +55,17 @@ module.exports = View.extend({
       $(this.queryByHook('view-actions')).addClass('active');
     }else{
       this.renderEditActionsView();
+      this.toggleActionsCollectionError("ev");
+      this.collection.on('add remove', () => {
+        this.toggleActionsCollectionError("ev");
+        this.toggleActionsCollectionError("vv");
+      }, this);
       this.collection.on('update-shape-options', this.updateShapeOptions, this);
       this.collection.on('update-transformation-options', this.updateTransformationOptions, this);
       this.collection.on('update-type-options', this.updateTypeOptions, this);
     }
     this.renderViewActionsView();
+    this.toggleActionsCollectionError("vv");
   },
   addAction: function (e) {
     let type = e.target.dataset.name;
@@ -67,6 +73,13 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  openSection: function () {
+    if(!$(this.queryByHook("actions-list-container")).hasClass("show")) {
+      let actionsCollapseBtn = $(this.queryByHook("collapse"));
+      actionsCollapseBtn.click();
+      actionsCollapseBtn.html('-');
+    }
   },
   renderEditActionsView: function ({key=null, attr=null}={}) {
     if(this.editActionsView) {
@@ -94,6 +107,16 @@ module.exports = View.extend({
       this.queryByHook('view-actions-list'),
       options
     );
+  },
+  toggleActionsCollectionError: function (viewCode) {
+    let errorMsg = $(this.queryByHook(`${viewCode}-actions-collection-error`));
+    if(!this.collection.validateCollection()) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
+    }
   },
   updateShapeOptions: function ({currName=null, newName=null}={}) {
     if(currName === null && newName === null) { return; }
