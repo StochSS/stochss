@@ -313,7 +313,7 @@ class StochSSParamSweepNotebook(StochSSNotebook):
         nb_run = "\n".join(nb_run)
         return nbf.new_code_cell(nb_run)
 
-    def create_1d_notebook(self, results=None):
+    def create_1d_notebook(self, results=None, compute="StochSS"):
         '''Create a 1D parameter sweep jupiter notebook for a StochSS model/workflow'''
         self.nb_type = self.PARAMETER_SWEEP_1D
         cells = self.create_common_cells()
@@ -327,11 +327,16 @@ class StochSSParamSweepNotebook(StochSSNotebook):
         index = self.__create_parameter_sweep_config(cells, 19, 1, results)
         cells.insert(index, self.__create_run(results))
         cells.append(self.__create_visualization(results))
+        if compute != "StochSS":
+            self.log(
+                "warning",
+                "AWS Cloud compute environment is not supported by 1D parameter sweep workflows."
+            )
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-    def create_2d_notebook(self, results=None):
+    def create_2d_notebook(self, results=None, compute="StochSS"):
         '''Create a 2D parameter sweep jupiter notebook for a StochSS model/workflow'''
         self.nb_type = self.PARAMETER_SWEEP_2D
         cells = self.create_common_cells()
@@ -345,6 +350,11 @@ class StochSSParamSweepNotebook(StochSSNotebook):
         index = self.__create_parameter_sweep_config(cells, 19, 2, results)
         cells.insert(index, self.__create_run(results))
         cells.append(self.__create_visualization(results))
+        if compute != "StochSS":
+            self.log(
+                "warning",
+                "AWS Cloud compute environment is not supported by 2D parameter sweep workflows."
+            )
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
