@@ -320,6 +320,7 @@ let WorkflowManager = PageView.extend({
         $(this.queryByHook("start-job")).prop("disabled", numParams < 1);
       }, this))
     }else if(this.model.type === "Model Inference") {
+      $(this.queryByHook("aws-start-job")).addClass("disabled")
       if(this.model.settings.inferenceSettings.parameters.length < 1) {
         $(this.queryByHook("start-job")).prop("disabled", true);
       }
