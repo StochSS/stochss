@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -39,6 +39,23 @@ def report_error(handler, log, err):
     error['Traceback'] = trace
     handler.write(error)
 
+def report_critical_error(handler, log, err):
+    '''
+    Report a critical stochss error to the front end.
+
+    Attributes
+    ----------
+    handler : obj
+        Jupyter Notebook API Handler
+    log : obj
+        StochSS log
+    '''
+    handler.set_status(500)
+    error = {"Reason":"Uncaught Critical Error", "Message":str(err)}
+    trace = traceback.format_exc()
+    log.error("Exception information: %s\n%s", error, trace)
+    error['Traceback'] = trace
+    handler.write(error)
 
 class StochSSAPIError(Exception):
     '''
@@ -228,16 +245,17 @@ class DomainFormatError(StochSSAPIError):
         super().__init__(406, "Domain File Not In Proper Format", msg, trace)
 
 
-class DomainGeometryError(StochSSAPIError):
+class DomainUpdateError(StochSSAPIError):
     '''
     ################################################################################################
-    Domain Geometry Action Failed
+    Domain File Can't Be Updated
     ################################################################################################
     '''
 
     def __init__(self, msg, trace=None):
         '''
-        Indicates that a geometry action for the a domain failed
+        Indicates that the domain file can't be updated as it may be a
+        dependency of another doamin or a spatial model.
 
         Attributes
         ----------
@@ -246,7 +264,70 @@ class DomainGeometryError(StochSSAPIError):
         trace : str
             Error traceback for the error
         '''
-        super().__init__(406, "Domain Geometry Action Failed", msg, trace)
+        super().__init__(405, "Domain File Can't Be Updated.", msg, trace)
+
+
+class DomainActionError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain Action Failed to Initialize
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that an action for the a domain failed.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Domain Action Failed", msg, trace)
+
+
+class DomainShapeError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain Shape Failed to Initialize
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that a shape failed to initialize.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Domain Shape Failed", msg, trace)
+
+
+class DomainTransformationError(StochSSAPIError):
+    '''
+    ################################################################################################
+    Domain Transformation Failed to Initialize
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that a transformation failed to initialize.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(406, "Domain Transformations Failed", msg, trace)
 
 ####################################################################################################
 # Job Errors
@@ -334,3 +415,68 @@ class StochSSJobResultsError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(500, "Job Results Error", msg, trace)
+
+
+####################################################################################################
+# AWS Errors
+####################################################################################################
+
+class AWSConfigurationError(StochSSAPIError):
+    '''
+    ################################################################################################
+    AWS Configuration Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that StochSS Compute configured to run jobs.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "AWS Configuration Error", msg, trace)
+
+class AWSLauncherError(StochSSAPIError):
+    '''
+    ################################################################################################
+    AWS Launcher Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the StochSS Compute launcher single node instance failed.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "AWS Launch Error", msg, trace)
+
+class AWSTerminatorError(StochSSAPIError):
+    '''
+    ################################################################################################
+    AWS Terminator Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the StochSS Compute clean up failed.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "AWS Terminate Error", msg, trace)

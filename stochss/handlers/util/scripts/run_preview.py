@@ -2,7 +2,7 @@
 
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -90,7 +90,7 @@ def run_spatialpy_preview(args):
     '''
     model = StochSSSpatialModel(path=args.path)
     job = SpatialSimulation(path="", preview=True, target=args.target)
-    job.s_py_model = model.convert_to_spatialpy()
+    job.s_py_model = model.convert_to_spatialpy(include_model_settings=True)
     job.s_model = model.model
     return job.run(preview=True)
 

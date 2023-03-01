@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -41,17 +41,18 @@ module.exports = View.extend({
     this.template = this.spatial ? spatialSpeciesTemplate : speciesTemplate;
     this.tooltips = Tooltips.speciesEditor;
     this.defaultMode = attrs.defaultMode;
-    let self = this;
-    this.collection.on('update-species', function (compID, specie, isNameUpdate, isDefaultMode) {
-      self.collection.parent.reactions.forEach(function (reaction) {
+    this.filterAttr = attrs.attr;
+    this.filterKey = attrs.key;
+    this.collection.on('update-species', (compID, specie, isNameUpdate, isDefaultMode) => {
+      this.collection.parent.reactions.forEach((reaction) => {
         var changedReaction = false;
-        reaction.reactants.forEach(function (reactant) {
+        reaction.reactants.forEach((reactant) => {
           if(reactant.specie.compID === compID) {
             reactant.specie = specie;
             changedReaction = true;
           }
         });
-        reaction.products.forEach(function (product) {
+        reaction.products.forEach((product) => {
           if(product.specie.compID === compID) {
             product.specie = specie;
             changedReaction = true;
@@ -61,23 +62,23 @@ module.exports = View.extend({
           reaction.trigger('change-reaction');
         }
       });
-      self.collection.parent.eventsCollection.forEach(function (event) {
-        event.eventAssignments.forEach(function (assignment) {
+      this.collection.parent.eventsCollection.forEach((event) => {
+        event.eventAssignments.forEach((assignment) => {
           if(assignment.variable.compID === compID) {
             assignment.variable = specie;
           }
         })
         if(isNameUpdate && event.selected) {
-          event.detailsView.renderEventAssignments();
+          event.trigger('change-event');
         }
       });
-      self.collection.parent.rules.forEach(function (rule) {
+      this.collection.parent.rules.forEach((rule) => {
         if(rule.variable.compID === compID) {
           rule.variable = specie;
         }
       });
       if(isNameUpdate) {
-        self.parent.rulesView.renderEditRules();
+        this.parent.rulesView.renderEditRules();
       }
     });
   },
@@ -94,9 +95,9 @@ module.exports = View.extend({
       $(this.queryByHook('view-species')).addClass('active');
     }else{
       this.toggleSpeciesCollectionError();
-      this.renderEditSpeciesView();
+      this.renderEditSpeciesView({'key': this.filterKey, 'attr': this.filterAttr});
     }
-    this.renderViewSpeciesView();
+    this.renderViewSpeciesView({'key': this.filterKey, 'attr': this.filterAttr});
   },
   addSpecies: function () {
     if(this.parent.model.domain.types) {
@@ -206,6 +207,7 @@ module.exports = View.extend({
           required: false,
           name: 'filter',
           valueType: 'string',
+          disabled: this.filterKey !== null,
           placeholder: 'filter'
         });
       }

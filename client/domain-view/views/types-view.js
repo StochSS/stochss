@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,8 +48,16 @@ module.exports = View.extend({
       $(this.queryByHook('view-domain-types')).addClass('active');
     }else{
       this.renderEditTypeView();
+      this.collection.on("update-inuse", this.updateInUse, this);
+      this.collection.parent.trigger('update-type-deps');
+      this.toggleTypesCollectionError("ev");
+      this.collection.on('add remove', () => {
+        this.toggleTypesCollectionError("ev");
+        this.toggleTypesCollectionError("vv");
+      }, this);
     }
     this.toggleDomainError();
+    this.toggleTypesCollectionError("vv");
     this.renderViewTypeView();
   },
   changeCollapseButtonText: function (e) {
@@ -57,7 +65,15 @@ module.exports = View.extend({
   },
   handleAddDomainType: function () {
     let name = this.collection.addType();
-    this.parent.addType(name);
+    this.collection.parent.trigger('update-particle-type-options', {currName: name});
+    this.collection.parent.actions.trigger('update-type-options', {currName: name});
+  },
+  openSection: function () {
+    if(!$(this.queryByHook("domain-types-section")).hasClass("show")) {
+      let typesCollapseBtn = $(this.queryByHook("collapse-domain-types"));
+      typesCollapseBtn.click();
+      typesCollapseBtn.html('-');
+    }
   },
   renderEditTypeView: function () {
     if(this.editTypeView) {
@@ -93,13 +109,47 @@ module.exports = View.extend({
     );
   },
   toggleDomainError: function () {
-    let errorMsg = $(this.queryByHook('domain-error'))
-    if(!this.collection.parent.valid) {
+    let errorMsg = $(this.queryByHook('domain-error'));
+    if(this.collection.models[0].numParticles > 0) {
       errorMsg.addClass('component-invalid');
       errorMsg.removeClass('component-valid');
     }else{
       errorMsg.addClass('component-valid');
       errorMsg.removeClass('component-invalid');
     }
+  },
+  toggleTypesCollectionError: function (viewCode) {
+    let errorMsg = $(this.queryByHook(`${viewCode}-types-collection-error`));
+    if(this.collection.length == 1) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
+    }
+  },
+  updateInUse: function ({deps=null}={}) {
+    if(deps === null) { return; }
+    this.collection.forEach((type) => {
+      type.inUse = deps.includes(type.name);
+    });
+  },
+  updateParticleCounts: function (particles) {
+    let particleCounts = {};
+    particles.forEach((particle) => {
+      if(particleCounts[particle.type]) {
+        particleCounts[particle.type] += 1;
+      }else{
+        particleCounts[particle.type] = 1;
+      }
+    });
+    this.collection.forEach((type) => {
+      type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
+    });
+    $(this.queryByHook('unassigned-type-count')).text(this.collection.models[0].numParticles);
+    this.renderEditTypeView();
+    this.renderViewTypeView();
+    this.collection.parent.updateValid();
+    this.toggleDomainError();
   }
 });

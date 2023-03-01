@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -73,11 +73,19 @@ module.exports = State.extend({
     if(this.reactionType === "custom-propensity") { return }
     var odePropensity = this.rate.name;
     var propensity = this.rate.name;
-    
+
+    let reactants = {}
     this.reactants.forEach((stoichSpecies) => {
-      let name = stoichSpecies.specie.name;
-      if(stoichSpecies.ratio == 2) {
-        odePropensity += ` * ${name} * ${name}`;
+      if(Object.keys(reactants).includes(stoichSpecies.specie.name)) {
+        reactants[stoichSpecies.specie.name] += stoichSpecies.ratio;
+      }else{
+        reactants[stoichSpecies.specie.name] = stoichSpecies.ratio;
+      }
+    });
+    
+    Object.keys(reactants).forEach((name) => {
+      if(reactants[name] == 2) {
+        odePropensity = `${propensity} * ${name} * ${name}`;
         propensity = `${propensity} * ${name} * (${name} - 1) / vol`;
       }else{
         odePropensity += ` * ${name}`;
@@ -85,7 +93,7 @@ module.exports = State.extend({
       }
     })
     
-    let order = this.reactants.length;
+    let order = reactants.length;
     if(order == 2) {
       propensity += " / vol";
     }else if(order == 0) {
@@ -237,13 +245,14 @@ module.exports = State.extend({
     }
     return "custom-massaction"
   },
-  validateComponent: function () {
-    if(!this.name.trim() || this.name.match(/^\d/)) return false;
-    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
-    if(!this.propensity.trim() && this.reactionType === "custom-propensity") return false;
+  validateComponent: function (isSpatial) {
+    if(!this.name.trim() || this.name.match(/^\d/)) { return false; }
+    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) { return false; }
+    if(!this.propensity.trim() && this.reactionType === "custom-propensity") { return false; }
     if(this.reactionType.startsWith('custom')) {
-      if(this.reactants.length <= 0 && this.products.length <= 0) return false;
+      if(this.reactants.length <= 0 && this.products.length <= 0) { return false; }
     }
+    if(isSpatial && this.types.length <= 0) { return false; }
     return true;
   }
 });

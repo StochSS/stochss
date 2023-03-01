@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -48,6 +48,8 @@ module.exports = View.extend({
     View.prototype.initialize.apply(this, arguments);
     this.tooltips = Tooltips.reactionsEditor;
     this.readOnly = attrs.readOnly ? attrs.readOnly : false;
+    this.filterAttr = attrs.attr;
+    this.filterKey = attrs.key;
     if(!this.readOnly) {
       this.collection.parent.species.on('add remove', this.toggleAddReactionButton, this);
       this.collection.parent.parameters.on('add remove', this.updateMAState, this);
@@ -66,7 +68,7 @@ module.exports = View.extend({
       $(this.queryByHook('edit-reactions')).removeClass('active');
       $(this.queryByHook('view-reactions')).addClass('active');
     }else{
-      this.renderEditReactionView();
+      this.renderEditReactionView({'key': this.filterKey, 'attr': this.filterAttr});
       this.toggleAddReactionButton();
       this.updateMAState();
       this.renderReactionTypes();
@@ -76,7 +78,7 @@ module.exports = View.extend({
       displayMode: false,
       output: 'html',
     });
-    this.renderViewReactionView();
+    this.renderViewReactionView({'key': this.filterKey, 'attr': this.filterAttr});
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -126,8 +128,10 @@ module.exports = View.extend({
       reacCollapseBtn.click();
       reacCollapseBtn.html('-');
     }
-    app.switchToEditTab(this, "reactions");
-    if(error.type !== "process") {
+    if(!this.readOnly) {
+      app.switchToEditTab(this, "reactions");
+    }
+    if(error && error.type !== "process") {
       let reactionView = this.editReactionView.views.filter((reactView) => {
         return reactView.model.compID === error.id;
       })[0];
@@ -226,6 +230,7 @@ module.exports = View.extend({
           required: false,
           name: 'filter',
           valueType: 'string',
+          disabled: this.filterKey !== null,
           placeholder: 'filter'
         });
       }

@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,8 +23,11 @@ var InitialCondition = require('./initial-condition');
 
 module.exports = Collection.extend({
   model: InitialCondition,
+  indexes: ['compID'],
   addInitialCondition: function (initialConditionType, types) {
+    var id = this.parent.getDefaultID();
     var initialCondition = new InitialCondition({
+      compID: id,
       icType: initialConditionType,
       annotation: "",
       types: types,
@@ -43,4 +46,13 @@ module.exports = Collection.extend({
   removeInitialCondition: function (initialCondition) {
     this.remove(initialCondition);
   },
+  validateCollection: function () {
+    for(var i = 0; i < this.length; i++) {
+      if(!this.models[i].validateComponent()) {
+        this.parent.error = {'id':this.models[i].compID,'type':'initialCondition'};
+        return false;
+      }
+    }
+    return true;
+  }
 });

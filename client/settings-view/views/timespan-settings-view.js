@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ module.exports = View.extend({
     'click [data-hook=collapse]' : 'changeCollapseButtonText',
     'input [data-hook=timestep-size-slider]' : 'viewTimestepValue',
     'change [data-hook=preview-time]' : 'updateViewer',
-    'change [data-hook=time-units]' : 'updateViewer',
+    'change [data-hook=time-units]' : 'updateTimeStep',
     'change [data-hook=timestep-size-slider]' : 'setTimestepSize'
   },
   initialize: function (attrs, options) {
@@ -55,8 +55,13 @@ module.exports = View.extend({
       $(this.queryByHook(this.model.elementID + '-timespan-view-tab')).tab('show');
       $(this.queryByHook(this.model.elementID + '-edit-timespan')).removeClass('active');
       $(this.queryByHook(this.model.elementID + '-view-timespan')).addClass('active');
+    }else{
+      this.toggleTimestepSizeError();
     }
-    $(this.queryByHook("timestep-size-value")).html(this.model.timestepSize);
+    if(this.isSpatial) {
+      $(this.queryByHook("timestep-size-container")).css("display", "inline-block");
+      $(this.queryByHook("timestep-size-value")).html(this.model.timestepSize);
+    }
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -64,8 +69,23 @@ module.exports = View.extend({
   setTimestepSize: function (e) {
     this.model.timestepSize = Number("1e-" + e.target.value);
     $(this.queryByHook("view-timestep-size")).html(this.model.timestepSize);
+    this.toggleTimestepSizeError();
+  },
+  toggleTimestepSizeError: function () {
+    let errorMsg = $(this.queryByHook("timestep-size-error"));
+    if(this.isSpatial && this.model.timestepSize > this.model.timeStep) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
+    }
   },
   update: function (e) {},
+  updateTimeStep: function () {
+    this.updateViewer();
+    this.toggleTimestepSizeError();
+  },
   updateValid: function () {},
   updateViewer: function (e) {
     $(this.queryByHook("view-end-sim")).html("0 to " + this.model.endSim);

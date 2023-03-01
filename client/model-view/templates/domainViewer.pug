@@ -20,13 +20,17 @@ div#domain-viewer.card
 
   div.collapse(id="collapse-domain" data-hook="domain-container")
 
-    div.card-body.tab-content
+    div.card-body.tab-content.mx-4
 
       div(data-hook="external-domains-container")
 
-        button.btn.btn-outline-secondary.box-shadow.mb-3(data-hook="select-external-domain") View External Domain
+        button.btn.btn-outline-primary.box-shadow.mb-3(data-hook="edit-domain-btn") Edit Domain
 
-        div(data-hook="external-domain-select" style="display: none")
+        button.btn.btn-outline-primary.box-shadow.mb-3.ml-2(data-hook="create-domain") Build New Domain
+
+        button.btn.btn-outline-primary.box-shadow.mb-3.ml-2(data-hook="select-external-domain") View External Domain
+
+        div.hidden(data-hook="domain-interact-section")
 
           div.text-info(data-hook="select-location-message" style="display: none")
             | There are multiple domain files with that name, please select a location
@@ -41,17 +45,13 @@ div#domain-viewer.card
 
             div.inline(data-hook="select-location")
 
+          div.mb-3.inline
+
+            button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Import into Model
+
       div(data-hook="domain-view-container")
 
       div.tab-pane.active(id="edit-domain" data-hook="edit-domain")
-
-        div.mt-3
-
-          button.btn.btn-outline-primary.box-shadow(data-hook="edit-domain-btn") Edit Domain
-
-          button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="create-domain") Build New Domain
-
-          button.btn.btn-outline-primary.box-shadow.ml-2(data-hook="save-to-model" disabled) Import into Model
 
       div.tab-pane(id="view-domain" data-hook="view-domain")
 

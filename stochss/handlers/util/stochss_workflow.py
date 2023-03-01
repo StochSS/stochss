@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -273,7 +273,7 @@ class StochSSWorkflow(StochSSBase):
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
 
 
-    def initialize_job(self, settings, mdl_path, time_stamp, wkfl_type):
+    def initialize_job(self, settings, mdl_path, time_stamp, wkfl_type, compute):
         '''
         Initialize a new job for this workflow.
 
@@ -287,6 +287,8 @@ class StochSSWorkflow(StochSSBase):
             Datetime stamp for the new job
         wkfl_type : str
             Type of workflow
+        compute : str
+            The compute environment to use.
         '''
         self.log("info", f"Saving {self.get_file()}")
         self.save(new_settings=settings, mdl_path=mdl_path)
@@ -296,7 +298,10 @@ class StochSSWorkflow(StochSSBase):
         if self.check_workflow_format(path=self.path):
             self.log("info", f"Creating job{time_stamp} job")
             path = os.path.join(self.path, f"job{time_stamp}")
-            data = {"mdl_path": mdl_path, "settings": settings, "type":wkfl_type}
+            data = {
+                "mdl_path": mdl_path, "settings": settings,
+                "type": wkfl_type, "compute_env": compute
+            }
             job = StochSSJob(path=path, new=True, data=data)
             self.log("info", f"Successfully created {job.get_file()} job")
         else:
@@ -332,7 +337,8 @@ class StochSSWorkflow(StochSSBase):
             self.workflow['type'] = jobdata['titleType']
             oldfmtrdy = jobdata['status'] == "ready"
         self.__update_settings()
-        if not os.path.exists(self.workflow['model']) and (oldfmtrdy or self.workflow['newFormat']):
+        if (self.workflow['model'] is None or not os.path.exists(self.workflow['model'])) \
+                                                    and (oldfmtrdy or self.workflow['newFormat']):
             if ".proj" in self.path:
                 if "WorkflowGroup1.wkgp" in self.path:
                     proj = StochSSFolder(path=os.path.dirname(self.get_dir_name(full=True)))

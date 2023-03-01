@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,7 +28,8 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
-                  StochSSParamSweepNotebook, StochSSSciopeNotebook, StochSSAPIError, report_error
+                  StochSSParamSweepNotebook, StochSSSciopeNotebook, StochSSAPIError, report_error, \
+                  report_critical_error
 
 log = logging.getLogger('stochss')
 
@@ -64,6 +65,8 @@ class NewWorkflowAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -91,6 +94,8 @@ class LoadWorkflowAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -117,6 +122,8 @@ class LoadWorkflowAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -140,13 +147,17 @@ class InitializeJobAPIHandler(APIHandler):
         log.debug(f"Handler query string: {data}")
         try:
             wkfl = StochSSWorkflow(path=path)
-            resp = wkfl.initialize_job(settings=data['settings'], mdl_path=data['mdl_path'],
-                                       wkfl_type=data['type'], time_stamp=data['time_stamp'])
+            resp = wkfl.initialize_job(
+                settings=data['settings'], mdl_path=data['mdl_path'], wkfl_type=data['type'],
+                time_stamp=data['time_stamp'], compute=data['compute']
+            )
             wkfl.print_logs(log)
             log.debug(f"Response message: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -184,6 +195,8 @@ class RunWorkflowAPIHandler(APIHandler):
             log.debug('The workflow has started')
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -211,6 +224,8 @@ class WorkflowStatusAPIHandler(APIHandler):
             self.write(status)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -253,6 +268,8 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
             self.write(fig)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -274,6 +291,9 @@ class WorkflowNotebookHandler(APIHandler):
         path = self.get_query_argument(name="path")
         log.debug(f"Path to the model/workflow: {path}")
         wkfl_type = self.get_query_argument(name="type")
+        log.debug(f"Type of workflow: {wkfl_type}")
+        compute = self.get_query_argument(name="compute", default=None)
+        log.debug(f"Compute Environment: {compute}")
         try:
             if path.endswith(".mdl"):
                 file_obj = StochSSModel(path=path)
@@ -285,9 +305,12 @@ class WorkflowNotebookHandler(APIHandler):
             kwargs = file_obj.get_notebook_data()
             if "type" in kwargs:
                 wkfl_type = kwargs['type']
+                results = kwargs['results']
+                compute = kwargs['compute_env']
                 kwargs = kwargs['kwargs']
                 log.info(f"Converting {file_obj.get_file()} to notebook")
             else:
+                results = None
                 log.info(f"Creating notebook workflow for {file_obj.get_file()}")
             log.debug(f"Type of workflow to be run: {wkfl_type}")
             if wkfl_type in ("1d_parameter_sweep", "2d_parameter_sweep"):
@@ -302,13 +325,15 @@ class WorkflowNotebookHandler(APIHandler):
                 notebook = StochSSNotebook(**kwargs)
                 notebooks = {"gillespy":notebook.create_es_notebook,
                              "spatial":notebook.create_ses_notebook}
-            resp = notebooks[wkfl_type]()
+            resp = notebooks[wkfl_type](results=results, compute=compute)
             notebook.print_logs(log)
             log.debug(f"Response: {resp}")
             log.info(f"Successfully created the notebook for {file_obj.get_file()}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -340,6 +365,8 @@ class SavePlotAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -377,6 +404,8 @@ class SaveAnnotationAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -403,6 +432,8 @@ class UpadteWorkflowAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -439,6 +470,8 @@ class JobPresentationAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -475,4 +508,6 @@ class DownloadCSVZipAPIHandler(APIHandler):
             self.write(csv_data)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()

@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,18 +37,19 @@ module.exports = View.extend({
         el.checked = value;
       },
       hook: 'select'
+    },
+    'model.inUse': {
+      hook: 'remove',
+      type: 'booleanAttribute',
+      name: 'disabled',
     }
   },
   events: {
-    'change [data-hook=type-name]' : 'handleRenameType',
-    'change [data-target=type-defaults]' : 'updateView',
+    'change [data-hook=type-name]' : 'updateDepsOptions',
+    'change [data-target=type-defaults]' : 'updateViewer',
     'change [data-hook=td-fixed]' : 'setTDFixed',
-    'change [data-hook=type-geometry]' : 'updateView',
     'click [data-hook=select]' : 'selectType',
-    'click [data-hook=unassign-all]' : 'handleUnassignParticles',
-    'click [data-hook=delete-type]' : 'handleDeleteType',
-    'click [data-hook=delete-all]' : 'handleDeleteTypeAndParticle',
-    'click [data-hook=apply-geometry]' : 'handleApplyGeometry'
+    'click [data-hook=remove]' : 'handleDeleteType',
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -66,66 +67,13 @@ module.exports = View.extend({
     $(this.queryByHook('view-td-fixed')).prop('checked', this.model.fixed)
     app.documentSetup();
   },
-  completeAction: function () {
-    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "none");
-    $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "inline-block");
-    setTimeout(() => {
-      $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "none");
-    }, 5000);
-  },
-  errorAction: function (action) {
-    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "none");
-    $(this.queryByHook(`tg-action-error-${this.model.typeID}`)).html(action);
-    $(this.queryByHook(`tg-error-${this.model.typeID}`)).css("display", "block");
-  },
-  handleApplyGeometry: function (e) {
-    this.startAction();
-    let domain = this.model.collection.parent;
-    let particles = domain.particles.toJSON();
-    let center = [
-      (domain.x_lim[1] + domain.x_lim[0]) / 2,
-      (domain.y_lim[1] + domain.y_lim[0]) / 2,
-      (domain.z_lim[1] + domain.z_lim[0]) / 2
-    ];
-    let data = {particles: particles, type: this.model.toJSON(), center: center}
-    let endpoint = path.join(app.getApiPath(), 'spatial-model/apply-geometry');
-    app.postXHR(endpoint, data, {
-      success: (err, response, body) => {
-        this.parent.parent.applyGeometry(body.particles, this.model);
-        this.completeAction();
-      },
-      error: (err, response, body) => {
-        if(body.Traceback.includes("SyntaxError")) {
-          var tracePart = body.Traceback.split('\n').slice(6)
-          tracePart.splice(2, 2)
-          tracePart[1] = tracePart[1].replace(new RegExp('          ', 'g'), '                 ')
-          var errorBlock = `<p class='mb-1' style='white-space:pre'>${body.Message}<br>${tracePart.join('<br>')}</p>`
-        }else{
-          var errorBlock = body.Message
-        }
-        this.errorAction(errorBlock);
-      }
-    });
-  },
   handleDeleteType: function (e) {
-    let type = Number(e.target.dataset.type);
+    let typeID = this.model.typeID;
+    let domain = this.model.collection.parent;
+    let actions = domain.actions;
     this.model.collection.removeType(this.model);
-    this.parent.parent.deleteType(this.model.typeID);
-  },
-  handleDeleteTypeAndParticle: function (e) {
-    let type = Number(e.target.dataset.type);
-    this.model.collection.removeType(this.model);
-    this.parent.parent.deleteType(this.model.typeID, {unassign: false});
-  },
-  handleRenameType: function (e) {
-    this.updateView();
-    let type = Number(e.target.parentElement.parentElement.dataset.target);
-    let name = e.target.value;
-    this.parent.parent.renameType(type, name);
-  },
-  handleUnassignParticles: function () {
-    this.model.numParticles = 0;
-    this.parent.parent.unassignAllParticles(this.model.typeID);
+    domain.trigger('update-particle-type-options', {currName: typeID});
+    actions.trigger('update-type-options', {currName: typeID});
   },
   openTypeDetails: function () {
     $("#collapse-type-details" + this.model.typeID).collapse("show");
@@ -135,28 +83,32 @@ module.exports = View.extend({
   },
   setTDFixed: function (e) {
     this.model.fixed = e.target.checked;
-    this.updateView();
-  },
-  startAction: function () {
-    $(this.queryByHook(`tg-complete-${this.model.typeID}`)).css("display", "none");
-    $(this.queryByHook(`tg-error-${this.model.typeID}`)).css("display", "none");
-    $(this.queryByHook(`tg-in-progress-${this.model.typeID}`)).css("display", "inline-block");
+    this.updateViewer();
   },
   update: function () {},
+  updateDepsOptions: function (e) {
+    let typeID = this.model.typeID;
+    this.model.name = e.target.value;
+    this.updateViewer();
+    this.model.collection.parent.trigger(
+      'update-particle-type-options', {currName: typeID, newName: this.model.typeID}
+    );
+    this.model.collection.parent.actions.trigger(
+      'update-type-options', {currName: typeID, newName: this.model.typeID}
+    );
+  },
   updateValid: function () {},
-  updateView: function () {
+  updateViewer: function () {
     this.parent.renderViewTypeView();
-    this.parent.parent.updateParticleViews({includeGeometry: true});
   },
   subviews: {
-    inputTypeID: {
+    inputName: {
       hook: "type-name",
       prepareView: function (el) {
         return new InputView({
           parent: this,
           required: true,
           name: 'name',
-          modelKey: 'name',
           tests: [tests.invalidChar],
           valueType: 'string',
           value: this.model.name
@@ -230,20 +182,6 @@ module.exports = View.extend({
           valueType: 'number',
           tests: tests.valueTests,
           value: this.model.c
-        });
-      }
-    },
-    inputGeometry: {
-      hook: 'type-geometry',
-      prepareView: function (el) {
-        return new InputView({
-          parent: this,
-          required: false,
-          name: 'geometry',
-          modelKey: 'geometry',
-          valueType: 'string',
-          value: this.model.geometry,
-          placeholder: "--Expression in terms of 'x', 'y', 'z'--"
         });
       }
     }

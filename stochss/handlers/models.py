@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -28,7 +28,7 @@ from notebook.base.handlers import APIHandler
 # Use finish() for json, write() for text
 
 from .util import StochSSFolder, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
-                  StochSSAPIError, report_error
+                  StochSSAPIError, report_error, report_critical_error
 
 
 log = logging.getLogger('stochss')
@@ -83,6 +83,8 @@ class JsonFileAPIHandler(APIHandler):
                     report_error(self, log, new_model_err)
             else:
                 report_error(self, log, load_err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -111,6 +113,8 @@ class JsonFileAPIHandler(APIHandler):
             log.info(f"Successfully saved {model.get_file(path=path)}")
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -146,6 +150,8 @@ class LoadDomainEditorAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -156,7 +162,7 @@ class LoadDomainAPIHandler(APIHandler):
     ################################################################################################
     '''
     @web.authenticated
-    async def get(self):
+    async def post(self):
         '''
         Load and return the domain plot.
 
@@ -164,25 +170,21 @@ class LoadDomainAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path", default=None)
-        log.debug(f"Path to the spatial model: {path}")
-        d_path = self.get_query_argument(name="domain_path", default=None)
-        if d_path is not None:
-            log.debug(f"Path to the domain file: {d_path}")
-        new = self.get_query_argument(name="new", default=False)
-        log.debug(f"The domain is new: {new}")
+        domain = json.loads(self.request.body.decode())
         log.info("Generating the domain plot")
         try:
-            model = StochSSSpatialModel(path=path)
-            fig, trace_temp = model.get_domain_plot(path=d_path, new=new)
+            model = StochSSSpatialModel(path="")
+            fig, limits = model.load_action_preview(domain)
             log.info("Loading the domain plot")
             if isinstance(fig, str):
                 fig = json.loads(fig)
-            resp = {"fig":fig, "trace_temp": trace_temp}
+            resp = {"fig":fig, "particles": domain['particles'], "limits": limits}
             log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -214,33 +216,39 @@ class RunModelAPIHandler(APIHandler):
         target = self.get_query_argument(name="target", default=None)
         resp = {"Running":False, "Outfile":outfile, "Results":""}
         if run_cmd == "start":
-            model = StochSSModel(path=path)
-            if os.path.exists(f".{model.get_name()}-preview.json"):
-                os.remove(f".{model.get_name()}-preview.json")
-            exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
-                        f'{path}', f'{outfile}']
-            if target is not None:
-                exec_cmd.insert(1, "--target")
-                exec_cmd.insert(2, f"{target}")
-            log.debug(f"Script commands for running a preview: {exec_cmd}")
-            subprocess.Popen(exec_cmd)
-            resp['Running'] = True
-            log.debug(f"Response to the start command: {resp}")
-            self.write(resp)
-        else:
-            model = StochSSModel(path=path)
-            log.info("Check for preview results ...")
-            results = model.get_preview_results(outfile=outfile)
-            log.debug(f"Results for the model preview: {results}")
-            if results is None:
+            try:
+                model = StochSSModel(path=path)
+                if os.path.exists(f".{model.get_name()}-preview.json"):
+                    os.remove(f".{model.get_name()}-preview.json")
+                exec_cmd = ['/stochss/stochss/handlers/util/scripts/run_preview.py',
+                            f'{path}', f'{outfile}']
+                if target is not None:
+                    exec_cmd.insert(1, "--target")
+                    exec_cmd.insert(2, f"{target}")
+                log.debug(f"Script commands for running a preview: {exec_cmd}")
+                subprocess.Popen(exec_cmd)
                 resp['Running'] = True
-                resp['Results'] = model.get_live_results()
-                log.info("The preview is still running")
-            else:
-                resp['Results'] = results
-                log.info("Loading the preview results")
-            log.debug(f"Response to the read command: {resp}")
-            self.write(resp)
+                log.debug(f"Response to the start command: {resp}")
+                self.write(resp)
+            except Exception as err:
+                report_critical_error(self, log, err)
+        else:
+            try:
+                model = StochSSModel(path=path)
+                log.info("Check for preview results ...")
+                results = model.get_preview_results(outfile=outfile)
+                log.debug(f"Results for the model preview: {results}")
+                if results is None:
+                    resp['Running'] = True
+                    resp['Results'] = model.get_live_results()
+                    log.info("The preview is still running")
+                else:
+                    resp['Results'] = results
+                    log.info("Loading the preview results")
+                log.debug(f"Response to the read command: {resp}")
+                self.write(resp)
+            except Exception as err:
+                report_critical_error(self, log, err)
         self.finish()
 
 
@@ -261,10 +269,13 @@ class ModelExistsAPIHandler(APIHandler):
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
         log.debug(f"Path to the file: {path}")
-        model = StochSSModel(path=path)
-        resp = {"exists":os.path.exists(model.get_path(full=True))}
-        log.debug(f"Response: {resp}")
-        self.write(resp)
+        try:
+            model = StochSSModel(path=path)
+            resp = {"exists":os.path.exists(model.get_path(full=True))}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -283,25 +294,32 @@ class ImportMeshAPIHandler(APIHandler):
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
-        log.info(f"Loading the domain from {self.request.files['datafile'][0]['filename']}")
-        data = self.request.files['datafile'][0]['body'].decode()
+        dirname = os.path.dirname(self.request.body_arguments['path'][0].decode())
+        if dirname == '.':
+            dirname = ""
+        elif ".wkgp" in dirname:
+            dirname = os.path.dirname(dirname)
+        mesh_file = self.request.files['datafile'][0]
+        log.info(f"Importing mesh: {mesh_file['filename']}")
         if "typefile" in self.request.files.keys():
-            log.info(f"Loading the particle types from \
-                        {self.request.files['typefile'][0]['filename']}")
-            types = self.request.files['typefile'][0]['body'].decode().strip().split("\n")
+            type_file = self.request.files['typefile'][0]
+            log.info(f"Importing type descriptions: {type_file['filename']}")
         else:
-            types = None
-        log.info("Loading particle data")
-        particle_data = json.loads(self.request.body_arguments['particleData'][0].decode())
+            type_file = None
         try:
-            log.info("Generating new particles")
-            resp = StochSSSpatialModel.get_particles_from_remote(domain=data, data=particle_data,
-                                                                 types=types)
-            log.debug(f"Number of Particles: {len(resp['particles'])}")
-            log.info("Successfully created new particles")
+            folder = StochSSFolder(path=dirname)
+            mesh_resp = folder.upload('file', mesh_file['filename'], mesh_file['body'])
+            resp = {'meshPath': mesh_resp['path'], 'meshFile': mesh_resp['file']}
+            if type_file is not None:
+                types_resp = folder.upload('file', type_file['filename'], type_file['body'])
+                resp['typesPath'] = types_resp['path']
+                resp['typesFile'] = types_resp['file']
+            log.info("Successfully uploaded files")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -328,94 +346,46 @@ class LoadExternalDomains(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
-class LoadParticleTypesDescriptions(APIHandler):
+class LoadLatticeFiles(APIHandler):
     '''
     ################################################################################################
-    Handler for getting particle type description files.
+    Handler for getting mesh/domain and type description files.
     ################################################################################################
     '''
     @web.authenticated
     async def get(self):
         '''
-        Get text files on disc for particles type description selection.
+        Get mesh/domain and type description files on disc for file selections.
 
         Attributes
         ----------
         '''
         self.set_header('Content-Type', 'application/json')
+        target_ext = self.get_query_argument(name="ext")
+        include_types = bool(self.get_query_argument(name="includeTypes", default=False))
         try:
             folder = StochSSFolder(path="")
             test = lambda ext, root, file: bool(
-                "trash" in root.split("/") or file.startswith('.') or 'wkfl' in root or root.startswith('.')
+                "trash" in root.split("/") or file.startswith('.') or \
+                'wkfl' in root or root.startswith('.')
             )
-            resp = folder.get_file_list(ext=".txt", test=test)
-            log.debug("Response: {resp}")
+            mesh_files = folder.get_file_list(ext=target_ext, test=test)
+            resp = {'meshFiles': mesh_files}
+            if include_types:
+                type_files = folder.get_file_list(ext=".txt", test=test)
+                resp['typeFiles'] = type_files
+            log.debug(f"Response: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
-
-
-class Create3DDomainAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for creating a 3D domain.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def post(self):
-        '''
-        Create a 3D domain and return its particles.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        log.info("Loading particle data")
-        data = json.loads(self.request.body.decode())
-        log.debug("Data used to create the domain: {data}")
-        try:
-            log.info("Generating new particles")
-            model = StochSSSpatialModel(path="")
-            resp = model.get_particles_from_3d_domain(data=data)
-            log.debug(f"Number of Particles: {len(resp['particles'])}")
-            log.info("Successfully created new particles")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-
-class GetParticlesTypesAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler getting particle types.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Get particle types from a text file.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        path = self.get_query_argument(name="path")
-        log.debug("Path to the file: {}", path)
-        try:
-            log.info(f"Loading particle types from {path.split('/').pop()}")
-            model = StochSSSpatialModel(path="")
-            resp = model.get_types_from_file(path=path)
-            log.debug(f"Number of Particles: {len(resp['types'])}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
 
 class ModelPresentationAPIHandler(APIHandler):
     '''
@@ -444,13 +414,16 @@ class ModelPresentationAPIHandler(APIHandler):
                 message = f"A presentation for {model.get_name()} already exists."
             else:
                 message = f"Successfully published the {model.get_name()} presentation."
-                file_objs[ext](**data)
+                if ext == "mdl":
+                    file_objs[ext](**data)
             resp = {"message": message, "links": links}
             log.info(resp['message'])
             log.debug(f"Response Message: {resp}")
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -482,59 +455,6 @@ class CreateNewBoundCondAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        self.finish()
-
-class ApplyGeometryAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler apply type and properties to particles.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def post(self):
-        '''
-        Apply type and properties to particles.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        data = json.loads(self.request.body.decode())
-        log.debug(f"Type used to apply geometry: {data['type']}")
-        try:
-            log.info("Applying type and properties to particles.")
-            resp = StochSSSpatialModel.apply_geometry(data['particles'], data['type'], data['center'])
-            log.info("Successfully applied type and properties to particles.")
-            log.debug(f"Response Message: {resp}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
-        self.finish()
-
-class FillGeometryAPIHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler fill geometry with particles.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def post(self):
-        '''
-        Fill a geomatry with particles.
-
-        Attributes
-        ----------
-        '''
-        self.set_header('Content-Type', 'application/json')
-        data = json.loads(self.request.body.decode())
-        log.debug(f"Agrs passed to Domain.fill_with_particles: {data['kwargs']}")
-        log.debug(f"Type used to fill geometry: {data['type']}")
-        try:
-            log.info("Creating particles within the geometry.")
-            resp = StochSSSpatialModel.fill_geometry(data['kwargs'], data['type'])
-            log.info("Successfully filled the geometry particles.")
-            log.debug(f"Response Message: {resp}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()

@@ -6,7 +6,7 @@ div#sbml-components.card
 
     button.btn.btn-outline-collapse(data-toggle="collapse", data-target="#collapse-sbml-component", data-hook="collapse") +
 
-  div.collapse(id="collapse-sbml-component")
+  div.collapse(id="collapse-sbml-component" data-hook="sbml-component-container")
 
     div.card-body
 
@@ -30,11 +30,13 @@ div#sbml-components.card
 
           button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-function-definitions" data-hook="collapse-function-definitions") -
 
+          div.inline(data-hook="function-definition-filter" style="float: right;")
+
         div.card-body
           p.mb-0
             | Object representation defining an evaluable function to be used during simulation.
 
-          div.collapse.tab-content(class="show" id="collapse-function-definitions")
+          div.collapse.tab-content(class="show" id="collapse-function-definitions" data-hook="function-definitions-list-container")
 
             div.tab-pane.active(id="edit-function-definitions" data-hook="edit-function-definitions")
 

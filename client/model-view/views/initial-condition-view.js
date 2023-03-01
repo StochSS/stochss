@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -57,6 +57,8 @@ module.exports = View.extend({
     app.documentSetup();
     if(!this.viewMode) {
       this.model.on('change', _.bind(this.updateViewer, this));
+      this.model.on('types-changed', this.toggleRestrictToError, this);
+      this.toggleRestrictToError();
     }
     if(!this.model.annotation){
       $(this.queryByHook('edit-annotation-btn')).text('Add');
@@ -106,6 +108,7 @@ module.exports = View.extend({
     this.model.icType = newType;
     if(currentType === "Place" || newType === "Place"){
       this.toggleDetailsView();
+      this.toggleRestrictToError();
     }
   },
   toggleDetailsView: function () {
@@ -115,6 +118,16 @@ module.exports = View.extend({
     }else {
       $(this.queryByHook("place-details")).css("display", "none");
       $(this.queryByHook("scatter-details")).css("display", "block");
+    }
+  },
+  toggleRestrictToError: function () {
+    let errorMsg = $(this.queryByHook("restict-to-error"));
+    if(!this.model.validateComponent()) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
     }
   },
   update: function () {},

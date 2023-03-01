@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -96,6 +96,7 @@ class StochSSBase():
     '''
     user_dir = os.path.expanduser("~") # returns the path to the users home directory
     TEMPLATE_VERSION = 1
+    DOMAIN_TEMPLATE_VERSION = 2
 
     def __init__(self, path=None):
         '''
@@ -109,6 +110,17 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
+    def get_file(self, path=None):
+        '''
+        Get the file from the path
+
+        Attributes
+        ----------
+        path : str
+            Path to a file object
+        '''
+        file = self.path if path is None else path
+        return file.split('/').pop()
 
     def log(self, level, message):
         '''
@@ -122,7 +134,6 @@ class StochSSBase():
             Message to be logged
         '''
         self.logs.append({"level":level, "message":message})
-
 
     def print_logs(self, log):
         '''

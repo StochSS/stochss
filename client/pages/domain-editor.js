@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,6 +29,7 @@ let DomainView = require('../domain-view/domain-view');
 let PageView = require('../pages/base');
 //templates
 let template = require('../templates/pages/domainEditor.pug');
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
 
 import initPage from './page.js';
 
@@ -64,6 +65,12 @@ let DomainEditor = PageView.extend({
         this.domain.dirname = newDomain && !modelPath ? domainPath : null
         this.model = this.buildModel(body.model, modelPath);
         this.renderSubviews();
+      },
+      error: (err, response, body) => {
+        this.title = `${response.statusCode} ${body.Reason.toUpperCase()}`;
+        this.errMsg = body.Message;
+        this.logoPath = "/static/stochss-logo.png";
+        this.renderErrorView();
       }
     });
   },
@@ -171,6 +178,10 @@ let DomainEditor = PageView.extend({
       queryStr: this.queryStr
     });
     app.registerRenderSubview(this, this.domainView, "domain-view-container");
+  },
+  renderErrorView: function () {
+    this.template = errorTemplate;
+    PageView.prototype.render.apply(this, arguments);
   },
   renderSubviews: function () {
     let breadData = this.getBreadcrumbData();

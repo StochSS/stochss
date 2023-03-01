@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -179,14 +179,24 @@ module.exports = {
     parameterSweep: "Produced and compare results from model simulations by varying parameters over a range."
   },
   domainEditor: {
+    staticDomain: "If true, particles are fixed system wide.  If false, Fixed property of particles is used.",
+
     pressure: "Atmospheric or background pressure.",
 
-    speed: "Approximate or artificial speed of sound"
+    speed: "Approximate or artificial speed of sound."
   },
-  domainType: {
-    geometry: "The geometry expression can be any mathematical expression which evaluates to a boolean value in a python environment (i.e. x==5).  This "+
-        "expression is evaluable within the a limited namespace, and only lower case variables (x, y, z), particles location, and (cx, cy, cz), "+
-        "center of the geometry, can be referenced in the expression."
+  domainGeometry: {
+    name: "Unique identifier for Geometry. Cannot share a name with other model components.",
+
+    geometry: "The geometry formula can be any mathematical expression which evaluates to a boolean value in a python environment (i.e. x==5).  This "+
+        "expression is evaluable within the a limited namespace, and only lower case variables (x, y, z), particles location in standard geometries, "+
+        "or other geometry names, combinatory geometries, can be referenced in the expression."
+  },
+  domainLattice: {
+    name: "Unique identifier for Lattice. Cannot share a name with other model components."
+  },
+  domainTransformation: {
+    name: "Unique identifier for Transformation. Cannot share a name with other model components."
   },
   boundaryConditionsEditor: {
     annotation: "An optional note about a boundary condition."

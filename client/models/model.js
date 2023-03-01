@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -96,32 +96,33 @@ module.exports = Model.extend({
     this.rules.on('add change remove', this.updateValid, this);
   },
   validateModel: function () {
-    if(!this.species.validateCollection(this.is_spatial)) return false;
-    if(!this.parameters.validateCollection()) return false;
-    if(!this.reactions.validateCollection()) return false;
-    if(!this.eventsCollection.validateCollection()) return false;
-    if(!this.rules.validateCollection()) return false;
+    if(this.is_spatial && this.domain.validateModel() === false) {
+      this.error = {"type":"domain"};
+      return false;
+    };
+    if(!this.species.validateCollection(this.is_spatial)) { return false; }
+    if(this.is_spatial && !this.initialConditions.validateCollection()) { return false; }
+    if(!this.parameters.validateCollection()) { return false; }
+    if(!this.reactions.validateCollection(this.is_spatial)) { return false; }
+    if(!this.eventsCollection.validateCollection()) { return false; }
+    if(!this.rules.validateCollection()) { return false; }
     if(!this.is_spatial && this.reactions.length <= 0 && this.eventsCollection.length <= 0 && this.rules.length <= 0) {
-      this.error = {"type":"process"}
+      this.error = {"type":"process"};
       return false;
     }
     if(!this.volume === "" || isNaN(this.volume)) {
-      this.error = {"type":"volume"}
-      return false
+      this.error = {"type":"volume"};
+      return false;
     };
-    if(this.domain.validateModel() === false) {
-      this.error = {"type":"domain"}
-      return false
-    };
-    if(this.modelSettings.validate() === false) {
-      this.error = {"type":"timespan"}
-      return false
+    if(this.modelSettings.validate(this.is_spatial) === false) {
+      this.error = {"type":"timespan"};
+      return false;
     };
     return true;
   },
   updateValid: function () {
-    this.error = {}
-    this.valid = this.validateModel()
+    this.error = {};
+    this.valid = this.validateModel();
   },
   getDefaultID: function () {
     var id = this.defaultID;

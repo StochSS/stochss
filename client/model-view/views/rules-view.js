@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,6 +42,8 @@ module.exports = View.extend({
     this.collection.parent.species.on('add remove', this.toggleAddRuleButton, this);
     this.collection.parent.parameters.on('add remove', this.toggleAddRuleButton, this);
     this.tooltips = Tooltips.rulesEditor;
+    this.filterAttr = attrs.attr;
+    this.filterKey = attrs.key;
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -56,10 +58,10 @@ module.exports = View.extend({
       $(this.queryByHook('edit-rules')).removeClass('active');
       $(this.queryByHook('view-rules')).addClass('active');
     }else {
-      this.renderEditRules();
+      this.renderEditRules({'key': this.filterKey, 'attr': this.filterAttr});
       this.toggleAddRuleButton();
     }
-    this.renderViewRules();
+    this.renderViewRules({'key': this.filterKey, 'attr': this.filterAttr});
   },
   addRule: function (e) {
     let type = e.target.dataset.name;
@@ -88,7 +90,9 @@ module.exports = View.extend({
       ruleCollapseBtn.click();
       ruleCollapseBtn.html('-');
     }
-    app.switchToEditTab(this, "rules");
+    if(!this.readOnly) {
+      app.switchToEditTab(this, "rules");
+    }
   },
   renderDocs: function () {
     let options = {
@@ -135,7 +139,7 @@ module.exports = View.extend({
     app.tooltipSetup();
   },
   toggleAddRuleButton: function () {
-    this.renderEditRules();
+    this.renderEditRules({'key': this.filterKey, 'attr': this.filterAttr});
     let numSpecies = this.collection.parent.species.length;
     let numParameters = this.collection.parent.parameters.length;
     let disabled = numSpecies <= 0 && numParameters <= 0;
@@ -152,6 +156,7 @@ module.exports = View.extend({
           required: false,
           name: 'filter',
           valueType: 'string',
+          disabled: this.filterKey !== null,
           placeholder: 'filter'
         });
       }

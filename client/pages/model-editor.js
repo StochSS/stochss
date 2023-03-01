@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -138,7 +138,10 @@ let ModelEditor = PageView.extend({
     }, 5000);
   },
   focusOnError: function (e) {
-    let mdlSections = ["species", "parameter", "reaction", "process", "event", "rule", "volume", "domain"];
+    let mdlSections = [
+      "species", "parameter", "reaction", "process", "event",
+      "rule", "volume", "domain", "initialCondition"
+    ];
     if(this.model.error) {
       if(this.model.error.type === "timespan") {
         this.openTimespanSection();
@@ -148,6 +151,7 @@ let ModelEditor = PageView.extend({
       setTimeout(() => {
         let inputErrors = this.queryAll(".input-invalid");
         let componentErrors = this.queryAll(".component-invalid");
+        console.log(inputErrors, componentErrors)
         if(componentErrors.length > 0) {
           componentErrors[0].scrollIntoView({'block':"center"});
         }else if(inputErrors.length > 0) {
@@ -251,6 +255,7 @@ let ModelEditor = PageView.extend({
   },
   handleSimulateClick: function (e) {
     let errorMsg = $(this.queryByHook("error-detected-msg"));
+    this.model.updateValid();
     if(!this.model.valid) {
       this.displayError(errorMsg, e);
     }else{
@@ -303,7 +308,7 @@ let ModelEditor = PageView.extend({
       tspnCollapseBtn.click();
       tspnCollapseBtn.html('-');
     }
-    this.switchToEditTab(this.modelSettings, "timespan");
+    app.switchToEditTab(this.modelSettings, "timespan");
   },
   plotResults: function (data) {
     this.ran(true);

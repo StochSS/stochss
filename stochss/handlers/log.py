@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ import logging
 from tornado.log import LogFormatter
 
 log = logging.getLogger('stochss')
+spy_log = logging.getLogger('SpatialPy')
 
 def init_log():
     '''
@@ -33,6 +34,7 @@ def init_log():
     relocate_old_logs()
     setup_stream_handler()
     setup_file_handler()
+    setup_spy_file_handler()
     log.setLevel(logging.DEBUG)
     log.propagate = False
 
@@ -119,12 +121,33 @@ def setup_file_handler():
         os.rename(src, dst)
         os.remove(src)
 
+    fmt = '%(asctime)s$ %(message)s'
+    formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
+
     path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
     handler = logging.handlers.RotatingFileHandler(path, maxBytes=500000, backupCount=1)
     handler.namer = namer
     handler.rotator = rotator
-    fmt = '%(asctime)s$ %(message)s'
-    formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
     handler.setFormatter(formatter)
     handler.setLevel(logging.INFO)
+
     log.addHandler(handler)
+
+
+def setup_spy_file_handler():
+    '''
+    Initialize the SpatialPy file handler
+
+    Attributes
+    ----------
+    '''
+    print(spy_log.handlers)
+    fmt = '%(asctime)s$ %(message)s'
+    formatter = LogFormatter(fmt=fmt, datefmt="%b %d, %Y  %I:%M %p UTC")
+
+    path = os.path.join(os.path.expanduser("~"), ".user-logs.txt")
+    handler = logging.FileHandler(path)
+    handler.setFormatter(formatter)
+    handler.setLevel(logging.INFO)
+
+    spy_log.addHandler(handler)

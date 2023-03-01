@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ from notebook.base.handlers import APIHandler
 
 from .util import StochSSBase, StochSSFolder, StochSSFile, StochSSModel, StochSSSpatialModel, \
                   StochSSSBMLModel, StochSSNotebook, StochSSWorkflow, StochSSJob, StochSSProject, \
-                  StochSSAPIError, report_error
+                  StochSSAPIError, report_error, report_critical_error
 
 
 log = logging.getLogger('stochss')
@@ -62,42 +62,8 @@ class ModelBrowserFileList(APIHandler):
             self.write(node)
         except StochSSAPIError as err:
             report_error(self, log, err)
-        self.finish()
-
-
-class ModelToNotebookHandler(APIHandler):
-    '''
-    ################################################################################################
-    Handler for handling conversions from model (.mdl) file to Jupyter Notebook
-    (.ipynb) file.
-    ################################################################################################
-    '''
-    @web.authenticated
-    async def get(self):
-        '''
-        Runs the convert_to_notebook function from the convert_to_notebook script
-        to build a Jupyter Notebook version of the model and write it to a file.
-
-        Attributes
-        ----------
-        '''
-        path = self.get_query_argument(name="path")
-        log.debug(f"Path to the model file: {path}")
-        self.set_header('Content-Type', 'application/json')
-        try:
-            is_spatial = path.endswith(".smdl")
-            log.info(f"Getting data from {path.split('/').pop()}")
-            model = StochSSSpatialModel(path=path) if is_spatial else StochSSModel(path=path)
-            data = model.get_notebook_data()
-            log.debug(f"Notebook data: {data}")
-            log.info(f"Converting {path.split('/').pop()} to notebook")
-            notebook = StochSSNotebook(**data)
-            resp = notebook.create_ses_notebook() if is_spatial else notebook.create_es_notebook()
-            log.info(f"Successfully created the notebook for {path.split('/').pop()}")
-            log.debug(f"Notebook file path: {resp}")
-            self.write(resp)
-        except StochSSAPIError as err:
-            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -127,6 +93,8 @@ class EmptyTrashAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -155,6 +123,8 @@ class DeleteFileAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -189,6 +159,8 @@ class MoveFileAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -220,6 +192,8 @@ class DuplicateModelHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -251,6 +225,8 @@ class DuplicateDirectoryHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -293,6 +269,8 @@ class RenameAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -325,6 +303,8 @@ class ConvertToSpatialAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -357,6 +337,8 @@ class ConvertToModelAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -391,6 +373,8 @@ class ModelToSBMLAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -434,6 +418,8 @@ class SBMLToModelAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -461,6 +447,8 @@ class DownloadAPIHandler(APIHandler):
             self.write(data)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -498,6 +486,8 @@ class DownloadZipFileAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -526,6 +516,8 @@ class CreateDirectoryHandler(APIHandler):
             self.write(f"{directories} was successfully created!")
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -574,6 +566,8 @@ class UploadFileAPIHandler(APIHandler):
             self.write(json.dumps(resp))
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -632,6 +626,8 @@ class DuplicateWorkflowAsNewHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -661,6 +657,8 @@ class GetWorkflowModelPathAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -692,28 +690,36 @@ class UploadFileFromLinkAPIHandler(APIHandler):
                 self.write(resp)
             except StochSSAPIError as err:
                 report_error(self, log, err)
+            except Exception as err:
+                report_critical_error(self, log, err)
         elif cmd is None:
-            overwrite = self.get_query_argument(name='overwrite', default=False)
-            outfile = f"{str(uuid.uuid4()).replace('-', '_')}.tmp"
-            log.debug(f"Response file name: {outfile}")
-            exec_cmd = [script, f'{path}', f'{outfile}'] # Script commands for read run_cmd
-            if overwrite:
-                exec_cmd.append('-o')
-            log.debug(f"Exec command: {exec_cmd}")
-            pipe = subprocess.Popen(exec_cmd)
-            resp = {"responsePath": outfile}
-            log.debug(f"Response: {resp}")
-            self.write(resp)
+            try:
+                overwrite = self.get_query_argument(name='overwrite', default=False)
+                outfile = f"{str(uuid.uuid4()).replace('-', '_')}.tmp"
+                log.debug(f"Response file name: {outfile}")
+                exec_cmd = [script, f'{path}', f'{outfile}'] # Script commands for read run_cmd
+                if overwrite:
+                    exec_cmd.append('-o')
+                log.debug(f"Exec command: {exec_cmd}")
+                pipe = subprocess.Popen(exec_cmd)
+                resp = {"responsePath": outfile}
+                log.debug(f"Response: {resp}")
+                self.write(resp)
+            except Exception as err:
+                report_critical_error(self, log, err)
         else:
-            exec_cmd = [script, 'None', f'{path}'] # Script commands for read run_cmd
-            log.debug(f"Exec command: {exec_cmd}")
-            pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
-            results, error = pipe.communicate()
-            if error is not None:
-                log.error(f"Errors thrown by the subprocess: {error}")
-            resp = json.loads(results)
-            log.debug(f"Response: {resp}")
-            self.write(resp)
+            try:
+                exec_cmd = [script, 'None', f'{path}'] # Script commands for read run_cmd
+                log.debug(f"Exec command: {exec_cmd}")
+                pipe = subprocess.Popen(exec_cmd, stdout=subprocess.PIPE, text=True)
+                results, error = pipe.communicate()
+                if error is not None:
+                    log.error(f"Errors thrown by the subprocess: {error}")
+                resp = json.loads(results)
+                log.debug(f"Response: {resp}")
+                self.write(resp)
+            except Exception as err:
+                report_critical_error(self, log, err)
         self.finish()
 
 
@@ -741,6 +747,8 @@ class UnzipFileAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -775,6 +783,8 @@ class NotebookPresentationAPIHandler(APIHandler):
             self.write(resp)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 
@@ -801,6 +811,8 @@ class PresentationListAPIHandler(APIHandler):
             self.write({"presentations": presentations})
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()
 
 class ImportFromLibrary(APIHandler):
@@ -829,4 +841,6 @@ class ImportFromLibrary(APIHandler):
             self.write(examples)
         except StochSSAPIError as err:
             report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
         self.finish()

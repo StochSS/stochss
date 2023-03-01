@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let $ = require('jquery');
 //support files
 let app = require('../../app');
+let tests = require('../../views/tests');
 //views
 let View = require('ampersand-view');
 let InputView = require('../../views/input');
@@ -28,202 +29,211 @@ let template = require('../templates/editParticleView.pug');
 
 module.exports = View.extend({
   template: template,
-  events: function () {
-    let events = {};
-    events[`change [data-hook=particle-type-${this.viewIndex}]`] = 'handleSelectType';
-    events[`change [data-target=location-${this.viewIndex}]`] = 'handleUpdateLocation';
-    events[`change [data-hook=particle-fixed=${this.viewIndex}]`] = 'handleUpdateFixed';
-    return events;
+  events: {
+    'change [data-target=new-point]' : 'setNewPoint',
+    'change [data-hook=particle-type]' : 'setParticleType',
+    'change [data-hook=particle-fixed]' : 'setParticleFixed'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     this.viewIndex = attrs.viewIndex;
     this.defaultType = attrs.defaultType;
     this.disable = attrs.disable ? attrs.disable : false;
-    this.origType = this.model.type;
+    this.origType = this.model.typeID;
     this.origPoint = JSON.parse(JSON.stringify(this.model.point));
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
     this.renderTypeSelectView();
     this.renderParticleProperties();
-    this.renderXCoordView();
-    this.renderYCoordView();
-    this.renderZCoordView();
+    $(this.queryByHook('particle-fixed')).prop('disabled', this.disable);
   },
-  handleSelectType: function (e) {
-    this.defaultType = this.parent.model.types.get(this.model.type, "typeID")
-    this.model.type = Number(e.target.value);
-    let type = this.parent.model.types.get(this.model.type, "typeID")
-    if(this.model.mass === this.defaultType.mass) {
-      this.model.mass = type.mass;
+  renderDensityPropertyView: function () {
+    if(this.densityPropertyView) {
+      this.densityPropertyView.remove();
     }
-    if(this.model.volume === this.defaultType.volume) {
-      this.model.volume = type.volume;
-    }
-    if(this.model.rho === this.defaultType.rho) {
-      this.model.rho = type.rho;
-    }
-    if(this.model.nu === this.defaultType.nu) {
-      this.model.nu = type.nu;
-    }
-    if(this.model.c === this.defaultType.c) {
-      this.model.c = type.c;
-    }
-    if(this.model.fixed === this.defaultType.fixed) {
-      this.model.fixed = type.fixed;
-    }
-    this.renderParticleProperties();
-  },
-  handleUpdateFixed: function (e) {
-    this.model.fixed = e.target.checked;
-  },
-  handleUpdateLocation: function (e) {
-    let index = Number(e.target.parentElement.parentElement.dataset.index);
-    this.model.point[index] = Number(e.target.value);
-  },
-  renderCInputView: function () {
-    if(this.cInputView) {
-      this.cInputView.remove();
-    }
-    this.cInputView = new InputView({
-      parent: this,
-      required: true,
-      name: 'speed-of-sound',
-      disabled: this.disable,
-      modelKey: 'c',
-      valueType: 'number',
-      value: this.model.c
-    });
-    app.registerRenderSubview(this, this.cInputView, `particle-c-${this.viewIndex}`);
-  },
-  renderParticleProperties: function () {
-    this.renderCInputView();
-    this.renderMassInputView();
-    this.renderNuInputView();
-    this.renderRhoInputView();
-    this.renderVolumeInputView();
-    $(this.queryByHook(`particle-fixed-${this.viewIndex}`)).prop('checked', this.model.fixed);
-    $(this.queryByHook(`particle-fixed-${this.viewIndex}`)).prop('disabled', this.disable);
-  },
-  renderMassInputView: function () {
-    if(this.massInputView) {
-      this.massInputView.remove();
-    }
-    this.massInputView = new InputView({
-      parent: this,
-      required: true,
-      name: 'mass',
-      disabled: this.disable,
-      modelKey: 'mass',
-      valueType: 'number',
-      value: this.model.mass
-    });
-    app.registerRenderSubview(this, this.massInputView, `particle-mass-${this.viewIndex}`);
-  },
-  renderNuInputView: function () {
-    if(this.nuInputView) {
-      this.nuInputView.remove();
-    }
-    this.nuInputView = new InputView({
-      parent: this,
-      required: true,
-      name: 'viscosity',
-      disabled: this.disable,
-      modelKey: 'nu',
-      valueType: 'number',
-      value: this.model.nu
-    });
-    app.registerRenderSubview(this, this.nuInputView, `particle-nu-${this.viewIndex}`);
-  },
-  renderRhoInputView: function () {
-    if(this.rhoInputView) {
-      this.rhoInputView.remove();
-    }
-    this.rhoInputView = new InputView({
+    this.densityPropertyView = new InputView({
       parent: this,
       required: true,
       name: 'density',
-      disabled: this.disable,
-      modelKey: 'rho',
+      tests: tests.valueTests,
       valueType: 'number',
+      modelKey: 'rho',
       value: this.model.rho
     });
-    app.registerRenderSubview(this, this.rhoInputView, `particle-rho-${this.viewIndex}`);
+    let hook = "particle-rho";
+    app.registerRenderSubview(this, this.densityPropertyView, hook);
+  },
+  renderMassPropertyView: function () {
+    if(this.massPropertyView) {
+      this.massPropertyView.remove();
+    }
+    this.massPropertyView = new InputView({
+      parent: this,
+      required: true,
+      name: 'mass',
+      tests: tests.valueTests,
+      valueType: 'number',
+      modelKey: 'mass',
+      value: this.model.mass
+    });
+    let hook = "particle-mass";
+    app.registerRenderSubview(this, this.massPropertyView, hook);
+  },
+  renderParticleProperties: function () {
+    this.renderMassPropertyView();
+    this.renderVolumePropertyView();
+    this.renderDensityPropertyView();
+    this.renderViscosityPropertyView();
+    this.renderSOSPropertyView();
+  },
+  renderSOSPropertyView: function () {
+    if(this.sOSPropertyView) {
+      this.sOSPropertyView.remove();
+    }
+    this.sOSPropertyView = new InputView({
+      parent: this,
+      required: true,
+      name: 'speed-of-sound',
+      tests: tests.valueTests,
+      valueType: 'number',
+      modelKey: 'c',
+      value: this.model.c
+    });
+    let hook = "particle-c";
+    app.registerRenderSubview(this, this.sOSPropertyView, hook);
   },
   renderTypeSelectView: function () {
     if(this.typeSelectView) {
       this.typeSelectView.remove();
     }
+    let options = this.parent.model.types.map((type) => {
+      return [type.typeID, type.name];
+    });
     this.typeSelectView = new SelectView({
       name: 'type',
       required: true,
-      idAttribute: 'typeID',
-      textAttribute: 'name',
-      eagerValidate: true,
-      options: this.parent.model.types,
-      value: this.parent.model.types.get(this.model.type, "typeID")
+      options: options,
+      value: this.model.typeID,
     });
-    app.registerRenderSubview(this, this.typeSelectView, `particle-type-${this.viewIndex}`)
-    $(this.queryByHook(`particle-type-${this.viewIndex}`)).find('select').prop('disabled', this.disable);
+    let hook = "particle-type";
+    app.registerRenderSubview(this, this.typeSelectView, hook);
+    $(this.queryByHook(hook)).find('select').prop('disabled', this.disable);
   },
-  renderVolumeInputView: function () {
-    if(this.volumeInputView) {
-      this.volumeInputView.remove();
+  renderViscosityPropertyView: function () {
+    if(this.viscosityPropertyView) {
+      this.viscosityPropertyView.remove();
     }
-    this.volumeInputView = new InputView({
+    this.viscosityPropertyView = new InputView({
+      parent: this,
+      required: true,
+      name: 'viscosity',
+      tests: tests.valueTests,
+      valueType: 'number',
+      modelKey: 'nu',
+      value: this.model.nu
+    });
+    let hook = "particle-nu";
+    app.registerRenderSubview(this, this.viscosityPropertyView, hook);
+  },
+  renderVolumePropertyView: function () {
+    if(this.volumePropertyView) {
+      this.volumePropertyView.remove();
+    }
+    this.volumePropertyView = new InputView({
       parent: this,
       required: true,
       name: 'volume',
-      disabled: this.disable,
-      modelKey: 'volume',
+      tests: tests.valueTests,
       valueType: 'number',
-      value: this.model.volume
+      modelKey: 'vol',
+      value: this.model.vol
     });
-    app.registerRenderSubview(this, this.volumeInputView, `particle-vol-${this.viewIndex}`);
+    let hook = "particle-vol";
+    app.registerRenderSubview(this, this.volumePropertyView, hook);
   },
-  renderXCoordView: function () {
-    if(this.xCoordView) {
-      this.xCoordView.remove();
-    }
-    this.xCoordView = new InputView({
-      parent: this,
-      required: true,
-      name: 'x-coord',
-      disabled: this.disable,
-      valueType: 'number',
-      value: this.model.point[0]
-    });
-    app.registerRenderSubview(this, this.xCoordView, `x-coord-${this.viewIndex}`);
+  setNewPoint: function (e) {
+    let key = e.target.parentElement.parentElement.dataset.name;
+    let value = Number(e.target.value);
+    this.model.newPoint[key] = value;
   },
-  renderYCoordView: function () {
-    if(this.yCoordView) {
-      this.yCoordView.remove();
-    }
-    this.yCoordView = new InputView({
-      parent: this,
-      required: true,
-      name: 'y-coord',
-      disabled: this.disable,
-      valueType: 'number',
-      value: this.model.point[1]
-    });
-    app.registerRenderSubview(this, this.yCoordView, `y-coord-${this.viewIndex}`);
+  setParticleFixed: function (e) {
+    this.model.fixed = !this.model.fixed;
   },
-  renderZCoordView: function () {
-    if(this.zCoordView) {
-      this.zCoordView.remove();
-    }
-    this.zCoordView = new InputView({
-      parent: this,
-      required: true,
-      name: 'z-coord',
-      disabled: this.disable,
-      valueType: 'number',
-      value: this.model.point[2]
-    });
-    app.registerRenderSubview(this, this.zCoordView, `z-coord-${this.viewIndex}`);
+  setParticleType: function (e) {
+    let value = Number(e.target.value);
+    console.log(value);
+    let currType = this.parent.model.types.get(this.model.typeID, "typeID");
+    let newType = this.parent.model.types.get(value, "typeID");
+    this.updatePropertyDefaults(currType, newType);
+    this.model.typeID = value;
   },
   update: function (e) {},
-  updateValid: function (e) {}
+  updatePropertyDefaults: function (currType, newType) {
+    if(this.model.mass === currType.mass) {
+      this.model.mass = newType.mass;
+    }
+    if(this.model.vol === currType.volume) {
+      this.model.vol = newType.volume;
+    }
+    if(this.model.rho === currType.rho) {
+      this.model.rho = newType.rho;
+    }
+    if(this.model.nu === currType.nu) {
+      this.model.nu = newType.nu;
+    }
+    if(this.model.c === currType.c) {
+      this.model.c = newType.c;
+    }
+    if(this.model.fixed === currType.fixed) {
+      this.model.fixed = newType.fixed;
+    }
+    this.renderParticleProperties();
+    $(this.queryByHook('particle-fixed')).prop('checked', this.model.fixed);
+  },
+  updateValid: function (e) {},
+  subviews: {
+    inputNewPointX: {
+      hook: 'new-point-x-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'new-point-x',
+          disabled: this.disable,
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.newPoint.x
+        });
+      }
+    },
+    inputNewPointY: {
+      hook: 'new-point-y-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'new-point-y',
+          disabled: this.disable,
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.newPoint.y
+        });
+      }
+    },
+    inputNewPointZ: {
+      hook: 'new-point-z-container',
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'new-point-z',
+          disabled: this.disable,
+          tests: [tests.nanValue],
+          valueType: 'number',
+          value: this.model.newPoint.z
+        });
+      }
+    }
+  }
 });

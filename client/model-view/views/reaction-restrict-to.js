@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,7 +15,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
+let $ = require('jquery');
 //views
 let View = require('ampersand-view');
 let DomainTypesView = require('./component-types');
@@ -32,6 +32,8 @@ module.exports = View.extend({
   render: function () {
     View.prototype.render.apply(this, arguments);
     this.renderDomainTypes();
+    this.toggleRestrictToError();
+    this.model.on('types-changed', this.toggleRestrictToError, this);
   },
   renderDomainTypes: function () {
     if(this.domainTypesView) {
@@ -45,5 +47,15 @@ module.exports = View.extend({
         return model.typeID != 0;
       }}
     );
+  },
+  toggleRestrictToError: function () {
+    let errorMsg = $(this.queryByHook("restict-to-error"));
+    if(this.model.types.length <= 0) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
+    }
   }
 });

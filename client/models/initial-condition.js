@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,6 +22,7 @@ var Specie = require('./specie');
 
 module.exports = State.extend({
   props: {
+    compID: 'number',
     icType: 'string',
     annotation: 'string',
     count: 'any',
@@ -71,5 +72,9 @@ module.exports = State.extend({
       if(checks[attribute]) { return true; }
     }
     return false;
+  },
+  validateComponent: function () {
+    if(this.icType !== "Place" && this.types.length <= 0) { return false; }
+    return true;
   }
 });
