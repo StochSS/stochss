@@ -9,11 +9,21 @@ section.page
           li.breadcrumb-item
             a(href="stochss/project/manager?path="+this.projectPath data-hook="project-breadcrumb")=this.projectName
           
-  div.alert-danger(data-hook="invalid-model-message" style="display: none;")
-    | You cannot create a workflow if your model does not have at least one Variable and one Reaction, Event, or Rule
+  div.alert-danger.hidden(data-hook="invalid-model-message")
+    | You cannot create a workflow if your model does not have at least one <b>Variable</b> and one <b>Reaction</b>, <b>Event</b>, or <b>Rule</b>
 
-  div.alert-info(data-hook="psweep-workflow-message" style="display: none;")
-    | Parameter Sweep workflows require at least one parameter
+  div.alert-info.hidden(data-hook="psweep-workflow-message")
+    | <b>Parameter Sweep</b> workflows require at least one parameter
+
+  div
+
+    div.alert-info <b>AWS Cloud</b> is only supported in the <b>Ensemble Simulation</b> workflow
+
+    div.my-2
+
+      span.mr-2.inline(for="#compute-env-select") Compute Environment:
+
+      div.inline(id="compute-env-select" data-hook="compute-env-select")
 
   table.table
     thead

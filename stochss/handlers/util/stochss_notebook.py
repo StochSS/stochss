@@ -126,6 +126,49 @@ class StochSSNotebook(StochSSBase):
             nbf.new_markdown_cell("***\n## Simulation Parameters\n***")
         ]
 
+    def __create_compute_cells(self, cells, compute):
+        self.__create_compute_headers(cells, compute)
+        self.__create_compute_imports(cells, compute)
+        self.__create_compute_credentials(cells, compute)
+        self.__create_compute_launch(cells, compute)
+        self.__create_compute_cleanup(cells, compute)
+
+    def __create_compute_cleanup(self, cells, compute):
+        cells.append(nbf.new_code_cell("# cluster.clean_up()"))
+
+    def __create_compute_credentials(self, cells, compute):
+        nb_creds = [
+            "key_dir = os.path.join(os.environ.get('HOME'), '.aws')",
+            "_ = dotenv.load_dotenv(dotenv_path=os.path.join(key_dir, 'awsec2.env'))"
+        ]
+        cells.insert(5, nbf.new_code_cell("\n".join(nb_creds)))
+
+    def __create_compute_headers(self, cells, compute):
+        cells.insert(2, nbf.new_markdown_cell(
+            "***\n## AWS Credentials\n***\nAWS Credentials for StochSS can be set [here](/stochss/settings)"
+        ))
+        cells.insert(3, nbf.new_markdown_cell("***\n## Launch AWS Cluster\n***"))
+        cells.append(nbf.new_markdown_cell('***\n## Clean Up AWS Cluster\n***'))
+
+    def __create_compute_imports(self, cells, compute):
+        cells.insert(1, nbf.new_code_cell("import os\nimport dotenv"))
+        cells.insert(3, nbf.new_code_cell(
+            "import stochss_compute\nfrom stochss_compute.cloud import EC2Cluster, EC2LocalConfig"
+        ))
+
+    def __create_compute_launch(self, cells, compute):
+        instance = self.load_user_settings(path='.user-settings.json')['headNode']
+        path = f'{instance.replace(".", "-")}-status.txt'
+        nb_cluster = [
+            "local_config = EC2LocalConfig(",
+            f"    key_dir=key_dir, status_file=os.path.join(key_dir, '{path}')", ")",
+            "cluster = EC2Cluster(local_config=local_config)",
+            f"# cluster = EC2Cluster(status_file=os.path.join(key_dir, '{path}'))",
+            "if cluster._server is None:",
+            f"    cluster.launch_single_node_instance('{instance}')", "cluster.status"
+        ]
+        cells.insert(7, nbf.new_code_cell("\n".join(nb_cluster)))
+
     def __create_configuration_cell(self):
         use_solver = self.nb_type not in (self.ENSEMBLE_SIMULATION, self.SPATIAL_SIMULATION)
         algorithm = self.settings['simulationSettings']['algorithm']
@@ -232,15 +275,19 @@ class StochSSNotebook(StochSSBase):
                 raise StochSSModelFormatError(message, traceback.format_exc()) from err
         return index
 
-    @classmethod
-    def __create_run(cls, results):
+    def __create_run(self, results, compute="StochSS"):
         nb_run_header = "***\n## Run the Simulation\n***"
         nb_run = ["kwargs = configure_simulation()"]
+        if compute in ("AWS Cloud", "AWS"):
+            nb_run.append("simulation = stochss_compute.RemoteSimulation(model, server=cluster)")
+            nb_res = "results = simulation.run(**kwargs)"
+        else:
+            nb_res = "results = model.run(**kwargs)"
         if results is None:
-            nb_run.append("results = model.run(**kwargs)")
+            nb_run.append(nb_res)
         else:
             nb_load_res = [
-                "# results = model.run(**kwargs)", f"path = '{results}'",
+                f"# {nb_res}", f"path = '{results}'",
                 "with open(os.path.join(os.path.expanduser('~'), path), 'rb') as results_file:",
                 "    results = pickle.load(results_file)"
             ]
@@ -898,23 +945,25 @@ class StochSSNotebook(StochSSBase):
         cells.append(self.__create_configuration_cell())
         return cells
 
-    def create_es_notebook(self, results=None):
+    def create_es_notebook(self, results=None, compute="StochSS"):
         '''Create an ensemble simulation jupiter notebook for a StochSS model/workflow '''
         self.nb_type = self.ENSEMBLE_SIMULATION
         cells = self.create_common_cells()
 
         self.settings['solver'] = self.get_gillespy2_solver_name()
-        if results is not None:
-            cells.insert(1, nbf.new_code_cell("import os\nimport pickle"))
-        run_header, run_code = self.__create_run(results)
+        run_header, run_code = self.__create_run(results, compute=compute)
         vis_header = nbf.new_markdown_cell("***\n## Visualization\n***")
         vis_code = nbf.new_code_cell("results.plotplotly()")
         cells.extend([run_header, run_code, vis_header, vis_code])
+        if compute != "StochSS":
+            self.__create_compute_cells(cells, compute)
+        if results is not None:
+            cells.insert(1, nbf.new_code_cell("import os\nimport pickle"))
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-    def create_ses_notebook(self, results=None):
+    def create_ses_notebook(self, results=None, compute="StochSS"):
         '''Create a spetial ensemble simulation jupiter notebook for a StochSS model/workflow '''
         self.nb_type = self.SPATIAL_SIMULATION
         cells = self.create_common_cells()
@@ -931,6 +980,11 @@ class StochSSNotebook(StochSSBase):
             plot_str = f"results.plot_property('type', {plt_args})"
         vis_code = nbf.new_code_cell(plot_str)
         cells.extend([run_header, run_code, vis_header, vis_code])
+        if compute != "StochSS":
+            self.log(
+                "warning",
+                "AWS Cloud compute environment is not supported by spatial ensemble simulation workflows."
+            )
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}

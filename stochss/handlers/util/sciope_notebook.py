@@ -201,7 +201,7 @@ class StochSSSciopeNotebook(StochSSNotebook):
         ]
         return nbf.new_code_cell("\n".join(nb_sum_stats))
 
-    def create_me_notebook(self, results=None):
+    def create_me_notebook(self, results=None, compute="StochSS"):
         '''Create a model exploration jupiter notebook for a StochSS model/workflow.'''
         self.nb_type = self.MODEL_EXPLORATION
         cells = self.create_common_cells()
@@ -215,11 +215,16 @@ class StochSSSciopeNotebook(StochSSNotebook):
         cells.insert(17, nbf.new_code_cell("met = StochMET(simulator, lhc, summary_stats)"))
         cells.insert(19, nbf.new_code_cell("met.compute(n_points=500, chunk_size=10)"))
         self.__create_explore_cells(cells)
+        if compute != "StochSS":
+            self.log(
+                "warning",
+                "AWS Cloud compute environment is not supported by SCIOPE model exploration workflows."
+            )
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
 
-    def create_mi_notebook(self, results=None):
+    def create_mi_notebook(self, results=None, compute="StochSS"):
         '''Create a model inference jupiter notebook for a StochSS model/workflow.'''
         self.nb_type = self.MODEL_INFERENCE
         cells = self.create_common_cells()
@@ -236,6 +241,11 @@ class StochSSSciopeNotebook(StochSSNotebook):
         ))
         cells.insert(25, nbf.new_code_cell("c = Client()\nc"))
         self.__create_abc_cells(cells)
+        if compute != "StochSS":
+            self.log(
+                "warning",
+                "AWS Cloud compute environment is not supported by SCIOPE model inference workflows."
+            )
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}

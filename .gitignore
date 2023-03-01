@@ -14,6 +14,7 @@ stochss/dist/stochss-loading-page.html
 stochss/dist/stochss-quick-start.html
 stochss/dist/stochss-user-home.html
 stochss/dist/stochss-example-library.html
+stochss/dist/stochss-user-settings.html
 jupyterhub/templates/page.html
 jupyterhub/templates/stochss-home.html
 jupyterhub/templates/stochss-job-presentation.html
