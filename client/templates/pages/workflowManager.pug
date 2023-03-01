@@ -48,21 +48,36 @@ section.page
 
         div.mdl-edit-btn
 
-          button.btn.btn-primary.box-shadow(data-hook="save") Save
+          button.btn.btn-primary.box-shadow.inline(data-hook="save") Save
 
-          div.mdl-edit-btn.saving-status(data-hook="saving-workflow")
+          div.mdl-edit-btn.saving-status.inline(data-hook="saving-workflow")
 
             div.spinner-grow
 
             span Saving...
 
-          div.mdl-edit-btn.saved-status(data-hook="saved-workflow")
+          div.mdl-edit-btn.saved-status.inline(data-hook="saved-workflow")
 
             span Saved
 
-          button.btn.btn-primary.box-shadow(data-hook="start-job") Start Workflow
+          div.inline.hidden(data-hook="of-start-job")
+
+            button.btn.btn-primary.box-shadow(data-target="start-job" data-computeenv="local") Start Workflow
+
+          div.inline(data-hook="nf-start-job")
+
+            button.btn.btn-primary.dropdown-toggle.box-shadow#startNewJobBtn(
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
+            ) Start New Job using <span class="caret"></span>
+
+            ul.dropdown-menu(aria-labelledby="startNewJobBtn")
+              li.dropdown-item(data-target="start-job" data-computeenv="local") StochSS
+              li.dropdown-item(data-hook="aws-start-job" data-target="start-job" data-computeenv="aws") AWS Cloud
     
-          button.btn.btn-primary.box-shadow(data-hook="edit-model") Edit Model
+          button.btn.btn-primary.box-shadow.inline(data-hook="edit-model") Edit Model
 
   div(data-hook="status-container")
 
