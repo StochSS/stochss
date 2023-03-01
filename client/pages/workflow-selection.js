@@ -1,6 +1,6 @@
 /*
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -24,6 +24,7 @@ var app = require('../app');
 let Model = require('../models/model');
 //views
 let PageView = require('./base');
+let SelectView = require('ampersand-select-view');
 //templates
 let template = require('../templates/pages/workflowSelection.pug');
 
@@ -32,6 +33,7 @@ import initPage from './page.js';
 let workflowSelection = PageView.extend({
   template: template,
   events: {
+    "change [data-hook=compute-env-select]" : "handleSelectComputeEnv",
     "click [data-hook=ensemble-simulation]" : "notebookWorkflow",
     "click [data-hook=spatial-simulation]" : "notebookWorkflow",
     "click [data-hook=oned-parameter-sweep]" : "notebookWorkflow",
@@ -41,7 +43,6 @@ let workflowSelection = PageView.extend({
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
-    let self = this;
     let urlParams = new URLSearchParams(window.location.search);
     this.modelDir = urlParams.get('path');
     if(urlParams.has('parentPath')){
@@ -57,33 +58,37 @@ let workflowSelection = PageView.extend({
       this.projectName = this.projectPath.split('/').pop().split('.proj')[0];
       this.workflowGroupName = this.parentPath.split('/').pop().split('.wkgp')[0];
     }
+    this.computeEnv = "StochSS";
     this.model = new Model({
       directory: this.modelDir,
       isPreview: false,
       for: "wkfl",
     });
     app.getXHR(this.model.url(), {
-      success: function (err, response, body) {
-        self.model.set(body)
-        $(self.queryByHook("wkfl-selection-header")).text("Workflow Selection for " + self.model.name);
-        if(self.modelDir.includes(".proj")) {
-          self.queryByHook("workflow-selection-breadcrumb-links").style.display = "block";
+      success: (err, response, body) => {
+        this.model.set(body)
+        $(this.queryByHook("wkfl-selection-header")).text(`Workflow Selection for ${this.model.name}`);
+        if(this.modelDir.includes(".proj")) {
+          this.queryByHook("workflow-selection-breadcrumb-links").style.display = "block";
         }
-        self.validateWorkflows()
+        this.validateWorkflows()
       }
     });
   },
+  handleSelectComputeEnv: function (e) {
+    this.computeEnv = e.target.value;
+  },
   notebookWorkflow: function (e) {
     let type = e.target.dataset.type;
-    let queryString = "?type=" + type + "&path=" + this.modelDir + "&parentPath=" + this.parentPath
-    let endpoint = path.join(app.getApiPath(), "workflow/notebook") + queryString
+    let queryString = `?type=${type}&path=${this.modelDir}&parentPath=${this.parentPath}&compute=${this.computeEnv}`;
+    let endpoint = `${path.join(app.getApiPath(), "workflow/notebook")}${queryString}`;
     app.getXHR(endpoint, {
-      success: function (err, response, body) {
+      success: (err, response, body) => {
         let notebookPath = path.join(app.getBasePath(), "notebooks", body.FilePath)
         window.open(notebookPath, "_blank")
         window.history.back();
       }
-    })
+    });
   },
   validateWorkflows: function () {
     this.model.updateValid();
@@ -98,7 +103,7 @@ let workflowSelection = PageView.extend({
     if(dimensions < 2) {
       $(this.queryByHook('psweep-workflow-message')).css('display', 'block');
       if(dimensions === 1) {
-        $(this.queryByHook('psweep-workflow-message')).text('2D Parameter Sweep workflows require at least two parameters');
+        $(this.queryByHook('psweep-workflow-message')).html('<b>2D Parameter Sweep</b> workflows require at least two parameters');
       }
     }
     $(this.queryByHook('ensemble-simulation')).prop('disabled', invalid || this.model.is_spatial);
@@ -107,6 +112,22 @@ let workflowSelection = PageView.extend({
     $(this.queryByHook('oned-parameter-sweep')).prop('disabled', invalid || this.model.is_spatial || dimensions < 1);
     $(this.queryByHook('twod-parameter-sweep')).prop('disabled', invalid || this.model.is_spatial || dimensions < 2);
     $(this.queryByHook('sciope-model-exploration')).prop('disabled', invalid || this.model.is_spatial);
+    $(this.queryByHook('compute-env-select').firstChild.children[1]).prop('disabled', this.model.is_spatial);
+  },
+  subviews: {
+    computeEnvSelect: {
+      hook: "compute-env-select",
+      prepareView: function (el) {
+        let options = ["StochSS", "AWS Cloud"];
+        return new SelectView({
+          name: 'compute-environment',
+          required: true,
+          idAttributes: 'cid',
+          options: options,
+          value: this.computeEnv
+        });
+      }
+    }
   }
 });
 

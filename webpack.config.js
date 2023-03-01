@@ -5,6 +5,7 @@ module.exports = {
   mode: 'development',
   entry: {
     home: './client/pages/users-home.js',
+    userSettings: './client/pages/user-settings.js',
     quickstart: './client/pages/quickstart.js',
     exampleLibrary: './client/pages/example-library.js',
     browser: './client/pages/browser.js',
@@ -27,6 +28,13 @@ module.exports = {
       filename: 'stochss-user-home.html',
       template: 'page_template.pug',
       name: 'home',
+      inject: false
+    }),
+    new HtmlWebpackPlugin({
+      title: 'StochSS | User Settings',
+      filename: 'stochss-user-settings.html',
+      template: 'page_template.pug',
+      name: 'userSettings',
       inject: false
     }),
     new HtmlWebpackPlugin({

@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,8 +22,13 @@ import time
 import shutil
 import datetime
 import traceback
+import subprocess
 
+import dotenv
 import requests
+
+from stochss_compute.cloud import EC2Cluster, EC2LocalConfig
+from stochss_compute.cloud.exceptions import EC2Exception
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
                             FileNotJSONFormatError
@@ -255,6 +260,29 @@ class StochSSBase():
             json.dump(names, names_file)
 
 
+    def get_aws_cluster(self, instance=None):
+        '''
+        Get the AWS cluster.
+
+        Attributes
+        ----------
+        instance : str
+            AWS EC2 instance.
+        '''
+        key_dir = os.path.join(self.user_dir, ".aws")
+        if instance is None:
+            path = os.path.join(self.user_dir, ".user-settings.json")
+            settings = self.load_user_settings(path=path)
+            instance = settings['headNode']
+        s_path = os.path.join(key_dir, f"{instance.replace('.', '-')}-status.txt")
+        # Setup the AWS environment
+        env_path = os.path.join(key_dir, "awsec2.env")
+        dotenv.load_dotenv(dotenv_path=env_path)
+        # Configure the AWS cluster
+        local_config = EC2LocalConfig(key_dir=key_dir, status_file=s_path)
+        cluster = EC2Cluster(local_config=local_config)
+        return cluster
+
     @classmethod
     def get_new_path(cls, dst_path):
         '''
@@ -476,6 +504,21 @@ class StochSSBase():
 
         return os.path.join(dirname, cp_file)
 
+    def launch_aws_cluster(self):
+        '''
+        Launch an AWS instance.
+        '''
+        settings = self.load_user_settings(path='.user-settings.json')
+        instance = settings['headNode']
+
+        try:
+            cluster = self.get_aws_cluster(instance=instance)
+            cluster.launch_single_node_instance(instance)
+        except EC2Exception:
+            pass
+        except Exception:
+            cluster.clean_up()
+
     def load_example_library(self, home):
         '''
         Load the example library dropdown list.
@@ -498,6 +541,33 @@ class StochSSBase():
             json.dump(exm_data, data_file, sort_keys=True, indent=4)
 
         return self.__build_example_html(exm_data, home)
+
+    def load_user_settings(self, path=None):
+        '''
+        Load the user settings from file.
+
+        Attributes
+        ----------
+        path : str
+            Absolute path to the user settings file.
+        '''
+        if path is None and os.path.exists(self.path):
+            path = self.path
+        elif path is None or not os.path.exists(path):
+            path = "/stochss/stochss_templates/userSettingTemplate.json"
+        with open(path, "r", encoding="utf-8") as usrs_fd:
+            settings = json.load(usrs_fd)
+        settings['awsHeadNodeStatus'] = "not launched"
+        if os.path.exists(os.path.join(self.user_dir, ".aws/awsec2.env")):
+            settings['awsSecretKey'] = "*"*20
+            i_id = settings['headNode'].replace('.', '-')
+            s_path = os.path.join(self.user_dir, f".aws/{i_id}-status.txt")
+            if os.path.exists(s_path):
+                with open(s_path, 'r', encoding="utf-8") as aws_s_fd:
+                    settings['awsHeadNodeStatus'] = aws_s_fd.read().strip()
+        else:
+            settings['awsSecretKey'] = None
+        return settings
 
     def log(self, level, message):
         '''
@@ -568,5 +638,30 @@ class StochSSBase():
             message = f"Could not find the file or directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
-            message = f"You don not have permission to rename this file or directory: {str(err)}"
+            message = f"You do not have permission to rename this file or directory: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
+
+    def terminate_aws_cluster(self):
+        '''
+        Terminate an AWS instance.
+        '''
+        cluster = self.get_aws_cluster()
+        cluster.clean_up()
+
+    def update_aws_status(self, instance):
+        '''
+        Updated the status of the aws instance.
+
+        Attributes
+        ----------
+        instance : str
+            The AWS instance.
+        '''
+        s_path = os.path.join(self.user_dir, f".aws/{instance.replace('.', '-')}-status.txt")
+        if not os.path.exists(s_path):
+            return
+
+        script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
+        exec_cmd = [f"{script}", "-sv"]
+        print("Updating the status of AWS")
+        process = subprocess.Popen(exec_cmd)
