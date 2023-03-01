@@ -147,8 +147,10 @@ class InitializeJobAPIHandler(APIHandler):
         log.debug(f"Handler query string: {data}")
         try:
             wkfl = StochSSWorkflow(path=path)
-            resp = wkfl.initialize_job(settings=data['settings'], mdl_path=data['mdl_path'],
-                                       wkfl_type=data['type'], time_stamp=data['time_stamp'])
+            resp = wkfl.initialize_job(
+                settings=data['settings'], mdl_path=data['mdl_path'], wkfl_type=data['type'],
+                time_stamp=data['time_stamp'], compute=data['compute']
+            )
             wkfl.print_logs(log)
             log.debug(f"Response message: {resp}")
             self.write(resp)
