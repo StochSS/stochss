@@ -118,11 +118,13 @@ let userSettings = PageView.extend({
   },
   handleLaunchAWSCluster: function () {
     this.handleApplyUserSettings({cb: () => {
+      this.completeAction();
       this.launchAWSCluster();
     }});
   },
   handleRefreshAWSStatus: function () {
     this.handleApplyUserSettings({cb: () => {
+      this.completeAction();
       this.refreshAWSStatus();
     }});
   },
@@ -145,6 +147,7 @@ let userSettings = PageView.extend({
   },
   handleTerminateAWSCluster: function () {
     this.handleApplyUserSettings({cb: () => {
+      this.completeAction();
       this.terminateAWSCluster();
     }});
   },
