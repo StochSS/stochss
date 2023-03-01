@@ -26,6 +26,26 @@ div#inference-settings.card
 
         div
 
+          hr
+
+          div.mx-1.row.head.align-items-baseline
+
+            div.col-sm-3
+
+              h6.inline <b>Number of Epochs</b>
+
+            div.col-sm-3
+
+              h6.inline <b>Number of Samples</b>
+
+          div.mx-1.my-3.row
+
+            div.col-sm-3(data-hook="num-epochs")
+
+            div.col-sm-3(data-hook="num-samples")
+
+        div
+
           h4 Summary Statistics
 
           hr
@@ -132,7 +152,39 @@ div#inference-settings.card
 
       div.tab-pane(id=this.model.elementID + "-view-inference-settings" data-hook=this.model.elementID + "-view-inference-settings")
 
+        div
+
+          hr
+
+          div.mx-1.row.head.align-items-baseline
+
+            div.col-sm-3
+
+              h6.inline <b>Number of Epochs</b>
+
+            div.col-sm-3
+
+              h6.inline <b>Number of Samples</b>
+
+          div.mx-1.my-3.row
+
+            div.col-sm-3
+
+              div(data-hook="view-num-epochs")=this.model.numEpochs
+
+            div.col-sm-3
+
+              div(data-hook="view-num-samples")=this.model.numSamples
+
         h4 Summary Statistics
+
+        hr
+
+        div
+
+          h6.mr-2.inline <b>Summary Statistic Type</b>:
+
+          div.inline(data-hook="view-summary-type")=this.summaryType
 
         div.mb-3(data-hook="view-summary-stats-container")
 
@@ -140,4 +192,4 @@ div#inference-settings.card
 
         h4 Observed Data
 
-        div=this.model.obsData
+        div(data-hook="view-obs-data-file")=this.model.obsData

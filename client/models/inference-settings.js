@@ -23,6 +23,10 @@ let State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
+    batchSize: 'number',
+    chunkSize: 'number',
+    numEpochs: 'number',
+    numSamples: 'number', 
     obsData: 'string',
     priorMethod: 'string',
     summaryStatsType: 'string'

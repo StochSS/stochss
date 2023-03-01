@@ -1,5 +1,9 @@
 {
     "inferenceSettings": {
+        "batchSize": 10,
+        "chunkSize": 10,
+        "numEpochs": 5,
+        "numSamples": 100,
         "obsData": "",
         "parameters": [],
         "priorMethod": "Uniform Prior",

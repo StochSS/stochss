@@ -21,6 +21,7 @@ let path = require('path');
 let app = require('../../app');
 let modals = require('../../modals');
 let Plotly = require('plotly.js-dist');
+let tests = require('../../views/tests');
 //views
 let View = require('ampersand-view');
 let InputView = require('../../views/input');
@@ -41,6 +42,8 @@ module.exports = View.extend({
     }
   },
   events: {
+    'change [data-hook=num-epochs]' : 'updateEpochsView',
+    'change [data-hook=num-samples]' : 'updateSamplesView',
     'change [data-hook=summary-stats-type-select]' : 'setSummaryStatsType',
     'change [data-hook=obs-data-file]' : 'setObsDataFile',
     'change [data-hook=obs-data-file-select]' : 'selectObsDataFile',
@@ -73,6 +76,8 @@ module.exports = View.extend({
     this.summaryStatCollections = {
       identity: null, minimal: null, custom: null
     }
+    this.summaryTypes = {"identity": "Identity", "minimal": "TSFresh Minimal", "custom": "Custom TSFresh"};
+    this.summaryType = this.summaryTypes[this.model.summaryStatsType];
   },
   render: function () {
     View.prototype.render.apply(this, arguments);
@@ -123,6 +128,7 @@ module.exports = View.extend({
         this.completeAction();
         $(this.queryByHook('collapseUploadObsData')).click();
         this.renderObsDataSelects();
+        $(this.queryByHook("view-obs-data-file")).text(this.model.obsData);
       },
       error: (err, response, body) => {
         body = JSON.parse(body);
@@ -248,24 +254,6 @@ module.exports = View.extend({
     let hook = "view-summary-stats-container";
     app.registerRenderSubview(this, this.viewSummaryStats, hook);
   },
-  setObsDataFile: function (e) {
-    this.obsDataFile = e.target.files[0];
-    $(this.queryByHook("import-obs-data-file")).prop('disabled', !this.obsDataFile);
-  },
-  setSummaryStatsType: function (e) {
-    if(this.summaryStatCollections[e.target.value] === null) {
-      var summaryStats = this.model.resetSummaryStats();
-    }else{
-      var summaryStats = this.model.summaryStats;
-      this.model.summaryStats = this.summaryStatCollections[e.target.value];
-    }
-    this.summaryStatCollections[this.model.summaryStatsType] = summaryStats;
-    this.model.summaryStatsType = e.target.value;
-    let display = e.target.value === "custom" ? "inline-block" : "none";
-    $(this.queryByHook("tsfresh-docs-link")).css("display", display);
-    this.renderEditSummaryStats();
-    this.renderViewSummaryStats();
-  },
   selectObsDataFile: function (e) {
     this.obsFig = null;
     let value = e.target.value;
@@ -283,17 +271,38 @@ module.exports = View.extend({
     }else{
       this.model.obsData = "";
     }
+    $(this.queryByHook("view-obs-data-file")).text(this.model.obsData ? this.model.obsData : "None");
     $(this.queryByHook("obs-data-location-message")).css('display', msgDisplay);
     $(this.queryByHook("obs-data-location-container")).css("display", contDisplay);
   },
   selectObsDataLocation: function (e) {
     this.obsFig = null;
     this.model.obsData = e.target.value ? e.target.value : "";
+    $(this.queryByHook("view-obs-data-file")).text(this.model.obsData ? this.model.obsData : "None");
   },
   startAction: function () {
     $(this.queryByHook("iodf-complete")).css("display", "none");
     $(this.queryByHook("iodf-error")).css("display", "none");
     $(this.queryByHook("iodf-in-progress")).css("display", "inline-block");
+  },
+  setObsDataFile: function (e) {
+    this.obsDataFile = e.target.files[0];
+    $(this.queryByHook("import-obs-data-file")).prop('disabled', !this.obsDataFile);
+  },
+  setSummaryStatsType: function (e) {
+    if(this.summaryStatCollections[e.target.value] === null) {
+      var summaryStats = this.model.resetSummaryStats();
+    }else{
+      var summaryStats = this.model.summaryStats;
+      this.model.summaryStats = this.summaryStatCollections[e.target.value];
+    }
+    this.summaryStatCollections[this.model.summaryStatsType] = summaryStats;
+    this.model.summaryStatsType = e.target.value;
+    let display = e.target.value === "custom" ? "inline-block" : "none";
+    $(this.queryByHook("view-summary-type")).text(this.summaryTypes[this.model.summaryStatsType]);
+    $(this.queryByHook("tsfresh-docs-link")).css("display", display);
+    this.renderEditSummaryStats();
+    this.renderViewSummaryStats();
   },
   toggleImportFiles: function (e) {
     let classes = $(this.queryByHook('collapseImportObsData')).attr("class").split(/\s+/);
@@ -315,7 +324,41 @@ module.exports = View.extend({
   },
   update: function (e) {},
   updateValid: function (e) {},
+  updateEpochsView: function (e) {
+    $(this.queryByHook("view-num-epochs")).text(this.model.numEpochs);
+  },
+  updateSamplesView: function (e) {
+    $(this.queryByHook("view-num-samples")).text(this.model.numSamples);
+  },
   subviews: {
+    numEpochsInputView: {
+      hook: "num-epochs",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'number-of-epochs',
+          tests: tests.valueTests,
+          modelKey: 'numEpochs',
+          valueType: 'number',
+          value: this.model.numEpochs
+        });
+      }
+    },
+    numSamplesInputView: {
+      hook: "num-samples",
+      prepareView: function (el) {
+        return new InputView({
+          parent: this,
+          required: true,
+          name: 'number-of-samples',
+          tests: tests.valueTests,
+          modelKey: 'numSamples',
+          valueType: 'number',
+          value: this.model.numSamples
+        });
+      }
+    },
     summaryStatsTypeView: {
       hook: "summary-stats-type-select",
       prepareView: function (el) {
