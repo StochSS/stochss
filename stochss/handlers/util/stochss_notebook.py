@@ -278,7 +278,7 @@ class StochSSNotebook(StochSSBase):
     def __create_run(self, results, compute="StochSS"):
         nb_run_header = "***\n## Run the Simulation\n***"
         nb_run = ["kwargs = configure_simulation()"]
-        if compute == "AWS Cloud":
+        if compute in ("AWS Cloud", "AWS"):
             nb_run.append("simulation = stochss_compute.RemoteSimulation(model, server=cluster)")
             nb_res = "results = simulation.run(**kwargs)"
         else:
@@ -951,14 +951,14 @@ class StochSSNotebook(StochSSBase):
         cells = self.create_common_cells()
 
         self.settings['solver'] = self.get_gillespy2_solver_name()
-        if results is not None:
-            cells.insert(1, nbf.new_code_cell("import os\nimport pickle"))
         run_header, run_code = self.__create_run(results, compute=compute)
         vis_header = nbf.new_markdown_cell("***\n## Visualization\n***")
         vis_code = nbf.new_code_cell("results.plotplotly()")
         cells.extend([run_header, run_code, vis_header, vis_code])
         if compute != "StochSS":
             self.__create_compute_cells(cells, compute)
+        if results is not None:
+            cells.insert(1, nbf.new_code_cell("import os\nimport pickle"))
 
         message = self.write_notebook_file(cells=cells)
         return {"Message":message, "FilePath":self.get_path(), "File":self.get_file()}
