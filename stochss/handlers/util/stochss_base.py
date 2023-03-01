@@ -55,31 +55,54 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
-    @classmethod
-    def __build_example_html(cls, exm_data, home):
-        row = "<div class='row'>__CONTENTS__</div>"
-        entry = "__ALERT__' href='__OPEN_LINK__' role='button' style='width: 100%'>__NAME__</a>"
-        entry_a = f"<a class='btn box-shadow btn-outline-{entry}"
+    def __build_example_html(self, exm_data, home):
+        section = "<div>__ROWS__</div>"
+        row = "<div class='mx-1'><div class='row'>__COLUMNS__</div></div>"
 
         # Well Mixed Examples
         wm_list = []
         for entry in exm_data['Well-Mixed']:
-            exm_a = entry_a.replace("__ALERT__", entry['alert'])
-            exm_a = exm_a.replace("__OPEN_LINK__", f"{home}?open={entry['open_link']}")
-            exm_a = exm_a.replace("__NAME__", entry['name'])
-            wm_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
-        well_mixed = row.replace("__CONTENTS__", ''.join(wm_list))
+            columns = self.__build_html_entry(entry, home)
+            wm_list.append(row.replace("__COLUMNS__", columns))
+        well_mixed = section.replace("__ROWS__", "<hr class='mx-1'>".join(wm_list))
 
         # Spatial Examples
         s_list = []
         for entry in exm_data['Spatial']:
-            exm_a = entry_a.replace("__ALERT__", entry['alert'])
-            exm_a = exm_a.replace("__OPEN_LINK__", f"{home}?open={entry['open_link']}")
-            exm_a = exm_a.replace("__NAME__", entry['name'])
-            s_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
-        spatial = row.replace("__CONTENTS__", ''.join(s_list))
+            columns = self.__build_html_entry(entry, home)
+            s_list.append(row.replace("__COLUMNS__", columns))
+        spatial = section.replace("__ROWS__", "<hr class='mx-1'>".join(s_list))
 
         return {"wellMixed": well_mixed, "spatial": spatial}
+
+    @classmethod
+    def __build_html_entry(cls, entry, home):
+        desc = entry['description'] if 'description' in entry else "TODO"
+
+        nav_alert = "secondary" if entry['alert'] == "success" else entry['alert']
+        nav_status = "" if entry['alert'] == "primary" else " disabled"
+        nav_link = f"/stochss/project/manager?path=Examples/{entry['name']}.proj"
+        nav_title = "Error!" if entry['alert'] == "danger" else "Open"
+        nav_classes = f"class='btn full-btn btn-outline-{nav_alert} box-shadow{nav_status}'"
+        nav_a = f"<a {nav_classes} href='{nav_link}' role='button'>{nav_title}</a>"
+
+        imp_alert = "success" if entry['alert'] == "danger" else entry['alert']
+        imp_link = f"{home}?open={entry['open_link']}"
+        imp_title = "Update" if entry['alert'] == "primary" else "Import"
+        imp_classes = f"class='btn full-btn btn-outline-{imp_alert} box-shadow'"
+        imp_a = f"<a {imp_classes} href='{imp_link}' role='button'>{imp_title}</a>"
+
+        mod_label = "Added" if entry['alert'] == "success" else "Last Updated"
+        mod_date = entry['mod_time'] if entry['mod_time'] is not None else "TODO"
+
+        return "".join([
+            f"<div class='col-sm-3'><h6><b>{entry['name']}</b></h6></div>"
+            f"<div class='col-sm-5'><p>{desc}</p></div>",
+            "<div class='col-sm-4'><div class='row'>",
+            f"<div class='col-sm-6'>{nav_a}</div>",
+            f"<div class='col-sm-6'>{imp_a}</div>",
+            f"<div class='ml-5 mr-1 mt-3'>{mod_label}: {mod_date}</div></div></div>"
+        ])
 
     @classmethod
     def __get_entry(cls, entries, name):
@@ -112,12 +135,16 @@ class StochSSBase():
             entry['alert'] = "success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Well-Mixed'], entry['name'])
+                if old_entry is None:
+                    continue
                 entry['mod_time'] = old_entry['mod_time']
                 entry['umd5_sum'] = old_entry['umd5_sum']
         for entry in exm_data['Spatial']:
             entry['alert'] = "success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Spatial'], entry['name'])
+                if old_entry is None:
+                    continue
                 entry['mod_time'] = old_entry['mod_time']
                 entry['umd5_sum'] = old_entry['umd5_sum']
 
@@ -146,7 +173,12 @@ class StochSSBase():
                         entry = self.__get_entry(
                             exm_data['Spatial'], exm_data['Name-Mappings'][example]
                         )
-                    entry['alert'] = "primary"
+                    if entry is None:
+                        continue
+                    if example == "Example SIR Epidemic Project.proj":
+                        entry['alert'] = "danger"
+                    else:
+                        entry['alert'] = "primary"
 
     def add_presentation_name(self, file, name):
         '''

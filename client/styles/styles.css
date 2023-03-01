@@ -404,6 +404,10 @@ input[type="file"]::-ms-browse {
   color: #0056b3;
 }
 
+.full-btn {
+  width: 100%;
+}
+
 #collapse-description {
   padding: 0rem 2rem;
   font-size: 12px;
