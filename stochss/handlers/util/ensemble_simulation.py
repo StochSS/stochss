@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -18,12 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 
 import os
-import numpy
+import copy
 import pickle
 import logging
 import traceback
 
-from gillespy2 import TimeSpan
+import gillespy2
+from stochss_compute import RemoteSimulation
 
 from .stochss_job import StochSSJob
 from .stochss_errors import StochSSAPIError, StochSSJobResultsError
@@ -89,21 +90,10 @@ class EnsembleSimulation(StochSSJob):
                 end = self.settings['timespanSettings']['endSim']
                 step_size = self.settings['timespanSettings']['timeStep']
                 self.g_model.timespan(
-                    TimeSpan.arange(step_size, t=end + step_size)
+                    gillespy2.TimeSpan.arange(step_size, t=end + step_size)
                 )
 
-
-    def run(self, preview=False, verbose=True):
-        '''
-        Run a GillesPy2 ensemble simulation job
-
-        Attributes
-        ----------
-        preview : bool
-            Indicates whether or not to run a 5 sec preivew
-        verbose : bool
-            Indicates whether or not to print debug statements
-        '''
+    def __run(self, run_func, preview=False, verbose=True):
         if preview:
             if verbose:
                 log.info(f"Running {self.g_model.name} preview simulation")
@@ -117,16 +107,14 @@ class EnsembleSimulation(StochSSJob):
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot
-        if verbose:
-            log.info("Running the ensemble simulation")
         if self.settings['simulationSettings']['isAutomatic']:
             self.__update_timespan()
             is_ode = self.g_model.get_best_solver().name in ["ODESolver", "ODECSolver"]
-            results = self.g_model.run(number_of_trajectories=1 if is_ode else 100)
+            results = run_func(verbose=verbose, number_of_trajectories=1 if is_ode else 100)
         else:
             kwargs = self.__get_run_settings()
             self.__update_timespan()
-            results = self.g_model.run(**kwargs)
+            results = run_func(verbose=verbose, **kwargs)
         if verbose:
             log.info("The ensemble simulation has completed")
             log.info("Storing the results as pickle")
@@ -140,3 +128,38 @@ class EnsembleSimulation(StochSSJob):
             trace = str(pkl_err)
             raise StochSSJobResultsError(message, trace)
         return None
+
+    def __run_in_aws(self, verbose=False, **kwargs):
+        aws_kwargs = copy.deepcopy(kwargs)
+        if 'solver' in kwargs:
+            aws_kwargs['solver'] = kwargs['solver'].__class__
+        if verbose:
+            log.info("Running the ensemble simulation in AWS")
+
+        cluster = self.get_aws_cluster()
+        # Run the simulation
+        simulation = RemoteSimulation(self.g_model, server=cluster)
+        aws_results = simulation.run(**aws_kwargs)
+        return aws_results.get_gillespy2_results()
+
+    def __run_local(self, verbose=False, **kwargs):
+        if verbose:
+            log.info("Running the ensemble simulation locally")
+        return self.g_model.run(**kwargs)
+
+    def run(self, preview=False, verbose=True):
+        '''
+        Run a GillesPy2 ensemble simulation job
+
+        Attributes
+        ----------
+        preview : bool
+            Indicates whether or not to run a 5 sec preivew
+        verbose : bool
+            Indicates whether or not to print debug statements
+        '''
+        compute_env = self.load_info()['compute_env']
+        if compute_env == 'AWS':
+            results = self.__run(self.__run_in_aws, preview=preview, verbose=verbose)
+            return results
+        return self.__run(self.__run_local, preview=preview, verbose=verbose)
