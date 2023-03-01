@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -415,3 +415,68 @@ class StochSSJobResultsError(StochSSAPIError):
             Error traceback for the error
         '''
         super().__init__(500, "Job Results Error", msg, trace)
+
+
+####################################################################################################
+# AWS Errors
+####################################################################################################
+
+class AWSConfigurationError(StochSSAPIError):
+    '''
+    ################################################################################################
+    AWS Configuration Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that StochSS Compute configured to run jobs.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "AWS Configuration Error", msg, trace)
+
+class AWSLauncherError(StochSSAPIError):
+    '''
+    ################################################################################################
+    AWS Launcher Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the StochSS Compute launcher single node instance failed.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "AWS Launch Error", msg, trace)
+
+class AWSTerminatorError(StochSSAPIError):
+    '''
+    ################################################################################################
+    AWS Terminator Error
+    ################################################################################################
+    '''
+
+    def __init__(self, msg, trace=None):
+        '''
+        Indicates that the StochSS Compute clean up failed.
+
+        Attributes
+        ----------
+        msg : str
+            Details on what caused the error
+        trace : str
+            Error traceback for the error
+        '''
+        super().__init__(403, "AWS Terminate Error", msg, trace)

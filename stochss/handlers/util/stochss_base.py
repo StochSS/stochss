@@ -1,6 +1,6 @@
 '''
 StochSS is a platform for simulating biochemical systems
-Copyright (C) 2019-2022 StochSS developers.
+Copyright (C) 2019-2023 StochSS developers.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -22,8 +22,13 @@ import time
 import shutil
 import datetime
 import traceback
+import subprocess
 
+import dotenv
 import requests
+
+from stochss_compute.cloud import EC2Cluster, EC2LocalConfig
+from stochss_compute.cloud.exceptions import EC2Exception
 
 from .stochss_errors import StochSSFileNotFoundError, StochSSPermissionsError, \
                             FileNotJSONFormatError
@@ -50,31 +55,54 @@ class StochSSBase():
         self.path = path
         self.logs = []
 
-    @classmethod
-    def __build_example_html(cls, exm_data, home):
-        row = "<div class='row'>__CONTENTS__</div>"
-        entry = "__ALERT__' href='__OPEN_LINK__' role='button' style='width: 100%'>__NAME__</a>"
-        entry_a = f"<a class='btn box-shadow btn-outline-{entry}"
+    def __build_example_html(self, exm_data, home):
+        section = "<div>__ROWS__</div>"
+        row = "<div class='mx-1'><div class='row'>__COLUMNS__</div></div>"
 
         # Well Mixed Examples
         wm_list = []
         for entry in exm_data['Well-Mixed']:
-            exm_a = entry_a.replace("__ALERT__", entry['alert'])
-            exm_a = exm_a.replace("__OPEN_LINK__", f"{home}?open={entry['open_link']}")
-            exm_a = exm_a.replace("__NAME__", entry['name'])
-            wm_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
-        well_mixed = row.replace("__CONTENTS__", ''.join(wm_list))
+            columns = self.__build_html_entry(entry, home)
+            wm_list.append(row.replace("__COLUMNS__", columns))
+        well_mixed = section.replace("__ROWS__", "<hr class='mx-1'>".join(wm_list))
 
         # Spatial Examples
         s_list = []
         for entry in exm_data['Spatial']:
-            exm_a = entry_a.replace("__ALERT__", entry['alert'])
-            exm_a = exm_a.replace("__OPEN_LINK__", f"{home}?open={entry['open_link']}")
-            exm_a = exm_a.replace("__NAME__", entry['name'])
-            s_list.append(f"<div class='col-md-4 col-lg-3 my-2'>{exm_a}</div>")
-        spatial = row.replace("__CONTENTS__", ''.join(s_list))
+            columns = self.__build_html_entry(entry, home)
+            s_list.append(row.replace("__COLUMNS__", columns))
+        spatial = section.replace("__ROWS__", "<hr class='mx-1'>".join(s_list))
 
         return {"wellMixed": well_mixed, "spatial": spatial}
+
+    @classmethod
+    def __build_html_entry(cls, entry, home):
+        desc = entry['description'] if 'description' in entry else "TODO"
+
+        nav_alert = "secondary" if entry['alert'] == "success" else entry['alert']
+        nav_status = "" if entry['alert'] == "primary" else " disabled"
+        nav_link = f"/stochss/project/manager?path=Examples/{entry['name']}.proj"
+        nav_title = "Error!" if entry['alert'] == "danger" else "Open"
+        nav_classes = f"class='btn full-btn btn-outline-{nav_alert} box-shadow{nav_status}'"
+        nav_a = f"<a {nav_classes} href='{nav_link}' role='button'>{nav_title}</a>"
+
+        imp_alert = "success" if entry['alert'] == "danger" else entry['alert']
+        imp_link = f"{home}?open={entry['open_link']}"
+        imp_title = "Update" if entry['alert'] == "primary" else "Import"
+        imp_classes = f"class='btn full-btn btn-outline-{imp_alert} box-shadow'"
+        imp_a = f"<a {imp_classes} href='{imp_link}' role='button'>{imp_title}</a>"
+
+        mod_label = "Added" if entry['alert'] == "success" else "Last Updated"
+        mod_date = entry['mod_time'] if entry['mod_time'] is not None else "TODO"
+
+        return "".join([
+            f"<div class='col-sm-3'><h6><b>{entry['name']}</b></h6></div>"
+            f"<div class='col-sm-5'><p>{desc}</p></div>",
+            "<div class='col-sm-4'><div class='row'>",
+            f"<div class='col-sm-6'>{nav_a}</div>",
+            f"<div class='col-sm-6'>{imp_a}</div>",
+            f"<div class='ml-5 mr-1 mt-3'>{mod_label}: {mod_date}</div></div></div>"
+        ])
 
     @classmethod
     def __get_entry(cls, entries, name):
@@ -107,12 +135,16 @@ class StochSSBase():
             entry['alert'] = "success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Well-Mixed'], entry['name'])
+                if old_entry is None:
+                    continue
                 entry['mod_time'] = old_entry['mod_time']
                 entry['umd5_sum'] = old_entry['umd5_sum']
         for entry in exm_data['Spatial']:
             entry['alert'] = "success"
             if old_exm_data is not None:
                 old_entry = self.__get_entry(old_exm_data['Spatial'], entry['name'])
+                if old_entry is None:
+                    continue
                 entry['mod_time'] = old_entry['mod_time']
                 entry['umd5_sum'] = old_entry['umd5_sum']
 
@@ -141,7 +173,12 @@ class StochSSBase():
                         entry = self.__get_entry(
                             exm_data['Spatial'], exm_data['Name-Mappings'][example]
                         )
-                    entry['alert'] = "primary"
+                    if entry is None:
+                        continue
+                    if example == "Example SIR Epidemic Project.proj":
+                        entry['alert'] = "danger"
+                    else:
+                        entry['alert'] = "primary"
 
     def add_presentation_name(self, file, name):
         '''
@@ -222,6 +259,29 @@ class StochSSBase():
         with open(path, "w", encoding="utf-8") as names_file:
             json.dump(names, names_file)
 
+
+    def get_aws_cluster(self, instance=None):
+        '''
+        Get the AWS cluster.
+
+        Attributes
+        ----------
+        instance : str
+            AWS EC2 instance.
+        '''
+        key_dir = os.path.join(self.user_dir, ".aws")
+        if instance is None:
+            path = os.path.join(self.user_dir, ".user-settings.json")
+            settings = self.load_user_settings(path=path)
+            instance = settings['headNode']
+        s_path = os.path.join(key_dir, f"{instance.replace('.', '-')}-status.txt")
+        # Setup the AWS environment
+        env_path = os.path.join(key_dir, "awsec2.env")
+        dotenv.load_dotenv(dotenv_path=env_path)
+        # Configure the AWS cluster
+        local_config = EC2LocalConfig(key_dir=key_dir, status_file=s_path)
+        cluster = EC2Cluster(local_config=local_config)
+        return cluster
 
     @classmethod
     def get_new_path(cls, dst_path):
@@ -444,6 +504,21 @@ class StochSSBase():
 
         return os.path.join(dirname, cp_file)
 
+    def launch_aws_cluster(self):
+        '''
+        Launch an AWS instance.
+        '''
+        settings = self.load_user_settings(path='.user-settings.json')
+        instance = settings['headNode']
+
+        try:
+            cluster = self.get_aws_cluster(instance=instance)
+            cluster.launch_single_node_instance(instance)
+        except EC2Exception:
+            pass
+        except Exception:
+            cluster.clean_up()
+
     def load_example_library(self, home):
         '''
         Load the example library dropdown list.
@@ -466,6 +541,33 @@ class StochSSBase():
             json.dump(exm_data, data_file, sort_keys=True, indent=4)
 
         return self.__build_example_html(exm_data, home)
+
+    def load_user_settings(self, path=None):
+        '''
+        Load the user settings from file.
+
+        Attributes
+        ----------
+        path : str
+            Absolute path to the user settings file.
+        '''
+        if path is None and os.path.exists(self.path):
+            path = self.path
+        elif path is None or not os.path.exists(path):
+            path = "/stochss/stochss_templates/userSettingTemplate.json"
+        with open(path, "r", encoding="utf-8") as usrs_fd:
+            settings = json.load(usrs_fd)
+        settings['awsHeadNodeStatus'] = "not launched"
+        if os.path.exists(os.path.join(self.user_dir, ".aws/awsec2.env")):
+            settings['awsSecretKey'] = "*"*20
+            i_id = settings['headNode'].replace('.', '-')
+            s_path = os.path.join(self.user_dir, f".aws/{i_id}-status.txt")
+            if os.path.exists(s_path):
+                with open(s_path, 'r', encoding="utf-8") as aws_s_fd:
+                    settings['awsHeadNodeStatus'] = aws_s_fd.read().strip()
+        else:
+            settings['awsSecretKey'] = None
+        return settings
 
     def log(self, level, message):
         '''
@@ -536,5 +638,30 @@ class StochSSBase():
             message = f"Could not find the file or directory: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc()) from err
         except PermissionError as err:
-            message = f"You don not have permission to rename this file or directory: {str(err)}"
+            message = f"You do not have permission to rename this file or directory: {str(err)}"
             raise StochSSPermissionsError(message, traceback.format_exc()) from err
+
+    def terminate_aws_cluster(self):
+        '''
+        Terminate an AWS instance.
+        '''
+        cluster = self.get_aws_cluster()
+        cluster.clean_up()
+
+    def update_aws_status(self, instance):
+        '''
+        Updated the status of the aws instance.
+
+        Attributes
+        ----------
+        instance : str
+            The AWS instance.
+        '''
+        s_path = os.path.join(self.user_dir, f".aws/{instance.replace('.', '-')}-status.txt")
+        if not os.path.exists(s_path):
+            return
+
+        script = "/stochss/stochss/handlers/util/scripts/aws_compute.py"
+        exec_cmd = [f"{script}", "-sv"]
+        print("Updating the status of AWS")
+        process = subprocess.Popen(exec_cmd)
