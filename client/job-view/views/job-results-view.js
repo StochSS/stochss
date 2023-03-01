@@ -42,6 +42,7 @@ module.exports = View.extend({
     'change [data-hook=yaxis]' : 'setYAxis',
     'change [data-hook=target-of-interest-list]' : 'getPlotForTarget',
     'change [data-hook=target-mode-list]' : 'getPlotForTargetMode',
+    'change [data-hook=trajectory-index-slider]' : 'getPlotForTrajectory',
     'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
@@ -55,7 +56,8 @@ module.exports = View.extend({
     'click [data-target=download-plot-csv]' : 'handlePlotCSVClick',
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
     'click [data-hook=download-results-csv]' : 'handleFullCSVClick',
-    'click [data-hook=job-presentation]' : 'handlePresentationClick'
+    'click [data-hook=job-presentation]' : 'handlePresentationClick',
+    'input [data-hook=trajectory-index-slider]' : 'viewTrajectoryIndex'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -65,6 +67,7 @@ module.exports = View.extend({
     this.tooltips = Tooltips.jobResults;
     this.plots = {};
     this.plotArgs = {};
+    this.trajectoryIndex = 1;
   },
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
@@ -113,6 +116,10 @@ module.exports = View.extend({
       this.targetIndex = null;
       this.targetMode = "discrete";
       this.renderTargetOfInterestView();
+      if(this.model.settings.simulationSettings.realizations > 1) {
+        $(this.queryByHook("spatial-trajectory-header")).css("display", "inline-block");
+        $(this.queryByHook("spatial-trajectory-container")).css("display", "inline-block");
+      }
       $(this.queryByHook("spatial-plot-csv")).css('display', 'none');
     }
     this.getPlot(type);
@@ -218,7 +225,7 @@ module.exports = View.extend({
     }else if(type === "spatial") {
       data['sim_type'] = "SpatialPy";
       data['data_keys'] = {
-        target: this.spatialTarget, index: this.targetIndex, mode: this.targetMode
+        target: this.spatialTarget, index: this.targetIndex, mode: this.targetMode, trajectory: this.trajectoryIndex - 1
       };
       data['plt_key'] = type;
     }else {
@@ -259,16 +266,22 @@ module.exports = View.extend({
       this.targetIndex = null;
     }
     if(!["type", "v", "nu", "rho", "mass"].includes(this.spatialTarget)) {
-      $(this.queryByHook('job-results-mode')).css('display', 'inline-block');
+      $(this.queryByHook('job-results-mode-header')).css('display', 'inline-block');
+      $(this.queryByHook('job-results-mode-container')).css('display', 'inline-block');
       this.renderTargetModeView();
     }else{
-      $(this.queryByHook('job-results-mode')).css('display', 'none');
+      $(this.queryByHook('job-results-mode-header')).css('display', 'none');
+      $(this.queryByHook('job-results-mode-container')).css('display', 'none');
     }
     this.getPlot("spatial");
   },
   getPlotForTargetMode: function (e) {
     this.targetMode = e.target.value;
     this.getPlot("spatial");
+  },
+  getPlotForTrajectory: function (e) {
+    this.trajectoryIndex = Number(e.target.value);
+    this.getPlot('spatial');
   },
   getPlotKey: function (type) {
     if(type === "psweep") {
@@ -579,6 +592,9 @@ module.exports = View.extend({
   },
   update: function () {},
   updateValid: function () {},
+  viewTrajectoryIndex: function (e) {
+    $(this.queryByHook("trajectory-index-value")).html(e.target.value);
+  },
   subviews: {
     inputTitle: {
       hook: 'title',

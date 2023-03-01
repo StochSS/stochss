@@ -787,6 +787,10 @@ span.checkbox {
   display: none;
 }
 
+.custom-range {
+  height: auto;
+}
+
 .switch {
   position: relative;
   display: inline-block;
