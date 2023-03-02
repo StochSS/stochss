@@ -35,7 +35,8 @@ class HomeHandler(BaseHandler):
         Attributes
         ----------
         '''
-        html = self.render_template("stochss-home.html")
+        html = self.render_template("stochss-home.html", sync=True)
+        print(f"Type: '{type(html)}'")
         self.finish(html)
 
 
