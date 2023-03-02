@@ -36,7 +36,6 @@ class HomeHandler(BaseHandler):
         ----------
         '''
         html = self.render_template("stochss-home.html", sync=True)
-        print(f"Type: '{type(html)}'")
         self.finish(html)
 
 
@@ -53,7 +52,7 @@ class JobPresentationHandler(BaseHandler):
         Attributes
         ----------
         '''
-        html = self.render_template("stochss-job-presentation.html")
+        html = self.render_template("stochss-job-presentation.html", sync=True)
         self.finish(html)
 
 
@@ -70,7 +69,7 @@ class ModelPresentationHandler(BaseHandler):
         Attributes
         ----------
         '''
-        html = self.render_template("stochss-model-presentation.html")
+        html = self.render_template("stochss-model-presentation.html", sync=True)
         self.finish(html)
 
 
@@ -87,7 +86,7 @@ class NotebookPresentationHandler(BaseHandler):
         Attributes
         ----------
         '''
-        html = self.render_template("stochss-notebook-presentation.html")
+        html = self.render_template("stochss-notebook-presentation.html", sync=True)
         self.finish(html)
 
 
@@ -104,7 +103,7 @@ class MultiplePlotsHandler(BaseHandler):
         Attributes
         ----------
         '''
-        html = self.render_template("multiple-plots-page.html")
+        html = self.render_template("multiple-plots-page.html", sync=True)
         self.finish(html)
 
 class MessageAPIHandler(BaseHandler):
