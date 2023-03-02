@@ -81,7 +81,7 @@ class StochSSBase():
 
         nav_alert = "secondary" if entry['alert'] == "success" else entry['alert']
         nav_status = "" if entry['alert'] == "primary" else " disabled"
-        nav_link = f"/stochss/project/manager?path=Examples/{entry['name']}.proj"
+        nav_link = f"stochss/project/manager?path=Examples/{entry['name']}.proj"
         nav_title = "Error!" if entry['alert'] == "danger" else "Open"
         nav_classes = f"class='btn full-btn btn-outline-{nav_alert} box-shadow{nav_status}'"
         nav_a = f"<a {nav_classes} href='{nav_link}' role='button'>{nav_title}</a>"
