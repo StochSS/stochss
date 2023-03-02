@@ -40,7 +40,7 @@ EXPOSE 8000
 
 # Install dockerspawner, oauth, postgres
 RUN python3 -m pip install --no-cache-dir \
-        jupyterhub==1.1.0 \
+        jupyterhub \
         oauthenticator==0.11.* \
         dockerspawner==0.11.* \
         psycopg2-binary==2.9.* \
@@ -60,4 +60,5 @@ RUN cp /srv/jupyterhub/static/* /usr/local/share/jupyterhub/static/
 RUN cp /srv/jupyterhub/custom/favicon.ico /usr/local/share/jupyterhub/static/favicon.ico
 
 WORKDIR /srv/jupyterhub
-CMD ["jupyterhub" "-f" "/srv/jupyterhub/jupyterhub_config.py"]
+
+CMD ["sh" "-c" "jupyterhub upgrade-db && jupyterhub -f /srv/jupyterhub/jupyterhub_config.py"]
