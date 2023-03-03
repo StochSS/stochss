@@ -158,6 +158,11 @@ c.JupyterHub.services = [
         }
 ]
 
+## Roles managed by JupyterHub
+# c.JupyterHub.load_roles = [
+    
+# ]
+
 #---------------------------------------------------------------------------------------------------
 # Dockerspawner configuration
 #---------------------------------------------------------------------------------------------------
@@ -228,16 +233,30 @@ def update_users_sets():
                     elif parts[1] == 'blacklist':
                         blacklist.add(name)
 
+    c.JupyterHub.load_groups = {
+        'admin': admin, 'power': power_users
+    }
+
     c.JupyterHub.load_roles = [
+        {
+            'name': 'idle-culler',
+            'description': 'Culls idle servers after 8hrs',
+            "scopes": ["read:users:name", "read:users:activity", "servers"],
+            "services": ["cull-idle"]
+        },
+        {
+            'name': 'admin',
+            'scopes': ['servers','admin-ui','admin:users','admin:servers','admin:groups'],
+            'groups': ['admin']
+        },
         {
             'name': 'server-rights',
             'description': 'Allows parties to start and stop user servers',
-            'scopes': ['servers','admin-ui','admin:users','admin:servers','admin:groups'],
-            'users': admin,
-            'services': ['cull-idle'],
-            'groups': ['admin-group'],
+            'scopes': ['servers','delete:servers'],
+            'groups': ['admin']
         }
     ]
+    
 
 def get_user_cpu_count_or_fail():
     '''
