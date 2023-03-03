@@ -159,9 +159,44 @@ c.JupyterHub.services = [
 ]
 
 ## Roles managed by JupyterHub
-# c.JupyterHub.load_roles = [
-    
-# ]
+c.JupyterHub.load_roles = [
+    {
+        'name': 'idle-culler',
+        'description': 'Culls idle servers after 8hrs',
+        "scopes": ["read:users:name", "read:users:activity", "servers"],
+        "services": ["cull-idle"]
+    },
+    {
+        'name': 'server-rights',
+        'description': 'Allows parties to start and stop user servers',
+        'scopes': [
+            'admin-ui','admin:users','admin:servers','admin:groups','shutdown',
+            # Admin users scope
+            # Teir 1
+            'admin:auth_state','users','read:roles:users','delete:users',
+            # Teir 2
+            # 'read:users','list:users','users:activity',
+            # Teir 3
+            # 'read:users:name','read:users:groups','read:users:activity','read:users:name','read:users:activity',
+            # Admin servers scope
+            # Teir 1
+            'admin:server_state','servers',
+            # Teir 2
+            # 'read:servers','delete:servers',
+            # Teir 3
+            # 'read:users:name',
+            # Admin groups scope
+            # Teir 1
+            'groups','read:roles:groups','delete:groups',
+            # Teir 2
+            # 'read:groups','list:groups',
+            # Teir 3
+            # 'read:groups:name','read:groups:name',
+        ],
+        'groups': ['admin'],
+        "services": ["cull-idle"]
+    }
+]
 
 #---------------------------------------------------------------------------------------------------
 # Dockerspawner configuration
@@ -236,27 +271,6 @@ def update_users_sets():
     c.JupyterHub.load_groups = {
         'admin': list(admin), 'power': list(power_users)
     }
-
-    c.JupyterHub.load_roles = [
-        {
-            'name': 'idle-culler',
-            'description': 'Culls idle servers after 8hrs',
-            "scopes": ["read:users:name", "read:users:activity", "servers"],
-            "services": ["cull-idle"]
-        },
-        {
-            'name': 'admin',
-            'scopes': ['servers','admin-ui','admin:users','admin:servers','admin:groups'],
-            'groups': ['admin']
-        },
-        {
-            'name': 'server-rights',
-            'description': 'Allows parties to start and stop user servers',
-            'scopes': ['servers','delete:servers'],
-            'groups': ['admin']
-        }
-    ]
-    
 
 def get_user_cpu_count_or_fail():
     '''
