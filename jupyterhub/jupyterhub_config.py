@@ -228,6 +228,17 @@ def update_users_sets():
                     elif parts[1] == 'blacklist':
                         blacklist.add(name)
 
+    c.JupyterHub.load_roles = [
+        {
+            'name': 'server-rights',
+            'description': 'Allows parties to start and stop user servers',
+            'scopes': ['servers'],
+            'users': admin,
+            'services': ['cull-idle'],
+            'groups': ['admin-group'],
+        }
+    ]
+
 def get_user_cpu_count_or_fail():
     '''
     Get the user cpu count or raise error.
@@ -267,6 +278,7 @@ def pre_spawn_hook(spawner):
     log.info(f"Beginning pre_spawn_hook for {spawner.user.name}")
     # Update admins, power users, and blacklist users
     update_users_sets()
+
     # Remove the memory limit for power users
     if c.StochSS.user_cpu_count == 0:
         spawner.mem_limit = None
