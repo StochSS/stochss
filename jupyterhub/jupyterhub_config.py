@@ -234,7 +234,7 @@ def update_users_sets():
                         blacklist.add(name)
 
     c.JupyterHub.load_groups = {
-        'admin': admin, 'power': power_users
+        'admin': list(admin), 'power': list(power_users)
     }
 
     c.JupyterHub.load_roles = [
