@@ -232,7 +232,7 @@ def update_users_sets():
         {
             'name': 'server-rights',
             'description': 'Allows parties to start and stop user servers',
-            'scopes': ['servers'],
+            'scopes': ['servers','admin:users'],
             'users': admin,
             'services': ['cull-idle'],
             'groups': ['admin-group'],
