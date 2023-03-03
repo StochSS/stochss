@@ -170,28 +170,40 @@ c.JupyterHub.load_roles = [
         'name': 'server-rights',
         'description': 'Allows parties to start and stop user servers',
         'scopes': [
-            'admin-ui','admin:users','admin:servers','admin:groups','shutdown',
+            'admin-ui',
             # Admin users scope
+            'admin:users',
             # Teir 1
             'admin:auth_state','users','read:roles:users','delete:users',
             # Teir 2
-            # 'read:users','list:users','users:activity',
+            'read:users','list:users','users:activity',
             # Teir 3
-            # 'read:users:name','read:users:groups','read:users:activity','read:users:name','read:users:activity',
+            'read:users:name','read:users:groups','read:users:activity','read:users:name','read:users:activity',
+            # Read roles scope
+            'read:roles',
+            # Teir 1
+            'read:roles:users','read:roles:services','read:roles:groups',
             # Admin servers scope
+            'admin:servers',
             # Teir 1
             'admin:server_state','servers',
             # Teir 2
-            # 'read:servers','delete:servers',
+            'read:servers','delete:servers',
             # Teir 3
-            # 'read:users:name',
+            'read:users:name',
+            # Tokens scope
+            'tokens','read:tokens',
             # Admin groups scope
+            'admin:groups',
             # Teir 1
             'groups','read:roles:groups','delete:groups',
             # Teir 2
-            # 'read:groups','list:groups',
+            'read:groups','list:groups',
             # Teir 3
-            # 'read:groups:name','read:groups:name',
+            'read:groups:name','read:groups:name',
+            # List/Read services scope
+            'list:services','read:services','read:services:name',
+            'read:hub','access:servers','access:services','proxy','shutdown','read:metrics'
         ],
         'groups': ['admin'],
         "services": ["cull-idle"]
