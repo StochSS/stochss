@@ -10,8 +10,8 @@ jobs:
       id: checkout
       uses: actions/checkout@v2.1.0
       # Setup container & execute Python unit tests
-    - name: run_tests.py
-      id: run_tests
+    - name: run_all_tests.py
+      id: run_all_tests
       uses: ./
       with:
-        testin: '/stochss/stochss/tests/run_tests.py'
+        testin: '/stochss/stochss/tests/run_all_tests.py'
