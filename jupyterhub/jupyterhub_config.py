@@ -229,65 +229,65 @@ def update_users_sets():
                         blacklist.add(name)
 
     ## Roles managed by JupyterHub
-    c.JupyterHub.load_groups = {
-        'stochss-admin-users': list(admin), 'stochss-power-users': list(power_users)
-    }
+    # c.JupyterHub.load_groups = {
+    #     'stochss-admin-users': list(admin), 'stochss-power-users': list(power_users)
+    # }
 
     ## Roles managed by JupyterHub
-    c.JupyterHub.load_roles = [
-        {
-            'name': 'idle-culler',
-            'description': 'Culls idle servers after 8hrs',
-            "scopes": ["read:users:name", "read:users:activity", "servers"],
-            "services": ["cull-idle"]
-        },
-        {
-            'name': 'server-rights',
-            'description': 'Allows parties to start and stop user servers',
-            'scopes': [
-                'admin-ui',
-                # Admin users scope
-                'admin:users',
-                # Teir 1
-                'admin:auth_state','users','read:roles:users','delete:users',
-                # Teir 2
-                'read:users','list:users','users:activity',
-                # Teir 3
-                'read:users:name','read:users:groups','read:users:activity','read:users:name','read:users:activity',
-                # Read roles scope
-                'read:roles',
-                # Teir 1
-                'read:roles:users','read:roles:services','read:roles:groups',
-                # Admin servers scope
-                'admin:servers',
-                # Teir 1
-                'admin:server_state','servers',
-                # Teir 2
-                'read:servers','delete:servers',
-                # Teir 3
-                'read:users:name',
-                # Tokens scope
-                'tokens','read:tokens',
-                # Admin groups scope
-                'admin:groups',
-                # Teir 1
-                'groups','read:roles:groups','delete:groups',
-                # Teir 2
-                'read:groups','list:groups',
-                # Teir 3
-                'read:groups:name','read:groups:name',
-                # List/Read services scope
-                'list:services','read:services','read:services:name',
-                'read:hub','access:servers','access:services','proxy','shutdown','read:metrics'
-            ],
-            'users': [
-                'jupyterhub-user-bmrumsey-40gmail-2ecom,' 'jupyterhub-user-brumsey-40unca-2eedu',
-                'bmrumsey-40gmail-2ecom,' 'brumsey-40unca-2eedu'
-            ],
-            'groups': ['stochss-admin-users'],
-            "services": ["cull-idle"]
-        }
-    ]
+    # c.JupyterHub.load_roles = [
+    #     {
+    #         'name': 'idle-culler',
+    #         'description': 'Culls idle servers after 8hrs',
+    #         "scopes": ["read:users:name", "read:users:activity", "servers"],
+    #         "services": ["cull-idle"]
+    #     },
+    #     {
+    #         'name': 'server-rights',
+    #         'description': 'Allows parties to start and stop user servers',
+    #         'scopes': [
+    #             'admin-ui',
+    #             # Admin users scope
+    #             'admin:users',
+    #             # Teir 1
+    #             'admin:auth_state','users','read:roles:users','delete:users',
+    #             # Teir 2
+    #             'read:users','list:users','users:activity',
+    #             # Teir 3
+    #             'read:users:name','read:users:groups','read:users:activity','read:users:name','read:users:activity',
+    #             # Read roles scope
+    #             'read:roles',
+    #             # Teir 1
+    #             'read:roles:users','read:roles:services','read:roles:groups',
+    #             # Admin servers scope
+    #             'admin:servers',
+    #             # Teir 1
+    #             'admin:server_state','servers',
+    #             # Teir 2
+    #             'read:servers','delete:servers',
+    #             # Teir 3
+    #             'read:users:name',
+    #             # Tokens scope
+    #             'tokens','read:tokens',
+    #             # Admin groups scope
+    #             'admin:groups',
+    #             # Teir 1
+    #             'groups','read:roles:groups','delete:groups',
+    #             # Teir 2
+    #             'read:groups','list:groups',
+    #             # Teir 3
+    #             'read:groups:name','read:groups:name',
+    #             # List/Read services scope
+    #             'list:services','read:services','read:services:name',
+    #             'read:hub','access:servers','access:services','proxy','shutdown','read:metrics'
+    #         ],
+    #         'users': [
+    #             'jupyterhub-user-bmrumsey-40gmail-2ecom,' 'jupyterhub-user-brumsey-40unca-2eedu',
+    #             'bmrumsey-40gmail-2ecom,' 'brumsey-40unca-2eedu'
+    #         ],
+    #         'groups': ['stochss-admin-users'],
+    #         "services": ["cull-idle"]
+    #     }
+    # ]
 
 def get_user_cpu_count_or_fail():
     '''
