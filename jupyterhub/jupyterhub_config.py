@@ -280,6 +280,7 @@ def update_users_sets():
                 'list:services','read:services','read:services:name',
                 'read:hub','access:servers','access:services','proxy','shutdown','read:metrics'
             ],
+            'users': list(admin),
             'groups': ['admin'],
             "services": ["cull-idle"]
         }
