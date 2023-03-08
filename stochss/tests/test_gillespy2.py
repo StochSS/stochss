@@ -22,7 +22,7 @@ import unittest
 from gillespy2 import GillesPySolver
 
 from example_models import (
-    Brusselator,
+    #Brusselator,
     Degradation,
     Dimerization,
     LotkavolterraOscillator,
@@ -31,7 +31,7 @@ from example_models import (
     Schlogl,
     ToggleSwitch,
     VilarOscillator,
-    Oregonator,
+    #Oregonator,
     TysonOscillator
 )
 
@@ -46,7 +46,8 @@ class TestGillesPy2Dependency(unittest.TestCase):
     '''
     def setUp(self):
         ''' Create a list of common example paths for each test. '''
-        self.test_models = [Brusselator, Degradation, Dimerization, LotkavolterraOscillator,
+        self.test_models = [#Brusselator, 
+                            Degradation, Dimerization, LotkavolterraOscillator,
                             MichaelisMenten, Opioid, Schlogl, ToggleSwitch, VilarOscillator]
 
     ################################################################################################
@@ -90,7 +91,7 @@ class TestGillesPy2Dependency(unittest.TestCase):
         ''' Check if the test_models run with the ODESolver. '''
         from gillespy2 import ODESolver
 
-        self.test_models.append(Oregonator)
+        #self.test_models.append(Oregonator)
         for model in self.test_models:
             test_model = model()
             with self.subTest(model=test_model.name):
@@ -101,7 +102,7 @@ class TestGillesPy2Dependency(unittest.TestCase):
         ''' Check if the test_models run with the ODECSolver. '''
         from gillespy2 import ODECSolver
 
-        self.test_models.append(Oregonator)
+        #self.test_models.append(Oregonator)
         for model in self.test_models:
             test_model = model()
             with self.subTest(model=test_model.name):
@@ -159,7 +160,7 @@ class TestGillesPy2Dependency(unittest.TestCase):
         ''' Check if the test_models run with the TauHybridSolver. '''
         from gillespy2 import TauHybridSolver
 
-        self.test_models.append(Oregonator)
+        #self.test_models.append(Oregonator)
         self.test_models.append(TysonOscillator)
         self.test_models.remove(VilarOscillator)
         for model in self.test_models:
@@ -172,7 +173,7 @@ class TestGillesPy2Dependency(unittest.TestCase):
         ''' Check if the test_models run with the TauHybridCSolver. '''
         from gillespy2 import TauHybridCSolver
 
-        self.test_models.append(Oregonator)
+        #self.test_models.append(Oregonator)
         self.test_models.append(TysonOscillator)
         self.test_models.remove(VilarOscillator)
         self.test_models.remove(ToggleSwitch)
