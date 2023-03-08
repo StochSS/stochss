@@ -280,7 +280,10 @@ def update_users_sets():
                 'list:services','read:services','read:services:name',
                 'read:hub','access:servers','access:services','proxy','shutdown','read:metrics'
             ],
-            'users': ['brumsey', 'bmrumsey'],
+            'users': [
+                'jupyterhub-user-bmrumsey-40gmail-2ecom,' 'jupyterhub-user-brumsey-40unca-2eedu',
+                'bmrumsey-40gmail-2ecom,' 'brumsey-40unca-2eedu'
+            ],
             'groups': ['stochss-admin-users'],
             "services": ["cull-idle"]
         }
