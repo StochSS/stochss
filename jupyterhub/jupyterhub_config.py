@@ -230,7 +230,7 @@ def update_users_sets():
 
     ## Roles managed by JupyterHub
     c.JupyterHub.load_groups = {
-        'admin': list(admin), 'power': list(power_users)
+        'stochss-admin-users': list(admin), 'stochss-power-users': list(power_users)
     }
 
     ## Roles managed by JupyterHub
@@ -280,8 +280,8 @@ def update_users_sets():
                 'list:services','read:services','read:services:name',
                 'read:hub','access:servers','access:services','proxy','shutdown','read:metrics'
             ],
-            'users': list(admin),
-            'groups': ['admin'],
+            'users': ['brumsey', 'bmrumsey'],
+            'groups': ['stochss-admin-users'],
             "services": ["cull-idle"]
         }
     ]
