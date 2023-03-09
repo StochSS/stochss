@@ -17,22 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import time
 import unittest
 
-from gillespy2 import GillesPySolver
+import gillespy2
 
 from example_models import (
-    #Brusselator,
-    Degradation,
-    Dimerization,
-    LotkavolterraOscillator,
-    MichaelisMenten,
-    Opioid,
-    Schlogl,
-    ToggleSwitch,
-    VilarOscillator,
-    #Oregonator,
-    TysonOscillator
+    create_vilar_oscillator, create_dimerization, create_trichloroethylene, create_lac_operon, create_schlogl,
+    create_michaelis_menten, create_toggle_switch, create_decay, create_tyson_2_state_oscillator,
+    create_oregonator, create_opioid, create_telegraph_model
 )
 
 os.chdir('/stochss')
@@ -40,15 +33,21 @@ os.chdir('/stochss')
 # pylint: disable=import-outside-toplevel
 class TestGillesPy2Dependency(unittest.TestCase):
     '''
-    ################################################################################################
+    ####################################################################################################################
     Unit tests for GillesPy2 dependency.
-    ################################################################################################
+    ####################################################################################################################
     '''
     def setUp(self):
         ''' Create a list of common example paths for each test. '''
-        self.test_models = [#Brusselator, 
-                            Degradation, Dimerization, LotkavolterraOscillator,
-                            MichaelisMenten, Opioid, Schlogl, ToggleSwitch, VilarOscillator]
+        self.test_ode_models = []
+        self.test_ssa_models = []
+        self.test_tau_models = []
+        self.test_hybrid_models = []
+        self.test_models = [
+            create_vilar_oscillator, create_dimerization, create_trichloroethylene, create_lac_operon, create_schlogl,
+            create_michaelis_menten, create_toggle_switch, create_decay, create_tyson_2_state_oscillator,
+            create_oregonator, create_opioid, create_telegraph_model
+        ]
 
     ################################################################################################
     # Unit tests for GillesPy2 dependency check_cpp_support.
@@ -68,7 +67,7 @@ class TestGillesPy2Dependency(unittest.TestCase):
         ''' Check if the get best solver function works in StochSS. '''
         test_model = self.test_models[0]()
         test_solver = test_model.get_best_solver()
-        self.assertIsInstance(test_solver(model=test_model), GillesPySolver)
+        self.assertIsInstance(test_solver(model=test_model), gillespy2.GillesPySolver)
 
     ################################################################################################
     # Unit tests for GillesPy2 dependency get_best_solver_algo.
@@ -81,7 +80,7 @@ class TestGillesPy2Dependency(unittest.TestCase):
         for test_algo in test_algos:
             with self.subTest(test_algo=test_algo):
                 test_solver = test_model.get_best_solver_algo(algorithm=test_algo)
-                self.assertIsInstance(test_solver(model=test_model), GillesPySolver)
+                self.assertIsInstance(test_solver(model=test_model), gillespy2.GillesPySolver)
 
     ################################################################################################
     # Unit tests for GillesPy2 dependency solvers.
@@ -89,95 +88,84 @@ class TestGillesPy2Dependency(unittest.TestCase):
 
     def test_ode_solver(self):
         ''' Check if the test_models run with the ODESolver. '''
-        from gillespy2 import ODESolver
-
-        #self.test_models.append(Oregonator)
         for model in self.test_models:
             test_model = model()
-            with self.subTest(model=test_model.name):
-                test_model.run(solver=ODESolver)
-
+            msg = f"Running {test_model.name} using {gillespy2.ODESolver.name} failed!"
+            with self.subTest(msg=msg):
+                start = time.perf_counter()
+                test_model.run(solver=gillespy2.ODESolver, timeout=30)
+                print(f"Run time for {test_model.name} using {gillespy2.ODESolver.name}: {time.perf_counter() - start}")
 
     def test_ode_c_solver(self):
         ''' Check if the test_models run with the ODECSolver. '''
-        from gillespy2 import ODECSolver
-
-        #self.test_models.append(Oregonator)
         for model in self.test_models:
             test_model = model()
-            with self.subTest(model=test_model.name):
-                test_solver = ODECSolver(model=test_model)
-                test_model.run(solver=test_solver)
-
+            test_solver = gillespy2.ODECSolver(model=test_model)
+            msg = f"Running {test_model.name} using {gillespy2.ODECSolver.name} failed!"
+            with self.subTest(msg=msg):
+                start = time.perf_counter()
+                test_model.run(solver=test_solver, timeout=30)
+                print(f"Run time for {test_model.name} using {gillespy2.ODECSolver.name}: {time.perf_counter() - start}")
 
     def test_numpy_ssa_solver(self):
         ''' Check if the test_models run with the NumPySSASolver. '''
-        from gillespy2 import NumPySSASolver
-
-        self.test_models.append(TysonOscillator)
         for model in self.test_models:
             test_model = model()
-            with self.subTest(model=test_model.name):
-                test_model.run(solver=NumPySSASolver)
-
+            msg = f"Running {test_model.name} using {gillespy2.NumPySSASolver.name} failed!"
+            with self.subTest(msg=msg):
+                start = time.perf_counter()
+                test_model.run(solver=gillespy2.NumPySSASolver, timeout=30)
+                print(f"Run time for {test_model.name} using {gillespy2.NumPySSASolver.name}: {time.perf_counter() - start}")
 
     def test_ssa_c_solver(self):
         ''' Check if the test_models run with the SSACSolver. '''
-        from gillespy2 import SSACSolver
-
-        self.test_models.append(TysonOscillator)
         for model in self.test_models:
             test_model = model()
-            with self.subTest(model=test_model.name):
-                test_solver = SSACSolver(model=test_model)
-                test_model.run(solver=test_solver)
-
+            test_solver = gillespy2.SSACSolver(model=test_model)
+            msg = f"Running {test_model.name} using {gillespy2.SSACSolver.name} failed!"
+            with self.subTest(msg=msg):
+                start = time.perf_counter()
+                test_model.run(solver=test_solver, timeout=30)
+                print(f"Run time for {test_model.name} using {gillespy2.SSACSolver.name}: {time.perf_counter() - start}")
 
     def test_tau_leaping_solver(self):
         ''' Check if the test_models run with the TauLeapingSolver. '''
-        from gillespy2 import TauLeapingSolver
-
-        self.test_models.append(TysonOscillator)
         for model in self.test_models:
             test_model = model()
-            with self.subTest(model=test_model.name):
-                test_model.run(solver=TauLeapingSolver)
-
+            msg = f"Running {test_model.name} using {gillespy2.TauLeapingSolver.name} failed!"
+            with self.subTest(msg=msg):
+                start = time.perf_counter()
+                test_model.run(solver=gillespy2.TauLeapingSolver, timeout=30)
+                print(f"Run time for {test_model.name} using {gillespy2.TauLeapingSolver.name}: {time.perf_counter() - start}")
 
     def test_tau_leaping_c_solver(self):
         ''' Check if the test_models run with the TauLeapingCSolver. '''
-        from gillespy2 import TauLeapingCSolver
-
-        self.test_models.append(TysonOscillator)
         for model in self.test_models:
             test_model = model()
-            with self.subTest(model=test_model.name):
-                test_solver = TauLeapingCSolver(model=test_model)
-                test_model.run(solver=test_solver)
-
+            test_solver = gillespy2.TauLeapingCSolver(model=test_model)
+            msg = f"Running {test_model.name} using {gillespy2.TauLeapingCSolver.name} failed!"
+            with self.subTest(msg=msg):
+                start = time.perf_counter()
+                test_model.run(solver=test_solver, timeout=30)
+                print(f"Run time for {test_model.name} using {gillespy2.TauLeapingCSolver.name}: {time.perf_counter() - start}")
 
     def test_tau_hybrid_solver(self):
         ''' Check if the test_models run with the TauHybridSolver. '''
-        from gillespy2 import TauHybridSolver
-
-        #self.test_models.append(Oregonator)
-        self.test_models.append(TysonOscillator)
-        self.test_models.remove(VilarOscillator)
         for model in self.test_models:
             test_model = model()
-            with self.subTest(model=test_model.name):
-                test_model.run(solver=TauHybridSolver)
-
+            msg = f"Running {test_model.name} using {gillespy2.TauHybridSolver.name} failed!"
+            with self.subTest(msg=msg):
+                start = time.perf_counter()
+                test_model.run(solver=gillespy2.TauHybridSolver, timeout=30)
+                print(f"Run time for {test_model.name} using {gillespy2.TauHybridSolver.name}: {time.perf_counter() - start}")
 
     def test_tau_hybrid_c_solver(self):
         ''' Check if the test_models run with the TauHybridCSolver. '''
-        from gillespy2 import TauHybridCSolver
-
-        #self.test_models.append(Oregonator)
-        self.test_models.append(TysonOscillator)
-        self.test_models.remove(VilarOscillator)
-        self.test_models.remove(ToggleSwitch)
         for model in self.test_models:
             test_model = model()
-            with self.subTest(model=test_model.name):
-                test_model.run(solver=TauHybridCSolver)
+            test_solver = gillespy2.TauHybridCSolver(model=test_model)
+            msg = f"Running {test_model.name} using {gillespy2.TauHybridCSolver.name} failed!"
+            with self.subTest(msg=msg):
+                start = time.perf_counter()
+                test_model.run(solver=test_solver, timeout=30)
+                print(f"Run time for {test_model.name} using {gillespy2.TauHybridCSolver.name}: {time.perf_counter() - start}")
