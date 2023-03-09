@@ -174,7 +174,8 @@ module.exports = View.extend({
         process: this.reactionsView,
         event: this.eventsView,
         rule: this.rulesView,
-        domain: this.domainViewer
+        domain: this.domainViewer,
+        initialCondition: this.initialConditionsView
       }
       if(["reaction", "process", "event"].includes(error.type)) {
         views[error.type].openSection(error); 

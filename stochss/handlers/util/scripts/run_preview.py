@@ -90,7 +90,7 @@ def run_spatialpy_preview(args):
     '''
     model = StochSSSpatialModel(path=args.path)
     job = SpatialSimulation(path="", preview=True, target=args.target)
-    job.s_py_model = model.convert_to_spatialpy()
+    job.s_py_model = model.convert_to_spatialpy(include_model_settings=True)
     job.s_model = model.model
     return job.run(preview=True)
 

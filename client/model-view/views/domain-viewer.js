@@ -128,7 +128,7 @@ module.exports = View.extend({
       this.domainPath = null;
       $(this.queryByHook('select-location-message')).css('display', 'none');
       $(this.queryByHook('select-domain-location')).css('display', 'none');
-      $(this.queryByHook('external-domain-select')).css('display', 'none');
+      $(this.queryByHook('domain-interact-section')).css('display', 'none');
       $(this.queryByHook('save-to-model')).prop('disabled', true);
       this.renderDomainView();
     }
@@ -162,6 +162,7 @@ module.exports = View.extend({
       domainCollapseBtn.html('-');
     }
     app.switchToEditTab(this, "domain");
+    this.domainView.displayError();
   },
   renderDomainFileSelectView: function () {
     if(this.domainFileSelectView) {
@@ -175,7 +176,7 @@ module.exports = View.extend({
       unselectedText: '-- Select Domain --'
     });
     app.registerRenderSubview(this, this.domainFileSelectView, 'select-domain');
-    $(this.queryByHook('external-domain-select')).css('display', 'block');
+    $(this.queryByHook('domain-interact-section')).css('display', 'block');
   },
   renderDomainLocationSelectView: function (options) {
     if(this.domainLocationSelectView) {

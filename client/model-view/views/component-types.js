@@ -47,5 +47,6 @@ module.exports = View.extend({
       this.parent.model.types.splice(index, 1);
     }
     this.parent.model.trigger('change');
+    this.parent.model.trigger('types-changed');
   }
 });

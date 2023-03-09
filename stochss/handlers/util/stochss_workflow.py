@@ -406,7 +406,8 @@ class StochSSWorkflow(StochSSBase):
         if "template_version" not in self.workflow['settings']:
             self.workflow['settings']['template_version'] = 0
         self.__update_settings_to_current()
-        if not os.path.exists(self.workflow['model']) and (oldfmtrdy or self.workflow['newFormat']):
+        if (self.workflow['model'] is None or not os.path.exists(self.workflow['model'])) \
+                                                    and (oldfmtrdy or self.workflow['newFormat']):
             if ".proj" in self.path:
                 if "WorkflowGroup1.wkgp" in self.path:
                     proj = StochSSFolder(path=os.path.dirname(self.get_dir_name(full=True)))

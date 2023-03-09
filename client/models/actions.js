@@ -59,6 +59,9 @@ module.exports = Collection.extend({
     this.remove(action);
   },
   validateCollection: function () {
+    if(this.length <= 0) { return false; }
+    if(this.parent.particles === undefined) { return false; }
+    if(this.parent.particles.length <= 0) { return false; }
     return true;
   }
 });

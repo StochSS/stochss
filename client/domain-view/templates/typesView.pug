@@ -60,6 +60,10 @@ div#domain-types-editor.card
 
         div.my-3(data-hook="edit-domain-types-list")
 
+        div(data-hook="ev-types-collection-error")
+
+          p.text-danger Domains must have at least one type for matter classification.
+
         button.btn.btn-outline-primary.box-shadow(data-hook="add-domain-type") Add Type
 
       div.tab-pane(id="view-domain-types" data-hook="view-domain-types")
@@ -81,3 +85,7 @@ div#domain-types-editor.card
             h6.inline <b>Defaults</b>
 
         div.my-3(data-hook="view-domain-types-list")
+
+        div(data-hook="vv-types-collection-error")
+
+          p.text-danger Domains must have at least one type for matter classification.

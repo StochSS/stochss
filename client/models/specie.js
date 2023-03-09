@@ -78,14 +78,15 @@ module.exports = State.extend({
     }
     return false;
   },
-  validateComponent: function () {
-    if(!this.name.trim() || this.name.match(/^\d/)) return false;
-    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) return false;
-    if(this.value === "" || isNaN(this.value)) return false;
+  validateComponent: function (isSpatial) {
+    if(!this.name.trim() || this.name.match(/^\d/)) { return false; }
+    if((!/^[a-zA-Z0-9_]+$/.test(this.name))) { return false; }
+    if(this.value === "" || isNaN(this.value)) { return false; }
     if(this.mode === "dynamic") {
-      if(this.isSwitchTol && (this.switchTol === "" || isNaN(this.switchTol))) return false;
-      if(!this.isSwitchTol && (this.switchMin === "" || isNaN(this.switchMin))) return false;
+      if(this.isSwitchTol && (this.switchTol === "" || isNaN(this.switchTol))) { return false; }
+      if(!this.isSwitchTol && (this.switchMin === "" || isNaN(this.switchMin))) { return false; }
     }
+    if(isSpatial && this.types.length <= 0) { return false; }
     return true;
   }
 });

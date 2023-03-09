@@ -27,7 +27,7 @@ import gillespy2
 from stochss_compute import RemoteSimulation
 
 from .stochss_job import StochSSJob
-from .stochss_errors import StochSSAPIError, StochSSJobResultsError
+from .stochss_errors import StochSSAPIError, StochSSFileNotFoundError, StochSSJobResultsError
 
 log = logging.getLogger("stochss")
 
@@ -158,7 +158,10 @@ class EnsembleSimulation(StochSSJob):
         verbose : bool
             Indicates whether or not to print debug statements
         '''
-        compute_env = self.load_info()['compute_env']
+        try:
+            compute_env = self.load_info()['compute_env']
+        except StochSSFileNotFoundError:
+            compute_env = "local"
         if compute_env == 'AWS':
             results = self.__run(self.__run_in_aws, preview=preview, verbose=verbose)
             return results
