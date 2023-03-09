@@ -1,0 +1,23 @@
+name: Run StochSS Integration Tests
+
+on:
+  push:
+    branches: [main, develop]
+
+jobs:
+  run-tests:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-20.04 ]
+
+    steps:
+    - name: Initialize environment
+      id: checkout
+      uses: actions/checkout@v2
+
+    - name: Run Integration Tests
+      id: run_integration_tests
+      uses: ./
+      with:
+        testin: '/stochss/stochss/tests/run_integration_tests.py'
