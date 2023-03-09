@@ -148,7 +148,7 @@ test: create_working_dir
 		-v $(DOCKER_WORKING_DIR):/home/jovyan/ \
 		-p 8888:8888 \
 		$(DOCKER_STOCHSS_IMAGE):latest \
-		/stochss/stochss/tests/run_tests.py
+		/stochss/stochss/tests/run_all_tests.py
 
 build_and_test: build test
 
