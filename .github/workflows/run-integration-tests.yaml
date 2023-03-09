@@ -1,9 +1,8 @@
 name: Run StochSS Integration Tests
 
-on: [push]
-# on:
-#   push:
-#     branches: [main, develop]
+on:
+  push:
+    branches: [main, develop]
 
 jobs:
   run-tests:
