@@ -1,0 +1,157 @@
+div#workflow-results.card
+
+  div.card-header.pb-0
+
+    h3.inline Results
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-results" data-hook="collapse-results-btn") -
+
+  div.collapse.show(id="collapse-results" data-hook="workflow-results")
+
+    div.card-body
+
+      div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
+
+        table.table
+          thead
+            tr
+              th(scope="col") Title
+              th(scope="col") X-axis Label
+              th(scope="col") Y-axis Label
+
+          tbody
+            tr
+              td: div(id="title" data-hook="title")
+              td: div(id="xaxis" data-hook="xaxis")
+              td: div(id="yaxis" data-hook="yaxis")
+
+      div.card
+
+        div.card-header.pb-0
+
+          h5.inline Plot Inference
+
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-inference"
+            id="collapse-inference-btn"
+            data-hook="collapse-inference-btn"
+            data-trigger="collapse-plot-container"
+            data-type="inference"
+          ) -
+
+        div.collapse.show(id="collapse-inference")
+
+          div.card-body
+
+            div(data-hook="inference-plot")
+
+            div.spinner-border.workflow-plot(data-hook="inference-plot-spinner")
+            
+            button.btn.btn-primary.box-shadow(data-hook="inference-edit-plot" data-target="edit-plot" disabled) Edit Plot
+
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="inference-download"
+              data-hook="inference-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
+              disabled
+            ) Download <span class="caret"></span>
+
+            ul.dropdown-menu(aria-labelledby="#inference-download")
+              li.dropdown-item(
+                data-hook="inference-download-png-custom"
+                data-target="download-png-custom"
+                data-type="inference"
+              ) Plot as .png
+              li.dropdown-item.disabled(
+                data-hook="inference-download-json"
+                data-target="download-json"
+                data-type="inference"
+              ) Plot as .json
+              li.dropdown-item.disabled(
+                data-hook="inference-plot-csv"
+                data-target="download-plot-csv"
+                data-type="inference"
+              ) Plot Results as .csv
+
+      div.card
+
+        div.card-header.pb-0
+
+          h5.inline Plot Epoch
+
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-epoch"
+            id="collapse-epoch-btn"
+            data-hook="collapse-epoch-btn"
+            data-trigger="collapse-plot-container"
+            data-type="epoch"
+          ) +
+
+        div.collapse(id="collapse-epoch")
+
+          div.card-body
+
+            div(data-hook="epoch-plot")
+
+            div.spinner-border.workflow-plot(data-hook="epoch-plot-spinner")
+
+            button.btn.btn-primary.box-shadow(data-hook="epoch-edit-plot" data-target="edit-plot" disabled) Edit Plot
+
+            button.btn.btn-primary.box-shadow(data-hook="multiple-plots", data-type="mltplplt" disabled) Multiple Plots
+
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="epoch-download"
+              data-hook="epoch-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
+              disabled
+            ) Download <span class="caret"></span>
+
+            ul.dropdown-menu(aria-labelledby="#epoch-download")
+              li.dropdown-item(
+                data-hook="epoch-download-png-custom"
+                data-target="download-png-custom"
+                data-type="epoch"
+              ) Plot as .png
+              li.dropdown-item.disabled(
+                data-hook="epoch-download-json"
+                data-target="download-json"
+                data-type="epoch"
+              ) Plot as .json
+              li.dropdown-item.disabled(
+                data-hook="epoch-plot-csv"
+                data-target="download-plot-csv"
+                data-type="epoch"
+              ) Plot Results as .csv
+
+      div
+
+        button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook" disabled) Convert to Notebook
+
+        button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv" disabled) Download Full Results as .csv
+
+        button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation" disabled) Publish
+
+        div.saving-status(data-hook="job-action-start")
+
+          div.spinner-grow
+
+          span Publishing ...
+
+        div.saved-status(data-hook="job-action-end")
+
+          span Published
+
+        div.save-error-status(data-hook="job-action-err")
+
+          span Error
+
+      div.text-info(data-hook="update-format-message" style="display: none;")
+        | To publish you job the workflows format must be updated.

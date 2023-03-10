@@ -29,11 +29,12 @@ let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let SweepParametersView = require('./sweep-parameter-range-view');
 //templates
-let wellMixedTemplate = require('../templates/gillespyResultsView.pug');
-let ensembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
-let sweepTemplate = require('../templates/parameterSweepResultsView.pug');
-let scanTemplate = require('../templates/parameterScanResultsView.pug');
 let spatialTemplate = require('../templates/spatialResultsView.pug');
+let wellMixedTemplate = require('../templates/gillespyResultsView.pug');
+let scanTemplate = require('../templates/parameterScanResultsView.pug');
+let inferenceTemplate = require('../templates/inferenceResultsView.pug');
+let sweepTemplate = require('../templates/parameterSweepResultsView.pug');
+let ensembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
 
 module.exports = View.extend({
   events: {
@@ -76,7 +77,8 @@ module.exports = View.extend({
     let templates = {
       "Ensemble Simulation": isEnsemble ? ensembleTemplate : wellMixedTemplate,
       "Parameter Sweep": isParameterScan ? scanTemplate : sweepTemplate,
-      "Spatial Ensemble Simulation": spatialTemplate
+      "Spatial Ensemble Simulation": spatialTemplate,
+      "Model Inference": inferenceTemplate
     }
     this.template = templates[this.titleType];
     View.prototype.render.apply(this, arguments);
@@ -110,7 +112,7 @@ module.exports = View.extend({
       }
       this.getPlot("psweep");
       this.renderSweepParameterView();
-    }else{
+    }else if(this.titleType === "Spatial Ensemble Simulation") {
       var type = "spatial";
       this.spatialTarget = "type";
       this.targetIndex = null;
@@ -121,6 +123,15 @@ module.exports = View.extend({
         $(this.queryByHook("spatial-trajectory-container")).css("display", "inline-block");
       }
       $(this.queryByHook("spatial-plot-csv")).css('display', 'none');
+    }else{
+      var type = "inference";
+      this.epochIndex = this.model.settings.inferenceSettings.numEpochs;
+      // TODO: Enable inference convert to notebook when implemented
+      $(this.queryByHook("convert-to-notebook")).prop("disabled", true);
+      // TODO: Enable inference CSV download when implemented
+      $(this.queryByHook("download-results-csv")).prop("disabled", true);
+      // TODO: Enable inference presentations when implemented
+      $(this.queryByHook("job-presentation")).prop("disabled", true);
     }
     this.getPlot(type);
   },
@@ -171,7 +182,7 @@ module.exports = View.extend({
     let storageKey = JSON.stringify(data);
     data['plt_data'] = this.getPlotLayoutData();
     if(Boolean(this.plots[storageKey])) {
-      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial'];
+      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial', 'epoch'];
       if(renderTypes.includes(type)) {
         this.plotFigure(this.plots[storageKey], type);
       }
@@ -228,6 +239,10 @@ module.exports = View.extend({
         target: this.spatialTarget, index: this.targetIndex, mode: this.targetMode, trajectory: this.trajectoryIndex - 1
       };
       data['plt_key'] = type;
+    }else if(["inference", "epoch"].includes(type)) {
+      data['sim_type'] = "Inference";
+      data['data_keys'] = {"epoch": type === "inference" ? null : this.epochIndex - 1};
+      data['plt_key'] = "inference";
     }else {
       data['sim_type'] = "GillesPy2";
       data['data_keys'] = {};
