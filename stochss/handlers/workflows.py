@@ -29,7 +29,7 @@ from notebook.base.handlers import APIHandler
 
 from .util import StochSSFolder, StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
                   StochSSWorkflow, StochSSParamSweepNotebook, StochSSSciopeNotebook, \
-                  StochSSAPIError, report_error, report_critical_error
+                  StochSSAPIError, report_error, report_critical_error, ModelInference
 
 log = logging.getLogger('stochss')
 
@@ -249,21 +249,29 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         body = json.loads(self.get_query_argument(name='data'))
         log.debug(f"Plot args passed to the plot: {body}")
         try:
-            job = StochSSJob(path=path)
-            if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
-                fig = job.get_plot_from_results(data_keys=body['data_keys'],
-                                                plt_key=body['plt_key'], add_config=True)
-                job.print_logs(log)
-            elif body['sim_type'] == "SpatialPy":
-                fig = job.get_plot_from_spatial_results(
-                    data_keys=body['data_keys'], add_config=True
-                )
+            if body['sim_type'] == "Inference":
+                job = ModelInference(path=path)
+                kwargs = {'add_config': True}
+                kwargs.update(body['data_keys'])
+                if "plt_data" in body.keys():
+                    kwargs.update(body['plt_data'])
+                fig = job.get_result_plot(**kwargs)
             else:
-                fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
-                                                       kwargs=body['plt_key'], add_config=True)
-                job.print_logs(log)
-            if "plt_data" in body.keys():
-                fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
+                job = StochSSJob(path=path)
+                if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
+                    fig = job.get_plot_from_results(data_keys=body['data_keys'],
+                                                    plt_key=body['plt_key'], add_config=True)
+                    job.print_logs(log)
+                elif body['sim_type'] == "SpatialPy":
+                    fig = job.get_plot_from_spatial_results(
+                        data_keys=body['data_keys'], add_config=True
+                    )
+                else:
+                    fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
+                                                           kwargs=body['plt_key'], add_config=True)
+                    job.print_logs(log)
+                if "plt_data" in body.keys():
+                    fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
             log.debug(f"Plot figure: {fig}")
             self.write(fig)
         except StochSSAPIError as err:

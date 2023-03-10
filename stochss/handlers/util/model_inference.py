@@ -18,11 +18,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import csv
 import copy
+import json
 import pickle
 import logging
 import traceback
 
 import numpy
+import plotly
 
 import gillespy2
 
@@ -35,6 +37,17 @@ from .stochss_job import StochSSJob
 from .stochss_errors import StochSSJobError, StochSSJobResultsError
 
 log = logging.getLogger("stochss")
+
+common_rgb_values = [
+    '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
+    '#7f7f7f', '#bcbd22', '#17becf', '#ff0000', '#00ff00', '#0000ff', '#ffff00',
+    '#00ffff', '#ff00ff', '#800000', '#808000', '#008000', '#800080', '#008080',
+    '#000080', '#ff9999', '#ffcc99', '#ccff99', '#cc99ff', '#ffccff', '#62666a',
+    '#8896bb', '#77a096', '#9d5a6c', '#9d5a6c', '#eabc75', '#ff9600', '#885300',
+    '#9172ad', '#a1b9c4', '#18749b', '#dadecf', '#c5b8a8', '#000117', '#13a8fe',
+    '#cf0060', '#04354b', '#0297a0', '#037665', '#eed284', '#442244',
+    '#ffddee', '#702afb'
+]
 
 class ModelInference(StochSSJob):
     '''
@@ -68,6 +81,44 @@ class ModelInference(StochSSJob):
                     rows.append(row)
             data = numpy.array(rows).swapaxes(0, 1).astype("float")
         return data
+
+    @classmethod
+    def __get_full_results_plot(cls, results, names, values,
+                                title=None, xaxis="Values", yaxis="Sample Concentrations"):
+        cols = 2
+        nbins = 50
+
+        fig = plotly.subplots.make_subplots(
+            rows=int(numpy.ceil(len(values)/cols)), cols=cols, subplot_titles=names, x_title=xaxis, y_title=yaxis
+        )
+
+        for i, result in enumerate(results):
+            accepted_samples = numpy.vstack(result['accepted_samples']).swapaxes(0, 1)
+            base_opacity = 0.5 if len(results) <= 1 else (i / (len(results) - 1) * 0.5)
+
+            for j, accepted_values in enumerate(accepted_samples):
+                name = f"epoch {i + 1}"
+                color = common_rgb_values[i % len(common_rgb_values)]
+                opacity = base_opacity + 0.25
+                trace = plotly.graph_objs.Histogram(
+                    x=accepted_values, name=name, legendgroup=name, showlegend=j==0,
+                    marker_color=color, opacity=opacity, nbinsx=nbins
+                )
+
+                row = int(numpy.ceil((j + 1) / cols))
+                col = (j % cols) + 1
+                fig.append_trace(trace, row, col)
+                fig.add_vline(
+                    result['inferred_parameters'][j], row=row, col=col, line={"color": color},
+                    opacity=base_opacity + 0.5, exclude_empty_subplots=True, layer=True
+                )
+                if i == len(results) - 1:
+                    fig.add_vline(values[j], row=row, col=col, line={"color": "red"}, layer=True)
+
+        fig.update_layout(barmode='overlay')
+        if title is not None:
+            fig.update_layout(title=title)
+        return fig
 
     def __get_infer_args(self):
         settings = self.settings['inferenceSettings']
@@ -135,6 +186,24 @@ class ModelInference(StochSSJob):
             log.error(message)
             return message
         return False
+
+    def get_result_plot(self, epoch=None, add_config=False, **kwargs):
+        """
+        Generate a plot for inference results.
+        """
+        model = self.load_models()[0]
+        results = self.__get_filtered_ensemble_results(None)
+        parameters = self.load_settings()['inferenceSettings']['parameters']
+        if epoch is None:
+            names = []
+            values = []
+            for parameter in parameters:
+                names.append(parameter['name'])
+                values.append(model.listOfParameters[parameter['name']])
+            fig = self.__get_full_results_plot(results, names, values, **kwargs)
+        if add_config:
+            fig["config"] = {"responsive": True}
+        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
 
     def process(self, raw_results):
         """
