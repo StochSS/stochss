@@ -253,7 +253,7 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
                 job = ModelInference(path=path)
                 kwargs = {'add_config': True}
                 kwargs.update(body['data_keys'])
-                if "plt_data" in body.keys():
+                if "plt_data" in body.keys() and body['plt_data'] is not None:
                     kwargs.update(body['plt_data'])
                 fig = job.get_result_plot(**kwargs)
             else:

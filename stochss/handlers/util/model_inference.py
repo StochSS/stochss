@@ -25,6 +25,7 @@ import traceback
 
 import numpy
 import plotly
+from plotly import subplots
 
 import gillespy2
 
@@ -48,6 +49,14 @@ common_rgb_values = [
     '#cf0060', '#04354b', '#0297a0', '#037665', '#eed284', '#442244',
     '#ffddee', '#702afb'
 ]
+
+def combine_colors(colors):
+    red = int(sum([int(k[:2], 16) * 0.5 for k in colors]))
+    green = int(sum([int(k[2:4], 16) * 0.5 for k in colors]))
+    blue = int(sum([int(k[4:6], 16) * 0.5 for k in colors]))
+    zpad = lambda x: x if len(x)==2 else '0' + x
+    color = f"#{zpad(hex(red)[2:])}{zpad(hex(green)[2:])}{zpad(hex(blue)[2:])}"
+    return color
 
 class ModelInference(StochSSJob):
     '''
@@ -83,13 +92,63 @@ class ModelInference(StochSSJob):
         return data
 
     @classmethod
+    def __get_epoch_result_plot(cls, results, names, values, dmin, dmax,
+                                title=None, xaxis="Values", yaxis="Sample Concentrations"):
+        accepted_samples = numpy.vstack(results['accepted_samples']).swapaxes(0, 1)
+
+        nbins = 50
+        rows = cols = len(accepted_samples)
+        fig = subplots.make_subplots(
+            rows=rows, cols=cols, column_titles=names, row_titles=names,
+            x_title=xaxis, y_title=yaxis, vertical_spacing=0.075
+        )
+
+        for i in range(rows):
+            for j in range(cols):
+                row = i + 1
+                col = j + 1
+                if i > j:
+                    continue
+                if i == j:
+                    color = common_rgb_values[(i)%len(common_rgb_values)]
+                    trace = plotly.graph_objs.Histogram(
+                        x=accepted_samples[i], name=names[i], legendgroup=names[i], showlegend=False,
+                        nbinsx=nbins, opacity=0.75, marker_color=color
+                    )
+
+                    fig.append_trace(trace, row, col)
+                    fig.update_xaxes(row=row, col=col, range=[dmin[i], dmax[i]])
+                    fig.add_vline(
+                        results['inferred_parameters'][i], row=row, col=col, line={"color": "green"},
+                        exclude_empty_subplots=True, layer='above'
+                    )
+                    fig.add_vline(values[i], row=row, col=col, line={"color": "red"}, layer='above')
+                else:
+                    color = combine_colors([
+                        common_rgb_values[(i)%len(common_rgb_values)][1:],
+                        common_rgb_values[(j)%len(common_rgb_values)][1:]
+                    ])
+                    trace = plotly.graph_objs.Scatter(
+                        x=accepted_samples[j], y=accepted_samples[i], mode='markers', marker_color=color,
+                        name=f"{names[j]} X {names[i]}", legendgroup=f"{names[j]} X {names[i]}", showlegend=False
+                    )
+                    fig.append_trace(trace, row, col)
+                    fig.update_xaxes(row=row, col=col, range=[dmin[j], dmax[j]])
+                    fig.update_yaxes(row=row, col=col, range=[dmin[i], dmax[i]])
+
+        fig.update_layout(height=500 * rows, title=title)
+        return fig
+
+    @classmethod
     def __get_full_results_plot(cls, results, names, values,
                                 title=None, xaxis="Values", yaxis="Sample Concentrations"):
         cols = 2
         nbins = 50
+        rows = int(numpy.ceil(len(results[0]['accepted_samples'][0])/cols))
 
-        fig = plotly.subplots.make_subplots(
-            rows=int(numpy.ceil(len(values)/cols)), cols=cols, subplot_titles=names, x_title=xaxis, y_title=yaxis
+        fig = subplots.make_subplots(
+            rows=rows, cols=cols, subplot_titles=names, x_title=xaxis, y_title=yaxis, vertical_spacing=0.075
+
         )
 
         for i, result in enumerate(results):
@@ -110,12 +169,12 @@ class ModelInference(StochSSJob):
                 fig.append_trace(trace, row, col)
                 fig.add_vline(
                     result['inferred_parameters'][j], row=row, col=col, line={"color": color},
-                    opacity=base_opacity + 0.5, exclude_empty_subplots=True, layer=True
+                    opacity=base_opacity + 0.5, exclude_empty_subplots=True, layer='above'
                 )
                 if i == len(results) - 1:
-                    fig.add_vline(values[j], row=row, col=col, line={"color": "red"}, layer=True)
+                    fig.add_vline(values[j], row=row, col=col, line={"color": "red"}, layer='above')
 
-        fig.update_layout(barmode='overlay')
+        fig.update_layout(barmode='overlay', height=500 * rows)
         if title is not None:
             fig.update_layout(title=title)
         return fig
@@ -127,6 +186,11 @@ class ModelInference(StochSSJob):
         kwargs = {"eps_selector": eps_selector, "chunk_size": settings['chunkSize']}
         return args, kwargs
 
+    def __get_pickled_results(self):
+        path = os.path.join(self.__get_results_path(full=True), "results.p")
+        with open(path, "rb") as results_file:
+            return pickle.load(results_file)
+
     def __get_prior_function(self):
         dmin = []
         dmax = []
@@ -134,6 +198,9 @@ class ModelInference(StochSSJob):
             dmin.append(parameter['min'])
             dmax.append(parameter['max'])
         return uniform_prior.UniformPrior(numpy.array(dmin, dtype="float"), numpy.array(dmax, dtype="float"))
+
+    def __get_results_path(self, full=False):
+        return os.path.join(self.get_path(full=full), "results")
 
     def __get_run_settings(self):
         solver_map = {"ODE":self.g_model.get_best_solver_algo("ODE"),
@@ -192,18 +259,27 @@ class ModelInference(StochSSJob):
         Generate a plot for inference results.
         """
         model = self.load_models()[0]
-        results = self.__get_filtered_ensemble_results(None)
+        results = self.__get_pickled_results()
         parameters = self.load_settings()['inferenceSettings']['parameters']
+        names = []
+        values = []
+        dmin = []
+        dmax = []
+        for parameter in parameters:
+            names.append(parameter['name'])
+            values.append(model.listOfParameters[parameter['name']].value)
+            dmin.append(parameter['min'])
+            dmax.append(parameter['max'])
         if epoch is None:
-            names = []
-            values = []
-            for parameter in parameters:
-                names.append(parameter['name'])
-                values.append(model.listOfParameters[parameter['name']])
-            fig = self.__get_full_results_plot(results, names, values, **kwargs)
+            fig_obj = self.__get_full_results_plot(results, names, values, **kwargs)
+        else:
+            if 'titlt' not in kwargs or kwargs['title'] is None:
+                kwargs['title'] = f"Epoch {epoch + 1}"
+            fig_obj = self.__get_epoch_result_plot(results[epoch], names, values, dmin, dmax, **kwargs)
+        fig = json.loads(json.dumps(fig_obj, cls=plotly.utils.PlotlyJSONEncoder))
         if add_config:
             fig["config"] = {"responsive": True}
-        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
+        return fig
 
     def process(self, raw_results):
         """
