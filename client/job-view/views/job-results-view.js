@@ -44,6 +44,7 @@ module.exports = View.extend({
     'change [data-hook=target-of-interest-list]' : 'getPlotForTarget',
     'change [data-hook=target-mode-list]' : 'getPlotForTargetMode',
     'change [data-hook=trajectory-index-slider]' : 'getPlotForTrajectory',
+    'change [data-hook=epoch-index-slider]' : 'getPlotForEpoch',
     'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
@@ -58,7 +59,8 @@ module.exports = View.extend({
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
     'click [data-hook=download-results-csv]' : 'handleFullCSVClick',
     'click [data-hook=job-presentation]' : 'handlePresentationClick',
-    'input [data-hook=trajectory-index-slider]' : 'viewTrajectoryIndex'
+    'input [data-hook=trajectory-index-slider]' : 'viewTrajectoryIndex',
+    'input [data-hook=epoch-index-slider]' : 'viewEpochIndex'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -68,6 +70,7 @@ module.exports = View.extend({
     this.tooltips = Tooltips.jobResults;
     this.plots = {};
     this.plotArgs = {};
+    this.activePlots = {};
     this.trajectoryIndex = 1;
   },
   render: function (attrs, options) {
@@ -126,6 +129,8 @@ module.exports = View.extend({
     }else{
       var type = "inference";
       this.epochIndex = this.model.settings.inferenceSettings.numEpochs;
+      $(this.queryByHook("epoch-index-value")).text(this.epochIndex);
+      $(this.queryByHook("epoch-index-slider")).prop("value", this.epochIndex);
       // TODO: Enable inference convert to notebook when implemented
       $(this.queryByHook("convert-to-notebook")).prop("disabled", true);
       // TODO: Enable inference CSV download when implemented
@@ -184,6 +189,7 @@ module.exports = View.extend({
     if(Boolean(this.plots[storageKey])) {
       let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial', 'epoch'];
       if(renderTypes.includes(type)) {
+        this.activePlots[type] = storageKey;
         this.plotFigure(this.plots[storageKey], type);
       }
     }else{
@@ -191,6 +197,17 @@ module.exports = View.extend({
       let endpoint = `${path.join(app.getApiPath(), "workflow/plot-results")}${queryStr}`;
       app.getXHR(endpoint, {
         success: (err, response, body) => {
+          if(type === "epoch") {
+            body.layout.annotations.push({
+              font: {size: 16}, showarrow: false, text: "", x: 0.5, xanchor: "center", xref: "paper",
+              y: 0, yanchor: "top", yref: "paper", yshift: -30
+            });
+            body.layout.annotations.push({
+              font: {size: 16}, showarrow: false, text: "", textangle: -90, x: 0, xanchor: "right",
+              xref: "paper", xshift: -40, y: 0.5, yanchor: "middle", yref: "paper"
+            });
+          }
+          this.activePlots[type] = storageKey;
           this.plots[storageKey] = body;
           this.plotFigure(body, type);
         },
@@ -259,6 +276,10 @@ module.exports = View.extend({
   getPlotForEnsembleAggragator: function (e) {
     this.model.settings.resultsSettings.reducer = e.target.value;
     this.getPlot('psweep')
+  },
+  getPlotForEpoch: function (e) {
+    this.epochIndex = Number(e.target.value);
+    this.getPlot('epoch');
   },
   getPlotForFeatureExtractor: function (e) {
     this.model.settings.resultsSettings.mapper = e.target.value;
@@ -329,8 +350,12 @@ module.exports = View.extend({
   },
   getType: function (storageKey) {
     let plotData = JSON.parse(storageKey)
-    if(plotData.sim_type === "GillesPy2") { return plotData.plt_key }
-    if(plotData.sim_type === "GillesPy2_PS") { return "ts-psweep"}
+    if(plotData.sim_type === "GillesPy2") { return plotData.plt_key; }
+    if(plotData.sim_type === "GillesPy2_PS") { return "ts-psweep"; }
+    if(plotData.sim_type === "Inference") {
+      if(plotData.data_keys.epoch === null) { return "inference"; }
+      return "epoch"
+    }
     return "psweep"
   },
   handleCollapsePlotContainerClick: function (e) {
@@ -578,8 +603,14 @@ module.exports = View.extend({
     for (var storageKey in this.plots) {
       let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
-      fig.layout.title.text = e.target.value
-      this.plotFigure(fig, type)
+      if(Object.keys(fig.layout).includes('title')) {
+        fig.layout.title.text = e.target.value
+      }else{
+        fig.layout.title = {'text': e.target.value, 'x': 0.5, 'xanchor': 'center'}
+      }
+    }
+    for (var [type, storageKey] of Object.entries(this.activePlots)) {
+      this.plotFigure(this.plots[storageKey], type);
     }
   },
   setXAxis: function (e) {
@@ -587,8 +618,14 @@ module.exports = View.extend({
     for (var storageKey in this.plots) {
       let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
-      fig.layout.xaxis.title.text = e.target.value
-      this.plotFigure(fig, type)
+      if(['inference', 'epoch'].includes(type)) {
+        fig.layout.annotations.at(-2).text = e.target.value
+      }else {
+        fig.layout.xaxis.title.text = e.target.value
+      }
+    }
+    for (var [type, storageKey] of Object.entries(this.activePlots)) {
+      this.plotFigure(this.plots[storageKey], type);
     }
   },
   setYAxis: function (e) {
@@ -596,8 +633,14 @@ module.exports = View.extend({
     for (var storageKey in this.plots) {
       let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
-      fig.layout.yaxis.title.text = e.target.value
-      this.plotFigure(fig, type)
+      if(['inference', 'epoch'].includes(type)) {
+        fig.layout.annotations.at(-1).text = e.target.value
+      }else {
+        fig.layout.xaxis.title.text = e.target.value
+      }
+    }
+    for (var [type, storageKey] of Object.entries(this.activePlots)) {
+      this.plotFigure(this.plots[storageKey], type);
     }
   },
   startAction: function () {
@@ -607,6 +650,9 @@ module.exports = View.extend({
   },
   update: function () {},
   updateValid: function () {},
+  viewEpochIndex: function (e) {
+    $(this.queryByHook("epoch-index-value")).html(e.target.value);
+  },
   viewTrajectoryIndex: function (e) {
     $(this.queryByHook("trajectory-index-value")).html(e.target.value);
   },

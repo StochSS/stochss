@@ -96,6 +96,30 @@ div#workflow-results.card
 
           div.card-body
 
+            div
+
+              div.mx-1.row.head.align-items-baseline
+
+                div.col-sm-12
+
+                  h6
+
+                    div.inline.mr-2 <b>Epoch</b>:
+
+                    div.inline(data-hook="epoch-index-value")=this.epochIndex
+
+              div.mx-1.my-3.row
+
+                div.col-sm-12
+
+                  input.custom-range(
+                    type="range"
+                    min="1"
+                    max=`${this.model.settings.inferenceSettings.numEpochs}`
+                    value=this.epochIndex
+                    data-hook="epoch-index-slider"
+                  )
+
             div(data-hook="epoch-plot")
 
             div.spinner-border.workflow-plot(data-hook="epoch-plot-spinner")
