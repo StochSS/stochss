@@ -93,7 +93,7 @@ class ModelInference(StochSSJob):
 
     @classmethod
     def __get_epoch_result_plot(cls, results, names, values, dmin, dmax,
-                                title=None, xaxis="Values", yaxis="Sample Concentrations"):
+                                title=None, xaxis=None, yaxis=None):
         accepted_samples = numpy.vstack(results['accepted_samples']).swapaxes(0, 1)
 
         nbins = 50
@@ -136,6 +136,9 @@ class ModelInference(StochSSJob):
                     fig.update_xaxes(row=row, col=col, range=[dmin[j], dmax[j]])
                     fig.update_yaxes(row=row, col=col, range=[dmin[i], dmax[i]])
 
+        if title is not None:
+            title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
+            fig.update_layout(title=title)
         fig.update_layout(height=500 * rows, title=title)
         return fig
 
@@ -176,6 +179,7 @@ class ModelInference(StochSSJob):
 
         fig.update_layout(barmode='overlay', height=500 * rows)
         if title is not None:
+            title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
             fig.update_layout(title=title)
         return fig
 
@@ -273,8 +277,6 @@ class ModelInference(StochSSJob):
         if epoch is None:
             fig_obj = self.__get_full_results_plot(results, names, values, **kwargs)
         else:
-            if 'titlt' not in kwargs or kwargs['title'] is None:
-                kwargs['title'] = f"Epoch {epoch + 1}"
             fig_obj = self.__get_epoch_result_plot(results[epoch], names, values, dmin, dmax, **kwargs)
         fig = json.loads(json.dumps(fig_obj, cls=plotly.utils.PlotlyJSONEncoder))
         if add_config:
