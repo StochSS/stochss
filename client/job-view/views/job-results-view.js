@@ -131,10 +131,6 @@ module.exports = View.extend({
       this.epochIndex = this.model.settings.inferenceSettings.numEpochs;
       $(this.queryByHook("epoch-index-value")).text(this.epochIndex);
       $(this.queryByHook("epoch-index-slider")).prop("value", this.epochIndex);
-      // TODO: Enable inference convert to notebook when implemented
-      $(this.queryByHook("convert-to-notebook")).prop("disabled", true);
-      // TODO: Enable inference CSV download when implemented
-      $(this.queryByHook("download-results-csv")).prop("disabled", true);
       // TODO: Enable inference presentations when implemented
       $(this.queryByHook("job-presentation")).prop("disabled", true);
     }
@@ -405,7 +401,11 @@ module.exports = View.extend({
     pngButton.click();
   },
   handleFullCSVClick: function (e) {
-    this.downloadCSV("full", null);
+    if(this.titleType === "Model Inference") {
+      this.downloadCSV("inference", null);
+    }else {
+      this.downloadCSV("full", null);
+    }
   },
   handlePlotCSVClick: function (e) {
     let type = e.target.dataset.type;

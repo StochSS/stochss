@@ -19,8 +19,10 @@ import os
 import csv
 import copy
 import json
+import shutil
 import pickle
 import logging
+import tempfile
 import traceback
 
 import numpy
@@ -90,6 +92,13 @@ class ModelInference(StochSSJob):
                     rows.append(row)
             data = numpy.array(rows).swapaxes(0, 1).astype("float")
         return data
+
+    @classmethod
+    def __get_csvzip(cls, dirname, name):
+        shutil.make_archive(os.path.join(dirname, name), "zip", dirname, name)
+        path = os.path.join(dirname, f"{name}.zip")
+        with open(path, "rb") as zip_file:
+            return zip_file.read()
 
     @classmethod
     def __get_epoch_result_plot(cls, results, names, values, dmin, dmax,
@@ -170,12 +179,12 @@ class ModelInference(StochSSJob):
                 row = int(numpy.ceil((j + 1) / cols))
                 col = (j % cols) + 1
                 fig.append_trace(trace, row, col)
-                fig.add_vline(
-                    result['inferred_parameters'][j], row=row, col=col, line={"color": color},
-                    opacity=base_opacity + 0.5, exclude_empty_subplots=True, layer='above'
-                )
                 if i == len(results) - 1:
                     fig.add_vline(values[j], row=row, col=col, line={"color": "red"}, layer='above')
+                    fig.add_vline(
+                        result['inferred_parameters'][j], row=row, col=col, line={"color": "green"},
+                        exclude_empty_subplots=True, layer='above'
+                    )
 
         fig.update_layout(barmode='overlay', height=500 * rows)
         if title is not None:
@@ -257,6 +266,56 @@ class ModelInference(StochSSJob):
             log.error(message)
             return message
         return False
+
+    def __to_csv(self, path='.', nametag="results_csv"):
+        results = self.__get_pickled_results()
+        settings = self.settings['inferenceSettings']
+        names = list(map(lambda param: param['name'], settings['parameters']))
+
+        directory = os.path.join(path, str(nametag))
+        if not os.path.exists(directory):
+            os.mkdir(directory)
+
+        infer_csv = [["Epoch", "Accepted Count", "Trial Count"]]
+        epoch_headers = ["Sample ID", "Distances"]
+        for name in names:
+            infer_csv[0].append(name)
+            epoch_headers.insert(-1, name)
+
+        for i, epoch in enumerate(results):
+            infer_line = [i + 1, epoch['accepted_count'], epoch['trial_count']]
+            infer_line.extend(epoch['inferred_parameters'])
+            infer_csv.append(infer_line)
+
+            epoch_csv = [epoch_headers]
+            for j, accepted_sample in enumerate(epoch['accepted_samples']):
+                epoch_line = accepted_sample.tolist()
+                epoch_line.insert(0, j + 1)
+                epoch_line.extend(epoch['distances'][j])
+                epoch_csv.append(epoch_line)
+
+            epoch_path = os.path.join(directory, f"epoch{i + 1}-details.csv")
+            self.__write_csv_file(epoch_path, epoch_csv)
+
+        infer_path = os.path.join(directory, "inference-overview.csv")
+        self.__write_csv_file(infer_path, infer_csv)
+
+    @classmethod
+    def __write_csv_file(cls, path, data):
+        with open(path, "w", encoding="utf-8") as csv_file:
+            csv_writer = csv.writer(csv_file)
+            for line in data:
+                csv_writer.writerow(line)
+
+    def get_csv_data(self, name):
+        """
+        Generate the csv results and return the binary of the zipped archive.
+        """
+        self.log("info", "Getting job results...")
+        nametag = f"Inference - {name} - Results-CSV"
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            self.__to_csv(path=tmp_dir, nametag=nametag)
+            return self.__get_csvzip(tmp_dir, nametag)
 
     def get_result_plot(self, epoch=None, add_config=False, **kwargs):
         """

@@ -71,11 +71,6 @@ div#workflow-results.card
                 data-target="download-json"
                 data-type="inference"
               ) Plot as .json
-              li.dropdown-item.disabled(
-                data-hook="inference-plot-csv"
-                data-target="download-plot-csv"
-                data-type="inference"
-              ) Plot Results as .csv
 
       div.card
 
@@ -147,17 +142,12 @@ div#workflow-results.card
                 data-target="download-json"
                 data-type="epoch"
               ) Plot as .json
-              li.dropdown-item.disabled(
-                data-hook="epoch-plot-csv"
-                data-target="download-plot-csv"
-                data-type="epoch"
-              ) Plot Results as .csv
 
       div
 
-        button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook" disabled) Convert to Notebook
+        button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
 
-        button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv" disabled) Download Full Results as .csv
+        button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Full Results as .csv
 
         button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation" disabled) Publish
 

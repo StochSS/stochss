@@ -504,13 +504,18 @@ class DownloadCSVZipAPIHandler(APIHandler):
         if data is not None:
             data = json.loads(data)
         try:
-            job = StochSSJob(path=path)
+            if csv_type == "inference":
+                job = ModelInference(path=path)
+            else:
+                job = StochSSJob(path=path)
             name = job.get_name()
             self.set_header('Content-Disposition', f'attachment; filename="{name}.zip"')
             if csv_type == "time series":
                 csv_data = job.get_csvzip_from_results(**data, name=name)
             elif csv_type == "psweep":
                 csv_data = job.get_psweep_csvzip_from_results(fixed=data, name=name)
+            elif csv_type == "inference":
+                csv_data = job.get_csv_data(name=name)
             else:
                 csv_data = job.get_full_csvzip_from_results(name=name)
             self.write(csv_data)
