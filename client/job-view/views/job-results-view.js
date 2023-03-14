@@ -390,7 +390,9 @@ module.exports = View.extend({
     let jsonData = this.plots[storageKey];
     let dataStr = JSON.stringify(jsonData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    let exportFileDefaultName = type + '-plot.json';
+    let nameIndex = type === "epoch" ? this.epochIndex : this.trajectoryIndex;
+    let nameBase = ["spatial", "epoch"].includes(type) ? `${type}${nameIndex}` : type;
+    let exportFileDefaultName = `${nameBase}-plot.json`;
 
     let linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataURI);

@@ -66,7 +66,7 @@ div#workflow-results.card
                 data-target="download-png-custom"
                 data-type="inference"
               ) Plot as .png
-              li.dropdown-item.disabled(
+              li.dropdown-item(
                 data-hook="inference-download-json"
                 data-target="download-json"
                 data-type="inference"
@@ -126,8 +126,6 @@ div#workflow-results.card
 
             button.btn.btn-primary.box-shadow(data-hook="epoch-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-            button.btn.btn-primary.box-shadow(data-hook="multiple-plots", data-type="mltplplt" disabled) Multiple Plots
-
             button.btn.btn-primary.box-shadow.dropdown-toggle(
               id="epoch-download"
               data-hook="epoch-download"
@@ -144,7 +142,7 @@ div#workflow-results.card
                 data-target="download-png-custom"
                 data-type="epoch"
               ) Plot as .png
-              li.dropdown-item.disabled(
+              li.dropdown-item(
                 data-hook="epoch-download-json"
                 data-target="download-json"
                 data-type="epoch"
