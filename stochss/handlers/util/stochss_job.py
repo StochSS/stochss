@@ -730,6 +730,17 @@ class StochSSJob(StochSSBase):
                         "startTime":info['start_time'], "status":status,
                         "timeStamp":self.time_stamp, "titleType":self.TITLES[info['type']],
                         "type":self.type, "directory":self.path, "logs":logs}
+            if self.type == "inference":
+                el_path = os.path.join(self.get_path(full=True), "export-links.json")
+                with open(el_path, "r", encoding="utf-8") as elfd:
+                    self.job['exportLinks'] = json.load(elfd)
+
+                for ndx, link in self.job['exportLinks'].items():
+                    if link is not None:
+                        epl_path = os.path.join(self.user_dir, link)
+                        if not os.path.exists(epl_path):
+                            self.job['exportLinks'][ndx] = None
+
             if "template_version" not in self.job['settings']:
                 self.job['settings']['template_version'] = 0
             self.__update_settings_to_current()

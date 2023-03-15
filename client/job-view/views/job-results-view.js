@@ -134,6 +134,10 @@ module.exports = View.extend({
     }else{
       var type = "inference";
       this.epochIndex = this.model.settings.inferenceSettings.numEpochs;
+      if(this.model.exportLinks[this.epochIndex] !== null) {
+        $(this.queryByHook("inference-model-export")).text("Open Model");
+        $(this.queryByHook("inference-model-explore")).text("Explore Model");
+      }
       $(this.queryByHook("epoch-index-value")).text(this.epochIndex);
       $(this.queryByHook("epoch-index-slider")).prop("value", this.epochIndex);
       // TODO: Enable inference presentations when implemented
@@ -185,21 +189,30 @@ module.exports = View.extend({
     window.open(endpoint);
   },
   exportInferredModel: function (type, {cb=null}={}) {
-    var queryStr = `?path=${this.model.directory}`;
-    if(type === "epoch") {
-      queryStr += `&epoch=${this.epochIndex}`;
-    }
-    let endpoint = `${path.join(app.getApiPath(), "job/export-inferred-model")}${queryStr}`;
-    app.getXHR(endpoint, {
-      success: (err, response, body) => {
-        if(cb === null) {
-          let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${body.path}`;
-          window.location.href = editEP;
-        }else {
-          cb(err, response, body);
-        }
+    let epoch = type === "epoch" ? this.epochIndex : this.model.settings.inferenceSettings.numEpochs
+    if(this.model.exportLinks[epoch] === null) {
+      var queryStr = `?path=${this.model.directory}`;
+      if(type === "epoch") {
+        queryStr += `&epoch=${this.epochIndex}`;
       }
-    });
+      let endpoint = `${path.join(app.getApiPath(), "job/export-inferred-model")}${queryStr}`;
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          if(cb === null) {
+            let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${body.path}`;
+            window.location.href = editEP;
+          }else {
+            cb(err, response, body);
+          }
+        }
+      });
+    }else if(cb === null){
+      let mdPath = this.model.exportLinks[epoch];
+      let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${mdPath}`;
+      window.location.href = editEP;
+    }else {
+      cb();
+    }
   },
   getPlot: function (type) {
     this.cleanupPlotContainer(type);
@@ -491,6 +504,9 @@ module.exports = View.extend({
   },
   newWorkflow: function (err, response, body) {
     let type = "Parameter Sweep"
+    if([undefined, null].includes(body)) {
+      body = { path: this.model.exportLinks[this.epochIndex] };
+    }
     let model = new Model({ directory: body.path });
     app.getXHR(model.url(), {
       success: (err, response, body) => {
@@ -526,6 +542,13 @@ module.exports = View.extend({
       $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
     }
     if(["inference", "epoch"].includes(type)) {
+      if(type === "epoch" && this.model.exportLinks[this.epochIndex] !== null) {
+        $(this.queryByHook("epoch-model-export")).text("Open Model");
+        $(this.queryByHook("epoch-model-explore")).text("Explore Model");
+      }else {
+        $(this.queryByHook("epoch-model-export")).text("Export Model");
+        $(this.queryByHook("epoch-model-explore")).text("Export & Explore Model");
+      }
       $(this.queryByHook(`${type}-model-export`)).prop("disabled", false);
       $(this.queryByHook(`${type}-model-explore`)).prop("disabled", false);
     }

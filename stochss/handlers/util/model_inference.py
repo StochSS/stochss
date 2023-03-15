@@ -407,6 +407,9 @@ class ModelInference(StochSSJob):
         pkl_err = self.__store_pickled_results(results)
         if pkl_err:
             self.__report_result_error(trace=pkl_err)
+        export_links = {i + 1: None for i in range(len(results))}
+        with open("export-links.json", "w", encoding="utf-8") as elfd:
+            json.dump(export_links, elfd, indent=4, sort_keys=True)
 
     def simulator(self, parameter_point):
         """ Wrapper function for inference simulations. """
@@ -420,3 +423,18 @@ class ModelInference(StochSSJob):
         raw_results = model.run(**kwargs)
 
         return self.process(raw_results)
+
+    def update_export_links(self, epoch, path):
+        """
+        Updated the export paths for an epoch.
+        """
+        el_path = os.path.join(self.get_path(full=True), "export-links.json")
+        with open(el_path, "r", encoding="utf-8") as elfd:
+            export_links = json.load(elfd)
+
+        if epoch < 1:
+            epoch = list(export_links.keys())[epoch]
+        export_links[epoch] = path
+
+        with open(el_path, "w", encoding="utf-8") as elfd:
+            json.dump(export_links, elfd, indent=4, sort_keys=True)

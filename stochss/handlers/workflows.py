@@ -660,6 +660,7 @@ class ExportInferredModelAPIHandler(APIHandler):
             resp = {"path": model.get_path()}
             log.debug(f"Response: {resp}")
             self.write(resp)
+            job.update_export_links(epoch, dst)
         except StochSSAPIError as err:
             report_error(self, log, err)
         except Exception as err:
