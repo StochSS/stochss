@@ -107,6 +107,8 @@ class ModelInference(StochSSJob):
 
         nbins = 50
         rows = cols = len(accepted_samples)
+        sizes = (numpy.array(dmax) - numpy.array(dmin)) / nbins
+
         fig = subplots.make_subplots(
             rows=rows, cols=cols, column_titles=names, row_titles=names,
             x_title=xaxis, y_title=yaxis, vertical_spacing=0.075
@@ -121,8 +123,8 @@ class ModelInference(StochSSJob):
                 if i == j:
                     color = common_rgb_values[(i)%len(common_rgb_values)]
                     trace = plotly.graph_objs.Histogram(
-                        x=accepted_samples[i], name=names[i], legendgroup=names[i], showlegend=False,
-                        nbinsx=nbins, opacity=0.75, marker_color=color
+                        x=accepted_samples[i], name=names[i], legendgroup=names[i], showlegend=False, marker_color=color,
+                        opacity=0.75, xbins={"start": dmin[i], "end": dmax[i], "size": sizes[i]}
                     )
 
                     fig.append_trace(trace, row, col)
@@ -152,10 +154,11 @@ class ModelInference(StochSSJob):
         return fig
 
     @classmethod
-    def __get_full_results_plot(cls, results, names, values,
+    def __get_full_results_plot(cls, results, names, values, dmin, dmax,
                                 title=None, xaxis="Values", yaxis="Sample Concentrations"):
         cols = 2
         nbins = 50
+        sizes = (numpy.array(dmax) - numpy.array(dmin)) / nbins
         rows = int(numpy.ceil(len(results[0]['accepted_samples'][0])/cols))
 
         fig = subplots.make_subplots(
@@ -172,8 +175,8 @@ class ModelInference(StochSSJob):
                 color = common_rgb_values[i % len(common_rgb_values)]
                 opacity = base_opacity + 0.25
                 trace = plotly.graph_objs.Histogram(
-                    x=accepted_values, name=name, legendgroup=name, showlegend=j==0,
-                    marker_color=color, opacity=opacity, nbinsx=nbins
+                    x=accepted_values, name=name, legendgroup=name, showlegend=j==0, marker_color=color,
+                    opacity=opacity, xbins={"start": dmin[j], "end": dmax[j], "size": sizes[j]}
                 )
 
                 row = int(numpy.ceil((j + 1) / cols))
@@ -349,7 +352,7 @@ class ModelInference(StochSSJob):
             dmin.append(parameter['min'])
             dmax.append(parameter['max'])
         if round is None:
-            fig_obj = self.__get_full_results_plot(results, names, values, **kwargs)
+            fig_obj = self.__get_full_results_plot(results, names, values, dmin, dmax, **kwargs)
         else:
             fig_obj = self.__get_round_result_plot(results[round], names, values, dmin, dmax, **kwargs)
         fig = json.loads(json.dumps(fig_obj, cls=plotly.utils.PlotlyJSONEncoder))
