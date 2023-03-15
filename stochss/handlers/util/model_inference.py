@@ -145,7 +145,7 @@ class ModelInference(StochSSJob):
                     fig.update_xaxes(row=row, col=col, range=[dmin[j], dmax[j]])
                     fig.update_yaxes(row=row, col=col, range=[dmin[i], dmax[i]])
 
-        fig.update_layout(height=500 * rows)
+        fig.update_layout(height=1000)
         if title is not None:
             title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
             fig.update_layout(title=title)

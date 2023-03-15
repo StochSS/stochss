@@ -466,7 +466,7 @@ class StochSSJob(StochSSBase):
         file = f"{self.get_name()}.ipynb"
         dirname = self.get_dir_name()
         if ".wkfl" in dirname:
-            codes = {"gillespy": "_ES", "spatial": "_SES", "parameterSweep": "_PS"}
+            codes = {"gillespy": "_ES", "spatial": "_SES", "parameterSweep": "_PS", "inference": "_MI"}
             code = codes[info['type']]
             wkfl_name = self.get_name(path=dirname).replace(code, "_NB")
             file = f"{wkfl_name}_{file}"
@@ -474,7 +474,7 @@ class StochSSJob(StochSSBase):
         path = os.path.join(dirname, file)
         g_model, s_model = self.load_models()
         settings = self.load_settings()
-        if info['type'] in ("gillespy", "spatial"):
+        if info['type'] in ("gillespy", "spatial", "inference"):
             wkfl_type = info['type']
         elif info['type'] == "parameterSweep" and \
                     len(settings['parameterSweepSettings']['parameters']) == 1:

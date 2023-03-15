@@ -325,10 +325,11 @@ class WorkflowNotebookHandler(APIHandler):
                 notebook = StochSSParamSweepNotebook(**kwargs)
                 notebooks = {"1d_parameter_sweep":notebook.create_1d_notebook,
                              "2d_parameter_sweep":notebook.create_2d_notebook}
-            elif wkfl_type in ("sciope_model_exploration", "model_inference"):
+            elif wkfl_type in ("sciope_model_exploration", "model_inference", "inference"):
                 notebook = StochSSSciopeNotebook(**kwargs)
                 notebooks = {"sciope_model_exploration":notebook.create_me_notebook,
-                             "model_inference":notebook.create_mi_notebook}
+                             "model_inference":notebook.create_mi_notebook,
+                             "inference":notebook.create_mi_notebook}
             else:
                 notebook = StochSSNotebook(**kwargs)
                 notebooks = {"gillespy":notebook.create_es_notebook,
