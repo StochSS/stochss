@@ -18,11 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 let path = require('path');
+let _ = require('underscore');
 //support files
 let app = require('../../app');
 let modals = require('../../modals');
 let Tooltips = require('../../tooltips');
 let Plotly = require('plotly.js-dist');
+//models
+let Model = require('../../models/model');
 //views
 let InputView = require('../../views/input');
 let View = require('ampersand-view');
@@ -52,6 +55,7 @@ module.exports = View.extend({
     'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
     'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
     'click [data-target=model-export]' : 'handleExportInferredModel',
+    'click [data-target=model-explore]' : 'handleExploreInferredModel',
     'click [data-target=edit-plot]' : 'openPlotArgsSection',
     'click [data-hook=multiple-plots]' : 'plotMultiplePlots',
     'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
@@ -420,6 +424,10 @@ module.exports = View.extend({
     let type = e.target.dataset.type;
     let pngButton = $('div[data-hook=' + type + '-plot] a[data-title*="Download plot as a png"]')[0];
     pngButton.click();
+  },
+  handleExploreInferredModel: function (e) {
+    let type = e.target.dataset.hook.split('-')[0];
+    this.exportInferredModel(type, {cb: _.bind(this.newWorkflow, this)});
   },
   handleExportInferredModel: function (e) {
     let type = e.target.dataset.hook.split('-')[0];
