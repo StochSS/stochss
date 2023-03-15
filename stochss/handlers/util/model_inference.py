@@ -307,6 +307,22 @@ class ModelInference(StochSSJob):
             for line in data:
                 csv_writer.writerow(line)
 
+    def export_inferred_model(self, epoch_ndx=-1):
+        """
+        Export the jobs model after updating the inferred parameter values.
+        """
+        model = copy.deepcopy(self.g_model)
+        epoch = self.__get_pickled_results()[epoch_ndx]
+        parameters = self.settings['inferenceSettings']['parameters']
+
+        for i, parameter in enumerate(parameters):
+            model.listOfParameters[parameter['name']].expression = str(epoch['inferred_parameters'][i])
+
+        inf_model = gillespy2.export_StochSS(model, return_stochss_model=True)
+        inf_model['name'] = f"Inferred-{model.name}"
+        inf_model['modelSettings'] = self.s_model['modelSettings']
+        return inf_model
+
     def get_csv_data(self, name):
         """
         Generate the csv results and return the binary of the zipped archive.
@@ -321,16 +337,15 @@ class ModelInference(StochSSJob):
         """
         Generate a plot for inference results.
         """
-        model = self.load_models()[0]
         results = self.__get_pickled_results()
-        parameters = self.load_settings()['inferenceSettings']['parameters']
+        parameters = self.settings['inferenceSettings']['parameters']
         names = []
         values = []
         dmin = []
         dmax = []
         for parameter in parameters:
             names.append(parameter['name'])
-            values.append(model.listOfParameters[parameter['name']].value)
+            values.append(self.g_model.listOfParameters[parameter['name']].value)
             dmin.append(parameter['min'])
             dmax.append(parameter['max'])
         if epoch is None:

@@ -132,7 +132,8 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/obs-data-files\/?", LoadObsDataFiles),
         (r"/stochss/api/workflow/preview-obs-data\/?", PreviewOBSDataAPIHandler),
         (r"/stochss/api/job/presentation\/?", JobPresentationAPIHandler),
-        (r"/stochss/api/job/csv\/?", DownloadCSVZipAPIHandler)
+        (r"/stochss/api/job/csv\/?", DownloadCSVZipAPIHandler),
+        (r"/stochss/api/job/export-inferred-model\/?", ExportInferredModelAPIHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers

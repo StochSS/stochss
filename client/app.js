@@ -142,7 +142,6 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
     "Parameter Sweep": "_PS",
     "Model Inference": "_MI"
   }
-  let self = parent;
   let ext = isSpatial ? /.smdl/g : /.mdl/g
   let typeCode = typeCodes[type];
   let name = mdlPath.split('/').pop().replace(ext, typeCode)

@@ -51,6 +51,7 @@ module.exports = View.extend({
     'change [data-hook=plot-type-select]' : 'getTSPlotForType',
     'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
     'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
+    'click [data-target=model-export]' : 'handleExportInferredModel',
     'click [data-target=edit-plot]' : 'openPlotArgsSection',
     'click [data-hook=multiple-plots]' : 'plotMultiplePlots',
     'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
@@ -165,6 +166,9 @@ module.exports = View.extend({
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
     }else if(type === "spatial") {
       $(this.queryByHook("spatial-plot-loading-msg")).css("display", "block");
+    }else if(type === "epoch") {
+      $(this.queryByHook("epoch-model-export")).prop("disabled", true);
+      $(this.queryByHook("epoch-model-explore")).prop("disabled", true);
     }
     $(this.queryByHook(`${type}-plot-spinner`)).css("display", "block");
   },
@@ -175,6 +179,23 @@ module.exports = View.extend({
     }
     let endpoint = `${path.join(app.getApiPath(), "job/csv")}${queryStr}`;
     window.open(endpoint);
+  },
+  exportInferredModel: function (type, {cb=null}={}) {
+    var queryStr = `?path=${this.model.directory}`;
+    if(type === "epoch") {
+      queryStr += `&epoch=${this.epochIndex}`;
+    }
+    let endpoint = `${path.join(app.getApiPath(), "job/export-inferred-model")}${queryStr}`;
+    app.getXHR(endpoint, {
+      success: (err, response, body) => {
+        if(cb === null) {
+          let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${body.path}`;
+          window.location.href = editEP;
+        }else {
+          cb(err, response, body);
+        }
+      }
+    });
   },
   getPlot: function (type) {
     this.cleanupPlotContainer(type);
@@ -400,6 +421,10 @@ module.exports = View.extend({
     let pngButton = $('div[data-hook=' + type + '-plot] a[data-title*="Download plot as a png"]')[0];
     pngButton.click();
   },
+  handleExportInferredModel: function (e) {
+    let type = e.target.dataset.hook.split('-')[0];
+    this.exportInferredModel(type);
+  },
   handleFullCSVClick: function (e) {
     if(this.titleType === "Model Inference") {
       this.downloadCSV("inference", null);
@@ -456,6 +481,27 @@ module.exports = View.extend({
       }
     });
   },
+  newWorkflow: function (err, response, body) {
+    let type = "Parameter Sweep"
+    let model = new Model({ directory: body.path });
+    app.getXHR(model.url(), {
+      success: (err, response, body) => {
+        model.set(body);
+        model.updateValid();
+        if(model.valid){
+          app.newWorkflow(this, model.directory, model.is_spatial, type);
+        }else{
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
+          let title = "Model Errors Detected";
+          let endpoint = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${model.directory}&validate`;
+          let message = `Errors were detected in you model <a href="${endpoint}">click here to fix your model<a/>`;
+          $(modals.errorHtml(title, message)).modal();
+        }
+      }
+    });
+  },
   openPlotArgsSection: function (e) {
     $(this.queryByHook("edit-plot-args")).collapse("show");
     $(document).ready(function () {
@@ -470,6 +516,10 @@ module.exports = View.extend({
     Plotly.newPlot(el, figure);
     if(type === "spatial") {
       $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
+    }
+    if(["inference", "epoch"].includes(type)) {
+      $(this.queryByHook(`${type}-model-export`)).prop("disabled", false);
+      $(this.queryByHook(`${type}-model-explore`)).prop("disabled", false);
     }
     $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
     $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", false);

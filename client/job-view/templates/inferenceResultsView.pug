@@ -48,6 +48,10 @@ div#workflow-results.card
 
             div.spinner-border.workflow-plot(data-hook="inference-plot-spinner")
             
+            button.btn.btn-primary.box-shadow(data-hook="inference-model-export" data-target="model-export" disabled) Export Model
+
+            button.btn.btn-primary.box-shadow(data-hook="inference-model-explore" data-target="model-explore" disabled) Export & Explore Model
+
             button.btn.btn-primary.box-shadow(data-hook="inference-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
             button.btn.btn-primary.box-shadow.dropdown-toggle(
@@ -118,6 +122,10 @@ div#workflow-results.card
             div(data-hook="epoch-plot")
 
             div.spinner-border.workflow-plot(data-hook="epoch-plot-spinner")
+
+            button.btn.btn-primary.box-shadow(data-hook="epoch-model-export" data-target="model-export" disabled) Export Model
+
+            button.btn.btn-primary.box-shadow(data-hook="epoch-model-explore" data-target="model-explore" disabled) Export & Explore Model
 
             button.btn.btn-primary.box-shadow(data-hook="epoch-edit-plot" data-target="edit-plot" disabled) Edit Plot
 

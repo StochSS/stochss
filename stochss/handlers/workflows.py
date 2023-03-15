@@ -627,3 +627,41 @@ class PreviewOBSDataAPIHandler(APIHandler):
         except Exception as err:
             report_critical_error(self, log, err)
         self.finish()
+
+class ExportInferredModelAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for exporting an inferred model.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Preview the observed data files.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        epoch = int(self.get_query_argument(name="epoch", default=-1))
+        try:
+            job = ModelInference(path=path)
+            inf_model = job.export_inferred_model(epoch_ndx=epoch)
+
+            end = -3 if '.wkgp' in path else -2
+            dirname = '/'.join(path.split('/')[:end])
+            if ".proj" in dirname:
+                dst = os.path.join(dirname, f"{inf_model['name']}.wkgp", f"{inf_model['name']}.mdl")
+            else:
+                dst = os.path.join(dirname, f"{inf_model['name']}.mdl")
+            model = StochSSModel(path=dst, new=True, model=inf_model)
+
+            resp = {"path": model.get_path()}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
+        self.finish()

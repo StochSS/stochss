@@ -26,6 +26,7 @@ import traceback
 
 from escapism import escape
 from gillespy2.sbml.SBMLexport import export
+from gillespy2.core.jsonify import ComplexJsonCoder
 from gillespy2 import (
     Model, Species, Parameter, Reaction, Event, EventTrigger, EventAssignment,
     RateRule, AssignmentRule, FunctionDefinition, TimeSpan
@@ -67,7 +68,7 @@ class StochSSModel(StochSSBase):
             if changed:
                 self.path = new_path.replace(self.user_dir + '/', "")
             with open(new_path, "w", encoding="utf-8") as mdl_file:
-                json.dump(model, mdl_file, indent=4, sort_keys=True)
+                json.dump(model, mdl_file, indent=4, sort_keys=True, cls=ComplexJsonCoder)
         else:
             self.model = None
 
