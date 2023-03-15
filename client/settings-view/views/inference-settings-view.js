@@ -42,7 +42,7 @@ module.exports = View.extend({
     }
   },
   events: {
-    'change [data-hook=num-epochs]' : 'updateEpochsView',
+    'change [data-hook=num-rounds]' : 'updateRoundsView',
     'change [data-hook=num-samples]' : 'updateSamplesView',
     'change [data-hook=summary-stats-type-select]' : 'setSummaryStatsType',
     'change [data-hook=obs-data-file]' : 'setObsDataFile',
@@ -324,24 +324,24 @@ module.exports = View.extend({
   },
   update: function (e) {},
   updateValid: function (e) {},
-  updateEpochsView: function (e) {
-    $(this.queryByHook("view-num-epochs")).text(this.model.numEpochs);
+  updateRoundsView: function (e) {
+    $(this.queryByHook("view-num-rounds")).text(this.model.numRounds);
   },
   updateSamplesView: function (e) {
     $(this.queryByHook("view-num-samples")).text(this.model.numSamples);
   },
   subviews: {
-    numEpochsInputView: {
-      hook: "num-epochs",
+    numRoundsInputView: {
+      hook: "num-rounds",
       prepareView: function (el) {
         return new InputView({
           parent: this,
           required: true,
-          name: 'number-of-epochs',
+          name: 'number-of-rounds',
           tests: tests.valueTests,
-          modelKey: 'numEpochs',
+          modelKey: 'numRounds',
           valueType: 'number',
-          value: this.model.numEpochs
+          value: this.model.numRounds
         });
       }
     },

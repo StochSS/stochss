@@ -25,7 +25,7 @@ module.exports = State.extend({
   props: {
     batchSize: 'number',
     chunkSize: 'number',
-    numEpochs: 'number',
+    numRounds: 'number',
     numSamples: 'number', 
     obsData: 'string',
     priorMethod: 'string',

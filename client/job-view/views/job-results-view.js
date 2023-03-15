@@ -47,7 +47,7 @@ module.exports = View.extend({
     'change [data-hook=target-of-interest-list]' : 'getPlotForTarget',
     'change [data-hook=target-mode-list]' : 'getPlotForTargetMode',
     'change [data-hook=trajectory-index-slider]' : 'getPlotForTrajectory',
-    'change [data-hook=epoch-index-slider]' : 'getPlotForEpoch',
+    'change [data-hook=round-index-slider]' : 'getPlotForRound',
     'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
@@ -65,7 +65,7 @@ module.exports = View.extend({
     'click [data-hook=download-results-csv]' : 'handleFullCSVClick',
     'click [data-hook=job-presentation]' : 'handlePresentationClick',
     'input [data-hook=trajectory-index-slider]' : 'viewTrajectoryIndex',
-    'input [data-hook=epoch-index-slider]' : 'viewEpochIndex'
+    'input [data-hook=round-index-slider]' : 'viewRoundIndex'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -133,13 +133,13 @@ module.exports = View.extend({
       $(this.queryByHook("spatial-plot-csv")).css('display', 'none');
     }else{
       var type = "inference";
-      this.epochIndex = this.model.settings.inferenceSettings.numEpochs;
-      if(this.model.exportLinks[this.epochIndex] !== null) {
+      this.roundIndex = this.model.settings.inferenceSettings.numRounds;
+      if(this.model.exportLinks[this.roundIndex] !== null) {
         $(this.queryByHook("inference-model-export")).text("Open Model");
         $(this.queryByHook("inference-model-explore")).text("Explore Model");
       }
-      $(this.queryByHook("epoch-index-value")).text(this.epochIndex);
-      $(this.queryByHook("epoch-index-slider")).prop("value", this.epochIndex);
+      $(this.queryByHook("round-index-value")).text(this.roundIndex);
+      $(this.queryByHook("round-index-slider")).prop("value", this.roundIndex);
       // TODO: Enable inference presentations when implemented
       $(this.queryByHook("job-presentation")).prop("disabled", true);
     }
@@ -174,9 +174,9 @@ module.exports = View.extend({
       $(this.queryByHook("multiple-plots")).prop("disabled", true);
     }else if(type === "spatial") {
       $(this.queryByHook("spatial-plot-loading-msg")).css("display", "block");
-    }else if(type === "epoch") {
-      $(this.queryByHook("epoch-model-export")).prop("disabled", true);
-      $(this.queryByHook("epoch-model-explore")).prop("disabled", true);
+    }else if(type === "round") {
+      $(this.queryByHook("round-model-export")).prop("disabled", true);
+      $(this.queryByHook("round-model-explore")).prop("disabled", true);
     }
     $(this.queryByHook(`${type}-plot-spinner`)).css("display", "block");
   },
@@ -189,11 +189,11 @@ module.exports = View.extend({
     window.open(endpoint);
   },
   exportInferredModel: function (type, {cb=null}={}) {
-    let epoch = type === "epoch" ? this.epochIndex : this.model.settings.inferenceSettings.numEpochs
-    if(this.model.exportLinks[epoch] === null) {
+    let round = type === "round" ? this.roundIndex : this.model.settings.inferenceSettings.numRounds
+    if(this.model.exportLinks[round] === null) {
       var queryStr = `?path=${this.model.directory}`;
-      if(type === "epoch") {
-        queryStr += `&epoch=${this.epochIndex}`;
+      if(type === "round") {
+        queryStr += `&round=${this.roundIndex}`;
       }
       let endpoint = `${path.join(app.getApiPath(), "job/export-inferred-model")}${queryStr}`;
       app.getXHR(endpoint, {
@@ -207,7 +207,7 @@ module.exports = View.extend({
         }
       });
     }else if(cb === null){
-      let mdPath = this.model.exportLinks[epoch];
+      let mdPath = this.model.exportLinks[round];
       let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${mdPath}`;
       window.location.href = editEP;
     }else {
@@ -221,7 +221,7 @@ module.exports = View.extend({
     let storageKey = JSON.stringify(data);
     data['plt_data'] = this.getPlotLayoutData();
     if(Boolean(this.plots[storageKey])) {
-      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial', 'epoch'];
+      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial', 'round'];
       if(renderTypes.includes(type)) {
         this.activePlots[type] = storageKey;
         this.plotFigure(this.plots[storageKey], type);
@@ -231,7 +231,7 @@ module.exports = View.extend({
       let endpoint = `${path.join(app.getApiPath(), "workflow/plot-results")}${queryStr}`;
       app.getXHR(endpoint, {
         success: (err, response, body) => {
-          if(type === "epoch") {
+          if(type === "round") {
             body.layout.annotations.push({
               font: {size: 16}, showarrow: false, text: "", x: 0.5, xanchor: "center", xref: "paper",
               y: 0, yanchor: "top", yref: "paper", yshift: -30
@@ -290,9 +290,9 @@ module.exports = View.extend({
         target: this.spatialTarget, index: this.targetIndex, mode: this.targetMode, trajectory: this.trajectoryIndex - 1
       };
       data['plt_key'] = type;
-    }else if(["inference", "epoch"].includes(type)) {
+    }else if(["inference", "round"].includes(type)) {
       data['sim_type'] = "Inference";
-      data['data_keys'] = {"epoch": type === "inference" ? null : this.epochIndex - 1};
+      data['data_keys'] = {"round": type === "inference" ? null : this.roundIndex - 1};
       data['plt_key'] = "inference";
     }else {
       data['sim_type'] = "GillesPy2";
@@ -311,9 +311,9 @@ module.exports = View.extend({
     this.model.settings.resultsSettings.reducer = e.target.value;
     this.getPlot('psweep')
   },
-  getPlotForEpoch: function (e) {
-    this.epochIndex = Number(e.target.value);
-    this.getPlot('epoch');
+  getPlotForRound: function (e) {
+    this.roundIndex = Number(e.target.value);
+    this.getPlot('round');
   },
   getPlotForFeatureExtractor: function (e) {
     this.model.settings.resultsSettings.mapper = e.target.value;
@@ -387,8 +387,8 @@ module.exports = View.extend({
     if(plotData.sim_type === "GillesPy2") { return plotData.plt_key; }
     if(plotData.sim_type === "GillesPy2_PS") { return "ts-psweep"; }
     if(plotData.sim_type === "Inference") {
-      if(plotData.data_keys.epoch === null) { return "inference"; }
-      return "epoch"
+      if(plotData.data_keys.round === null) { return "inference"; }
+      return "round"
     }
     return "psweep"
   },
@@ -424,8 +424,8 @@ module.exports = View.extend({
     let jsonData = this.plots[storageKey];
     let dataStr = JSON.stringify(jsonData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    let nameIndex = type === "epoch" ? this.epochIndex : this.trajectoryIndex;
-    let nameBase = ["spatial", "epoch"].includes(type) ? `${type}${nameIndex}` : type;
+    let nameIndex = type === "round" ? this.roundIndex : this.trajectoryIndex;
+    let nameBase = ["spatial", "round"].includes(type) ? `${type}${nameIndex}` : type;
     let exportFileDefaultName = `${nameBase}-plot.json`;
 
     let linkElement = document.createElement('a');
@@ -505,7 +505,7 @@ module.exports = View.extend({
   newWorkflow: function (err, response, body) {
     let type = "Parameter Sweep"
     if([undefined, null].includes(body)) {
-      body = { path: this.model.exportLinks[this.epochIndex] };
+      body = { path: this.model.exportLinks[this.roundIndex] };
     }
     let model = new Model({ directory: body.path });
     app.getXHR(model.url(), {
@@ -541,13 +541,13 @@ module.exports = View.extend({
     if(type === "spatial") {
       $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
     }
-    if(["inference", "epoch"].includes(type)) {
-      if(type === "epoch" && this.model.exportLinks[this.epochIndex] !== null) {
-        $(this.queryByHook("epoch-model-export")).text("Open Model");
-        $(this.queryByHook("epoch-model-explore")).text("Explore Model");
+    if(["inference", "round"].includes(type)) {
+      if(type === "round" && this.model.exportLinks[this.roundIndex] !== null) {
+        $(this.queryByHook("round-model-export")).text("Open Model");
+        $(this.queryByHook("round-model-explore")).text("Explore Model");
       }else {
-        $(this.queryByHook("epoch-model-export")).text("Export Model");
-        $(this.queryByHook("epoch-model-explore")).text("Export & Explore Model");
+        $(this.queryByHook("round-model-export")).text("Export Model");
+        $(this.queryByHook("round-model-explore")).text("Export & Explore Model");
       }
       $(this.queryByHook(`${type}-model-export`)).prop("disabled", false);
       $(this.queryByHook(`${type}-model-explore`)).prop("disabled", false);
@@ -701,7 +701,7 @@ module.exports = View.extend({
     for (var storageKey in this.plots) {
       let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
-      if(['inference', 'epoch'].includes(type)) {
+      if(['inference', 'round'].includes(type)) {
         fig.layout.annotations.at(-2).text = e.target.value
       }else {
         fig.layout.xaxis.title.text = e.target.value
@@ -716,7 +716,7 @@ module.exports = View.extend({
     for (var storageKey in this.plots) {
       let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
-      if(['inference', 'epoch'].includes(type)) {
+      if(['inference', 'round'].includes(type)) {
         fig.layout.annotations.at(-1).text = e.target.value
       }else {
         fig.layout.xaxis.title.text = e.target.value
@@ -733,8 +733,8 @@ module.exports = View.extend({
   },
   update: function () {},
   updateValid: function () {},
-  viewEpochIndex: function (e) {
-    $(this.queryByHook("epoch-index-value")).html(e.target.value);
+  viewRoundIndex: function (e) {
+    $(this.queryByHook("round-index-value")).html(e.target.value);
   },
   viewTrajectoryIndex: function (e) {
     $(this.queryByHook("trajectory-index-value")).html(e.target.value);

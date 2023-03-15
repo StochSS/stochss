@@ -644,10 +644,10 @@ class ExportInferredModelAPIHandler(APIHandler):
         '''
         self.set_header('Content-Type', 'application/json')
         path = self.get_query_argument(name="path")
-        epoch = int(self.get_query_argument(name="epoch", default=-1))
+        round = int(self.get_query_argument(name="round", default=-1))
         try:
             job = ModelInference(path=path)
-            inf_model = job.export_inferred_model(epoch_ndx=epoch)
+            inf_model = job.export_inferred_model(round_ndx=round)
 
             end = -3 if '.wkgp' in path else -2
             dirname = '/'.join(path.split('/')[:end])
@@ -660,7 +660,7 @@ class ExportInferredModelAPIHandler(APIHandler):
             resp = {"path": model.get_path()}
             log.debug(f"Response: {resp}")
             self.write(resp)
-            job.update_export_links(epoch, dst)
+            job.update_export_links(round, dst)
         except StochSSAPIError as err:
             report_error(self, log, err)
         except Exception as err:

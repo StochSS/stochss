@@ -80,18 +80,18 @@ div#workflow-results.card
 
         div.card-header.pb-0
 
-          h5.inline Plot Epoch
+          h5.inline Plot Round
 
           button.btn.btn-outline-collapse(
             data-toggle="collapse"
-            data-target="#collapse-epoch"
-            id="collapse-epoch-btn"
-            data-hook="collapse-epoch-btn"
+            data-target="#collapse-round"
+            id="collapse-round-btn"
+            data-hook="collapse-round-btn"
             data-trigger="collapse-plot-container"
-            data-type="epoch"
+            data-type="round"
           ) +
 
-        div.collapse(id="collapse-epoch")
+        div.collapse(id="collapse-round")
 
           div.card-body
 
@@ -103,9 +103,9 @@ div#workflow-results.card
 
                   h6
 
-                    div.inline.mr-2 <b>Epoch</b>:
+                    div.inline.mr-2 <b>Round</b>:
 
-                    div.inline(data-hook="epoch-index-value")=this.epochIndex
+                    div.inline(data-hook="round-index-value")=this.roundIndex
 
               div.mx-1.my-3.row
 
@@ -114,24 +114,24 @@ div#workflow-results.card
                   input.custom-range(
                     type="range"
                     min="1"
-                    max=`${this.model.settings.inferenceSettings.numEpochs}`
-                    value=this.epochIndex
-                    data-hook="epoch-index-slider"
+                    max=`${this.model.settings.inferenceSettings.numRounds}`
+                    value=this.roundIndex
+                    data-hook="round-index-slider"
                   )
 
-            div(data-hook="epoch-plot")
+            div(data-hook="round-plot")
 
-            div.spinner-border.workflow-plot(data-hook="epoch-plot-spinner")
+            div.spinner-border.workflow-plot(data-hook="round-plot-spinner")
 
-            button.btn.btn-primary.box-shadow(data-hook="epoch-model-export" data-target="model-export" disabled) Export Model
+            button.btn.btn-primary.box-shadow(data-hook="round-model-export" data-target="model-export" disabled) Export Model
 
-            button.btn.btn-primary.box-shadow(data-hook="epoch-model-explore" data-target="model-explore" disabled) Export & Explore Model
+            button.btn.btn-primary.box-shadow(data-hook="round-model-explore" data-target="model-explore" disabled) Export & Explore Model
 
-            button.btn.btn-primary.box-shadow(data-hook="epoch-edit-plot" data-target="edit-plot" disabled) Edit Plot
+            button.btn.btn-primary.box-shadow(data-hook="round-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
             button.btn.btn-primary.box-shadow.dropdown-toggle(
-              id="epoch-download"
-              data-hook="epoch-download"
+              id="round-download"
+              data-hook="round-download"
               data-toggle="dropdown",
               aria-haspopup="true",
               aria-expanded="false",
@@ -139,16 +139,16 @@ div#workflow-results.card
               disabled
             ) Download <span class="caret"></span>
 
-            ul.dropdown-menu(aria-labelledby="#epoch-download")
+            ul.dropdown-menu(aria-labelledby="#round-download")
               li.dropdown-item(
-                data-hook="epoch-download-png-custom"
+                data-hook="round-download-png-custom"
                 data-target="download-png-custom"
-                data-type="epoch"
+                data-type="round"
               ) Plot as .png
               li.dropdown-item(
-                data-hook="epoch-download-json"
+                data-hook="round-download-json"
                 data-target="download-json"
-                data-type="epoch"
+                data-type="round"
               ) Plot as .json
 
       div

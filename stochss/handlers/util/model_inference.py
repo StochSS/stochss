@@ -101,7 +101,7 @@ class ModelInference(StochSSJob):
             return zip_file.read()
 
     @classmethod
-    def __get_epoch_result_plot(cls, results, names, values, dmin, dmax,
+    def __get_round_result_plot(cls, results, names, values, dmin, dmax,
                                 title=None, xaxis=None, yaxis=None):
         accepted_samples = numpy.vstack(results['accepted_samples']).swapaxes(0, 1)
 
@@ -168,7 +168,7 @@ class ModelInference(StochSSJob):
             base_opacity = 0.5 if len(results) <= 1 else (i / (len(results) - 1) * 0.5)
 
             for j, accepted_values in enumerate(accepted_samples):
-                name = f"epoch {i + 1}"
+                name = f"round {i + 1}"
                 color = common_rgb_values[i % len(common_rgb_values)]
                 opacity = base_opacity + 0.25
                 trace = plotly.graph_objs.Histogram(
@@ -194,7 +194,7 @@ class ModelInference(StochSSJob):
 
     def __get_infer_args(self):
         settings = self.settings['inferenceSettings']
-        eps_selector = RelativeEpsilonSelector(20, max_rounds=settings['numEpochs'])
+        eps_selector = RelativeEpsilonSelector(20, max_rounds=settings['numRounds'])
         args = [settings['num_samples'], settings['batchSize']]
         kwargs = {"eps_selector": eps_selector, "chunk_size": settings['chunkSize']}
         return args, kwargs
@@ -276,26 +276,26 @@ class ModelInference(StochSSJob):
         if not os.path.exists(directory):
             os.mkdir(directory)
 
-        infer_csv = [["Epoch", "Accepted Count", "Trial Count"]]
-        epoch_headers = ["Sample ID", "Distances"]
+        infer_csv = [["Round", "Accepted Count", "Trial Count"]]
+        round_headers = ["Sample ID", "Distances"]
         for name in names:
             infer_csv[0].append(name)
-            epoch_headers.insert(-1, name)
+            round_headers.insert(-1, name)
 
-        for i, epoch in enumerate(results):
-            infer_line = [i + 1, epoch['accepted_count'], epoch['trial_count']]
-            infer_line.extend(epoch['inferred_parameters'])
+        for i, round in enumerate(results):
+            infer_line = [i + 1, round['accepted_count'], round['trial_count']]
+            infer_line.extend(round['inferred_parameters'])
             infer_csv.append(infer_line)
 
-            epoch_csv = [epoch_headers]
-            for j, accepted_sample in enumerate(epoch['accepted_samples']):
-                epoch_line = accepted_sample.tolist()
-                epoch_line.insert(0, j + 1)
-                epoch_line.extend(epoch['distances'][j])
-                epoch_csv.append(epoch_line)
+            round_csv = [round_headers]
+            for j, accepted_sample in enumerate(round['accepted_samples']):
+                round_line = accepted_sample.tolist()
+                round_line.insert(0, j + 1)
+                round_line.extend(round['distances'][j])
+                round_csv.append(round_line)
 
-            epoch_path = os.path.join(directory, f"epoch{i + 1}-details.csv")
-            self.__write_csv_file(epoch_path, epoch_csv)
+            round_path = os.path.join(directory, f"round{i + 1}-details.csv")
+            self.__write_csv_file(round_path, round_csv)
 
         infer_path = os.path.join(directory, "inference-overview.csv")
         self.__write_csv_file(infer_path, infer_csv)
@@ -307,16 +307,16 @@ class ModelInference(StochSSJob):
             for line in data:
                 csv_writer.writerow(line)
 
-    def export_inferred_model(self, epoch_ndx=-1):
+    def export_inferred_model(self, round_ndx=-1):
         """
         Export the jobs model after updating the inferred parameter values.
         """
         model = copy.deepcopy(self.g_model)
-        epoch = self.__get_pickled_results()[epoch_ndx]
+        round = self.__get_pickled_results()[round_ndx]
         parameters = self.settings['inferenceSettings']['parameters']
 
         for i, parameter in enumerate(parameters):
-            model.listOfParameters[parameter['name']].expression = str(epoch['inferred_parameters'][i])
+            model.listOfParameters[parameter['name']].expression = str(round['inferred_parameters'][i])
 
         inf_model = gillespy2.export_StochSS(model, return_stochss_model=True)
         inf_model['name'] = f"Inferred-{model.name}"
@@ -333,7 +333,7 @@ class ModelInference(StochSSJob):
             self.__to_csv(path=tmp_dir, nametag=nametag)
             return self.__get_csvzip(tmp_dir, nametag)
 
-    def get_result_plot(self, epoch=None, add_config=False, **kwargs):
+    def get_result_plot(self, round=None, add_config=False, **kwargs):
         """
         Generate a plot for inference results.
         """
@@ -348,10 +348,10 @@ class ModelInference(StochSSJob):
             values.append(self.g_model.listOfParameters[parameter['name']].value)
             dmin.append(parameter['min'])
             dmax.append(parameter['max'])
-        if epoch is None:
+        if round is None:
             fig_obj = self.__get_full_results_plot(results, names, values, **kwargs)
         else:
-            fig_obj = self.__get_epoch_result_plot(results[epoch], names, values, dmin, dmax, **kwargs)
+            fig_obj = self.__get_round_result_plot(results[round], names, values, dmin, dmax, **kwargs)
         fig = json.loads(json.dumps(fig_obj, cls=plotly.utils.PlotlyJSONEncoder))
         if add_config:
             fig["config"] = {"responsive": True}
@@ -424,17 +424,17 @@ class ModelInference(StochSSJob):
 
         return self.process(raw_results)
 
-    def update_export_links(self, epoch, path):
+    def update_export_links(self, round, path):
         """
-        Updated the export paths for an epoch.
+        Updated the export paths for an round.
         """
         el_path = os.path.join(self.get_path(full=True), "export-links.json")
         with open(el_path, "r", encoding="utf-8") as elfd:
             export_links = json.load(elfd)
 
-        if epoch < 1:
-            epoch = list(export_links.keys())[epoch]
-        export_links[epoch] = path
+        if round < 1:
+            round = list(export_links.keys())[round]
+        export_links[round] = path
 
         with open(el_path, "w", encoding="utf-8") as elfd:
             json.dump(export_links, elfd, indent=4, sort_keys=True)
