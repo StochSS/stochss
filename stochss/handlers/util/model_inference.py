@@ -27,7 +27,7 @@ import traceback
 
 import numpy
 import plotly
-from plotly import subplots
+from plotly import figure_factory, subplots
 
 import gillespy2
 
@@ -165,34 +165,56 @@ class ModelInference(StochSSJob):
             rows=rows, cols=cols, subplot_titles=names, x_title=xaxis, y_title=yaxis, vertical_spacing=0.075
 
         )
+        fig2 = subplots.make_subplots(
+            rows=rows, cols=cols, subplot_titles=names, x_title=xaxis, y_title=yaxis, vertical_spacing=0.075
+
+        )
 
         for i, result in enumerate(results):
             accepted_samples = numpy.vstack(result['accepted_samples']).swapaxes(0, 1)
             base_opacity = 0.5 if len(results) <= 1 else (i / (len(results) - 1) * 0.5)
 
             for j, accepted_values in enumerate(accepted_samples):
+                row = int(numpy.ceil((j + 1) / cols))
+                col = (j % cols) + 1
+
                 name = f"round {i + 1}"
                 color = common_rgb_values[i % len(common_rgb_values)]
                 opacity = base_opacity + 0.25
+                # Create histogram trace
                 trace = plotly.graph_objs.Histogram(
                     x=accepted_values, name=name, legendgroup=name, showlegend=j==0, marker_color=color,
                     opacity=opacity, xbins={"start": dmin[j], "end": dmax[j], "size": sizes[j]}
                 )
-
-                row = int(numpy.ceil((j + 1) / cols))
-                col = (j % cols) + 1
                 fig.append_trace(trace, row, col)
+                # Create PDF trace
+                tmp_fig = figure_factory.create_distplot(
+                    [accepted_values], [names[j]], curve_type='normal', bin_size=sizes[j], histnorm="probability"
+                )
+                trace2 = plotly.graph_objs.Scatter(
+                    x=tmp_fig.data[1]['x'], y=tmp_fig.data[1]['y'] * 1000, name=name, legendgroup=name, showlegend=False,
+                    mode='lines', line=dict(color=color)
+                )
+                fig2.append_trace(trace2, row, col)
+                fig2.update_xaxes(row=row, col=col, range=[dmin[j], dmax[j]])
                 if i == len(results) - 1:
                     fig.add_vline(values[j], row=row, col=col, line={"color": "red"}, layer='above')
                     fig.add_vline(
                         result['inferred_parameters'][j], row=row, col=col, line={"color": "green"},
                         exclude_empty_subplots=True, layer='above'
                     )
+                    fig2.add_vline(values[j], row=row, col=col, line={"color": "red"}, layer='above')
+                    fig2.add_vline(
+                        result['inferred_parameters'][j], row=row, col=col, line={"color": "green"},
+                        exclude_empty_subplots=True, layer='above'
+                    )
 
         fig.update_layout(barmode='overlay', height=500 * rows)
+        fig2.update_layout(height=500 * rows)
         if title is not None:
             title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
             fig.update_layout(title=title)
+            fig2.update_layout(title=title)
         return fig
 
     def __get_infer_args(self):
@@ -322,9 +344,14 @@ class ModelInference(StochSSJob):
             model.listOfParameters[parameter['name']].expression = str(round['inferred_parameters'][i])
 
         inf_model = gillespy2.export_StochSS(model, return_stochss_model=True)
-        inf_model['refLink'] = self.path
+        workflow = os.path.dirname(self.path)
+        name = f"{self.get_file(path=workflow)} - {self.get_file()}"
         inf_model['name'] = f"Inferred-{model.name}"
         inf_model['modelSettings'] = self.s_model['modelSettings']
+        inf_model['refLinks'] = self.s_model['refLinks']
+        inf_model['refLinks'].append({
+            "path": f"{workflow}&job={name}", "name": name, "job": True
+        })
         return inf_model
 
     def get_csv_data(self, name):

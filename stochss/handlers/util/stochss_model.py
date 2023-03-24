@@ -277,6 +277,19 @@ class StochSSModel(StochSSBase):
         for event in self.model['eventsCollection']:
             self.__update_event_assignments(event=event, param_ids=param_ids)
 
+    def __update_model_to_current(self):
+        if self.model['template_version'] == self.TEMPLATE_VERSION:
+            return
+
+        param_ids = self.__update_parameters()
+        self.__update_reactions()
+        self.__update_events(param_ids=param_ids)
+        self.__update_rules(param_ids=param_ids)
+
+        if "refLinks" not in self.model.keys():
+            self.model['refLinks'] = []
+
+        self.model['template_version'] = self.TEMPLATE_VERSION
 
     def __update_parameters(self):
         if "parameters" not in self.model.keys():
@@ -486,10 +499,10 @@ class StochSSModel(StochSSBase):
                 self.model['volume'] = self.model['modelSettings']['volume']
             else:
                 self.model['volume'] = 1
-        param_ids = self.__update_parameters()
-        self.__update_reactions()
-        self.__update_events(param_ids=param_ids)
-        self.__update_rules(param_ids=param_ids)
+        if "template_version" not in self.model:
+            self.model['template_version'] = 0
+        self.__update_model_to_current()
+
         self.model['name'] = self.get_name()
         self.model['directory'] = self.path
         return self.model

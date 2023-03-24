@@ -43,6 +43,13 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    let links = [];
+    this.model.model.refLinks.forEach((link) => {
+      links.push(
+        `<a class="text-break" href='stochss/workflow/edit?path=${link.path}&type=none'>${link.name}</a>`
+      );
+    });
+    this.htmlLinks = links.join('')
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -51,6 +58,9 @@ module.exports = View.extend({
     let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
     $(this.queryByHook(this.model.elementID + "-jupyter-notebook")).prop("href", endpoint);
     this.renderWorkflowCollection();
+    if(this.htmlLinks) {
+      $(this.queryByHook(`${this.model.elementID}-reference-links`)).html(this.htmlLinks);
+    }
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);

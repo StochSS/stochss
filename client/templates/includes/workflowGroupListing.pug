@@ -50,6 +50,10 @@ div
 
           a.nav-link.tab(data-toggle="tab" href="#" + this.model.elementID + "-notes-tab") Notes
 
+        li.nav-item
+
+          a.nav-link.tab(data-toggle="tab" href="#" + this.model.elementID + "-reference-tab") Reference Links          
+
         button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "-tab-container" data-hook=this.model.elementID + "-tab-btn") -
 
     div.card.card-body.tab-content.collapse.show(id=this.model.elementID + "-tab-container")
@@ -63,3 +67,7 @@ div
         div
 
           textarea(id=this.model.elementID + "-annotation" data-hook=this.model.elementID + "-annotation" rows="7" style="width: 100%;")=this.model.model.annotation
+
+      div.tab-pane(id=this.model.elementID + "-reference-tab")
+
+        div(data-hook=this.model.elementID + "-reference-links")

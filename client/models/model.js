@@ -43,7 +43,7 @@ module.exports = Model.extend({
     defaultID: 'number',
     defaultMode: 'string',
     is_spatial: 'boolean',
-    refLink: 'string',
+    refLinks: 'object',
     volume: 'any',
     template_version: 'number'
   },
