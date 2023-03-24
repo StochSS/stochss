@@ -113,6 +113,10 @@ class ModelInference(StochSSJob):
             rows=rows, cols=cols, column_titles=names, row_titles=names,
             x_title=xaxis, y_title=yaxis, vertical_spacing=0.075
         )
+        fig2 = subplots.make_subplots(
+            rows=rows, cols=cols, column_titles=names, row_titles=names,
+            x_title=xaxis, y_title=yaxis, vertical_spacing=0.075
+        )
 
         for i in range(rows):
             for j in range(cols):
@@ -122,13 +126,30 @@ class ModelInference(StochSSJob):
                     continue
                 if i == j:
                     color = common_rgb_values[(i)%len(common_rgb_values)]
+                    # Create histogram trace
                     trace = plotly.graph_objs.Histogram(
                         x=accepted_samples[i], name=names[i], legendgroup=names[i], showlegend=False,
                         marker_color=color, opacity=0.75,
                         xbins={"start": dmin[i], "end": dmax[i], "size": sizes[i]}
                     )
-
                     fig.append_trace(trace, row, col)
+                    fig.update_xaxes(row=row, col=col, range=[dmin[i], dmax[i]])
+                    fig.add_vline(
+                        results['inferred_parameters'][i], row=row, col=col, line={"color": "green"},
+                        exclude_empty_subplots=True, layer='above'
+                    )
+                    fig.add_vline(values[i], row=row, col=col, line={"color": "red"}, layer='above')
+                    # Create PDF trace
+                    tmp_fig = figure_factory.create_distplot(
+                        [accepted_samples[i]], [names[i]], curve_type='normal',
+                        bin_size=sizes[i], histnorm="probability"
+                    )
+                    trace2 = plotly.graph_objs.Scatter(
+                        x=tmp_fig.data[1]['x'], y=tmp_fig.data[1]['y'] * 1000,
+                        name=names[i], legendgroup=names[i], showlegend=False,
+                        mode='lines', line=dict(color=color)
+                    )
+                    fig.append_trace(trace2, row, col)
                     fig.update_xaxes(row=row, col=col, range=[dmin[i], dmax[i]])
                     fig.add_vline(
                         results['inferred_parameters'][i], row=row, col=col, line={"color": "green"},
@@ -147,12 +168,17 @@ class ModelInference(StochSSJob):
                     fig.append_trace(trace, row, col)
                     fig.update_xaxes(row=row, col=col, range=[dmin[j], dmax[j]])
                     fig.update_yaxes(row=row, col=col, range=[dmin[i], dmax[i]])
+                    fig2.append_trace(trace, row, col)
+                    fig2.update_xaxes(row=row, col=col, range=[dmin[j], dmax[j]])
+                    fig2.update_yaxes(row=row, col=col, range=[dmin[i], dmax[i]])
 
         fig.update_layout(height=1000)
+        fig2.update_layout(height=1000)
         if title is not None:
             title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
             fig.update_layout(title=title)
-        return fig
+            fig2.update_layout(title=title)
+        return fig, fig2
 
     @classmethod
     def __get_full_results_plot(cls, results, names, values, dmin, dmax,
@@ -193,8 +219,8 @@ class ModelInference(StochSSJob):
                     [accepted_values], [names[j]], curve_type='normal', bin_size=sizes[j], histnorm="probability"
                 )
                 trace2 = plotly.graph_objs.Scatter(
-                    x=tmp_fig.data[1]['x'], y=tmp_fig.data[1]['y'] * 1000, name=name, legendgroup=name, showlegend=False,
-                    mode='lines', line=dict(color=color)
+                    x=tmp_fig.data[1]['x'], y=tmp_fig.data[1]['y'] * 1000, name=name, legendgroup=name,
+                    showlegend=j==0, mode='lines', line=dict(color=color)
                 )
                 fig2.append_trace(trace2, row, col)
                 fig2.update_xaxes(row=row, col=col, range=[dmin[j], dmax[j]])
@@ -216,7 +242,7 @@ class ModelInference(StochSSJob):
             title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
             fig.update_layout(title=title)
             fig2.update_layout(title=title)
-        return fig
+        return fig, fig2
 
     def __get_infer_args(self):
         settings = self.settings['inferenceSettings']
@@ -365,7 +391,7 @@ class ModelInference(StochSSJob):
             self.__to_csv(path=tmp_dir, nametag=nametag)
             return self.__get_csvzip(tmp_dir, nametag)
 
-    def get_result_plot(self, round=None, add_config=False, **kwargs):
+    def get_result_plot(self, epoch=None, add_config=False, **kwargs):
         """
         Generate a plot for inference results.
         """
@@ -380,14 +406,16 @@ class ModelInference(StochSSJob):
             values.append(self.g_model.listOfParameters[parameter['name']].value)
             dmin.append(parameter['min'])
             dmax.append(parameter['max'])
-        if round is None:
-            fig_obj = self.__get_full_results_plot(results, names, values, dmin, dmax, **kwargs)
+        if epoch is None:
+            fig_obj, fig_obj2 = self.__get_full_results_plot(results, names, values, dmin, dmax, **kwargs)
         else:
-            fig_obj = self.__get_round_result_plot(results[round], names, values, dmin, dmax, **kwargs)
+            fig_obj, fig_obj2 = self.__get_round_result_plot(results[epoch], names, values, dmin, dmax, **kwargs)
         fig = json.loads(json.dumps(fig_obj, cls=plotly.utils.PlotlyJSONEncoder))
+        fig2 = json.loads(json.dumps(fig_obj2, cls=plotly.utils.PlotlyJSONEncoder))
         if add_config:
             fig["config"] = {"responsive": True}
-        return fig
+            fig2["config"] = {"responsive": True}
+        return fig, fig2
 
     def process(self, raw_results):
         """

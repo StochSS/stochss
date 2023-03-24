@@ -29,7 +29,19 @@ div#workflow-results.card
 
         div.card-header.pb-0
 
-          h5.inline Plot Inference
+          h5.inline.mr-2 Plot Inference
+
+          div.inline
+
+            ul.nav.nav-tabs
+
+              li.nav-item
+
+                a.nav-link.tab.active(data-toggle="tab" href="#histogram") Histogram
+
+              li.nav-item
+
+                a.nav-link.tab(data-toggle="tab" href="#pdf") Propability Distribution
 
           button.btn.btn-outline-collapse(
             data-toggle="collapse"
@@ -44,10 +56,20 @@ div#workflow-results.card
 
           div.card-body
 
-            div(data-hook="inference-plot")
+            div.tab-content
 
-            div.spinner-border.workflow-plot(data-hook="inference-plot-spinner")
+              div.tab-pane.active(id="histogram" data-hook="histogram")
+
+                div(data-hook="inference-histogram-plot")
+
+                div.spinner-border.workflow-plot(data-hook="inference-histogram-plot-spinner")
+
+              div.tab-pane(id="pdf" data-hook="pdf")
             
+                div(data-hook="inference-pdf-plot")
+
+                div.spinner-border.workflow-plot(data-hook="inference-pdf-plot-spinner")
+
             button.btn.btn-primary.box-shadow(data-hook="inference-model-export" data-target="model-export" disabled) Export Model
 
             button.btn.btn-primary.box-shadow(data-hook="inference-model-explore" data-target="model-explore" disabled) Export & Explore Model

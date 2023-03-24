@@ -165,20 +165,34 @@ module.exports = View.extend({
     }, 5000);
   },
   cleanupPlotContainer: function (type) {
-    let el = this.queryByHook(`${type}-plot`);
-    Plotly.purge(el);
-    $(this.queryByHook(type + "-plot")).empty();
-    if(type === "ts-psweep" || type === "psweep"){
-      $(this.queryByHook(`${type}-download`)).prop("disabled", true);
-      $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", true);
-      $(this.queryByHook("multiple-plots")).prop("disabled", true);
-    }else if(type === "spatial") {
-      $(this.queryByHook("spatial-plot-loading-msg")).css("display", "block");
-    }else if(type === "round") {
-      $(this.queryByHook("round-model-export")).prop("disabled", true);
-      $(this.queryByHook("round-model-explore")).prop("disabled", true);
+    if(["inference", "round"].includes(type)) {
+      let histoEL = this.queryByHook(`${type}-histogram-plot`);
+      Plotly.purge(histoEL);
+      $(this.queryByHook(`${type}-histogram-plot`)).empty();
+      $(this.queryByHook(`${type}-histogram-plot-spinner`)).css("display", "block");
+      let pdfEL = this.queryByHook(`${type}-pdf-plot`);
+      Plotly.purge(pdfEL);
+      $(this.queryByHook(`${type}-pdf-plot`)).empty();
+      $(this.queryByHook(`${type}-pdf-plot-spinner`)).css("display", "block");
+      if(type === "round") {
+        $(this.queryByHook("round-model-export")).prop("disabled", true);
+        $(this.queryByHook("round-model-explore")).prop("disabled", true);
+        $(this.queryByHook("round-download")).prop("disabled", true);
+        $(this.queryByHook("round-edit-plot")).prop("disabled", true);
+      }
+    }else {
+      let el = this.queryByHook(`${type}-plot`);
+      Plotly.purge(el);
+      $(this.queryByHook(type + "-plot")).empty();
+      if(["ts-psweep", "psweep"].includes(type)) {
+        $(this.queryByHook(`${type}-download`)).prop("disabled", true);
+        $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", true);
+        $(this.queryByHook("multiple-plots")).prop("disabled", true);
+      }else if(type === "spatial") {
+        $(this.queryByHook("spatial-plot-loading-msg")).css("display", "block");
+      }
+      $(this.queryByHook(`${type}-plot-spinner`)).css("display", "block");
     }
-    $(this.queryByHook(`${type}-plot-spinner`)).css("display", "block");
   },
   downloadCSV: function (csvType, data) {
     var queryStr = `?path=${this.model.directory}&type=${csvType}`;
@@ -232,14 +246,18 @@ module.exports = View.extend({
       app.getXHR(endpoint, {
         success: (err, response, body) => {
           if(type === "round") {
-            body.layout.annotations.push({
+            let xLabel = {
               font: {size: 16}, showarrow: false, text: "", x: 0.5, xanchor: "center", xref: "paper",
               y: 0, yanchor: "top", yref: "paper", yshift: -30
-            });
-            body.layout.annotations.push({
+            }
+            let yLabel = {
               font: {size: 16}, showarrow: false, text: "", textangle: -90, x: 0, xanchor: "right",
               xref: "paper", xshift: -40, y: 0.5, yanchor: "middle", yref: "paper"
-            });
+            }
+            body.histogrom.layout.annotations.push(xLabel);
+            body.histogrom.layout.annotations.push(yLabel);
+            body.pdf.layout.annotations.push(xLabel);
+            body.pdf.layout.annotations.push(yLabel);
           }
           this.activePlots[type] = storageKey;
           this.plots[storageKey] = body;
@@ -292,7 +310,7 @@ module.exports = View.extend({
       data['plt_key'] = type;
     }else if(["inference", "round"].includes(type)) {
       data['sim_type'] = "Inference";
-      data['data_keys'] = {"round": type === "inference" ? null : this.roundIndex - 1};
+      data['data_keys'] = {"epoch": type === "inference" ? null : this.roundIndex - 1};
       data['plt_key'] = "inference";
     }else {
       data['sim_type'] = "GillesPy2";
@@ -535,13 +553,17 @@ module.exports = View.extend({
     });
   },
   plotFigure: function (figure, type) {
-    let hook = `${type}-plot`;
-    let el = this.queryByHook(hook);
-    Plotly.newPlot(el, figure);
-    if(type === "spatial") {
-      $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
-    }
     if(["inference", "round"].includes(type)) {
+      // Display histogram plot
+      let histoHook = `${type}-histogram-plot`;
+      let histoEL = this.queryByHook(histoHook);
+      Plotly.newPlot(histoEL, figure.histogram);
+      $(this.queryByHook(`${type}-histogram-plot-spinner`)).css("display", "none");
+      // Display pdf plot
+      let pdfHook = `${type}-pdf-plot`;
+      let pdfEL = this.queryByHook(pdfHook);
+      Plotly.newPlot(pdfEL, figure.pdf);
+      $(this.queryByHook(`${type}-pdf-plot-spinner`)).css("display", "none");
       if(type === "round" && this.model.exportLinks[this.roundIndex] !== null) {
         $(this.queryByHook("round-model-export")).text("Open Model");
         $(this.queryByHook("round-model-explore")).text("Explore Model");
@@ -551,13 +573,20 @@ module.exports = View.extend({
       }
       $(this.queryByHook(`${type}-model-export`)).prop("disabled", false);
       $(this.queryByHook(`${type}-model-explore`)).prop("disabled", false);
+    }else {
+      let hook = `${type}-plot`;
+      let el = this.queryByHook(hook);
+      Plotly.newPlot(el, figure);
+      if(type === "spatial") {
+        $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
+      }
+      $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
+      if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
+        $(this.queryByHook("multiple-plots")).prop("disabled", false);
+      }      
     }
-    $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
     $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", false);
     $(this.queryByHook(`${type}-download`)).prop("disabled", false);
-    if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
-      $(this.queryByHook("multiple-plots")).prop("disabled", false);
-    }
   },
   plotMultiplePlots: function (e) {
     let type = e.target.dataset.type;

@@ -255,7 +255,9 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
                 kwargs.update(body['data_keys'])
                 if "plt_data" in body.keys() and body['plt_data'] is not None:
                     kwargs.update(body['plt_data'])
-                fig = job.get_result_plot(**kwargs)
+                fig, fig2 = job.get_result_plot(**kwargs)
+                log.debug(f"Histogram figure: {fig}, PDF figure: {fig2}")
+                self.write({'histogram': fig, 'pdf': fig2})
             else:
                 job = StochSSJob(path=path)
                 if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
@@ -272,8 +274,8 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
                     job.print_logs(log)
                 if "plt_data" in body.keys():
                     fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
-            log.debug(f"Plot figure: {fig}")
-            self.write(fig)
+                log.debug(f"Plot figure: {fig}")
+                self.write(fig)
         except StochSSAPIError as err:
             report_error(self, log, err)
         except Exception as err:
