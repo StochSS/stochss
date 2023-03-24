@@ -123,8 +123,9 @@ class ModelInference(StochSSJob):
                 if i == j:
                     color = common_rgb_values[(i)%len(common_rgb_values)]
                     trace = plotly.graph_objs.Histogram(
-                        x=accepted_samples[i], name=names[i], legendgroup=names[i], showlegend=False, marker_color=color,
-                        opacity=0.75, xbins={"start": dmin[i], "end": dmax[i], "size": sizes[i]}
+                        x=accepted_samples[i], name=names[i], legendgroup=names[i], showlegend=False,
+                        marker_color=color, opacity=0.75,
+                        xbins={"start": dmin[i], "end": dmax[i], "size": sizes[i]}
                     )
 
                     fig.append_trace(trace, row, col)
@@ -350,7 +351,7 @@ class ModelInference(StochSSJob):
         inf_model['modelSettings'] = self.s_model['modelSettings']
         inf_model['refLinks'] = self.s_model['refLinks']
         inf_model['refLinks'].append({
-            "path": f"{workflow}&job={name}", "name": name, "job": True
+            "path": f"{workflow}&job={self.get_file()}", "name": name, "job": True
         })
         return inf_model
 

@@ -54,32 +54,32 @@ let WorkflowManager = PageView.extend({
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
+    let jobID = urlParams.has('job') ? urlParams.get('job') : null;
     this.model = new Workflow({
       directory: urlParams.get('path')
     });
-    let self = this;
     app.getXHR(this.model.url(), {
-      success: function (err, response, body) {
-        self.model.set(body)
-        $("#page-title").text("Workflow: " + self.model.name);
-        if(self.model.directory.includes('.proj')) {
-          let index = self.model.directory.indexOf('.proj') + 5;
-          self.projectPath = self.model.directory.slice(0, index);
-          $(self.queryByHook('project-breadcrumb')).text(self.projectPath.split('/').pop().split('.proj')[0]);
-          $(self.queryByHook('workflow-breadcrumb')).text(self.model.name);
-          self.queryByHook("project-breadcrumb-links").style.display = "block";
-          self.queryByHook("return-to-project-btn").style.display = "inline-block";
+      success: (err, response, body) => {
+        this.model.set(body)
+        $("#page-title").text("Workflow: " + this.model.name);
+        if(this.model.directory.includes('.proj')) {
+          let index = this.model.directory.indexOf('.proj') + 5;
+          this.projectPath = this.model.directory.slice(0, index);
+          $(this.queryByHook('project-breadcrumb')).text(this.projectPath.split('/').pop().split('.proj')[0]);
+          $(this.queryByHook('workflow-breadcrumb')).text(this.model.name);
+          this.queryByHook("project-breadcrumb-links").style.display = "block";
+          this.queryByHook("return-to-project-btn").style.display = "inline-block";
         }
         if(body.models){
-          self.renderModelSelectView(body.models);
+          this.renderModelSelectView(body.models);
         }
-        self.renderSubviews();
-        if(!self.model.newFormat) {
+        this.renderSubviews(jobID);
+        if(!this.model.newFormat) {
           let modal = $(modals.updateFormatHtml("Workflow")).modal();
           let yesBtn = document.querySelector("#updateWorkflowFormatModal .yes-modal-btn");
           yesBtn.addEventListener("click", function (e) {
             modal.modal("hide");
-            let queryStr = "?path=" + self.model.directory + "&action=update-workflow";
+            let queryStr = "?path=" + this.model.directory + "&action=update-workflow";
             let endpoint = path.join(app.getBasePath(), "stochss/loading-page") + queryStr;
             window.location.href = endpoint;
           });
@@ -273,7 +273,7 @@ let WorkflowManager = PageView.extend({
     this.settingsView = new SettingsView(options);
     app.registerRenderSubview(this, this.settingsView, "settings-container");
   },
-  renderSubviews: function () {
+  renderSubviews: function (jobID) {
     let oldFormRdyState = !this.model.newFormat && this.model.activeJob.status === "ready";
     let newFormNotArchive = this.model.newFormat && this.model.model;
     if(!this.models && (oldFormRdyState || newFormNotArchive)) {
@@ -287,7 +287,13 @@ let WorkflowManager = PageView.extend({
     }else if(this.model.activeJob.status !== "ready") {
       this.renderStatusView();
     }
-    let detailsStatus = ["error", "complete"]
+    let detailsStatus = ["error", "complete"];
+    if(jobID !== null) {
+      let activeJob = this.model.jobs.filter((job) => { return job.name === jobID; })[0] || null;
+      if(activeJob !== null) {
+        this.model.activeJob = activeJob;
+      }
+    }
     if(this.model.activeJob && detailsStatus.includes(this.model.activeJob.status)) {
       this.renderActiveJob();
     }
