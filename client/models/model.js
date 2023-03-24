@@ -39,10 +39,11 @@ module.exports = Model.extend({
     return path.join(app.getApiPath(), "file/json-data")+"?for="+this.for+"&path="+this.directory;
   },
   props: {
-    is_spatial: 'boolean',
+    annotation: 'string',
     defaultID: 'number',
     defaultMode: 'string',
-    annotation: 'string',
+    is_spatial: 'boolean',
+    refLink: 'string',
     volume: 'any',
     template_version: 'number'
   },

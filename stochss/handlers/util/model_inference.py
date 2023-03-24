@@ -322,6 +322,7 @@ class ModelInference(StochSSJob):
             model.listOfParameters[parameter['name']].expression = str(round['inferred_parameters'][i])
 
         inf_model = gillespy2.export_StochSS(model, return_stochss_model=True)
+        inf_model['refLink'] = self.path
         inf_model['name'] = f"Inferred-{model.name}"
         inf_model['modelSettings'] = self.s_model['modelSettings']
         return inf_model
@@ -429,7 +430,7 @@ class ModelInference(StochSSJob):
 
     def update_export_links(self, round, path):
         """
-        Updated the export paths for an round.
+        Updated the export paths for a round.
         """
         el_path = os.path.join(self.get_path(full=True), "export-links.json")
         with open(el_path, "r", encoding="utf-8") as elfd:
