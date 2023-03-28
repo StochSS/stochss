@@ -37,7 +37,7 @@ div#workflow-results.card
 
               li.nav-item
 
-                a.nav-link.tab.active(data-toggle="tab" href="#histogram") Histogram
+                a.nav-link.tab.active(data-toggle="tab" href="#inference-histogram" data-hook="inference-histogram-tab") Histogram
 
               li.nav-item
 
@@ -58,7 +58,7 @@ div#workflow-results.card
 
             div.tab-content
 
-              div.tab-pane.active(id="histogram" data-hook="histogram")
+              div.tab-pane.active(id="inference-histogram" data-hook="inference-histogram")
 
                 div(data-hook="inference-histogram-plot")
 
@@ -102,7 +102,19 @@ div#workflow-results.card
 
         div.card-header.pb-0
 
-          h5.inline Plot Round
+          h5.inline.mr-2 Plot Round
+
+          div.inline
+
+            ul.nav.nav-tabs
+
+              li.nav-item
+
+                a.nav-link.tab.active(data-toggle="tab" href="#round-histogram" data-hook="round-histogram-tab") Histogram
+
+              li.nav-item
+
+                a.nav-link.tab(data-toggle="tab" href="#intersection" data-hook="round-intersection-tab") Intersection
 
           button.btn.btn-outline-collapse(
             data-toggle="collapse"
@@ -141,9 +153,19 @@ div#workflow-results.card
                     data-hook="round-index-slider"
                   )
 
-            div(data-hook="round-plot")
+            div.tab-content
 
-            div.spinner-border.workflow-plot(data-hook="round-plot-spinner")
+              div.tab-pane.active(id="round-histogram" data-hook="round-histogram")
+
+                div(data-hook="round-histogram-plot")
+
+                div.spinner-border.workflow-plot(data-hook="round-histogram-plot-spinner")
+
+              div.tab-pane(id="intersection" data-hook="intersection")
+
+                div(data-hook="round-intersection-plot")
+
+                div.spinner-border.workflow-plot(data-hook="round-intersection-plot-spinner")
 
             button.btn.btn-primary.box-shadow(data-hook="round-model-export" data-target="model-export" disabled) Export Model
 

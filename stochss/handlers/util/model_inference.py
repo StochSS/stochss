@@ -164,7 +164,7 @@ class InferenceRound(UserDict):
 
         return fig
 
-    def __plotplotly_intersection(self, parameters, bounds, include_pdf=True, include_orig_values=True,
+    def __plotplotly_intersection(self, parameters, bounds, colors, include_pdf=True, include_orig_values=True,
                      include_inferred_values=False, title=None, xaxis_label=None, yaxis_label=None):
         nbins = 50
         names = list(parameters.keys())
@@ -194,10 +194,9 @@ class InferenceRound(UserDict):
             if i >= 2:
                 break
 
-            color = common_rgb_values[(i)%len(common_rgb_values)]
             # Create histogram traces
             histo_trace = plotly.graph_objs.Histogram(
-                name=param, legendgroup=param, showlegend=False, marker_color=color, opacity=0.75
+                name=param, legendgroup=param, showlegend=False, marker_color=colors[i], opacity=0.75
             )
             histo_trace[x_key[i]] = self[param]
             histo_trace[bins[i]] = {"start": bounds[0][i], "end": bounds[1][i], "size": sizes[i]}
@@ -208,7 +207,7 @@ class InferenceRound(UserDict):
                     [self[param]], [param], curve_type='normal', bin_size=sizes[i], histnorm="probability"
                 )
                 histo_trace2 = plotly.graph_objs.Scatter(
-                    mode='lines', line=dict(color=color),
+                    mode='lines', line=dict(color=colors[i]),
                     name=f"{param} PDF", legendgroup=f"{param} PDF", showlegend=False
                 )
                 histo_trace2[x_key[i]] = tmp_fig.data[1]['x']
@@ -223,7 +222,7 @@ class InferenceRound(UserDict):
                 line_func[i](orig_val, row=histo_row[i], col=histo_col[i], line={"color": "red"}, layer='above')
             # Create rug traces
             rug_trace = plotly.graph_objs.Scatter(
-                mode='markers', marker={'color': color, 'symbol': rug_symbol[i]},
+                mode='markers', marker={'color': colors[i], 'symbol': rug_symbol[i]},
                 name=param, legendgroup=param, showlegend=False
             )
             rug_trace[x_key[i]] = self[param]
@@ -232,11 +231,8 @@ class InferenceRound(UserDict):
             xaxis_func[i](row=rug_row[i], col=rug_col[i], range=[bounds[0][i], bounds[1][i]])
             yaxis_func[i](row=rug_row[i], col=rug_col[i], showticklabels=False)
 
-        color = combine_colors([
-            common_rgb_values[(0)%len(common_rgb_values)][1:], common_rgb_values[(1)%len(common_rgb_values)][1:]
-        ])
         trace = plotly.graph_objs.Scatter(
-            x=self[names[0]], y=self[names[1]], mode='markers', marker_color=color,
+            x=self[names[0]], y=self[names[1]], mode='markers', marker_color=colors[2],
             name=f"{names[0]} X {names[1]}", legendgroup=f"{names[0]} X {names[1]}", showlegend=False
         )
         fig.append_trace(trace, 3, 1)
@@ -322,7 +318,8 @@ class InferenceRound(UserDict):
         plotly.offline.iplot(fig)
         return None
 
-    def plot_intersection(self, parameters, bounds, use_matplotlib=False, return_plotly_figure=False, **kwargs):
+    def plot_intersection(self, parameters, bounds, colors=None, color_ndxs=None, 
+                          use_matplotlib=False, return_plotly_figure=False, **kwargs):
         """
         Plot the results of the inference round.
 
@@ -331,6 +328,12 @@ class InferenceRound(UserDict):
 
         :param bounds: List of bounds for the provided parameters.
         :type bounds: list
+
+        :param colors: List of three colors.
+        :type colors: list
+
+        :param color_ndxs: List of two color indicies. Ignored if colors is set.
+        :type color_ndxs: list
 
         :param use_matplotlib: Whether or not to plot using MatPlotLib.
         :type use_matplotlib: bool
@@ -361,7 +364,20 @@ class InferenceRound(UserDict):
         """
         if use_matplotlib:
             raise Exception("use_matplotlib has not been implemented.")
-        fig = self.__plotplotly_intersection(parameters, bounds, **kwargs)
+        if colors is None:
+            if color_ndxs is None:
+                colors = [
+                    common_rgb_values[(0)%len(common_rgb_values)],
+                    common_rgb_values[(1)%len(common_rgb_values)]
+                ]
+            else:
+                colors = [
+                    common_rgb_values[(color_ndxs[0])%len(common_rgb_values)],
+                    common_rgb_values[(color_ndxs[1])%len(common_rgb_values)]
+                ]
+            colors.append(combine_colors([colors[0][1:], colors[1][1:]]))
+
+        fig = self.__plotplotly_intersection(parameters, bounds, colors, **kwargs)
 
         if return_plotly_figure:
             return fig
@@ -614,6 +630,9 @@ class InferenceResults(UserList):
         if names is None:
             names = param_names[:2]
 
+        if not ("colors" in kwargs or "color_ndxs" in kwargs):
+            kwargs['color_ndxs'] = [param_names.index(names[1]), param_names.index(names[0])]
+
         inf_round = self.data[ndx]
         bounds = [
             [self.bounds[0][param_names.index(names[1])], self.bounds[0][param_names.index(names[0])]],
@@ -829,7 +848,7 @@ class ModelInference(StochSSJob):
             fig_obj, fig_obj2 = results.plot(histo_only=False, return_plotly_figure=True, **kwargs)
         else:
             fig_obj = results.plot_round(ndx=epoch, return_plotly_figure=True, include_inferred_values=True, **kwargs)
-            fig_obj2 = results.plot_round(
+            fig_obj2 = results.plot_round_intersection(
                 ndx=epoch, names=names, return_plotly_figure=True, include_inferred_values=True, **kwargs
             )
 
