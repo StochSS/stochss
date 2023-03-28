@@ -825,6 +825,7 @@ class ModelInference(StochSSJob):
         results = InferenceResults.build_from_inference_results(self.__get_pickled_results(), parameters, bounds)
 
         if epoch is None:
+            kwargs['include_inferred_values'] = True
             fig_obj, fig_obj2 = results.plot(histo_only=False, return_plotly_figure=True, **kwargs)
         else:
             fig_obj = results.plot_round(ndx=epoch, return_plotly_figure=True, include_inferred_values=True, **kwargs)

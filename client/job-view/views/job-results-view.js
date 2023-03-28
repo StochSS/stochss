@@ -53,6 +53,7 @@ module.exports = View.extend({
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
     'change [data-hook=plot-type-select]' : 'getTSPlotForType',
     'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
+    'click [data-hook=inference-pdf-tab]' : 'handlePDFResize',
     'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
     'click [data-target=model-export]' : 'handleExportInferredModel',
     'click [data-target=model-explore]' : 'handleExploreInferredModel',
@@ -77,6 +78,7 @@ module.exports = View.extend({
     this.plotArgs = {};
     this.activePlots = {};
     this.trajectoryIndex = 1;
+    this.pdfResized = false;
   },
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
@@ -227,6 +229,15 @@ module.exports = View.extend({
     }else {
       cb();
     }
+  },
+  fixPlotSize: function (type, plotID) {
+    let plotEL = this.queryByHook(`${type}-${plotID}-plot`);
+    // Clear plot
+    Plotly.purge(plotEL);
+    $(plotEL).empty();
+    // Re-render the plot
+    let figure = this.plots[this.activePlots[type]]
+    Plotly.newPlot(plotEL, figure[plotID]);
   },
   getPlot: function (type) {
     this.cleanupPlotContainer(type);
@@ -469,6 +480,15 @@ module.exports = View.extend({
       this.downloadCSV("inference", null);
     }else {
       this.downloadCSV("full", null);
+    }
+  },
+  handlePDFResize: function (e) {
+    if(!this.pdfResized) {
+      setTimeout(() => {
+        console.log("Fixing plot size")
+        this.fixPlotSize("inference", "pdf");
+        this.pdfResized = true;  
+      }, 0)
     }
   },
   handlePlotCSVClick: function (e) {
