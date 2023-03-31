@@ -29,6 +29,7 @@ from collections import UserDict, UserList
 import numpy
 import plotly
 from plotly import figure_factory, subplots
+from dask.distributed import Client
 
 import gillespy2
 
@@ -717,7 +718,7 @@ class ModelInference(StochSSJob):
     def __get_infer_args(self):
         settings = self.settings['inferenceSettings']
         eps_selector = RelativeEpsilonSelector(20, max_rounds=settings['numRounds'])
-        args = [settings['num_samples'], settings['batchSize']]
+        args = [settings['numSamples'], settings['batchSize']]
         kwargs = {"eps_selector": eps_selector, "chunk_size": settings['chunkSize']}
         return args, kwargs
 
@@ -896,6 +897,7 @@ class ModelInference(StochSSJob):
         summaries = self.__get_summaries_function()
         if verbose:
             log.info("Running the model inference")
+        dask_client = Client()
         smc_abc_inference = smc_abc.SMCABC(
             obs_data, sim=self.simulator, prior_function=prior, summaries_function=summaries.compute
         )
@@ -912,6 +914,7 @@ class ModelInference(StochSSJob):
         export_links = {i + 1: None for i in range(len(results))}
         with open("export-links.json", "w", encoding="utf-8") as elfd:
             json.dump(export_links, elfd, indent=4, sort_keys=True)
+        dask_client.close()
 
     def simulator(self, parameter_point):
         """ Wrapper function for inference simulations. """

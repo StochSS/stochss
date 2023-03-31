@@ -732,8 +732,12 @@ class StochSSJob(StochSSBase):
                         "type":self.type, "directory":self.path, "logs":logs}
             if self.type == "inference":
                 el_path = os.path.join(self.get_path(full=True), "export-links.json")
-                with open(el_path, "r", encoding="utf-8") as elfd:
-                    self.job['exportLinks'] = json.load(elfd)
+                try:
+                    with open(el_path, "r", encoding="utf-8") as elfd:
+                        self.job['exportLinks'] = json.load(elfd)
+                except FileNotFoundError:
+                    num_params = len(settings['inferenceSettings']['parameters'])
+                    self.job['exportLinks'] = {i + 1: None for i in range(num_params)}
 
                 for ndx, link in self.job['exportLinks'].items():
                     if link is not None:
