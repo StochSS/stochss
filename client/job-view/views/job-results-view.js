@@ -499,7 +499,19 @@ module.exports = View.extend({
   },
   handleDownloadPNGClick: function (e) {
     let type = e.target.dataset.type;
-    let pngButton = $('div[data-hook=' + type + '-plot] a[data-title*="Download plot as a png"]')[0];
+    if(["inference", "round"].includes(type)) {
+      if(type === "inference") {
+        let classList = this.queryByHook("inference-histogram-tab").classList.value.split(" ");
+        var key = classList.includes("active") ? "histogram" : "pdf";
+      }else{
+        let classList = this.queryByHook("round-histogram-tab").classList.value.split(" ");
+        var key = classList.includes("active") ? "histogram" : "intersection";
+      }
+      var divEL = `div[data-hook=${type}-${key}-plot]`;
+    }else{
+      var divEL = `div[data-hook=${type}-plot]`;
+    }
+    let pngButton = $(`${divEL} a[data-title*="Download plot as a png"]`)[0];
     pngButton.click();
   },
   handleExploreInferredModel: function (e) {
