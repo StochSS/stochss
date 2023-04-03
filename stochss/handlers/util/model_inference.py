@@ -140,11 +140,13 @@ class InferenceRound(UserDict):
                         fig.append_trace(trace2, row, col)
                     if include_inferred_values:
                         fig.add_vline(
-                            self.inferred_parameters[param1], row=row, col=col, line={"color": "green"},
-                            exclude_empty_subplots=True, layer='above'
+                            self.inferred_parameters[param1], row=row, col=col, exclude_empty_subplots=True,
+                            layer='above', opacity=0.75, line={"color": "black", "dash": "dash"}
                         )
                     if include_orig_values:
-                        fig.add_vline(parameters[param1], row=row, col=col, line={"color": "red"}, layer='above')
+                        fig.add_vline(
+                            parameters[param1], row=row, col=col, layer='above', opacity=0.75, line={"color": "black"}
+                        )
                 else:
                     color = combine_colors([
                         common_rgb_values[(i)%len(common_rgb_values)][1:],
@@ -216,11 +218,14 @@ class InferenceRound(UserDict):
                 fig.append_trace(histo_trace2, histo_row[i], histo_col[i])
             if include_inferred_values:
                 line_func[i](
-                    self.inferred_parameters[param], row=histo_row[i], col=histo_col[i], line={"color": "green"},
-                    exclude_empty_subplots=True, layer='above'
+                    self.inferred_parameters[param], row=histo_row[i], col=histo_col[i], exclude_empty_subplots=True,
+                    layer='above', opacity=0.75, line={"color": "black", "dash": "dash"}
+                    
                 )
             if include_orig_values:
-                line_func[i](orig_val, row=histo_row[i], col=histo_col[i], line={"color": "red"}, layer='above')
+                line_func[i](
+                    orig_val, row=histo_row[i], col=histo_col[i], layer='above', opacity=0.75, line={"color": "black"}
+                )
             # Create rug traces
             rug_trace = plotly.graph_objs.Scatter(
                 mode='markers', marker={'color': colors[i], 'symbol': rug_symbol[i]},
@@ -485,19 +490,21 @@ class InferenceResults(UserList):
                 if i == len(self.data) - 1:
                     if include_orig_values:
                         histo_fig.add_vline(
-                            self.parameters[param], row=row, col=col, line={"color": "red"}, layer='above'
+                            self.parameters[param], row=row, col=col, layer='above', opacity=0.75,
+                            line={"color": "black"}
                         )
                         pdf_fig.add_vline(
-                            self.parameters[param], row=row, col=col, line={"color": "red"}, layer='above'
+                            self.parameters[param], row=row, col=col, layer='above', opacity=0.75,
+                            line={"color": "black"}
                         )
                     if include_inferred_values:
                         histo_fig.add_vline(
-                            inf_round.inferred_parameters[param], row=row, col=col, line={"color": "green"},
-                            exclude_empty_subplots=True, layer='above'
+                            inf_round.inferred_parameters[param], row=row, col=col, exclude_empty_subplots=True,
+                            layer='above', opacity=0.75, line={"color": "black", "dash": "dash"}
                         )
                         pdf_fig.add_vline(
-                            inf_round.inferred_parameters[param], row=row, col=col, line={"color": "green"},
-                            exclude_empty_subplots=True, layer='above'
+                            inf_round.inferred_parameters[param], row=row, col=col, exclude_empty_subplots=True,
+                            layer='above', opacity=0.75, line={"color": "black", "dash": "dash"}
                         )
 
         height = 500 * rows
