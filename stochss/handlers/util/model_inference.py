@@ -447,15 +447,22 @@ class InferenceResults(UserList):
         self.bounds = bounds
 
     def __plotplotly(self, include_orig_values=True, include_inferred_values=False,
-                     title=None, xaxis_label="Values", yaxis_label="Sample Concentrations"):
+                     title=None, xaxis_label="Parameter Values", yaxis_label=None):
+        if yaxis_label is None:
+            yaxis_label = {"histo": "Accepted Samples", "pdf": "Probability"}
+        elif isinstance(yaxis_label, str):
+            yaxis_label = {"histo": yaxis_label, "pdf": yaxis_label}
+
         cols = 2
         rows = int(numpy.ceil(len(self.parameters)/cols))
         names = list(self.parameters.keys())
         histo_fig = subplots.make_subplots(
-            rows=rows, cols=cols, subplot_titles=names, x_title=xaxis_label, y_title=yaxis_label, vertical_spacing=0.075
+            rows=rows, cols=cols, subplot_titles=names, vertical_spacing=0.075,
+            x_title=xaxis_label, y_title=yaxis_label['histo']
         )
         pdf_fig = subplots.make_subplots(
-            rows=rows, cols=cols, subplot_titles=names, x_title=xaxis_label, y_title=yaxis_label, vertical_spacing=0.075
+            rows=rows, cols=cols, subplot_titles=names, vertical_spacing=0.075,
+            x_title=xaxis_label, y_title=yaxis_label['pdf']
         )
 
         nbins = 50
@@ -570,8 +577,9 @@ class InferenceResults(UserList):
         :param xaxis_label: The label for the x-axis
         :type xaxis_label: str
 
-        :param yaxis_label: The label for the y-axis
-        :type yaxis_label: str
+        :param yaxis_label: The label for the y-axis. Dictionaries should be in
+                            the following format {'histo':<<label>>, 'pdf':<<label>>}.
+        :type yaxis_label: dict | str
 
         :param title: The title of the graph
         :type title: str
