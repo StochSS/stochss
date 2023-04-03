@@ -484,12 +484,27 @@ module.exports = View.extend({
   },
   handleDownloadJSONClick: function (e) {
     let type = e.target.dataset.type;
-    let storageKey = JSON.stringify(this.getPlotData(type))
-    let jsonData = this.plots[storageKey];
+    let storageKey = JSON.stringify(this.getPlotData(type));
+    if(["inference", "round"].includes(type)) {
+      if(type === "inference") {
+        let classList = this.queryByHook("inference-histogram-tab").classList.value.split(" ");
+        var key = classList.includes("active") ? "histogram" : "pdf";
+        var nameBase = `${type}-${key}`;
+      }else{
+        let classList = this.queryByHook("round-histogram-tab").classList.value.split(" ");
+        var key = classList.includes("active") ? "histogram" : "pdf";
+        let pltKey = key === "pdf" ? `${this.intersectionNames.join("-X-")}-intersection` : key;
+        var nameBase = `${type}${this.roundIndex}-${pltKey}`;
+      }
+      var jsonData = this.plots[storageKey][key];
+    }else if(type === "spatial") {
+      var nameBase = `${type}${this.trajectoryIndex}`
+    }else{
+      var jsonData = this.plots[storageKey];
+      var nameBase = type
+    }
     let dataStr = JSON.stringify(jsonData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    let nameIndex = type === "round" ? this.roundIndex : this.trajectoryIndex;
-    let nameBase = ["spatial", "round"].includes(type) ? `${type}${nameIndex}` : type;
     let exportFileDefaultName = `${nameBase}-plot.json`;
 
     let linkElement = document.createElement('a');
