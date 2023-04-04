@@ -124,8 +124,9 @@ class InferenceRound(UserDict):
                 if i == j:
                     color = common_rgb_values[(i)%len(common_rgb_values)]
                     trace = plotly.graph_objs.Histogram(
-                        x=accepted_values1, name=param1, legendgroup=param1, showlegend=False, marker_color=color,
-                        opacity=0.75, xbins={"start": bounds[0][i], "end": bounds[1][i], "size": sizes[i]}
+                        x=accepted_values1, name="Histogram", legendgroup=param1, showlegend=True, marker_color=color,
+                        opacity=0.75, xbins={"start": bounds[0][i], "end": bounds[1][i], "size": sizes[i]},
+                        legendgrouptitle={'text': param1}, legendrank=1
                     )
                     fig.append_trace(trace, row, col)
                     fig.update_xaxes(row=row, col=col, range=[bounds[0][i], bounds[1][i]])
@@ -135,7 +136,7 @@ class InferenceRound(UserDict):
                         )
                         trace2 = plotly.graph_objs.Scatter(
                             x=tmp_fig.data[1]['x'], y=tmp_fig.data[1]['y'] * 1000, mode='lines', line=dict(color=color),
-                            name=f"{param1} PDF", legendgroup=f"{param1} PDF", showlegend=False
+                            name="PDF", legendgroup=param1, showlegend=True, legendrank=1
                         )
                         fig.append_trace(trace2, row, col)
                     if include_inferred_values:
@@ -152,15 +153,20 @@ class InferenceRound(UserDict):
                         common_rgb_values[(i)%len(common_rgb_values)][1:],
                         common_rgb_values[(j)%len(common_rgb_values)][1:]
                     ])
-                    trace = plotly.graph_objs.Scatter(
-                        x=accepted_values2, y=accepted_values1, mode='markers', marker_color=color,
-                        name=f"{param2} X {param1}", legendgroup=f"{param2} X {param1}", showlegend=False
-                    )
+                    scatter_kwa = {
+                        'x': accepted_values2, 'y': accepted_values1, 'mode': 'markers', 'marker_color': color,
+                        'name': f"{param2} X {param1}", 'legendgroup': "intersections", 'showlegend': True
+                    }
+                    if i == 0 and j == 1:
+                        scatter_kwa['legendgrouptitle'] = {'text': "Parameter Intersections"}
+                    trace = plotly.graph_objs.Scatter(**scatter_kwa)
                     fig.append_trace(trace, row, col)
                     fig.update_xaxes(row=row, col=col, range=[bounds[0][j], bounds[1][j]])
                     fig.update_yaxes(row=row, col=col, range=[bounds[0][i], bounds[1][i]])
 
-        fig.update_layout(height=1000)
+        fig.update_layout(height=1000, legend=dict(
+            groupclick="toggleitem", x=0, y=0, tracegroupgap=0, itemsizing="constant"
+        ))
         if title is not None:
             title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
             fig.update_layout(title=title)
@@ -199,7 +205,8 @@ class InferenceRound(UserDict):
 
             # Create histogram traces
             histo_trace = plotly.graph_objs.Histogram(
-                name=param, legendgroup=param, showlegend=False, marker_color=colors[i], opacity=0.75
+                marker_color=colors[i], opacity=0.75,
+                name="Histogram", legendgroup=param, showlegend=True, legendgrouptitle={'text': param}, legendrank=1
             )
             histo_trace[x_key[i]] = self[param]
             histo_trace[bins[i]] = {"start": bounds[0][i], "end": bounds[1][i], "size": sizes[i]}
@@ -211,7 +218,7 @@ class InferenceRound(UserDict):
                 )
                 histo_trace2 = plotly.graph_objs.Scatter(
                     mode='lines', line=dict(color=colors[i]),
-                    name=f"{param} PDF", legendgroup=f"{param} PDF", showlegend=False
+                    name="PDF", legendgroup=param, showlegend=True, legendrank=1
                 )
                 histo_trace2[x_key[i]] = tmp_fig.data[1]['x']
                 histo_trace2[y_key[i]] = tmp_fig.data[1]['y'] * 1000
@@ -220,7 +227,6 @@ class InferenceRound(UserDict):
                 line_func[i](
                     self.inferred_parameters[param], row=histo_row[i], col=histo_col[i], exclude_empty_subplots=True,
                     layer='above', opacity=0.75, line={"color": "black", "dash": "dash"}
-                    
                 )
             if include_orig_values:
                 line_func[i](
@@ -229,7 +235,8 @@ class InferenceRound(UserDict):
             # Create rug traces
             rug_trace = plotly.graph_objs.Scatter(
                 mode='markers', marker={'color': colors[i], 'symbol': rug_symbol[i]},
-                name=param, legendgroup=param, showlegend=False
+                name=param, legendgroup="rug", showlegend=True, legendrank=2,
+                legendgrouptitle={'text': "Rug"}
             )
             rug_trace[x_key[i]] = self[param]
             rug_trace[y_key[i]] = [param] * self.accepted_count
@@ -239,13 +246,16 @@ class InferenceRound(UserDict):
 
         trace = plotly.graph_objs.Scatter(
             x=self[names[0]], y=self[names[1]], mode='markers', marker_color=colors[2],
-            name=f"{names[0]} X {names[1]}", legendgroup=f"{names[0]} X {names[1]}", showlegend=False
+            name=f"{names[0]} X {names[1]}", legendgroup="intersection", showlegend=True,
+            legendgrouptitle={'text': "Intersection"}
         )
         fig.append_trace(trace, 3, 1)
         fig.update_xaxes(row=3, col=1, range=[bounds[0][0], bounds[1][0]])
         fig.update_yaxes(row=3, col=1, range=[bounds[0][1], bounds[1][1]])
 
-        fig.update_layout(height=900)
+        fig.update_layout(height=1000, legend=dict(
+            groupclick="toggleitem", x=0.75, y=1, tracegroupgap=0, itemsizing="constant"
+        ))
         if title is not None:
             title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
             fig.update_layout(title=title)
