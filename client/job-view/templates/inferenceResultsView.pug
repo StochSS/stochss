@@ -56,6 +56,16 @@ div#workflow-results.card
 
           div.card-body
 
+            div.row
+
+              div.col-sm-4
+
+                div.inference-cpv-line Current Parameter Values
+
+              div.col-sm-8
+
+                div.inference-ipv-line Inferred Parameter Values (mean of the accepted samples)
+
             div.tab-content
 
               div.tab-pane.active(id="inference-histogram" data-hook="inference-histogram")
@@ -152,6 +162,18 @@ div#workflow-results.card
                     value=this.roundIndex
                     data-hook="round-index-slider"
                   )
+
+              hr
+
+              div.row
+
+                div.col-sm-4
+
+                  div.inference-cpv-line Current Parameter Values
+
+                div.col-sm-8
+
+                  div.inference-ipv-line Inferred Parameter Values (mean of the accepted samples)
 
             div.tab-content
 

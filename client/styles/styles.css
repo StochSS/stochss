@@ -857,3 +857,31 @@ input:checked + .slider:before {
 .slider.round:before {
   border-radius: 50%;
 }
+
+.inference-cpv-line {
+  margin-left: 19%;
+}
+
+.inference-cpv-line:before {
+  content: "";
+  display: block;
+  width: 15%;
+  border-top: 4px solid black;
+  position: absolute;
+  left: 15px;
+  top: 40%;
+}
+
+.inference-ipv-line {
+  margin-left: 10%;
+}
+
+.inference-ipv-line:before {
+  content: "";
+  display: block;
+  width: 8%;
+  border-top: 4px dashed black;
+  position: absolute;
+  left: 15px;
+  top: 40%;
+}
