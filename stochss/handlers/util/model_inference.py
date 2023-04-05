@@ -27,6 +27,7 @@ import traceback
 from collections import UserDict, UserList
 
 import numpy
+from scipy import stats
 import plotly
 from plotly import figure_factory, subplots
 from dask.distributed import Client
@@ -110,9 +111,11 @@ class InferenceRound(UserDict):
         sizes = (numpy.array(bounds[1]) - numpy.array(bounds[0])) / nbins
 
         plotly.offline.init_notebook_mode()
+        dims = len(names)
+        specs = [[{"secondary_y": True} if x == y else {} for y in range(dims)] for x in range(dims)]
         fig = subplots.make_subplots(
-            rows=len(names), cols=len(names), column_titles=names, row_titles=names,
-            x_title=xaxis_label, y_title=yaxis_label, vertical_spacing=0.075
+            rows=dims, cols=dims, column_titles=names, row_titles=names, specs=specs,
+            x_title=xaxis_label, y_title=yaxis_label, vertical_spacing=0.05, horizontal_spacing=0.05
         )
 
         for i, (param1, accepted_values1) in enumerate(self.data.items()):
@@ -128,17 +131,17 @@ class InferenceRound(UserDict):
                         opacity=0.75, xbins={"start": bounds[0][i], "end": bounds[1][i], "size": sizes[i]},
                         legendgrouptitle={'text': param1}, legendrank=1
                     )
-                    fig.append_trace(trace, row, col)
+                    fig.add_trace(trace, row, col, secondary_y=False)
                     fig.update_xaxes(row=row, col=col, range=[bounds[0][i], bounds[1][i]])
                     if include_pdf:
-                        tmp_fig = figure_factory.create_distplot(
-                            [accepted_values1], [param1], curve_type='normal', bin_size=sizes[i], histnorm="probability"
-                        )
+                        mean, std = stats.norm.fit(accepted_values1)
+                        points = numpy.linspace(min(accepted_values1), max(accepted_values1), 500)
+                        pdf = stats.norm.pdf(points, loc=mean, scale=std)
                         trace2 = plotly.graph_objs.Scatter(
-                            x=tmp_fig.data[1]['x'], y=tmp_fig.data[1]['y'] * 1000, mode='lines', line=dict(color=color),
+                            x=points, y=pdf, mode='lines', line=dict(color=color),
                             name="PDF", legendgroup=param1, showlegend=True, legendrank=1
                         )
-                        fig.append_trace(trace2, row, col)
+                        fig.add_trace(trace2, row, col, secondary_y=True)
                     if include_inferred_values:
                         fig.add_vline(
                             self.inferred_parameters[param1], row=row, col=col, exclude_empty_subplots=True,
@@ -170,6 +173,11 @@ class InferenceRound(UserDict):
         if title is not None:
             title = {'text': title, 'x': 0.5, 'xanchor': 'center'}
             fig.update_layout(title=title)
+        if include_pdf:
+            def update_annotations(annotation):
+                if annotation.x >= 0.94:
+                    annotation.update(x=0.96)
+            fig.for_each_annotation(update_annotations)
 
         return fig
 
@@ -184,10 +192,11 @@ class InferenceRound(UserDict):
         if yaxis_label is None:
             yaxis_label = names[1]
 
+        specs = [[{"secondary_y": True}, {}, {}], [{}, {}, {}], [{}, {}, {}]]
         fig = subplots.make_subplots(
             rows=3, cols=3, x_title=xaxis_label, y_title=yaxis_label, horizontal_spacing=0.01,
             vertical_spacing=0.01, column_widths=[0.6, 0.1, 0.3], row_heights=[0.3, 0.1, 0.6],
-            shared_xaxes=True, shared_yaxes=True
+            shared_xaxes=True, shared_yaxes=True, specs=specs
         )
 
         bins = ['xbins', 'ybins']
@@ -198,6 +207,7 @@ class InferenceRound(UserDict):
         rug_symbol = ['line-ns-open', 'line-ew-open']
         xaxis_func = [fig.update_xaxes, fig.update_yaxes]
         yaxis_func = [fig.update_yaxes, fig.update_xaxes]
+        secondary_y = [True, False]
 
         for i, (param, orig_val) in enumerate(parameters.items()):
             if i >= 2:
@@ -210,19 +220,23 @@ class InferenceRound(UserDict):
             )
             histo_trace[x_key[i]] = self[param]
             histo_trace[bins[i]] = {"start": bounds[0][i], "end": bounds[1][i], "size": sizes[i]}
-            fig.append_trace(histo_trace, histo_row[i], histo_col[i])
+            fig.add_trace(histo_trace, histo_row[i], histo_col[i], secondary_y=False)
             xaxis_func[i](row=histo_row[i], col=histo_col[i], range=[bounds[0][i], bounds[1][i]])
             if include_pdf:
-                tmp_fig = figure_factory.create_distplot(
-                    [self[param]], [param], curve_type='normal', bin_size=sizes[i], histnorm="probability"
-                )
+                mean, std = stats.norm.fit(self[param])
+                points = numpy.linspace(min(self[param]), max(self[param]), 500)
+                pdf = stats.norm.pdf(points, loc=mean, scale=std)
                 histo_trace2 = plotly.graph_objs.Scatter(
                     mode='lines', line=dict(color=colors[i]),
                     name="PDF", legendgroup=param, showlegend=True, legendrank=1
                 )
-                histo_trace2[x_key[i]] = tmp_fig.data[1]['x']
-                histo_trace2[y_key[i]] = tmp_fig.data[1]['y'] * 1000
-                fig.append_trace(histo_trace2, histo_row[i], histo_col[i])
+                fig.add_trace(histo_trace2, histo_row[i], histo_col[i], secondary_y=secondary_y[i])
+                if i > 0:
+                    fig.data[-1].update(xaxis='x10')
+                fig.data[-1].update(**{x_key[i]: points, y_key[i]: pdf})
+                fig.update_layout(xaxis10={
+                    'overlaying': 'x9', 'side': 'top', 'layer': 'above traces', 'anchor': 'free', 'position': 0.59
+                })
             if include_inferred_values:
                 line_func[i](
                     self.inferred_parameters[param], row=histo_row[i], col=histo_col[i], exclude_empty_subplots=True,
@@ -494,12 +508,11 @@ class InferenceResults(UserList):
                 )
                 histo_fig.append_trace(trace, row, col)
                 # Create PDF trace
-                tmp_fig = figure_factory.create_distplot(
-                    [accepted_values], [names[j]], curve_type='normal', bin_size=sizes[j], histnorm="probability"
-                )
+                mean, std = stats.norm.fit(accepted_values)
+                points = numpy.linspace(min(accepted_values), max(accepted_values), 500)
+                pdf = stats.norm.pdf(points, loc=mean, scale=std)
                 trace2 = plotly.graph_objs.Scatter(
-                    x=tmp_fig.data[1]['x'], y=tmp_fig.data[1]['y'] * 1000, name=name, legendgroup=name,
-                    showlegend=j==0, mode='lines', line=dict(color=color)
+                    x=points, y=pdf, name=name, legendgroup=name, showlegend=j==0, mode='lines', line=dict(color=color)
                 )
                 pdf_fig.append_trace(trace2, row, col)
                 pdf_fig.update_xaxes(row=row, col=col, range=[self.bounds[0][j], self.bounds[1][j]])
