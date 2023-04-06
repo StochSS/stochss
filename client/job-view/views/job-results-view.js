@@ -827,7 +827,7 @@ module.exports = View.extend({
   },
   selectIntersection: function (data) {
     let subplot = data.event.target.dataset.subplot;
-    let subplotID = subplot === "xy" ? 0 : Number(subplot.split('y').pop()) - 1;
+    let subplotID = subplot === "xy" ? 0 : Number(subplot.split('x').pop().split('y')[0]) - 1;
     let parameters = this.model.settings.inferenceSettings.parameters
     let col = subplotID % parameters.length;
     let row = (subplotID - col) / parameters.length;
