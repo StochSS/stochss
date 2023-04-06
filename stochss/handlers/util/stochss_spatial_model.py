@@ -321,7 +321,7 @@ class StochSSSpatialModel(StochSSBase):
             end = self.model['modelSettings']['endSim']
             output_freq = self.model['modelSettings']['timeStep']
             step_size = self.model['modelSettings']['timestepSize']
-            tspan = TimeSpan.arange(output_freq, t=end + step_size, timestep_size=step_size)
+            tspan = TimeSpan.arange(output_freq, t=end, timestep_size=step_size)
             model.timespan(tspan)
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
