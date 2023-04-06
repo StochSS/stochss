@@ -135,11 +135,26 @@ div#workflow-results.card
             data-type="round"
           ) +
 
-        div.collapse(id="collapse-round")
+        div.card-body
 
-          div.card-body
+          p.mb-0
+            | View the results of any selected round.<br>
+            | <b>Histogram</b> - View the histogram, pdf, and original and inferred values for all parameters as well as intersection between parameters.<br>
+
+          ul.mb-0
+            li Click on any intersection subplot to view it in the intersection tab
+
+          p.mb-0
+            | <b>Intersection</b> - View an intersection of two parameters including their histogram, pdf, and original and inferred values.
+
+          ul.mb-0
+            li Click on the histogram tab to select a different intersection.
+
+          div.collapse(id="collapse-round")
 
             div
+
+              hr
 
               div.mx-1.row.head.align-items-baseline
 
@@ -179,43 +194,45 @@ div#workflow-results.card
 
               div.tab-pane.active(id="round-histogram" data-hook="round-histogram")
 
-                div(data-hook="round-histogram-plot")
+                div(data-hook="round-histogram-plot" style="min-height: 1000;")
 
                 div.spinner-border.workflow-plot(data-hook="round-histogram-plot-spinner")
 
               div.tab-pane(id="intersection" data-hook="intersection")
 
-                div(data-hook="round-intersection-plot")
+                div(data-hook="round-intersection-plot" style="min-height: 1000;")
 
                 div.spinner-border.workflow-plot(data-hook="round-intersection-plot-spinner")
 
-            button.btn.btn-primary.box-shadow(data-hook="round-model-export" data-target="model-export" disabled) Export Model
+            div
 
-            button.btn.btn-primary.box-shadow(data-hook="round-model-explore" data-target="model-explore" disabled) Export & Explore Model
+              button.btn.btn-primary.box-shadow(data-hook="round-model-export" data-target="model-export" disabled) Export Model
 
-            button.btn.btn-primary.box-shadow(data-hook="round-edit-plot" data-target="edit-plot" disabled) Edit Plot
+              button.btn.btn-primary.box-shadow(data-hook="round-model-explore" data-target="model-explore" disabled) Export & Explore Model
 
-            button.btn.btn-primary.box-shadow.dropdown-toggle(
-              id="round-download"
-              data-hook="round-download"
-              data-toggle="dropdown",
-              aria-haspopup="true",
-              aria-expanded="false",
-              type="button"
-              disabled
-            ) Download <span class="caret"></span>
+              button.btn.btn-primary.box-shadow(data-hook="round-edit-plot" data-target="edit-plot" disabled) Edit Plot
 
-            ul.dropdown-menu(aria-labelledby="#round-download")
-              li.dropdown-item(
-                data-hook="round-download-png-custom"
-                data-target="download-png-custom"
-                data-type="round"
-              ) Plot as .png
-              li.dropdown-item(
-                data-hook="round-download-json"
-                data-target="download-json"
-                data-type="round"
-              ) Plot as .json
+              button.btn.btn-primary.box-shadow.dropdown-toggle(
+                id="round-download"
+                data-hook="round-download"
+                data-toggle="dropdown",
+                aria-haspopup="true",
+                aria-expanded="false",
+                type="button"
+                disabled
+              ) Download <span class="caret"></span>
+
+              ul.dropdown-menu(aria-labelledby="#round-download")
+                li.dropdown-item(
+                  data-hook="round-download-png-custom"
+                  data-target="download-png-custom"
+                  data-type="round"
+                ) Plot as .png
+                li.dropdown-item(
+                  data-hook="round-download-json"
+                  data-target="download-json"
+                  data-type="round"
+                ) Plot as .json
 
       div
 
