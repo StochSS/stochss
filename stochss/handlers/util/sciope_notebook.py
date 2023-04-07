@@ -168,7 +168,8 @@ class StochSSSciopeNotebook(StochSSNotebook):
             f"{pad*2}raise ValueError('Observed data must be a CSV file (.csv) or a directory (.obsd) of CSV files.')",
             f"{pad}if path.endswith('.csv'):", f"{pad*2}new_data = get_csv_data(path)", f"{pad*2}data.append(new_data)",
             f"{pad*2}return data", f"{pad}for file in os.listdir(path):",
-            f"{pad*2}data = load_obs_data(path=os.path.join(path, file), data=data)", f"{pad}return data"
+            f"{pad*2}data = load_obs_data(path=os.path.join(path, file), data=data)",
+            f"{pad}return numpy.array(data)[:, 1:, :]"
         ]))
         csv_cell = nbf.new_code_cell("\n".join([
             "def get_csv_data(path):", f"{pad}with open(path, 'r', newline='', encoding='utf-8') as csv_fd:",
@@ -181,15 +182,15 @@ class StochSSSciopeNotebook(StochSSNotebook):
         obsd_lines = [
             "kwargs = configure_simulation()", "results = model.run(**kwargs)", "",
             "unshaped_obs_data = results.to_array()", "shaped_obs_data = unshaped_obs_data.swapaxes(1, 2)",
-            "obs_data = shaped_obs_data[:,1:, :]", "print(obs_data.shape)", "",
-            "obs_data = load_obs_data(",
-            f"{pad}path='../{self.get_file(self.settings['inferenceSettings']['obsData'])}', data=[]", ")"
+            "obs_data = shaped_obs_data[:,1:, :]", "", "obs_data = load_obs_data(",
+            f"{pad}path='../{self.get_file(self.settings['inferenceSettings']['obsData'])}', data=[]",
+            ")", , "print(obs_data.shape)"
         ]
         if self.settings['inferenceSettings']['obsData'] == "":
-            for i in range(len(obsd_lines) - 3, len(obsd_lines)):
+            for i in range(len(obsd_lines) - 4, len(obsd_lines) - 1):
                 obsd_lines[i] = f"# {obsd_lines[i]}"
         else:
-            for i in range(len(obsd_lines) - 3):
+            for i in range(len(obsd_lines) - 4):
                 if obsd_lines[i] != "":
                     obsd_lines[i] = f"# {obsd_lines[i]}"
         obsd_cell = nbf.new_code_cell("\n".join(obsd_lines))
