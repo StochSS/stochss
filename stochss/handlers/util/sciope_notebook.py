@@ -184,7 +184,7 @@ class StochSSSciopeNotebook(StochSSNotebook):
             "unshaped_obs_data = results.to_array()", "shaped_obs_data = unshaped_obs_data.swapaxes(1, 2)",
             "obs_data = shaped_obs_data[:,1:, :]", "", "obs_data = load_obs_data(",
             f"{pad}path='../{self.get_file(self.settings['inferenceSettings']['obsData'])}', data=[]",
-            ")", , "print(obs_data.shape)"
+            ")", "print(obs_data.shape)"
         ]
         if self.settings['inferenceSettings']['obsData'] == "":
             for i in range(len(obsd_lines) - 4, len(obsd_lines) - 1):
