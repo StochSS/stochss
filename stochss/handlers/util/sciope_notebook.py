@@ -251,12 +251,13 @@ class StochSSSciopeNotebook(StochSSNotebook):
                 f"{pad*3}evaluations[label] = eval(formula, dict(), result.data)",
                 f"{pad*2}trajectories.append(gillespy2.Trajectory(",
                 f"{pad*3}data=evaluations, model=result.model, solver_name=result.solver_name, rc=result.rc",
-                f"{pad*2}))", f"{pad}processed_results = gillespy2.Results([evaluations])",
+                f"{pad*2}))", f"{pad}processed_results = gillespy2.Results(trajectories)",
                 f"{pad}return processed_results.to_array().swapaxes(1, 2)[:,1:, :]"
             ]
             lines = []
             for feature_calculator in self.settings['inferenceSettings']['summaryStats']:
                 line = f"{pad*2}{feature_calculator['name']}='{feature_calculator['formula']}',"
+                lines.append(line)
             ident_lines.insert(2, "\n".join(lines)[:-1])
             proc_lines.extend(ident_lines)
         else:
