@@ -28,8 +28,10 @@ from collections import UserDict, UserList
 
 import numpy
 from scipy import stats
+
 import plotly
-from plotly import figure_factory, subplots
+from plotly import subplots
+import matplotlib.pyplot as plt
 from dask.distributed import Client
 
 import gillespy2
@@ -561,6 +563,78 @@ class InferenceResults(UserList):
             return self
         return self.__add__(other)
 
+    def __plot(self, include_orig_values=True, include_inferred_values=False,
+                     title=None, xaxis_label="Parameter Values", yaxis_label=None):
+        if yaxis_label is None:
+            yaxis_label = {"histo": "Accepted Samples", "pdf": "Probability"}
+        elif isinstance(yaxis_label, str):
+            yaxis_label = {"histo": yaxis_label, "pdf": yaxis_label}
+
+        cols = 2
+        rows = int(numpy.ceil(len(self.parameters)/cols))
+        names = list(self.parameters.keys())
+        histo_fig, histo_axes = plt.subplots(nrows=rows, ncols=cols, figsize=[14, 7 * rows])
+        _ = histo_fig.text(0.5, 0.09, xaxis_label, size=18, ha='center', va='center')
+        _ = histo_fig.text(0.08, 0.5, yaxis_label['histo'], size=18, ha='center', va='center', rotation='vertical')
+
+        pdf_fig, pdf_axes = plt.subplots(nrows=rows, ncols=cols, figsize=[14, 7 * rows])
+        _ = pdf_fig.text(0.5, 0.09, xaxis_label, size=18, ha='center', va='center')
+        _ = pdf_fig.text(0.08, 0.5, yaxis_label['pdf'], size=18, ha='center', va='center', rotation='vertical')
+
+        if len(self.parameters) < rows * cols:
+            histo_axes[-1, -1].axis('off')
+            pdf_axes[-1, -1].axis('off')
+
+        nbins = 50
+        for i, inf_round in enumerate(self.data):
+            base_opacity = 0.5 if len(self.data) <= 1 else (i / (len(self.data) - 1) * 0.5)
+
+            for j, (param, accepted_values) in enumerate(inf_round.data.items()):
+                row = int(numpy.ceil((j + 1) / cols)) - 1
+                col = (j % cols)
+
+                name = f"round {i + 1}"
+                color = common_rgb_values[i % len(common_rgb_values)]
+                opacity = base_opacity + 0.25
+                # Create histogram trace
+                histo_axes[row, col].hist(
+                    accepted_values, label=name, color=color, alpha=opacity,
+                    bins=nbins, range=(self.bounds[0][j], self.bounds[1][j])
+                )
+                # Create pdf trace
+                mean, std = stats.norm.fit(accepted_values)
+                points = numpy.linspace(min(accepted_values), max(accepted_values), 500)
+                pdf = stats.norm.pdf(points, loc=mean, scale=std)
+                pdf_axes[row, col].plot(points, pdf, label=name, color=color)
+
+                if i == len(self.data) - 1:
+                    histo_axes[row, col].set_title(names[j], size=16)
+                    pdf_axes[row, col].set_title(names[j], size=16)
+                    if include_orig_values:
+                        histo_axes[row, col].axvline(self.parameters[param], alpha=0.75, color='black')
+                        pdf_axes[row, col].axvline(self.parameters[param], alpha=0.75, color='black')
+                    if include_inferred_values:
+                        histo_axes[row, col].axvline(
+                            inf_round.inferred_parameters[param], alpha=0.75, color='black', ls='dashed'
+                        )
+                        pdf_axes[row, col].axvline(
+                            inf_round.inferred_parameters[param], alpha=0.75, color='black', ls='dashed'
+                        )
+
+        histo_handles, histo_labels = histo_axes[0, 0].get_legend_handles_labels()
+        histo_fig.legend(
+            histo_handles, histo_labels, loc=(0.905, 0.83), fontsize=12.5, frameon=False, labelspacing=1.2
+        )
+        pdf_handles, pdf_labels = pdf_axes[0, 0].get_legend_handles_labels()
+        pdf_fig.legend(
+            pdf_handles, pdf_labels, loc=(0.905, 0.83), fontsize=12.5, frameon=False, labelspacing=1.2
+        )
+        if title is not None:
+            _ = histo_fig.text(0.5, 0.92, title, size=20, ha='center', va='center')
+            _ = pdf_fig.text(0.5, 0.92, title, size=20, ha='center', va='center')
+
+        return histo_fig, pdf_fig
+
     def __plotplotly(self, include_orig_values=True, include_inferred_values=False,
                      title=None, xaxis_label="Parameter Values", yaxis_label=None):
         if yaxis_label is None:
@@ -692,7 +766,8 @@ class InferenceResults(UserList):
             inferred_parameters = inf_round.calculate_inferred_parameters(key=key, method=method)
         return inferred_parameters
 
-    def plot(self, histo_only=True, pdf_only=False, use_matplotlib=False, return_plotly_figure=False, **kwargs):
+    def plot(self, histo_only=True, pdf_only=False, use_matplotlib=False,
+             save_histo=None, save_pdf=None, return_plotly_figure=False, **kwargs):
         """
         Plot the results.
 
@@ -704,6 +779,14 @@ class InferenceResults(UserList):
 
         :param use_matplotlib: Whether or not to plot using MatPlotLib.
         :type use_matplotlib: bool
+
+        :param save_histo: \**kwargs: Keyword arguments passed to :py:class:`matplotlib.pyplot.savefig`
+                           for saving histogram plots. Ignored if use_matplotlib is False.
+        :type save_histo: dict
+
+        :param save_pdf: \**kwargs: Keyword arguments passed to :py:class:`matplotlib.pyplot.savefig`
+                         for saving pdf plots. Ignored if use_matplotlib is False.
+        :type save_pdf: dict
 
         :param return_plotly_figure: Whether or not to return the figure. Ignored if use_matplotlib is set.
         :type return_plotly_figure: bool
@@ -729,7 +812,17 @@ class InferenceResults(UserList):
         :rtype: plotly.Figure
         """
         if use_matplotlib:
-            raise Exception("use_matplotlib has not been implemented.")
+            histo_fig, pdf_fig = self.__plot(**kwargs)
+            if histo_only:
+                plt.close(fig=pdf_fig)
+            if pdf_only:
+                plt.close(fig=histo_fig)
+            if save_histo is not None:
+                histo_fig.savefig(**save_histo)
+            if save_pdf is not None:
+                pdf_fig.savefig(**save_pdf)
+            return None
+
         histo_fig, pdf_fig = self.__plotplotly(**kwargs)
 
         if return_plotly_figure:
