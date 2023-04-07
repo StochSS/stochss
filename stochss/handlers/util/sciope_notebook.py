@@ -246,7 +246,7 @@ class StochSSSciopeNotebook(StochSSNotebook):
         ]
         if self.settings['inferenceSettings']['summaryStatsType'] == "identity":
             ident_lines = [
-                f"{pad}definitions = dict(", f"{pad*2}time='time'", f"{pad})", "", f"{pad}trajectories = []",
+                f"{pad}definitions = dict(", f"{pad*2}time='time',", f"{pad})", "", f"{pad}trajectories = []",
                 f"{pad}for result in raw_results:", f"{pad*2}evaluations = dict()",
                 f"{pad*2}for label, formula in definitions.items():",
                 f"{pad*3}evaluations[label] = eval(formula, dict(), result.data)",
