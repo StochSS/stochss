@@ -141,15 +141,19 @@ module.exports = View.extend({
       $(this.queryByHook("spatial-plot-csv")).css('display', 'none');
     }else{
       var type = "inference";
-      this.roundIndex = this.model.settings.inferenceSettings.numRounds;
+      this.roundIndex = this.model.settings.inferenceSettings.numRounds === 0 ? 1 : this.model.settings.inferenceSettings.numRounds;
       let parameters = this.model.settings.inferenceSettings.parameters;
       this.intersectionNames = [parameters.at(0).name, parameters.at(1).name];
       if(this.model.exportLinks[this.roundIndex] !== null) {
         $(this.queryByHook("inference-model-export")).text("Open Model");
         $(this.queryByHook("inference-model-explore")).text("Explore Model");
       }
-      $(this.queryByHook("round-index-value")).text(this.roundIndex);
-      $(this.queryByHook("round-index-slider")).prop("value", this.roundIndex);
+      if(this.roundIndex > 1) {
+        $(this.queryByHook("round-index-value")).text(this.roundIndex);
+        $(this.queryByHook("round-index-slider")).prop("value", this.roundIndex);
+      }else{
+        $(this.queryByHook("round-slider-container")).css('display', 'none');
+      }
       // TODO: Enable inference presentations when implemented
       $(this.queryByHook("job-presentation")).prop("disabled", true);
     }

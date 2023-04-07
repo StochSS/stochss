@@ -154,29 +154,31 @@ div#workflow-results.card
 
             div
 
-              hr
+              div(data-hook="round-slider-container")
 
-              div.mx-1.row.head.align-items-baseline
+                hr
 
-                div.col-sm-12
+                div.mx-1.row.head.align-items-baseline
 
-                  h6
+                  div.col-sm-12
 
-                    div.inline.mr-2 <b>Round</b>:
+                    h6
 
-                    div.inline(data-hook="round-index-value")=this.roundIndex
+                      div.inline.mr-2 <b>Round</b>:
 
-              div.mx-1.my-3.row
+                      div.inline(data-hook="round-index-value")=this.roundIndex
 
-                div.col-sm-12
+                div.mx-1.my-3.row
 
-                  input.custom-range(
-                    type="range"
-                    min="1"
-                    max=`${this.model.settings.inferenceSettings.numRounds}`
-                    value=this.roundIndex
-                    data-hook="round-index-slider"
-                  )
+                  div.col-sm-12
+
+                    input.custom-range(
+                      type="range"
+                      min="1"
+                      max=`${this.model.settings.inferenceSettings.numRounds}`
+                      value=this.roundIndex
+                      data-hook="round-index-slider"
+                    )
 
               hr
 
