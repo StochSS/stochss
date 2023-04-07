@@ -82,15 +82,20 @@ class InferenceRound(UserDict):
     :param inferred_parameters: The mean of accepted parameter samples.
     :type inferred_parameters: dict
     """
-    def __init__(self, accepted_samples, distances, accepted_count, trial_count, inferred_parameters):
+    def __init__(self, accepted_samples, distances, accepted_count, trial_count, inferred_parameters, inferred_method):
         super().__init__(accepted_samples)
         self.distances = distances
         self.accepted_count = accepted_count
         self.trial_count = trial_count
-        self.inferred_parameters = inferred_parameters
+        self.inferred_method = inferred_method
+        self.__inferred_parameters = {inferred_method: inferred_parameters}
+
+    def __getattribute__(self, key):
+        if key == 'inferred_parameters':
+            return self.__inferred_parameters[self.inferred_method]
+        return UserList.__getattribute__(self, key)
 
     def __getitem__(self, key):
-        print(key)
         if isinstance(key, int):
             param = list(self.data.keys())[key]
             msg = "InferenceRound is of type dictionary. "
@@ -299,7 +304,8 @@ class InferenceRound(UserDict):
             inferred_parameters[name] = data['inferred_parameters'][i]
 
         return InferenceRound(
-            accepted_samples, data['distances'], data['accepted_count'], data['trial_count'], inferred_parameters
+            accepted_samples, data['distances'], data['accepted_count'], data['trial_count'],
+            inferred_parameters, "mean"
         )
 
     def plot(self, parameters, bounds, use_matplotlib=False, return_plotly_figure=False, **kwargs):
@@ -469,6 +475,37 @@ class InferenceResults(UserList):
         super().__init__(data)
         self.parameters = parameters
         self.bounds = bounds
+
+    def __getattribute__(self, key):
+        if key in ('distances', 'accepted_count', 'trial_count', 'inferred_parameters'):
+            if len(self.data) > 1:
+                msg = f"Results is of type list. Use results[i]['{key}'] instead of results['{key}']"
+                log.warning(msg)
+            return getattr(Results.__getattribute__(self, key='data')[-1], key)
+        return UserList.__getattribute__(self, key)
+
+    def __getitem__(self, key):
+        if key == 'data':
+            return UserList.__getitem__(self, key)
+        if isinstance(key, str):
+            if len(self.data) > 1:
+                msg = f"Results is of type list. Use results[i]['{key}'] instead of results['{key}']"
+                log.warning(msg)
+            return self.data[0][key]
+        return UserList.__getitem__(self,key)
+
+    def __add__(self, other):
+        c_type = type(other).__name__
+        if c_type == "InferenceResults":
+            raise ValueError(f'{c_type} cannot be added to InferenceResults.')
+
+        combined_data = InferenceResults(data=(self.data + other.data))
+        return combined_data
+
+    def __radd__(self, other):
+        if other == 0:
+            return self
+        return self.__add__(other)
 
     def __plotplotly(self, include_orig_values=True, include_inferred_values=False,
                      title=None, xaxis_label="Parameter Values", yaxis_label=None):
