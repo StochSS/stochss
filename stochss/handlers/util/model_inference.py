@@ -308,6 +308,53 @@ class InferenceRound(UserDict):
             inferred_parameters, "mean"
         )
 
+    def calculate_inferred_parameters(self, key=None, method=None):
+        """
+        Calculate the inferred parameters using the given method and cached using the given key.
+
+        :param key: Key used to cache the inferred parameters.
+                    If method is None, key is a reference to a supported function.
+        :type key: str
+
+        :param method: A callable function or method used to calculate the inferred parameters.
+                       Needs to accept a single numpy.ndarray argument.
+        :type method: Callable
+
+        :returns: The calculated inferred parameters.
+        :rtype: dict
+
+        :raises ValueError: method and key are None or method is not callable.
+        """
+        if key is None and method is None:
+            raise ValueError("key or method must be set.")
+
+        if key is None:
+            i = 0
+            key = "custom"
+            while key in self.__inferred_parameters:
+                i += 1
+                key = f"custom{i}"
+
+        if key in self.__inferred_parameters:
+            self.inferred_method = key
+            return self.__inferred_parameters[key]
+
+        if method is None:
+            key_methods = {"mean": numpy.mean, "median": numpy.median}
+            if not (isinstance(key, str) and key in key_methods):
+                raise ValueError(f"{key} is not a supported function key.  Supported keys: {tuple(key_methods.keys())}")
+            method = key_methods[key]
+
+        if not callable(method) or type(method).__name__ not in ("function", "method"):
+            raise ValueError("method must be a callable function or method.")
+
+        inferred_parameters = {}
+        for param, accepted_values in self.items():
+            inferred_parameters[param] = method(accepted_values)
+        self.inferred_method = key
+        self.__inferred_parameters[key] = inferred_parameters
+        return inferred_parameters
+
     def plot(self, parameters, bounds, use_matplotlib=False, return_plotly_figure=False, **kwargs):
         """
         Plot the results of the inference round.
@@ -481,7 +528,7 @@ class InferenceResults(UserList):
             if len(self.data) > 1:
                 msg = f"Results is of type list. Use results[i]['{key}'] instead of results['{key}']"
                 log.warning(msg)
-            return getattr(Results.__getattribute__(self, key='data')[-1], key)
+            return getattr(InferenceResults.__getattribute__(self, key='data')[-1], key)
         return UserList.__getattribute__(self, key)
 
     def __getitem__(self, key):
@@ -496,11 +543,18 @@ class InferenceResults(UserList):
 
     def __add__(self, other):
         c_type = type(other).__name__
-        if c_type == "InferenceResults":
+        if c_type != "InferenceResults":
             raise ValueError(f'{c_type} cannot be added to InferenceResults.')
 
-        combined_data = InferenceResults(data=(self.data + other.data))
-        return combined_data
+        if self.parameters != other.parameters:
+            raise ValueError("InferenceResults object contain difference parameters.")
+
+        if not numpy.all(numpy.array(self.bounds) == numpy.array(other.bounds)):
+            raise ValueError("InferenceResults object contain difference priors.")
+
+        return InferenceResults(
+            data=(self.data + other.data), parameters=self.parameters, bounds=self.bounds
+        )
 
     def __radd__(self, other):
         if other == 0:
@@ -610,6 +664,33 @@ class InferenceResults(UserList):
             inf_round = InferenceRound.build_from_inference_round(inf_r, names)
             inf_rounds.append(inf_round)
         return InferenceResults(inf_rounds, parameters, bounds)
+
+    def calculate_inferred_parameters(self, key=None, method=None, ndx=None):
+        """
+        Calculate the inferred parameters using the given method and cached using the given key.
+
+        :param key: Key used to cache the inferred parameters.
+                    If method is None, key is a reference to a supported function.
+        :type key: str
+
+        :param method: A callable function or method used to calculate the inferred parameters.
+                       Needs to accept a single numpy.ndarray argument.
+        :type method: Callable
+
+        :param ndx: Index of the inference round to plot.
+        :type ndx: int
+
+        :returns: The calculated inferred parameters for the indicated round if ndx is set else the final round.
+        :rtype: dict
+
+        :raises ValueError: method and key are None or method is not callable.
+        """
+        if ndx is not None:
+            return self[ndx].calculate_inferred_parameters(key=key, method=method)
+
+        for inf_round in self:
+            inferred_parameters = inf_round.calculate_inferred_parameters(key=key, method=method)
+        return inferred_parameters
 
     def plot(self, histo_only=True, pdf_only=False, use_matplotlib=False, return_plotly_figure=False, **kwargs):
         """
