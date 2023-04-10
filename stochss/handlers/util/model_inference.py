@@ -29,9 +29,14 @@ from collections import UserDict, UserList
 import numpy
 from scipy import stats
 
-import plotly
-from plotly import subplots
+try:
+    import plotly
+    from plotly import subplots
+    plotly_installed = True
+except ImportError:
+    plotly_installed = False
 import matplotlib.pyplot as plt
+import matplotlib.text as mtext
 from dask.distributed import Client
 
 import gillespy2
@@ -65,6 +70,17 @@ def combine_colors(colors):
     color = f"#{zpad(hex(red)[2:])}{zpad(hex(green)[2:])}{zpad(hex(blue)[2:])}"
     return color
 
+class LegendTitle(object):
+    def __init__(self, text_props=None):
+        self.text_props = text_props or {}
+        super(LegendTitle, self).__init__()
+
+    def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        x0, y0 = handlebox.xdescent, handlebox.ydescent
+        title = mtext.Text(x0, y0, orig_handle,  **self.text_props)
+        handlebox.add_artist(title)
+        return title
+
 class InferenceRound(UserDict):
     """
     Inference Round Dict created by a StochSS Inference Simulation containing single round, extends the UserDict object.
@@ -83,6 +99,9 @@ class InferenceRound(UserDict):
 
     :param inferred_parameters: The mean of accepted parameter samples.
     :type inferred_parameters: dict
+
+    :param inferred_method: Label for the method used to calculate the inferred parameters.
+    :type inferred_method: str
     """
     def __init__(self, accepted_samples, distances, accepted_count, trial_count, inferred_parameters, inferred_method):
         super().__init__(accepted_samples)
@@ -110,6 +129,82 @@ class InferenceRound(UserDict):
         if hasattr(self.__class__, "__missing__"):
             return self.__class__.__missing__(self, key)
         raise KeyError(key)
+
+    def __plot(self, parameters, bounds, include_pdf=True, include_orig_values=True,
+               include_inferred_values=False, title=None, xaxis_label=None, yaxis_label=None):
+        nbins = 50
+        names = list(self.data.keys())
+        dims = len(names)
+        fig, axes = plt.subplots(nrows=dims, ncols=dims, figsize=[14, 14])
+        if xaxis_label is not None:
+            _ = fig.text(0.5, 0.09, xaxis_label, size=18, ha='center', va='center')
+        if yaxis_label is not None:
+            _ = fig.text(0.08, 0.5, yaxis_label, size=18, ha='center', va='center', rotation='vertical')
+
+        sing_param = []
+        doub_param = [(["Parameter Intersections"], [""])]
+        pdf_axes = [None] * dims
+        for i, (param1, accepted_values1) in enumerate(self.data.items()):
+            row = i
+            for j, (param2, accepted_values2) in enumerate(self.data.items()):
+                col = j
+                if i == 0:
+                    axes[row, col].set_title(names[j], size=16)
+                if j == dims - 1:
+                    axes[row, col].set_ylabel(names[i], size=16, rotation=270)
+                    axes[row, col].yaxis.set_label_position("right")
+                    axes[row, col].yaxis.set_label_coords(1.4, 0.5)
+
+                if i > j:
+                    axes[row, col].axis('off')
+                elif i == j:
+                    color = common_rgb_values[(i)%len(common_rgb_values)]
+                    axes[row, col].hist(
+                        accepted_values1, label="Histogram", color=color, alpha=0.75,
+                        bins=nbins, range=(bounds[0][i], bounds[1][i])
+                    )
+                    axes[row, col].set_xlim(bounds[0][i], bounds[1][i])
+                    sing_param.append(([param1], [""]))
+                    sing_param.append(axes[row, col].get_legend_handles_labels())
+                    if include_pdf:
+                        mean, std = stats.norm.fit(accepted_values1)
+                        points = numpy.linspace(min(accepted_values1), max(accepted_values1), 500)
+                        pdf = stats.norm.pdf(points, loc=mean, scale=std)
+
+                        pdf_axes[row] = axes[row, col].twinx()
+                        pdf_axes[row].plot(points, pdf, label="PDF", color=color)
+                        y_ticks = pdf_axes[row].get_yticks()
+                        pdf_axes[row].set_ylim(0, max(y_ticks))
+                        sing_param.append(pdf_axes[row].get_legend_handles_labels())
+                    if include_orig_values:
+                        axes[row, col].axvline(parameters[param1], alpha=0.75, color='black')
+                    if include_inferred_values:
+                        axes[row, col].axvline(
+                            self.inferred_parameters[param1], alpha=0.75, color='black', ls='dashed'
+                        )
+                else:
+                    color = combine_colors([
+                        common_rgb_values[(i)%len(common_rgb_values)][1:],
+                        common_rgb_values[(j)%len(common_rgb_values)][1:]
+                    ])
+                    axes[row, col].scatter(accepted_values2, accepted_values1, c=color, label=f"{param2} X {param1}")
+                    axes[row, col].set_xlim(bounds[0][j], bounds[1][j])
+                    axes[row, col].set_ylim(bounds[0][i], bounds[1][i])
+                    doub_param.append(axes[row, col].get_legend_handles_labels())
+
+        labels = numpy.array(sing_param)[:, 1, 0].tolist()
+        handles = numpy.array(sing_param)[:, 0, 0].tolist()
+        labels.extend(numpy.array(doub_param)[:, 1, 0].tolist())
+        handles.extend(numpy.array(doub_param)[:, 0, 0].tolist())
+        fig.legend(
+            handles, labels, loc=(0.05, 0.06), fontsize=12.5, frameon=False, markerscale=1.75,
+            handler_map={str: LegendTitle({'fontsize': 14})}
+        )
+        fig.subplots_adjust(left=0.1, right=0.9, wspace=0.5, hspace=0.25)
+        if title is not None:
+            _ = fig.text(0.5, 0.92, title, size=20, ha='center', va='center')
+
+        return fig
 
     def __plotplotly(self, parameters, bounds, include_pdf=True, include_orig_values=True,
                      include_inferred_values=False, title=None, xaxis_label=None, yaxis_label=None):
@@ -357,7 +452,7 @@ class InferenceRound(UserDict):
         self.__inferred_parameters[key] = inferred_parameters
         return inferred_parameters
 
-    def plot(self, parameters, bounds, use_matplotlib=False, return_plotly_figure=False, **kwargs):
+    def plot(self, parameters, bounds, use_matplotlib=False, save_fig=None, return_plotly_figure=False, **kwargs):
         """
         Plot the results of the inference round.
 
@@ -369,6 +464,10 @@ class InferenceRound(UserDict):
 
         :param use_matplotlib: Whether or not to plot using MatPlotLib.
         :type use_matplotlib: bool
+
+        :param save_fig: \**kwargs: Keyword arguments passed to :py:class:`matplotlib.pyplot.savefig`
+                           for saving round plots. Ignored if use_matplotlib is False.
+        :type save_fig: dict
 
         :param return_plotly_figure: Whether or not to return the figure. Ignored if use_matplotlib is set.
         :type return_plotly_figure: bool
@@ -395,7 +494,14 @@ class InferenceRound(UserDict):
         :rtype: plotly.Figure
         """
         if use_matplotlib:
-            raise Exception("use_matplotlib has not been implemented.")
+            fig = self.__plot(parameters, bounds, **kwargs)
+            if save_fig is not None:
+                fig.savefig(**save_fig)
+            return None
+
+        if not plotly_installed:
+            raise ImportError("Unable to plot results.  To continue, install plotly or set 'use_matplotlib' to 'True'")
+
         fig = self.__plotplotly(parameters, bounds, **kwargs)
 
         if return_plotly_figure:
@@ -403,7 +509,7 @@ class InferenceRound(UserDict):
         plotly.offline.iplot(fig)
         return None
 
-    def plot_intersection(self, parameters, bounds, colors=None, color_ndxs=None, 
+    def plot_intersection(self, parameters, bounds, colors=None, color_ndxs=None,
                           use_matplotlib=False, return_plotly_figure=False, **kwargs):
         """
         Plot the results of the inference round.
@@ -449,6 +555,10 @@ class InferenceRound(UserDict):
         """
         if use_matplotlib:
             raise Exception("use_matplotlib has not been implemented.")
+
+        if not plotly_installed:
+            raise ImportError("Unable to plot results.  To continue, install plotly or set 'use_matplotlib' to 'True'")
+
         if colors is None:
             if color_ndxs is None:
                 colors = [
@@ -822,6 +932,9 @@ class InferenceResults(UserList):
             if save_pdf is not None:
                 pdf_fig.savefig(**save_pdf)
             return None
+
+        if not plotly_installed:
+            raise ImportError("Unable to plot results.  To continue, install plotly or set 'use_matplotlib' to 'True'")
 
         histo_fig, pdf_fig = self.__plotplotly(**kwargs)
 
