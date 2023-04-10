@@ -63,6 +63,15 @@ common_rgb_values = [
 ]
 
 def combine_colors(colors):
+    """
+    Combine two colors into one with concentrations of 50% of the original colors.
+
+    :param colors: Colors in hexidecimal form to combine.
+    :type colors: list(2)
+
+    :returns: Returns the new color in hexidecimal form.
+    :rtype: str
+    """
     red = int(sum([int(k[:2], 16) * 0.5 for k in colors]))
     green = int(sum([int(k[2:4], 16) * 0.5 for k in colors]))
     blue = int(sum([int(k[4:6], 16) * 0.5 for k in colors]))
@@ -71,11 +80,22 @@ def combine_colors(colors):
     return color
 
 class LegendTitle(object):
+    """
+    Custom handler map for legend group titles.
+
+    :param text_props: \**kwargs: Keyword arguments passed to :py:class:`matplotlib.text`.
+    :type text_props: dict
+    """
     def __init__(self, text_props=None):
         self.text_props = text_props or {}
         super(LegendTitle, self).__init__()
 
     def legend_artist(self, legend, orig_handle, fontsize, handlebox):
+        """
+        Return the artist that this HandlerBase generates for the given original artist/handle.
+        Full documentation can be found here:
+        https://matplotlib.org/stable/api/legend_handler_api.html#matplotlib.legend_handler.HandlerBase.legend_artist
+        """
         x0, y0 = handlebox.xdescent, handlebox.ydescent
         title = mtext.Text(x0, y0, orig_handle,  **self.text_props)
         handlebox.add_artist(title)
@@ -201,6 +221,101 @@ class InferenceRound(UserDict):
             handler_map={str: LegendTitle({'fontsize': 14})}
         )
         fig.subplots_adjust(left=0.1, right=0.9, wspace=0.5, hspace=0.25)
+        if title is not None:
+            _ = fig.text(0.5, 0.92, title, size=20, ha='center', va='center')
+
+        return fig
+
+    def __plot_intersection(self, parameters, bounds, colors, include_pdf=True, include_orig_values=True,
+                     include_inferred_values=False, title=None, xaxis_label=None, yaxis_label=None):
+        nbins = 50
+        names = list(parameters.keys())
+
+        if xaxis_label is None:
+            xaxis_label = names[0]
+        if yaxis_label is None:
+            yaxis_label = names[1]
+
+        fig, axes = plt.subplots(
+            nrows=3, ncols=3, figsize=[14, 14], sharex='col', sharey='row',
+            gridspec_kw={'width_ratios': [6, 1, 3], 'height_ratios': [3, 1, 6]}
+        )
+        _ = fig.text(0.5, 0.09, xaxis_label, size=18, ha='center', va='center')
+        _ = fig.text(0.08, 0.5, yaxis_label, size=18, ha='center', va='center', rotation='vertical')
+        for row in range(2):
+            for col in range(1, 3):
+                axes[row, col].axis('off')
+
+        rug_symbol = ['|', '_']
+        histo_row = histo_col = [0, 2]
+        rug_row, rug_col = [1, 2], [0, 1]
+        x_key, y_key = ['x', 'y'], ['y', 'x']
+        orientation = ['vertical', 'horizontal']
+        line_func = [axes[histo_row[0], histo_col[0]].axvline, axes[histo_row[1], histo_col[1]].axhline]
+
+        rugs = [(["Rug"], [""])]
+        legend = []
+        pdf_axes = [None] * 2
+        for i, (param, orig_val) in enumerate(parameters.items()):
+            if i >= 2:
+                break
+
+            # Create histogram traces
+            axes[histo_row[i], histo_col[i]].hist(
+                self[param], label="Histogram", color=colors[i], alpha=0.75, orientation=orientation[i],
+                bins=nbins, range=(bounds[0][i], bounds[1][i])
+            )
+            legend.append(([param], [""]))
+            legend.append(axes[histo_row[i], histo_col[i]].get_legend_handles_labels())
+            if include_pdf:
+                mean, std = stats.norm.fit(self[param])
+                points = numpy.linspace(min(self[param]), max(self[param]), 500)
+                pdf = stats.norm.pdf(points, loc=mean, scale=std)
+
+                if i == 0:
+                    pdf_axes[i] = axes[histo_row[i], histo_col[i]].twinx()
+                    pdf_axes[i].plot(points, pdf, label="PDF", color=colors[i])
+                    y_ticks = pdf_axes[i].get_yticks()
+                    pdf_axes[i].set_ylim(0, max(y_ticks))
+                else:
+                    pdf_axes[i] = axes[histo_row[i], histo_col[i]].twiny()
+                    pdf_axes[i].plot(pdf, points, label="PDF", color=colors[i])
+                    x_ticks = pdf_axes[i].get_xticks()
+                    pdf_axes[i].set_xlim(0, max(x_ticks))
+                legend.append(pdf_axes[i].get_legend_handles_labels())
+            if include_orig_values:
+                line_func[i](orig_val, alpha=0.75, color='black')
+            if include_inferred_values:
+                line_func[i](self.inferred_parameters[param], alpha=0.75, color='black', ls='dashed')
+            # Create rug traces
+            rug_args = {
+                x_key[i]: self[param], y_key[i]: [param] * self.accepted_count, 's': 50,
+                'c': colors[i], 'label': param, 'marker': rug_symbol[i]
+            }
+            axes[rug_row[i], rug_col[i]].scatter(**rug_args)
+            if i == 0:
+                axes[rug_row[i], rug_col[i]].set_yticks([])
+                axes[rug_row[i], rug_col[i]].yaxis.set_tick_params(labelleft=False)
+            else:
+                axes[rug_row[i], rug_col[i]].set_xticks([])
+                axes[rug_row[i], rug_col[i]].xaxis.set_tick_params(labelbottom=False)
+            rugs.append(axes[rug_row[i], rug_col[i]].get_legend_handles_labels())
+
+        legend.extend(rugs)
+
+        axes[2, 0].scatter(self[names[0]], self[names[1]], c=colors[2], label=f"{names[0]} X {names[1]}")
+        legend.append((["Intersection"], [""]))
+        legend.append(axes[2, 0].get_legend_handles_labels())
+
+        labels = numpy.array(legend)[:, 1, 0].tolist()
+        handles = numpy.array(legend)[:, 0, 0].tolist()
+        fig.legend(
+            handles, labels, loc=(0.78, 0.68), fontsize=12.5, frameon=False, markerscale=1.75,
+            handler_map={str: LegendTitle({'fontsize': 14})}
+        )
+        axes[2, 0].set_xlim(bounds[0][0], bounds[1][0])
+        axes[2, 0].set_ylim(bounds[0][1], bounds[1][1])
+        fig.subplots_adjust(wspace=0.04, hspace=0.04)
         if title is not None:
             _ = fig.text(0.5, 0.92, title, size=20, ha='center', va='center')
 
@@ -510,7 +625,7 @@ class InferenceRound(UserDict):
         return None
 
     def plot_intersection(self, parameters, bounds, colors=None, color_ndxs=None,
-                          use_matplotlib=False, return_plotly_figure=False, **kwargs):
+                          use_matplotlib=False, save_fig=None, return_plotly_figure=False, **kwargs):
         """
         Plot the results of the inference round.
 
@@ -528,6 +643,10 @@ class InferenceRound(UserDict):
 
         :param use_matplotlib: Whether or not to plot using MatPlotLib.
         :type use_matplotlib: bool
+
+        :param save_fig: \**kwargs: Keyword arguments passed to :py:class:`matplotlib.pyplot.savefig`
+                           for saving intersection plots. Ignored if use_matplotlib is False.
+        :type save_fig: dict
 
         :param return_plotly_figure: Whether or not to return the figure. Ignored if use_matplotlib is set.
         :type return_plotly_figure: bool
@@ -553,17 +672,10 @@ class InferenceRound(UserDict):
         :returns: Plotly figure object if return_plotly_figure is set else None.
         :rtype: plotly.Figure
         """
-        if use_matplotlib:
-            raise Exception("use_matplotlib has not been implemented.")
-
-        if not plotly_installed:
-            raise ImportError("Unable to plot results.  To continue, install plotly or set 'use_matplotlib' to 'True'")
-
         if colors is None:
             if color_ndxs is None:
                 colors = [
-                    common_rgb_values[(0)%len(common_rgb_values)],
-                    common_rgb_values[(1)%len(common_rgb_values)]
+                    common_rgb_values[(0)%len(common_rgb_values)], common_rgb_values[(1)%len(common_rgb_values)]
                 ]
             else:
                 colors = [
@@ -571,6 +683,15 @@ class InferenceRound(UserDict):
                     common_rgb_values[(color_ndxs[1])%len(common_rgb_values)]
                 ]
             colors.append(combine_colors([colors[0][1:], colors[1][1:]]))
+
+        if use_matplotlib:
+            fig = self.__plot_intersection(parameters, bounds, colors, **kwargs)
+            if save_fig is not None:
+                fig.savefig(**save_fig)
+            return None
+
+        if not plotly_installed:
+            raise ImportError("Unable to plot results.  To continue, install plotly or set 'use_matplotlib' to 'True'")
 
         fig = self.__plotplotly_intersection(parameters, bounds, colors, **kwargs)
 
