@@ -40,9 +40,6 @@ module.exports = View.extend({
     }
   },
   render: function () {
-  	// if(this.priorMethod === "Uniform Prior") {
-  	// 	this.template = this.readOnly ? viewUniformTemplate : editUniformTemplate;
-  	// }
   	this.template = this.readOnly ? viewUniformTemplate : editUniformTemplate;
     View.prototype.render.apply(this, arguments);
     if(!this.readOnly) {
@@ -51,6 +48,8 @@ module.exports = View.extend({
         $(this.queryByHook("add-mi-parameter")).prop("disabled", disable);
       }, this)
       this.renderEditInferenceParameter();
+      this.toggleAddParameter();
+      this.toggleParameterCollectionError();
     }else{
     	this.renderViewInferenceParameter();
     }
@@ -66,6 +65,8 @@ module.exports = View.extend({
     let target = this.getParameter();
     this.collection.addInferenceParameter(target.compID, target.name);
     this.updateTargetOptions();
+    this.toggleAddParameter();
+    this.toggleParameterCollectionError();
   },
   renderEditInferenceParameter: function () {
     if(this.editInferenceParameter) {
@@ -75,10 +76,7 @@ module.exports = View.extend({
       parent: this,
       stochssParams: this.stochssModel.parameters
     }}
-    // if(this.priorMethod === "Uniform Prior") {
-  	// 	var inferenceParameterView = UniformParameterView;
-  	// }
-  	var inferenceParameterView = UniformParameterView;
+    var inferenceParameterView = UniformParameterView;
     this.editInferenceParameter = this.renderCollection(
       this.collection,
       inferenceParameterView,
@@ -94,16 +92,27 @@ module.exports = View.extend({
       parent: this, viewMode: true,
       stochssParams: this.stochssModel.parameters
     }}
-    // if(this.priorMethod === "Uniform Prior") {
-  	// 	var inferenceParameterView = UniformParameterView;
-  	// }
-  	var inferenceParameterView = UniformParameterView;
+    var inferenceParameterView = UniformParameterView;
     this.viewInferenceParameter = this.renderCollection(
       this.collection,
       inferenceParameterView,
       this.queryByHook("view-mi-parameter-collection"),
       options
     );
+  },
+  toggleAddParameter: function () {
+    let disable = this.collection.length >= this.stochssModel.parameters.length;
+    $(this.queryByHook("add-mi-parameter")).prop('disabled', disable);
+  },
+  toggleParameterCollectionError: function () {
+    let errorMsg = $(this.queryByHook('mi-parameter-collection-error'));
+    if(this.collection.length <= 0) {
+      errorMsg.addClass('component-invalid');
+      errorMsg.removeClass('component-valid');
+    }else{
+      errorMsg.addClass('component-valid');
+      errorMsg.removeClass('component-invalid');
+    }
   },
   updateTargetOptions: function () {
   	this.editInferenceParameter.views.forEach((view) => {

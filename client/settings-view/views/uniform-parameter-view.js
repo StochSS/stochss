@@ -70,8 +70,10 @@ module.exports = View.extend({
   },
   removeSweepParameter: function () {
     this.model.collection.removeInferenceParameter(this.model);
-    this.remove();
     this.parent.updateTargetOptions();
+    this.parent.toggleAddParameter();
+    this.parent.toggleParameterCollectionError();
+    this.remove();
   },
   renderMaxValInputView: function () {
     if(this.maxValInputView) {
