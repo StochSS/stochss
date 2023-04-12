@@ -69,6 +69,14 @@ module.exports = View.extend({
       $("#presentation-nav-link").css("display", "none");
     }
     this.setupUserLogs();
+    let endpoint = path.join(app.getApiPath(), "load-user-settings");
+    app.getXHR(endpoint, {
+      always: (err, response, body) => {
+        if(!body.settings.userLogs) {
+          this.closeUserLogs();
+        }
+      }
+    });
     return this;
   },
   addNewLogBlock: function () {
@@ -133,11 +141,13 @@ module.exports = View.extend({
     let logs = $("#user-logs");
     let classes = logs.attr("class").split(/\s+/);
     if(classes.includes("show")) {
+      $(this.queryByHook('close-user-logs')).css('display', 'block');
       logs.removeClass("show");
       $(this.queryByHook(e.target.dataset.hook)).html("+");
       $(".user-logs").removeClass("expand-logs");
       $(".side-navbar").css("z-index", 0);
     }else{
+      $(this.queryByHook('close-user-logs')).css('display', 'none');
       logs.addClass("show");
       $(this.queryByHook(e.target.dataset.hook)).html("-");
       if($(".sidebar-sticky").css("position") === "fixed") {

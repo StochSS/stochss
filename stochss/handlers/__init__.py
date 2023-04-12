@@ -53,7 +53,7 @@ def get_page_handlers(route_start):
         (r'/stochss/settings\/?', UserSettingsHandler),
         (r'/stochss/api/user-logs\/?', UserLogsAPIHandler),
         (r'/stochss/api/clear-user-logs\/?', ClearUserLogsAPIHandler),
-        (r'/stochss/api/user-settings\/?', LoadUserSettings),
+        (r'/stochss/api/load-user-settings\/?', LoadUserSettings),
         (r'/stochss/api/aws/job-config-check\/?', ConfirmAWSConfigHandler),
         (r'/stochss/api/aws/launch-cluster\/?', LaunchAWSClusterHandler),
         (r'/stochss/api/aws/cluster-status\/?', AWSClusterStatusHandler),
