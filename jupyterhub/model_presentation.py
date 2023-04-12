@@ -157,6 +157,24 @@ def process_smodel_presentation(path, file=None, for_download=False):
     file_obj.print_logs(log)
     return model_pres
 
+template = {
+    "is_spatial": False, "defaultID": 1, "defaultMode": "", "annotation": "", "volume": 1,
+    "modelSettings": {"endSim": 20, "timeStep": 0.05, "timestepSize": 1e-5 },
+    "domain": {
+        "actions": [],
+        "boundary_condition": {"reflect_x": True, "reflect_y": True, "reflect_z": True},
+        "c_0": 10, "gravity": [0, 0, 0], "p_0": 100.0, "rho_0": 1.0, "shapes": [],
+        "size": None, "static": True, "template_version": 2, "transformations": [],
+        "types": [{
+            "c":10, "fixed":False, "mass":1.0, "name":"Un-Assigned",
+            "nu":0.0, "rho":1.0, "typeID":0, "volume":1.0
+        }],
+        "x_lim": [0, 0], "y_lim": [0, 0], "z_lim": [0, 0]
+    },
+    "species": [], "initialConditions": [], "parameters": [], "reactions": [], "rules": [],
+    "eventsCollection": [], "functionDefinitions": [], "boundaryConditions": []
+}
+
 class StochSSModel(StochSSBase):
     '''
     ################################################################################################
@@ -175,6 +193,14 @@ class StochSSModel(StochSSBase):
         '''
         super().__init__()
         self.model = model
+        um_lines = json.dumps(template.update(model), sort_keys=True, indent=4).split("\n")
+        m_lines = json.dumps(template.update(model), sort_keys=True, indent=4).split("\n")
+        for i, um_line in enumerate(um_lines):
+            print(um_line.ljust(65), end=" | ")
+            if m_lines[i] == um_line:
+                print(m_lines[i])
+            else:
+                print()
 
     @classmethod
     def __update_event_assignments(cls, event, param_ids):
@@ -215,6 +241,8 @@ class StochSSModel(StochSSBase):
         if "reactions" not in self.model.keys():
             return
         for reaction in self.model['reactions']:
+            if "odePropensity" not in reaction.keys():
+                reaction['odePropensity'] = reaction['propensity']
             try:
                 if reaction['rate'].keys() and isinstance(reaction['rate']['expression'], str):
                     expression = ast.literal_eval(reaction['rate']['expression'])
@@ -237,13 +265,10 @@ class StochSSModel(StochSSBase):
             except ValueError:
                 pass
 
-    def load(self):
-        '''
-        Reads the model file, updates the model to the current format, and stores it in self.model
+    def __update_model_to_current(self):
+        if self.model['template_version'] == self.TEMPLATE_VERSION:
+            return
 
-        Attributes
-        ----------
-        '''
         if "annotation" not in self.model.keys():
             self.model['annotation'] = ""
         if "volume" not in self.model.keys():
@@ -251,10 +276,28 @@ class StochSSModel(StochSSBase):
                 self.model['volume'] = self.model['modelSettings']['volume']
             else:
                 self.model['volume'] = 1
+
         param_ids = self.__update_parameters()
         self.__update_reactions()
         self.__update_events(param_ids=param_ids)
         self.__update_rules(param_ids=param_ids)
+
+        if "refLinks" not in self.model.keys():
+            self.model['refLinks'] = []
+
+        self.model['template_version'] = self.TEMPLATE_VERSION
+
+    def load(self):
+        '''
+        Reads the model file, updates the model to the current format, and stores it in self.model
+
+        Attributes
+        ----------
+        '''
+        if "template_version" not in self.model:
+            self.model['template_version'] = 0
+        self.__update_model_to_current()
+
         return {"model": self.model}
 
 
