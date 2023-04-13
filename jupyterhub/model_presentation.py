@@ -193,14 +193,6 @@ class StochSSModel(StochSSBase):
         '''
         super().__init__()
         self.model = model
-        self.diff = []
-        um_lines = json.dumps(template.update(model), sort_keys=True, indent=4).split("\n")
-        m_lines = json.dumps(model, sort_keys=True, indent=4).split("\n")
-        for i, um_line in enumerate(um_lines):
-            diff = f"{um_line.ljust(65)} | "
-            if m_lines[i] == um_line:
-                diff += m_lines[i]
-            self.diff.append(diff)
 
     @classmethod
     def __update_event_assignments(cls, event, param_ids):
