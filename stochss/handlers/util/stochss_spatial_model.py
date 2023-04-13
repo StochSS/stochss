@@ -568,16 +568,26 @@ class StochSSSpatialModel(StochSSBase):
         if len(self.model['domain']['lattices']) == 0:
             return self.__write_presentation_file(presentation, dst)
         # Process file based lattices
-        file_based_types = ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice')
-        for lattice in self.model['domain']['lattices']:
-            if lattice['type'] in file_based_types:
-                entry = self.__get_presentation_file_entry(lattice['filename'], file)
-                lattice['filename'] = entry['pres_path']
-                presentation['files'][lattice['name']] = entry
-                if lattice['subdomainFile'] != "":
-                    sdf_entry = self.__get_presentation_file_entry(lattice['subdomainFile'], file)
-                    lattice['subdomainFile'] = sdf_entry['pres_path']
-                    presentation['files'][f"{lattice['name']}_sdf"] = sdf_entry
+        file_based_types = ('XML Mesh', 'Mesh IO', 'StochSS Domain')
+        for action in self.model['domain']['actions']:
+            if action.type in file_based_types:
+                action_id = hashlib.md5(json.dumps(action, sort_keys=True, indent=4).encode('utf-8')).hexdigest()
+                entry = self.__get_presentation_file_entry(action['filename'], file)
+                action['filename'] = entry['pres_path']
+                presentation['files'][action_id] = entry
+                if action['subdomainFile'] != "":
+                    sdf_entry = self.__get_presentation_file_entry(action['subdomainFile'], file)
+                    action['subdomainFile'] = sdf_entry['pres_path']
+                    presentation['files'][f"{action_id}_sdf"] = sdf_entry
+        # for lattice in self.model['domain']['lattices']:
+        #     if lattice['type'] in file_based_types:
+        #         entry = self.__get_presentation_file_entry(lattice['filename'], file)
+        #         lattice['filename'] = entry['pres_path']
+        #         presentation['files'][lattice['name']] = entry
+        #         if lattice['subdomainFile'] != "":
+        #             sdf_entry = self.__get_presentation_file_entry(lattice['subdomainFile'], file)
+        #             lattice['subdomainFile'] = sdf_entry['pres_path']
+        #             presentation['files'][f"{lattice['name']}_sdf"] = sdf_entry
         return self.__write_presentation_file(presentation, dst)
 
     def __get_presentation_file_entry(self, path, presentation_file):
