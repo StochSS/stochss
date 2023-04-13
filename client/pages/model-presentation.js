@@ -56,6 +56,13 @@ let ModelPresentationPage = PageView.extend({
         if(Object.keys(body.model.domain).includes("particles")) {
           let particles = new Particles(body.model.domain.particles);
           this.model.domain.particles = particles;
+          this.model.domain.actions.forEach((action) => {
+            action.filename = action.filename.split('/').pop();
+            action.subdomainFile = action.subdomainFile.split('/').pop();
+          });
+          this.model.domain.x_lim = body.domainLimits[0];
+          this.model.domain.y_lim = body.domainLimits[1];
+          this.model.domain.z_lim = body.domainLimits[2];
         }
         let domainPlot = Boolean(body.domainPlot) ? body.domainPlot : null;
         this.renderSubviews(false, domainPlot);

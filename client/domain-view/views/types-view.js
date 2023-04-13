@@ -37,6 +37,9 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(Object.keys(this.parent).includes("particles")) {
+      this.getParticleCounts(this.parent.particles);
+    }
     if(this.readOnly) {
       $(this.queryByHook('domain-types-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
@@ -62,6 +65,19 @@ module.exports = View.extend({
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
+  },
+  getParticleCounts: function (particles) {
+    let particleCounts = {};
+    particles.forEach((particle) => {
+      if(particleCounts[particle.type]) {
+        particleCounts[particle.type] += 1;
+      }else{
+        particleCounts[particle.type] = 1;
+      }
+    });
+    this.collection.forEach((type) => {
+      type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
+    });
   },
   handleAddDomainType: function () {
     let name = this.collection.addType();
@@ -135,17 +151,7 @@ module.exports = View.extend({
     });
   },
   updateParticleCounts: function (particles) {
-    let particleCounts = {};
-    particles.forEach((particle) => {
-      if(particleCounts[particle.type]) {
-        particleCounts[particle.type] += 1;
-      }else{
-        particleCounts[particle.type] = 1;
-      }
-    });
-    this.collection.forEach((type) => {
-      type.numParticles = particleCounts[type.typeID] ? particleCounts[type.typeID] : 0;
-    });
+    this.getParticleCounts(particles);
     $(this.queryByHook('unassigned-type-count')).text(this.collection.models[0].numParticles);
     this.renderEditTypeView();
     this.renderViewTypeView();
