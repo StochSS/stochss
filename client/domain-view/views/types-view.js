@@ -37,9 +37,6 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
-    if(Object.keys(this.parent).includes("particles")) {
-      this.getParticleCounts(this.parent.particles);
-    }
     if(this.readOnly) {
       $(this.queryByHook('domain-types-edit-tab')).addClass("disabled");
       $(".nav .disabled>a").on("click", function(e) {
