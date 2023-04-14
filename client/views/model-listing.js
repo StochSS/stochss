@@ -46,7 +46,7 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     let parentPath = path.join(path.dirname(this.model.directory), "WorkflowGroup1.wkgp");
     let queryString = "?path=" + this.model.directory + "&parentPath=" + parentPath;
-    let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
+    let endpoint = path.join(app.getBasePath(), 'stochss/workflow-selection') + queryString;
     $(this.queryByHook(this.model.elementID + "-jupyter-notebook")).prop("href", endpoint);
     if(!this.model.annotation){
       $(this.queryByHook(this.model.elementID + '-notes-btn')).text('Add Notes')
@@ -116,7 +116,7 @@ module.exports = View.extend({
             document.querySelector("#errorModal").remove();
           }
           let title = "Model Errors Detected";
-          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory + '&validate';
+          let endpoint = path.join(app.getBasePath(), "stochss/model-editor") + '?path=' + model.directory + '&validate';
           let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
           $(modals.errorHtml(title, message)).modal();
         }

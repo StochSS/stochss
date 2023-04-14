@@ -93,7 +93,7 @@ let WorkflowManager = PageView.extend({
   clickEditModelHandler: function (e) {
     this.handleSaveWorkflow(_.bind(function () {
       let queryStr = "?path=" + this.model.model;
-      let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+      let endpoint = path.join(app.getBasePath(), "stochss/model-editor") + queryStr;
       window.location.href = endpoint;
     }, this));
   },
@@ -114,7 +114,7 @@ let WorkflowManager = PageView.extend({
         error: (err, response, body) => {
           this.handleSaveWorkflow(() => {
             this.saved();
-            let contEndpoint = `${path.join(app.getBasePath(), 'stochss/workflow/edit')}${window.location.search}`;
+            let contEndpoint = `${path.join(app.getBasePath(), 'stochss/workflow-manager')}${window.location.search}`;
             let endpoint = `${path.join(app.getBasePath(), 'stochss/settings')}?continue=${contEndpoint}`;
             window.location.href = endpoint;
           });
@@ -175,12 +175,12 @@ let WorkflowManager = PageView.extend({
     if(this.model.activeJob.model.directory){
       this.handleSaveWorkflow(_.bind(function () {
         let queryStr = "?path=" + this.projectPath;
-        let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+        let endpoint = path.join(app.getBasePath(), "stochss/project-manager") + queryStr;
         window.location.href = endpoint;
       }, this));
     }else{
       let queryStr = "?path=" + this.projectPath;
-      let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+      let endpoint = path.join(app.getBasePath(), "stochss/project-manager") + queryStr;
       window.location.href = endpoint;
     }
   },

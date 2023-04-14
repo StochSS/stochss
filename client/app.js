@@ -175,7 +175,7 @@ let newWorkflow = (parent, mdlPath, isSpatial, type) => {
     let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
     getXHR(endpoint, {
       success: (err, response, body) => {
-        window.location.href = `${path.join(getBasePath(), "stochss/workflow/edit")}?path=${body.path}`;
+        window.location.href = `${path.join(getBasePath(), "stochss/workflow-manager")}?path=${body.path}`;
       }
     });
   });

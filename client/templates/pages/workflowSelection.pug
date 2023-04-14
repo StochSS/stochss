@@ -7,7 +7,7 @@ section.page
       nav(aria-label="breadcrumb")
         ol.breadcrumb
           li.breadcrumb-item
-            a(href="stochss/project/manager?path="+this.projectPath data-hook="project-breadcrumb")=this.projectName
+            a(href="stochss/project-manager?path="+this.projectPath data-hook="project-breadcrumb")=this.projectName
           
   div.alert-danger.hidden(data-hook="invalid-model-message")
     | You cannot create a workflow if your model does not have at least one <b>Variable</b> and one <b>Reaction</b>, <b>Event</b>, or <b>Rule</b>

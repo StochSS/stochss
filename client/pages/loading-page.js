@@ -108,17 +108,17 @@ let LoadingPage = PageView.extend({
             errorCB(err, response, body);
           }else if(body.done) {
             if(body.file_path.endsWith(".proj")){
-              this.openStochSSPage("stochss/project/manager", body.file_path);
+              this.openStochSSPage("stochss/project-manager", body.file_path);
             }else if(body.file_path.endsWith(".wkfl")){
-              this.openStochSSPage("stochss/workflow/edit", body.file_path);
+              this.openStochSSPage("stochss/workflow-manager", body.file_path);
             }else if(body.file_path.endsWith(".mdl")){
-              this.openStochSSPage("stochss/models/edit", body.file_path);
+              this.openStochSSPage("stochss/model-editor", body.file_path);
             }else if(body.file_path.endsWith(".domn")){
-              this.openStochSSPage("stochss/domain/edit", body.file_path);
+              this.openStochSSPage("stochss/domain-editor", body.file_path);
             }else if(body.file_path.endsWith(".ipynb")){
               this.openNotebookFile(body.file_path);
             }else{
-              this.openStochSSPage('stochss/files');
+              this.openStochSSPage('stochss/browser');
             }
           }else{
             this.getUploadResponse();
@@ -155,12 +155,12 @@ let LoadingPage = PageView.extend({
   },
   updateProjectFormat: function (filePath) {
     let message = `You can update the format of any project and its workflows by opening the project and clicking yes when prompted to update the format.`;
-    let identifier = "stochss/project/manager"
+    let identifier = "stochss/project-manager"
     this.updateFormat(filePath, message, "project", identifier);
   },
   updateWorkflowFormat: function (filePath) {
     let message = `You can update the format of any workflow by opening the workflow and clicking yes when prompted to update the format.`;
-    let identifier = "stochss/workflow/edit"
+    let identifier = "stochss/workflow-manager"
     this.updateFormat(filePath, message, "workflow", identifier);
   },
   uploadFileFromLink: function (filePath, overwrite) {

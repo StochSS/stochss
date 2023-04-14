@@ -85,7 +85,7 @@ let usersHomePage = PageView.extend({
         app.getXHR(endpoint, {
           success: function (err, response, body) {
             let projectQS = "?path="+body.path;
-            let projectEP = path.join(app.getBasePath(), "stochss/project/manager")+projectQS;
+            let projectEP = path.join(app.getBasePath(), "stochss/project-manager")+projectQS;
             self.navToPage(projectEP);
           },
           error: function (err, response, body) {
@@ -99,7 +99,7 @@ let usersHomePage = PageView.extend({
     });
   },
   handleBrowseProjectsClick: function (e) {
-    let endpoint = path.join(app.getBasePath(), "stochss/files#project-browser-section")
+    let endpoint = path.join(app.getBasePath(), "stochss/browser#project-browser-section")
     this.navToPage(endpoint)
   },
   handleQuickstartClick: function (e) {

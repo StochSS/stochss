@@ -84,7 +84,7 @@ module.exports = Model.extend({
       deps: ["directory"],
       fn: function () {
         let queryStr = "?path=" + this.directory;
-        return path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+        return path.join(app.getBasePath(), "stochss/model-editor") + queryStr;
       }
     }
   },

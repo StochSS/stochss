@@ -137,7 +137,7 @@ let ProjectManager = PageView.extend({
     });
   },
   addModel: function (parentPath, modelName, message) {
-    var endpoint = path.join(app.getBasePath(), "stochss/models/edit");
+    var endpoint = path.join(app.getBasePath(), "stochss/model-editor");
     if(parentPath.endsWith(".proj")) {
       let queryString = "?path=" + parentPath + "&mdlFile=" + modelName;
       let newMdlEP = path.join(app.getApiPath(), "project/new-model") + queryString;
@@ -294,7 +294,7 @@ let ProjectManager = PageView.extend({
         if(type === "Jupyter Notebook") {
           let parentPath = path.join(path.dirname(mdl.directory), "WorkflowGroup1.wkgp");
           let queryString = "?path=" + mdl.directory + "&parentPath=" + parentPath;
-          let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
+          let endpoint = path.join(app.getBasePath(), 'stochss/workflow-selection') + queryString;
           window.location.href = endpoint;
         }else {
           app.newWorkflow(self, mdl.directory, mdl.is_spatial, type);

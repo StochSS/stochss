@@ -88,7 +88,7 @@ module.exports = View.extend({
     }else if(this.domainPath) {
       queryStr += `&domainPath=${this.domainPath}`;
     }
-    let endpoint = path.join(app.getBasePath(), "stochss/domain/edit") + queryStr;
+    let endpoint = path.join(app.getBasePath(), "stochss/domain-editor") + queryStr;
     window.location.href = endpoint;
   },
   handleModeSwitch: function (e) {

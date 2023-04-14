@@ -46,7 +46,7 @@ module.exports = View.extend({
     let links = [];
     this.model.model.refLinks.forEach((link) => {
       links.push(
-        `<a class="text-break" href='stochss/workflow/edit?path=${link.path}&type=none'>${link.name}</a>`
+        `<a class="text-break" href='stochss/workflow-manager?path=${link.path}&type=none'>${link.name}</a>`
       );
     });
     this.htmlLinks = links.join('')
@@ -55,7 +55,7 @@ module.exports = View.extend({
     View.prototype.render.apply(this, arguments);
     let parentPath = path.dirname(this.model.model.directory);
     let queryString = "?path=" + this.model.model.directory + "&parentPath=" + parentPath;
-    let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
+    let endpoint = path.join(app.getBasePath(), 'stochss/workflow-selection') + queryString;
     $(this.queryByHook(this.model.elementID + "-jupyter-notebook")).prop("href", endpoint);
     this.renderWorkflowCollection();
     if(this.htmlLinks) {
@@ -112,7 +112,7 @@ module.exports = View.extend({
             document.querySelector("#errorModal").remove();
           }
           let title = "Model Errors Detected";
-          let endpoint = path.join(app.getBasePath(), "stochss/models/edit") + '?path=' + model.directory + '&validate';
+          let endpoint = path.join(app.getBasePath(), "stochss/model-editor") + '?path=' + model.directory + '&validate';
           let message = 'Errors were detected in you model <a href="' + endpoint + '">click here to fix your model<a/>';
           $(modals.errorHtml(title, message)).modal();
         }

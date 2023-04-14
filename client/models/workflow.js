@@ -65,7 +65,7 @@ module.exports = Model.extend({
           return path.join(app.getBasePath(), "notebooks", this.directory)
         }
         let queryStr = "?path=" + this.directory + "&type=none"
-        return path.join(app.getBasePath(), "stochss/workflow/edit") + queryStr
+        return path.join(app.getBasePath(), "stochss/workflow-manager") + queryStr
       }
     }
   }

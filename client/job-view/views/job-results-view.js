@@ -241,7 +241,7 @@ module.exports = View.extend({
       app.getXHR(endpoint, {
         success: (err, response, body) => {
           if(cb === null) {
-            let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${body.path}`;
+            let editEP = `${path.join(app.getBasePath(), "stochss/model-editor")}?path=${body.path}`;
             window.location.href = editEP;
           }else {
             cb(err, response, body);
@@ -250,7 +250,7 @@ module.exports = View.extend({
       });
     }else if(cb === null){
       let mdPath = this.model.exportLinks[round];
-      let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${mdPath}`;
+      let editEP = `${path.join(app.getBasePath(), "stochss/model-editor")}?path=${mdPath}`;
       window.location.href = editEP;
     }else {
       cb();
@@ -642,7 +642,7 @@ module.exports = View.extend({
             document.querySelector("#errorModal").remove();
           }
           let title = "Model Errors Detected";
-          let endpoint = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${model.directory}&validate`;
+          let endpoint = `${path.join(app.getBasePath(), "stochss/model-editor")}?path=${model.directory}&validate`;
           let message = `Errors were detected in you model <a href="${endpoint}">click here to fix your model<a/>`;
           $(modals.errorHtml(title, message)).modal();
         }

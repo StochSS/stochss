@@ -91,7 +91,7 @@ let ModelEditor = PageView.extend({
   clickReturnToProjectHandler: function () {
     this.saveModel((e) => {
       let queryStr = `?path=${this.projectPath}`;
-      let endpoint = path.join(app.getBasePath(), "stochss/project/manager") + queryStr;
+      let endpoint = path.join(app.getBasePath(), "stochss/project-manager") + queryStr;
       window.location.href = endpoint;
     });
   },
@@ -285,7 +285,7 @@ let ModelEditor = PageView.extend({
         let parentPath = path.join(path.dirname(this.model.directory), wkgp);
         queryString += `&parentPath=${parentPath}`;
       }
-      window.location.href = path.join(app.getBasePath(), "stochss/workflow/selection") + queryString;
+      window.location.href = path.join(app.getBasePath(), "stochss/workflow-selection") + queryString;
     });
   },
   openDomainPlot: function () {
@@ -363,7 +363,7 @@ let ModelEditor = PageView.extend({
     let infLink = this.model.refLinks.filter((refLink) => { return refLink.job; })[0] || null;
     if(infLink) {
       $(this.queryByHook('return-to-inf-btn')).css("display", "inline-block");
-      $(this.queryByHook('return-to-inf-btn')).prop("href", `stochss/workflow/edit?path=${infLink.path}&type=none`);
+      $(this.queryByHook('return-to-inf-btn')).prop("href", `stochss/workflow-manager?path=${infLink.path}&type=none`);
     }
     this.renderModelView();
     this.modelSettings = new TimespanSettingsView({

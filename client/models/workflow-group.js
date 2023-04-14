@@ -53,7 +53,7 @@ module.exports = State.extend({
       fn: function () {
         if(this.model.directory){
           let queryStr = "?path=" + this.model.directory;
-          return path.join(app.getBasePath(), "stochss/models/edit") + queryStr;
+          return path.join(app.getBasePath(), "stochss/model-editor") + queryStr;
         }
         return null
       }

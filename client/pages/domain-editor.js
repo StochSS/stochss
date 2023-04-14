@@ -99,8 +99,8 @@ let DomainEditor = PageView.extend({
   },
   getBreadcrumbData: function () {
     let data = {"project":null, "model":null};
-    var projEP = "stochss/project/manager?path="
-    var mdlEP = "stochss/models/edit?path="
+    var projEP = "stochss/project-manager?path="
+    var mdlEP = "stochss/model-editor?path="
     if(this.model) {
       data.model = {"name":this.model.name, "href":mdlEP + this.model.directory};
       let dirname = path.dirname(this.model.directory);

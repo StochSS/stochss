@@ -67,7 +67,7 @@ module.exports = Model.extend({
   	open: {
   	  deps: ["directory"],
   	  fn: function () {
-  	  	return path.join(app.getBasePath(), "stochss/project/manager")+"?path="+this.directory
+  	  	return path.join(app.getBasePath(), "stochss/project-manager")+"?path="+this.directory
   	  }
   	}
   }
