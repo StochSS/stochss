@@ -25,6 +25,7 @@ from .models import *
 from .workflows import *
 from .project import *
 from .log import init_log
+from .html_page_handlers import HTMLPageHandler
 
 def get_page_handlers(route_start):
     '''
@@ -39,18 +40,6 @@ def get_page_handlers(route_start):
         ##############################################################################
         # Page Handlers & API Handlers                                               #
         ##############################################################################
-        (r'/stochss/home\/?', UserHomeHandler),
-        (r'/stochss/quickstart\/?', QuickstartHandler),
-        (r'/stochss/example-library\/?', ExampleLibraryHandler),
-        (r'/stochss/files\/?$', ModelBrowserHandler),
-        (r'/stochss/models/edit\/?', ModelEditorHandler),
-        (r'/stochss/domain/edit\/?', DomainEditorHandler),
-        (r'/stochss/workflow/selection\/?', WorkflowSelectionHandler),
-        (r'/stochss/workflow/edit\/?', WorkflowEditorHandler),
-        (r'/stochss/project/manager\/?', ProjectManagerHandler),
-        (r'/stochss/loading-page\/?', LoadingPageHandler),
-        (r'/stochss/multiple-plots\/?', MultiplePlotsHandler),
-        (r'/stochss/settings\/?', UserSettingsHandler),
         (r'/stochss/api/user-logs\/?', UserLogsAPIHandler),
         (r'/stochss/api/clear-user-logs\/?', ClearUserLogsAPIHandler),
         (r'/stochss/api/load-user-settings\/?', LoadUserSettings),
@@ -133,7 +122,11 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/preview-obs-data\/?", PreviewOBSDataAPIHandler),
         (r"/stochss/api/job/presentation\/?", JobPresentationAPIHandler),
         (r"/stochss/api/job/csv\/?", DownloadCSVZipAPIHandler),
-        (r"/stochss/api/job/export-inferred-model\/?", ExportInferredModelAPIHandler)
+        (r"/stochss/api/job/export-inferred-model\/?", ExportInferredModelAPIHandler),
+        ##############################################################################
+        # HTML Page Handlers                                                         #
+        ##############################################################################
+        (r'/stochss/(.+)\/?', HTMLPageHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers
