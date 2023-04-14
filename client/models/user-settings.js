@@ -24,7 +24,7 @@ let Model = require('ampersand-model');
 
 module.exports = Model.extend({
   url: function () {
-    return path.join(app.getApiPath(), "load-user-settings");
+    return path.join(app.getLoadPath(), "settings");
   },
   props: {
     awsAccessKeyID: 'string',

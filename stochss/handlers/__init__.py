@@ -26,6 +26,7 @@ from .workflows import *
 from .project import *
 from .log import init_log
 from .html_page_handlers import HTMLPageHandler
+from .page_load_handlers import PageLoadHandler
 
 def get_page_handlers(route_start):
     '''
@@ -126,7 +127,8 @@ def get_page_handlers(route_start):
         ##############################################################################
         # HTML Page Handlers                                                         #
         ##############################################################################
-        (r'/stochss/(.+)\/?', HTMLPageHandler)
+        (r'/stochss/(.+)\/?', HTMLPageHandler),
+        (r'/stochss/load/(.+)\/', PageLoadHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers

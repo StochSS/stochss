@@ -25,6 +25,7 @@ let modals = require('./modals');
 
 let routePrefix = 'stochss';
 let apiPrefix =  path.join(routePrefix, 'api');
+let loadPrefix = path.join(routePrefix, 'load');
 
 let BrowserDetect = {
   dataBrowser: [
@@ -89,6 +90,7 @@ let getBasePath = () => {
     return '/'
   }
 }
+let getLoadPath = () => path.join(getBasePath(), loadPrefix);
 let getBrowser = () => {
   BrowserDetect.init();
   return {"name":BrowserDetect.browser,"version":BrowserDetect.version};
@@ -305,6 +307,7 @@ module.exports = {
   documentSetup: documentSetup,
   getApiPath: getApiPath,
   getBasePath: getBasePath,
+  getLoadPath: getLoadPath,
   getBrowser: getBrowser,
   getXHR: getXHR,
   maintenance: maintenance,
