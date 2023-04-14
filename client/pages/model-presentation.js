@@ -53,7 +53,7 @@ let ModelPresentationPage = PageView.extend({
     app.getXHR(endpoint, {
       success: (err, response, body) => {
         this.model.set(body.model);
-        if(Object.keys(body.model.domain).includes("particles")) {
+        if(this.model.is_spatial && Object.keys(body.model.domain).includes("particles")) {
           let particles = new Particles(body.model.domain.particles);
           this.model.domain.particles = particles;
         }
