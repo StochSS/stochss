@@ -127,8 +127,8 @@ def get_page_handlers(route_start):
         ##############################################################################
         # HTML Page Handlers                                                         #
         ##############################################################################
-        (r'/stochss/(.+)\/?', HTMLPageHandler),
-        (r'/stochss/load/(.+)\/', PageLoadHandler)
+        (r'/stochss/load/(.+)\/?', PageLoadHandler),
+        (r'/stochss/(.+)\/?', HTMLPageHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers

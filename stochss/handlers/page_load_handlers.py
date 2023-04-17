@@ -15,10 +15,12 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
+import traceback
 from tornado import web
 from notebook.base.handlers import APIHandler
 
 from stochss.utilities.user_system import UserSystem
+from stochss.utilities.server_errors import APIError, report_error
 
 # pylint: disable=abstract-method
 class PageLoadHandler(APIHandler):
@@ -46,9 +48,16 @@ class PageLoadHandler(APIHandler):
         :param page_key: Key indicating the desired page to load.
         :type page_key: str
         '''
-        self.set_header("Content-Type", "application/json")
-        kwargs = self.request.get_query_argument
-        print(kwargs, type(kwargs))
-        response = self.PAGE_MAP[page_key].page_load(**kwargs)
-        self.write(response)
+        try:
+            self.set_header("Content-Type", "application/json")
+            kwargs = self.request.query_arguments
+            print(kwargs, type(kwargs))
+            response = self.PAGE_MAP[page_key].page_load(**kwargs)
+            self.write(response)
+        except Exception as err: # pylint: disable=broad-except
+            system = UserSystem()
+            error = APIError(
+                404, "Page Contents Failed to Load", str(err), traceback.format_exc()
+            )
+            report_error(self, system.log, error)
         self.finish()

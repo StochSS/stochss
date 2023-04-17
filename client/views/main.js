@@ -46,7 +46,7 @@ module.exports = View.extend({
     'click [data-hook=registration-link-button]' : 'handleRegistrationLinkClick',
     'click [data-hook=user-logs-collapse]' : 'collapseExpandLogs',
     'click [data-hook=clear-user-logs]' : 'clearUserLogs',
-    'click [data-hook=close-user-logs]' : 'closeUserLogs',
+    'click [data-hook=close-user-logs]' : 'closeUserLogs'
   },
   initialize: function () {
     this.listenTo(App, 'page', this.handleNewPage);
@@ -68,11 +68,13 @@ module.exports = View.extend({
     if(app.getBasePath() === "/") {
       $("#presentation-nav-link").css("display", "none");
     }
-    this.setupUserLogs();
-    let endpoint = path.join(app.getApiPath(), "load-user-settings");
+    let endpoint = `${path.join(app.getLoadPath(), "settings")}?load_for=menu`;
     app.getXHR(endpoint, {
       always: (err, response, body) => {
-        if(!body.settings.userLogs) {
+        this.setupUserLogs({logs: body.logs});
+        if(body.settings.userLogs) {
+          this.updateUserLogs();
+        }else {
           this.closeUserLogs();
         }
       }
@@ -108,7 +110,7 @@ module.exports = View.extend({
     let endpoint = path.join(app.getApiPath(), "clear-user-logs");
     app.getXHR(endpoint, {
       success: (err, response, body) => {
-        this.setupUserLogs({getLogs: false});
+        this.setupUserLogs();
       }
     });
   },
@@ -210,20 +212,20 @@ module.exports = View.extend({
   navigate: function (page) {
     window.location = url;
   },
-  setupUserLogs: function ({getLogs = true}={}) {
+  setupUserLogs: function ({logs=null}={}) {
     let message = app.getBasePath() === "/" ? "Welcome to StochSS!" : "Welcome to StochSS Live!";
     $("#user-logs").html(message);
     this.logBlock = [];
     this.logs = [];
+    if(logs !== null) {
+      this.addNewLogs(logs);
+    }
     this.scrolled = false;
     this.scrollCount = 0;
-    if(getLogs) {
-      this.getUserLogs();
-      $("#user-logs").on("mousewheel", (e) => {
-        this.scrolled = true;
-        this.scrollCount = 0;
-      });
-    }
+    $("#user-logs").on("mousewheel", (e) => {
+      this.scrolled = true;
+      this.scrollCount = 0;
+    });
   },
   updateUserLogs: function () {
     setTimeout(_.bind(this.getUserLogs, this), 1000);

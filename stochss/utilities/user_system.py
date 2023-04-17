@@ -18,16 +18,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import json
 import shutil
+import logging
+
+from tornado.log import LogFormatter
 
 class UserSystem:
     ''' Manager the users system state. '''
     HOME_DIRECTORY = os.path.expanduser("~")
-    AWS_DIRECTORY = os.path.join(HOME_DIRECTORY, ".system/aws")
-    LOG_FILE = os.path.join(HOME_DIRECTORY, ".system/logs.txt")
-    SETTINGS_FILE = os.path.join(HOME_DIRECTORY, ".system/settings.json")
+    AWS_DIRECTORY = os.path.join(HOME_DIRECTORY, ".stochss-system/aws")
+    LOG_FILE = os.path.join(HOME_DIRECTORY, ".stochss-system/logs.txt")
+    SETTINGS_FILE = os.path.join(HOME_DIRECTORY, ".stochss-system/settings.json")
 
-    def __init__(self):
-        self.__update_to_current()
+    def __init__(self, logger_kw=None, init_logs=True):
+        if logger_kw is None:
+            logger_kw = {}
+
+        if not os.path.exists(self.AWS_DIRECTORY):
+            self.__update_to_current()
+        if init_logs:
+            self.log = self.initialize_logger()
+            self.status_log = logging.getLogger("JobStatus")
+
+    def __get_file_handler(self, file_path=None, log_level="info"):
+
+        if file_path is None:
+            file_path = self.LOG_FILE
+
+        handler = logging.handlers.RotatingFileHandler(file_path, maxBytes=200000, backupCount=5)
+        handler.namer = lambda name: name.replace(".txt", ".txt.bak")
+        handler.setFormatter(LogFormatter(fmt="%(asctime)s$ %(message)s", datefmt="%b %d, %Y  %I:%M %p UTC"))
+        handler.setLevel(getattr(logging, log_level.upper(), None))
+        return handler
 
     def __load_settings(self):
         with open(self.SETTINGS_FILE, "r", encoding="utf-8") as settings_fd:
@@ -72,7 +93,6 @@ class UserSystem:
             logs.extend(log_file_fd.read().strip().split("\n"))
         return logs
 
-
     def __update_to_current(self):
         # Ensure that the aws directory always exists in the new location.
         if not os.path.exists(self.AWS_DIRECTORY):
@@ -96,22 +116,62 @@ class UserSystem:
             else:
                 open(self.LOG_FILE, "w", encoding="utf-8").close() # pylint: disable=consider-using-with
 
+    def initialize_logger(self, use_for="system", log_path=None):
+        '''
+        Initialize the StochSS logger.
+
+        :param use_for: Indicates what the logger will be used for.
+                        Options: 'system', 'well-mixed job', or 'spatial-job'.
+        :type use_for: str
+        '''
+        log = logging.getLogger()
+        log.setLevel(logging.INFO)
+
+        stochss_log = log.getChild("StochSS")
+        stochss_sh = logging.StreamHandler()
+        stochss_sh.setFormatter(LogFormatter(
+            fmt="%(color)s[%(levelname)1.1s %(asctime)s StochSS %(filenam)s:%(lineno)d]%(end_color)s %(message)s",
+            datefmt="%H:%M:%S", color=True
+        ))
+        stochss_sh.setLevel(logging.WARNING)
+        stochss_log.addHandler(stochss_sh)
+
+        gpy_log = log.getChild("GillesPy2")
+        gpy_log.propagate = True
+        spy_log = log.getChild("SpatialPy")
+        spy_log.propagate = True
+
+        system_fh = self.__get_file_handler()
+        if use_for == "system":
+            log.addHandler(system_fh)
+        else:
+            job_status_log = log.getChild("JobStatus")
+            job_status_log.addHandler(system_fh)
+            job_status_log.setLevel(logging.INFO)
+            job_status_log.propagate = False
+
+            job_fh = self.__get_file_handler(file_path=log_path, log_level="warning")
+            log.addHandler(job_fh)
+        return log
+
     @classmethod
     def page_load(cls, load_for="settings"):
         '''
         Load the contents of the desired page.
 
-        :param load_for: Indicates which page we are loading for. Options 'settings' or 'menu'.
+        :param load_for: Indicates which page we are loading for. Options: 'settings' or 'menu'.
         :type load_for: str
 
         :returns: The required contents of the page.
         :rtype: dict
         '''
-        self = cls()
+        self = cls(init_logs=False)
         settings = self.__load_settings()
-        instances = self.__load_supported_aws_instances()
-        response = {'settings': settings, 'instances': instances}
+        response = {'settings': settings}
         if load_for == "menu":
             logs = self.__load_system_logs()
             response['logs'] = logs
+        else:
+            instances = self.__load_supported_aws_instances()
+            response['instances'] = instances
         return response

@@ -29,11 +29,13 @@ let InputView = require('../views/input');
 let SelectView = require('ampersand-select-view');
 // templates
 let template = require('../templates/pages/userSettings.pug');
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
+let loadingTemplate = require('../templates/pages/loadingPage.pug');
 
 import initPage from './page.js';
 
 let userSettings = PageView.extend({
-  template: template,
+  template: loadingTemplate,
   events: {
     'change [data-hook=user-logs]' : 'toggleUserLogs',
     'change [data-target=aws-credentials]' : 'toggleAWSComputeNodeSection',
@@ -51,32 +53,52 @@ let userSettings = PageView.extend({
     this.path = urlParams.has('continue') ? urlParams.get('continue') : null;
     this.model = new Settings();
     this.secretKey = null;
-    app.getXHR(this.model.url(), {
-      success: (err, response, body) => {
-        this.model.set(body.settings);
-        this.model.modelLoaded = true;
-        this.instances = body.instances;
-        if(this.model.headNode === "") {
-          this.awsType = "";
-          this.awsSize = "";
-        }else{
-          let data = this.model.headNode.split('.')
-          this.awsType = data[0];
-          this.awsSize = data[1];
-          this.renderAWSInstanceSizesView();
-        }
-        $(this.queryByHook('user-logs')).prop('checked', this.model.userLogs);
-        this.renderAWSInstanceTypesView();
-        this.toggleAWSComputeNodeSection();
-        this.refreshAWSStatus();
-      }
-    });
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
+    this.homeLink = "stochss/home";
+    $(this.queryByHook("loading-header")).html(`Loading User Settings`);
+    $(this.queryByHook("loading-target")).css("display", "none");
+    $(this.queryByHook("loading-spinner")).css("display", "block");
+    $(this.queryByHook("loading-message")).css("display", "none");
+    app.getXHR(this.model.url(), {
+      success: (err, response, body) => {
+        this.renderContent(body);
+      },
+      error: (err, response, body) => {
+        this.renderError(response, body);
+      }
+    });
+  },
+  renderContent: function (body) {
+    this.template = template;
+    PageView.prototype.render.apply(this, arguments);
+    this.model.set(body.settings);
+    this.model.modelLoaded = true;
+    this.instances = body.instances;
+    if(this.model.headNode === "") {
+      this.awsType = "";
+      this.awsSize = "";
+    }else{
+      let data = this.model.headNode.split('.');
+      this.awsType = data[0];
+      this.awsSize = data[1];
+      this.renderAWSInstanceSizesView();
+    }
+    $(this.queryByHook('user-logs')).prop('checked', this.model.userLogs);
+    this.renderAWSInstanceTypesView();
+    this.toggleAWSComputeNodeSection();
+    this.refreshAWSStatus();
     if(this.path !== null) {
       $(this.queryByHook('aws-config-msg')).css('display', 'block');
     }
+  },
+  renderError: function (response, body) {
+    this.template = errorTemplate;
+    this.logoPath = "/hub/static/stochss-logo.png";
+    this.title = `${response.statusCode} ${body.reason}`;
+    this.errMsg = body.message;
+    PageView.prototype.render.apply(this, arguments);
   },
   completeAction: function () {
     $(this.queryByHook("usa-in-progress")).css("display", "none");
