@@ -162,8 +162,8 @@ module.exports = View.extend({
   },
   getUserLogs: function () {
     if(this.ulClosed) { return; }
-    let queryStr = `?logNum=${this.logs.length}`;
-    let endpoint = path.join(app.getApiPath(), "user-logs") + queryStr;
+    let queryStr = `?index=${this.logs.length}`;
+    let endpoint = path.join(app.getLoadPath(), "logs") + queryStr;
     app.getXHR(endpoint, {
       success: (err, response, body) => {
         if(body) {

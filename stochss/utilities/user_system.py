@@ -170,6 +170,19 @@ class UserSystem:
         return log
 
     @classmethod
+    def load_logs(cls, index=0):
+        '''
+        Load all new logs from the user log file.
+
+        :param index: Starting index for the new logs
+        :type index: int
+
+        :returns: The new user logs.
+        :rtype: dict
+        '''
+        return {'logs': cls.__load_system_logs(cls)[index:]}
+
+    @classmethod
     def page_load(cls, load_for="settings"):
         '''
         Load the contents of the desired page.
@@ -184,9 +197,7 @@ class UserSystem:
         settings = self.__load_settings()
         response = {'settings': settings}
         if load_for == "menu":
-            logs = self.__load_system_logs()
-            response['logs'] = logs
+            response['logs'] = self.__load_system_logs()
         else:
-            instances = self.__load_supported_aws_instances()
-            response['instances'] = instances
+            response['instances'] = self.__load_supported_aws_instances()
         return response

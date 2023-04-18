@@ -30,21 +30,26 @@ class PageLoadHandler(APIHandler):
         # 'domain-editor': 'stochss-domain-editor.html',
         # 'example-library': 'stochss-example-library.html',
         # 'home': 'stochss-user-home.html',
+        'logs': UserSystem.load_logs,
         # 'loading-page': 'stochss-loading-page.html',
         # 'model-editor': 'stochss-model-editor.html',
         # 'multiple-plots': 'multiple-plots-page.html',
         # 'project-manager': 'stochss-project-manager.html',
         # 'quickstart': 'stochss-quickstart.html',
-        'settings': UserSystem,
+        'settings': UserSystem.page_load,
         # 'workflow-manager': 'stochss-workflow-manager.html',
         # 'workflow-selection': 'stochss-workflow-selection.html'
     }
 
     def __process_query_args(self):
         print(self.request.query_arguments)
-        process_func = { 'str': lambda value: value[0].decode() }
-        arg_types = { 'load_for': 'str' }
+        process_func = {
+            'str': lambda value: value[0].decode(),
+            'int': lambda value: int(value[0].decode())
+        }
+        arg_types = { 'load_for': 'str', 'index': 'int'}
         kwargs = {key: process_func[arg_types[key]](value) for key, value in self.request.query_arguments.items()}
+        print(kwargs)
         return kwargs
 
     @web.authenticated
@@ -58,8 +63,8 @@ class PageLoadHandler(APIHandler):
         try:
             self.set_header("Content-Type", "application/json")
             kwargs = self.__process_query_args()
-            print(kwargs)
-            response = self.PAGE_MAP[page_key].page_load(**kwargs)
+            if page_key in ('logs', 'settings'):
+                response = self.PAGE_MAP[page_key](**kwargs)
             self.write(response)
         except Exception as err: # pylint: disable=broad-except
             system = UserSystem()
