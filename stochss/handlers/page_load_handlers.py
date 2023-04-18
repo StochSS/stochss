@@ -40,6 +40,13 @@ class PageLoadHandler(APIHandler):
         # 'workflow-selection': 'stochss-workflow-selection.html'
     }
 
+    def __process_query_args(self):
+        print(self.request.query_arguments)
+        process_func = { 'str': lambda value: value[0].decode() }
+        arg_types = { 'load_for': 'str' }
+        kwargs = {key: process_func[arg_types[key]](value) for key, value in self.request.query_arguments.items()}
+        return kwargs
+
     @web.authenticated
     async def get(self, page_key):
         '''
@@ -50,8 +57,8 @@ class PageLoadHandler(APIHandler):
         '''
         try:
             self.set_header("Content-Type", "application/json")
-            kwargs = self.request.query_arguments
-            print(kwargs, type(kwargs))
+            kwargs = self.__process_query_args()
+            print(kwargs)
             response = self.PAGE_MAP[page_key].page_load(**kwargs)
             self.write(response)
         except Exception as err: # pylint: disable=broad-except

@@ -23,7 +23,15 @@ import logging
 from tornado.log import LogFormatter
 
 class UserSystem:
-    ''' Manager the users system state. '''
+    '''
+    Manager the users system state.
+
+    :param logger_kw: Keyword arguments used to initialize the logs file handler.
+    :type logger_kw: dict
+
+    :param init_logs: Whether or not to initialize the logs with the object.
+    :type init_logs: bool
+    '''
     HOME_DIRECTORY = os.path.expanduser("~")
     AWS_DIRECTORY = os.path.join(HOME_DIRECTORY, ".stochss-system/aws")
     LOG_FILE = os.path.join(HOME_DIRECTORY, ".stochss-system/logs.txt")
@@ -36,11 +44,10 @@ class UserSystem:
         if not os.path.exists(self.AWS_DIRECTORY):
             self.__update_to_current()
         if init_logs:
-            self.log = self.initialize_logger()
+            self.log = self.initialize_logger(**logger_kw)
             self.status_log = logging.getLogger("JobStatus")
 
     def __get_file_handler(self, file_path=None, log_level="info"):
-
         if file_path is None:
             file_path = self.LOG_FILE
 
@@ -99,7 +106,9 @@ class UserSystem:
             os.makedirs(self.AWS_DIRECTORY)
             src_path = os.path.join(self.HOME_DIRECTORY, ".aws")
             if os.path.exists(src_path):
-                _ = shutil.move(src_path, self.AWS_DIRECTORY)
+                for file in os.listdir(src_path):
+                    os.rename(os.path.join(src_path, file), os.path.join(self.AWS_DIRECTORY, file))
+                shutil.rmtree(src_path)
         # Ensure that the system settings file always exists in the new location.
         if not os.path.exists(self.SETTINGS_FILE):
             src_path = os.path.join(self.HOME_DIRECTORY, ".user-settings.json")
@@ -123,6 +132,12 @@ class UserSystem:
         :param use_for: Indicates what the logger will be used for.
                         Options: 'system', 'well-mixed job', or 'spatial-job'.
         :type use_for: str
+
+        :param log_path: Path to the log file. Defaults to the user log file.
+        :type log_path: str
+
+        :returns: The root logger.
+        :rtype: logging.Logger
         '''
         log = logging.getLogger()
         log.setLevel(logging.INFO)
