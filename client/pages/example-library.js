@@ -23,11 +23,13 @@ var app = require('../app');
 let PageView = require('./base');
 //templates
 let template = require('../templates/pages/exampleLibrary.pug');
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
+let loadingTemplate = require('../templates/pages/loadingPage.pug');
 
 import initPage from './page.js';
 
 let exampleLibrary = PageView.extend({
-  template: template,
+  template: loadingTemplate,
   events: {
   	'click [data-hook=collapse-well-mixed]' : 'changeCollapseButtonText',
   	'click [data-hook=collapse-spatial]' : 'changeCollapseButtonText'
@@ -37,19 +39,32 @@ let exampleLibrary = PageView.extend({
   },
   render: function (attrs, options) {
   	PageView.prototype.render.apply(this, arguments);
-  	this.getExampleLibrary();
+    this.homeLink = "stochss/home";
+    $(this.queryByHook("loading-header")).html(`Loading User Settings`);
+    $(this.queryByHook("loading-target")).css("display", "none");
+    $(this.queryByHook("loading-spinner")).css("display", "block");
+    $(this.queryByHook("loading-message")).css("display", "none");
+  	let endpoint = path.join(app.getLoadPath(), "example-library");
+    app.getXHR(endpoint, {
+      success: (err, response, body) => { this.renderContent(body); },
+      error: (err, response, body) => { this.renderError(response, body); }
+    });
+  },
+  renderContent: function (body) {
+    this.template = template;
+    PageView.prototype.render.apply(this, arguments);
+    $(this.queryByHook('well-mixed-examples')).html(body.wellMixed);
+    $(this.queryByHook('spatial-examples')).html(body.spatial);
+  },
+  renderError: function (response, body) {
+    this.template = errorTemplate;
+    this.logoPath = "/hub/static/stochss-logo.png";
+    this.title = `${response.statusCode} ${body.reason}`;
+    this.errMsg = body.message;
+    PageView.prototype.render.apply(this, arguments);
   },
   changeCollapseButtonText: function (e) {
   	app.changeCollapseButtonText(this, e)
-  },
-  getExampleLibrary: function () {
-    let endpoint = path.join(app.getApiPath(), "example-library");
-    app.getXHR(endpoint, {
-      success: (err, response, body) => {
-        $(this.queryByHook('well-mixed-examples')).html(body.wellMixed);
-        $(this.queryByHook('spatial-examples')).html(body.spatial);
-      }
-    });
   }
 });
 

@@ -62,12 +62,8 @@ let userSettings = PageView.extend({
     $(this.queryByHook("loading-spinner")).css("display", "block");
     $(this.queryByHook("loading-message")).css("display", "none");
     app.getXHR(this.model.url(), {
-      success: (err, response, body) => {
-        this.renderContent(body);
-      },
-      error: (err, response, body) => {
-        this.renderError(response, body);
-      }
+      success: (err, response, body) => { this.renderContent(body); },
+      error: (err, response, body) => { this.renderError(response, body); }
     });
   },
   renderContent: function (body) {

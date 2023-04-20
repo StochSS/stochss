@@ -41,9 +41,7 @@ def get_page_handlers(route_start):
         ##############################################################################
         # Page Handlers & API Handlers                                               #
         ##############################################################################
-        (r'/stochss/api/user-logs\/?', UserLogsAPIHandler),
         (r'/stochss/api/clear-user-logs\/?', ClearUserLogsAPIHandler),
-        (r'/stochss/api/load-user-settings\/?', LoadUserSettings),
         (r'/stochss/api/aws/job-config-check\/?', ConfirmAWSConfigHandler),
         (r'/stochss/api/aws/launch-cluster\/?', LaunchAWSClusterHandler),
         (r'/stochss/api/aws/cluster-status\/?', AWSClusterStatusHandler),
@@ -72,7 +70,6 @@ def get_page_handlers(route_start):
         (r"/stochss/api/file/unzip\/?", UnzipFileAPIHandler),
         (r"/stochss/api/notebook/presentation\/?", NotebookPresentationAPIHandler),
         (r"/stochss/api/file/presentations\/?", PresentationListAPIHandler),
-        (r'/stochss/api/example-library\/?', ImportFromLibrary),
         ##############################################################################
         # Model API Handlers                                                         #
         ##############################################################################

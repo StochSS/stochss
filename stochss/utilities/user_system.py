@@ -17,10 +17,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
 import json
+import time
+import copy
 import shutil
 import logging
+import requests
 
 from tornado.log import LogFormatter
+
+from stochss.templates.user_settings import settings_template
+from stochss.templates.example_html import example_section, example_entry
 
 class UserSystem:
     '''
@@ -36,6 +42,7 @@ class UserSystem:
     AWS_DIRECTORY = os.path.join(HOME_DIRECTORY, ".stochss-system/aws")
     LOG_FILE = os.path.join(HOME_DIRECTORY, ".stochss-system/logs.txt")
     SETTINGS_FILE = os.path.join(HOME_DIRECTORY, ".stochss-system/settings.json")
+    EXAMPLE_FILE = os.path.join(HOME_DIRECTORY, ".stochss-system/example-library.json")
 
     def __init__(self, logger_kw=None, init_logs=True):
         if logger_kw is None:
@@ -46,6 +53,68 @@ class UserSystem:
         if init_logs:
             self.log = self.initialize_logger(**logger_kw)
             self.status_log = logging.getLogger("JobStatus")
+
+    def __build_entry_html(self, entry, url_base): # pylint: disable=no-self-use
+        replacements = {
+            '__DESCRIPTION__': entry['description'], '__MOD_DATE__': entry['mod_time'],
+            '__URL_BASE__': url_base, '__OPEN_LINK__': entry['open_link'], '__MOD_LABEL__': 'Last Updated',
+            '__NAV_ALERT__': entry['alert'], '__NAV_STATUS__': ' disabled', '__IMP_TITLE__': 'Import',
+            '__NAV_TITLE__': 'Open', '__IMP_ALERT__': entry['alert']
+        }
+        if entry['alert'] == "success":
+            replacements['__MOD_LABEL__'] = "Added"
+            replacements['__NAV_ALERT__'] = "secondary"
+        elif entry['alert'] == "primary":
+            replacements['__NAV_STATUS__'] = ""
+            replacements['__IMP_TITLE__'] = "Update"
+        elif entry['alert'] == "danger":
+            replacements['__NAV_TITLE__'] = "Error!"
+            replacements['__IMP_ALERT__'] = "success"
+        entry_html = example_entry.replace("__NAME__", entry['name'])
+        for key, value in replacements.items():
+            entry_html = entry_html.replace(key, value)
+        return entry_html
+
+    def __build_example_html(self, exm_data, url_base):
+        # Well Mixed Examples
+        wm_list = []
+        for entry in exm_data['Well-Mixed']:
+            wm_list.append(self.__build_entry_html(entry, url_base))
+        well_mixed = example_section.replace("__CONTENTS__", "<hr class='mx-1'>".join(wm_list))
+        # Spatial Examples
+        s_list = []
+        for entry in exm_data['Spatial']:
+            s_list.append(self.__build_entry_html(entry, url_base))
+        spatial = example_section.replace("__CONTENTS__", "<hr class='mx-1'>".join(s_list))
+        return {'wellMixed': well_mixed, 'spatial': spatial}
+
+    def __get_alert(self, examples, name): # pylint: disable=no-self-use
+        if f"{name}.proj" in examples:
+            return "primary"
+        if name == "SIR Epidemic" and "Example SIR Epidemic.proj" in examples:
+            return "danger"
+        return "success"
+
+    def __get_entry(self, entries, name): # pylint: disable=no-self-use
+        for entry in entries:
+            if entry['name'] == name:
+                return entry
+        return None
+
+    def __get_remote_examples(self): # pylint: disable=no-self-use
+        p_path = "/stochss/.proxies.txt"
+        rel_path = "https://raw.githubusercontent.com/StochSS/StochSS_Example_Library/main/example_data.json"
+        if os.path.exists(p_path):
+            with open(p_path, "r", encoding="utf-8") as proxy_fd:
+                proxy_ip = proxy_fd.read().strip()
+                proxies = {'https': f'https://{proxy_ip}', 'http': f'http://{proxy_ip}'}
+        else:
+            proxies = None
+
+        response = requests.get(rel_path, allow_redirects=True, proxies=proxies)
+        exm_data = json.loads(response.content.decode())
+        exm_data['Download-Time'] = time.time()
+        return exm_data
 
     def __get_file_handler(self, file_path=None, log_level="info"):
         if file_path is None:
@@ -100,6 +169,22 @@ class UserSystem:
             logs.extend(log_file_fd.read().strip().split("\n"))
         return logs
 
+    def __update_catagory(self, examples, local, remote=None):
+        if remote is None:
+            remote = []
+        entries = []
+        for local_entry in local:
+            if local_entry['name'] == "Example-SIR-Epidemic-Project":
+                local_entry['name'] = "SIR-Epidemic"
+            remote_entry = self.__get_entry(remote, local_entry['name'])
+            if remote_entry is None:
+                local_entry['alert'] = self.__get_alert(examples, local_entry['name'])
+                entries.append(local_entry)
+            else:
+                remote_entry['alert'] = self.__get_alert(examples, remote_entry['name'])
+                entries.append(remote_entry)
+        return entries
+
     def __update_to_current(self):
         # Ensure that the aws directory always exists in the new location.
         if not os.path.exists(self.AWS_DIRECTORY):
@@ -113,8 +198,10 @@ class UserSystem:
         if not os.path.exists(self.SETTINGS_FILE):
             src_path = os.path.join(self.HOME_DIRECTORY, ".user-settings.json")
             if not os.path.exists(src_path):
-                src_path = "/stochss/stochss/templates/system-settings.json"
-            os.rename(src_path, self.SETTINGS_FILE)
+                with open(self.SETTINGS_FILE, "w", encoding="utf-8") as settings_fd:
+                    json.dump(settings_template, settings_fd)
+            else:
+                os.rename(src_path, self.SETTINGS_FILE)
         # Ensure that the logs file always exists in the new location.
         if not os.path.exists(self.LOG_FILE):
             src_path = os.path.join(self.HOME_DIRECTORY, ".user-logs.txt")
@@ -124,6 +211,10 @@ class UserSystem:
                     os.rename(f"{src_path}.bak", f"{self.LOG_FILE}.bak0")
             else:
                 open(self.LOG_FILE, "w", encoding="utf-8").close() # pylint: disable=consider-using-with
+        if not os.path.exists(self.EXAMPLE_FILE):
+            src_path = os.path.join(self.HOME_DIRECTORY, ".example-library.json")
+            if os.path.exists(src_path):
+                os.rename(src_path, self.EXAMPLE_FILE)
 
     def initialize_logger(self, use_for="system", log_path=None):
         '''
@@ -168,6 +259,43 @@ class UserSystem:
             job_fh = self.__get_file_handler(file_path=log_path, log_level="warning")
             log.addHandler(job_fh)
         return log
+
+    @classmethod
+    def load_examples(cls, url_base):
+        '''
+        Load the html for the example library page.
+
+        :param home: URL for the user home page.
+        :type home: str
+
+        :returns: List if examples in HTML format.
+        :rtype: dict
+        '''
+        self = cls(init_logs=False)
+        try:
+            with open(self.EXAMPLE_FILE, "r", encoding="utf-8") as exm_lib_fd:
+                exm_data = json.load(exm_lib_fd)
+        except FileNotFoundError:
+            exm_data = {}
+        new_exm_data = {}
+        if exm_data == {} or exm_data['Download-Time'] < (time.time() - (60 * 60 * 24)):
+            new_exm_data = self.__get_remote_examples()
+        examples = list(filter(
+            lambda file: file.endswith(".proj"), os.listdir(os.path.join(self.HOME_DIRECTORY, "Examples"))
+        ))
+        updates = copy.deepcopy(new_exm_data)
+        for cat in ['Well-Mixed', 'Spatial']:
+            kwargs = {
+                'examples': examples,
+                'local': new_exm_data[cat] if exm_data == {} else exm_data[cat],
+                'remote': None if new_exm_data == {} else new_exm_data[cat]
+            }
+            updates[cat] = self.__update_catagory(**kwargs)
+        exm_data.update(updates)
+        with open(self.EXAMPLE_FILE, "w", encoding="utf-8") as exm_lib_fd:
+            json.dump(exm_data, exm_lib_fd, sort_keys=True, indent=4)
+
+        return self.__build_example_html(exm_data, url_base)
 
     @classmethod
     def load_logs(cls, index=0):
