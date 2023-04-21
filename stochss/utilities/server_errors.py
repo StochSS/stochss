@@ -77,3 +77,19 @@ class APIError(Exception):
         for st_line in self.traceback:
             lines.append(f"\t    {st_line}")
         return "\n".join(lines)
+
+####################################################################################################
+# File System Errors
+####################################################################################################
+class FileExistsAPIError(APIError):
+    '''
+    API handler error for FileExistsError.
+
+    :param message: Details on what caused the error.
+    :type message: str
+
+    :param trace: Stack trace for the original error.
+    :type trace: str
+    '''
+    def __init__(self, message, trace):
+        super().__init__(406, "File Already Exists", message, trace)

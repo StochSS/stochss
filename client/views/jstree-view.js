@@ -59,10 +59,10 @@ module.exports = View.extend({
           if(this.root !== "none") {
             queryStr += "&isRoot=True";
           }
-          return path.join(app.getApiPath(), "file/browser-list") + queryStr;
+          return path.join(app.getLoadPath(), "jstree") + queryStr;
         }
         var queryStr = `?path=${node.original._path}`;
-        return path.join(app.getApiPath(), "file/browser-list") + queryStr;
+        return path.join(app.getLoadPath(), "jstree") + queryStr;
       },
       "dataType" : "json",
       "data" : (node) => {

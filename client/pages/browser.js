@@ -33,12 +33,14 @@ let PresentationView = require('../views/presentation-view'); // form presentati
 let JSTreeView = require('../views/jstree-view');
 //templates
 let template = require('../templates/pages/browser.pug');
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
+let loadingTemplate = require('../templates/pages/loadingPage.pug');
 
 import initPage from './page.js';
 
 let FileBrowser = PageView.extend({
   pageTitle: 'StochSS | File Browser',
-  template: template,
+  template: loadingTemplate,
   events: {
     'click [data-hook=file-browser-help]' : function () {
       let modal = $(modals.operationInfoModalHtml('file-browser')).modal();
@@ -49,9 +51,23 @@ let FileBrowser = PageView.extend({
     'click [data-hook=collapse-files]' : 'changeCollapseButtonText'
   },
   initialize: function (attrs, options) {
-    PageView.prototype.initialize.apply(this, arguments)
+    PageView.prototype.initialize.apply(this, arguments);
   },
   render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments);
+    this.homeLink = "stochss/home";
+    $(this.queryByHook("loading-header")).html(`Loading User Settings`);
+    $(this.queryByHook("loading-target")).css("display", "none");
+    $(this.queryByHook("loading-spinner")).css("display", "block");
+    $(this.queryByHook("loading-message")).css("display", "none");
+    let endpoint = `${path.join(app.getLoadPath(), "browser")}?with_presentations=${app.getBasePath() !== "/"}`;
+    app.getXHR(endpoint, {
+      success: (err, response, body) => { this.renderContent(body); },
+      error: (err, response, body) => { this.renderError(response, body); }
+    });
+  },
+  renderContent: function (body) {
+    this.template = template
     PageView.prototype.render.apply(this, arguments)
     window.addEventListener('pageshow', (e) => {
       let navType = window.performance.navigation.type;
@@ -59,20 +75,26 @@ let FileBrowser = PageView.extend({
         window.location.reload();
       }
     });
-    app.documentSetup();
-    this.getProjects();
-    if(app.getBasePath() === "/") {
-      $("#presentations").css("display", "none");
-    }else{
-      this.getPresentations();
+    this.renderProjectsView(body.projects);
+    if(body.presentations) {
+      $("#presentations").css("display", "flex");
+      this.renderPresentationView(body.presentations);
     }
+    app.documentSetup();
     this.renderJSTreeView();
+  },
+  renderError: function (response, body) {
+    this.template = errorTemplate;
+    this.logoPath = "/static/stochss-logo.png";
+    this.title = `${response.statusCode} ${body.reason}`;
+    this.errMsg = body.message;
+    PageView.prototype.render.apply(this, arguments);
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
   },
   getPresentations: function () {
-    let endpoint = path.join(app.getApiPath(), "file/presentations");
+    let endpoint = path.join(app.getLoadPath(), "presentations");
     app.getXHR(endpoint, {
       success: (err, response, body) => {
         this.renderPresentationView(body.presentations);
@@ -80,7 +102,7 @@ let FileBrowser = PageView.extend({
     });
   },
   getProjects: function () {
-    let endpoint = path.join(app.getApiPath(), "project/load-browser");
+    let endpoint = path.join(app.getLoadPath(), "projects");
     app.getXHR(endpoint, {
       success: (err, response, body) => {
         this.renderProjectsView(body.projects);

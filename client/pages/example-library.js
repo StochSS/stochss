@@ -58,7 +58,7 @@ let exampleLibrary = PageView.extend({
   },
   renderError: function (response, body) {
     this.template = errorTemplate;
-    this.logoPath = "/hub/static/stochss-logo.png";
+    this.logoPath = "/static/stochss-logo.png";
     this.title = `${response.statusCode} ${body.reason}`;
     this.errMsg = body.message;
     PageView.prototype.render.apply(this, arguments);

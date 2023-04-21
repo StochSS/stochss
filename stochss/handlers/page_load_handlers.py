@@ -19,6 +19,7 @@ import traceback
 from tornado import web
 from notebook.base.handlers import APIHandler
 
+from stochss.utilities.folder import Folder
 from stochss.utilities.user_system import UserSystem
 from stochss.utilities.server_errors import APIError, report_error
 
@@ -26,13 +27,16 @@ from stochss.utilities.server_errors import APIError, report_error
 class PageLoadHandler(APIHandler):
     ''' Handler for loading the initial content of StochSS Live! pages '''
     PAGE_MAP = {
-        # 'browser': 'stochss-file-browser.html',
+        'browser': Folder.page_load,
         # 'domain-editor': 'stochss-domain-editor.html',
         'example-library': UserSystem.load_examples,
+        # 'jstree': Folder.load_jstree,
         'logs': UserSystem.load_logs,
         # 'loading-page': 'stochss-loading-page.html',
         # 'model-editor': 'stochss-model-editor.html',
         # 'multiple-plots': 'multiple-plots-page.html',
+        'presentations': Folder.load_presentations,
+        'projects': Folder.load_projects,
         # 'project-manager': 'stochss-project-manager.html',
         'settings': UserSystem.page_load,
         # 'workflow-manager': 'stochss-workflow-manager.html',
@@ -41,11 +45,13 @@ class PageLoadHandler(APIHandler):
 
     def __process_query_args(self, include_url_base_path=False):
         print(self.request.query_arguments)
+        bool_map = {'True': True, 'False': False, 'true': True, 'false': False}
         process_func = {
-            'str': lambda value: value[0].decode(),
-            'int': lambda value: int(value[0].decode())
+            'bool': lambda value: bool_map[value[0].decode()],
+            'int': lambda value: int(value[0].decode()),
+            'str': lambda value: value[0].decode()
         }
-        arg_types = { 'load_for': 'str', 'index': 'int'}
+        arg_types = { 'load_for': 'str', 'index': 'int', 'with_presentations': 'bool'}
         kwargs = {key: process_func[arg_types[key]](value) for key, value in self.request.query_arguments.items()}
         if include_url_base_path:
             url_base = str(self.request.path).replace("/load/example-library", "")
@@ -68,7 +74,8 @@ class PageLoadHandler(APIHandler):
             kwargs = self.__process_query_args()
             if page_key == 'example-library':
                 kwargs['url_base'] = self.request.path
-            if page_key in ('logs', 'settings', 'example-library'):
+            classmethods = ('logs', 'settings', 'example-library', 'browser', 'projects', 'presentations')
+            if page_key in classmethods:
                 response = self.PAGE_MAP[page_key](**kwargs)
             self.write(response)
         except Exception as err: # pylint: disable=broad-except

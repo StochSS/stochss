@@ -49,7 +49,7 @@ def get_page_handlers(route_start):
         ##############################################################################
         # File Browser API Handlers                                                  #
         ##############################################################################
-        (r"/stochss/api/file/browser-list\/?", ModelBrowserFileList),
+        # (r"/stochss/api/file/browser-list\/?", ModelBrowserFileList),
         (r"/stochss/api/file/empty-trash\/?", EmptyTrashAPIHandler),
         (r"/stochss/api/file/delete\/?", DeleteFileAPIHandler),
         (r"/stochss/api/file/move\/?", MoveFileAPIHandler),
@@ -69,7 +69,7 @@ def get_page_handlers(route_start):
         (r"/stochss/api/file/upload-from-link\/?", UploadFileFromLinkAPIHandler),
         (r"/stochss/api/file/unzip\/?", UnzipFileAPIHandler),
         (r"/stochss/api/notebook/presentation\/?", NotebookPresentationAPIHandler),
-        (r"/stochss/api/file/presentations\/?", PresentationListAPIHandler),
+        # (r"/stochss/api/file/presentations\/?", PresentationListAPIHandler),
         ##############################################################################
         # Model API Handlers                                                         #
         ##############################################################################
@@ -91,7 +91,7 @@ def get_page_handlers(route_start):
         ##############################################################################
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),
         (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
-        (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),
+        # (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),
         (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),
         (r"/stochss/api/project/new-model\/?", NewModelAPIHandler),
