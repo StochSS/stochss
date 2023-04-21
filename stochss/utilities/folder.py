@@ -40,8 +40,6 @@ class Folder(FileObject):
     :param \**kwargs: Key word arguments passed to UserSystem.
     '''
     def __init__(self, path=None, new=False, **kwargs):
-        if path in ("", "/"):
-            path = None
         super().__init__(path, **kwargs)
 
         if new:
@@ -52,12 +50,70 @@ class Folder(FileObject):
                 msg = f"Could not create your directory: {str(err)}"
                 raise FileExistsAPIError(msg, traceback.format_exc()) from err
 
-    def __get_file_objects(self, tests=None, full_paths=True, include_files=True, include_folders=False):
+    def __build_jstree_node(self, file_object):
+        node_types = {
+            'mdl': 'well-mixed', 'smdl': 'spatial', 'sbml': 'sbml-model', 'ipynb': 'notebook',
+            'domn': 'domain', 'proj': 'project', 'wkgp': 'workflow-group', 'wkfl': 'workflow'
+        }
+        path = os.path.join(self.path, file_object)
+        ext = self.get_extension(path=file_object)
+        if ext not in node_types:
+            node_types[ext] = "folder" if os.path.isdir(path) else "other"
+        node = {
+            'text': file_object,
+            'type': node_types[ext],
+            '_path': self.get_sanitized_path(path=os.path.join(self.path, file_object)),
+            'children': node_types[ext] in ('folder', 'workflow-group')
+        }
+        if node['type'] != 'workflow':
+            return node
+        files = self.__get_file_objects(
+            tests=[lambda root, file_obj: file_obj.startswith('.')],
+            path=path, full_paths=False, recursive=False
+        )
+        node['_newFormat'] = len(files) == 1
+        if node['_newFormat']:
+            jobs = self.__get_file_objects(
+                tests=[
+                    lambda root, file_obj: file_obj.startswith('.'),
+                    lambda root, file_obj: not file_obj.startswith('job')
+                ],
+                path=path, full_paths=False, include_files=False, include_folders=True, recursive=False
+            )
+            node['_hasJobs'] = len(jobs) > 0
+            return node
+        def __wkfl_status(files):
+            if "COMPLETE" in files:
+                return "complete"
+            if "ERROR" in files:
+                return "error"
+            if "RUNNING" in files:
+                return "running"
+            return "ready"
+        node['_status'] = __wkfl_status(files=files)
+        return node
+
+    def __get_file_objects(self, path=None, tests=None, full_paths=True,
+                           include_files=True, include_folders=False, recursive=True):
+        if path is None:
+            path = self.path
         if tests is None:
             tests = []
         file_objects = []
+        if not recursive:
+            for file_object in os.listdir(path):
+                if not include_files:
+                    tests.append(lambda root, file_obj: os.path.isfile(os.path.join(root, file_obj)))
+                if not include_folders:
+                    tests.append(lambda root, file_obj: os.path.isdir(os.path.join(root, file_obj)))
+                exclude = True in [test(path, file_object) for test in tests]
+                if full_paths:
+                    file_object = os.path.join(path, file_object)
+                if not exclude:
+                    file_objects.append(file_object)
+            return file_objects
         try:
-            for root, folders, files in os.walk(self.path):
+            for root, folders, files in os.walk(path):
                 if include_files:
                     for file in files:
                         exclude = True in [test(root, file) for test in tests]
@@ -75,6 +131,25 @@ class Folder(FileObject):
             return file_objects
         except FileNotFoundError:
             return []
+
+    def __get_jstree_node(self, is_root=False):
+        if self.path == self.HOME_DIRECTORY:
+            is_root = True
+        files = self.__get_file_objects(
+            tests=[lambda root, file_obj: file_obj.startswith('.')],
+            full_paths=False, include_folders=True, recursive=False
+        )
+        nodes = list(map(self.__build_jstree_node, files))
+        if not is_root:
+            return json.dumps(nodes)
+        head_node = {'type': 'root', 'children': nodes, 'state': {'opened': True}}
+        if self.path == self.HOME_DIRECTORY:
+            head_node['text'] = "/"
+            head_node['_path'] = "/"
+        else:
+            head_node['text'] = self.get_name()
+            head_node['_path'] = self.get_sanitized_path()
+        return json.dumps([head_node])
 
     def __get_presentations(self):
         presentations = []
@@ -143,6 +218,15 @@ class Folder(FileObject):
             }
             projects.append(project)
         return projects
+
+    @classmethod
+    def load_jstree(cls, path=None, is_root=False):
+        ''' Load the nodes for the jstree views. '''
+        self = cls(path=path)
+        self.system.log.debug("Path to the directory: %s", path)
+        response = self.__get_jstree_node(is_root=is_root)
+        self.system.log.debug("Contents of the node: %s", str(response))
+        return response
 
     @classmethod
     def load_presentations(cls):

@@ -29,11 +29,11 @@ let doubleClick = (view, e) => {
   if(!(node.original._path.split("/")[0] === "trash")) {
     if(node.type === "folder" && $('#files-jstree').jstree().is_open(node) && $('#files-jstree').jstree().is_loaded(node)){
       view.refreshJSTree(node);
-    }else if(node.type === "nonspatial" || node.type === "spatial"){
+    }else if(node.type === "well-mixed" || node.type === "spatial"){
       view.openModel(node.original._path);
     }else if(node.type === "notebook"){
       view.openNotebook(node.original._path);
-    }else if(node.type === "sbmlModel"){
+    }else if(node.type === "sbml-model"){
       view.openSBML(node.original._path);
     }else if(node.type === "project"){
       view.openProject(node.original._path);
@@ -337,12 +337,12 @@ let types = {
   'root' : {"icon": "jstree-icon jstree-folder"},
   'folder' : {"icon": "jstree-icon jstree-folder"},
   'spatial' : {"icon": "jstree-icon jstree-file"},
-  'nonspatial' : {"icon": "jstree-icon jstree-file"},
+  'well-mixed' : {"icon": "jstree-icon jstree-file"},
   'project' : {"icon": "jstree-icon jstree-file"},
   'workflow' : {"icon": "jstree-icon jstree-file"},
   'notebook' : {"icon": "jstree-icon jstree-file"},
   'domain' : {"icon": "jstree-icon jstree-file"},
-  'sbmlModel' : {"icon": "jstree-icon jstree-file"},
+  'sbml-model' : {"icon": "jstree-icon jstree-file"},
   'other' : {"icon": "jstree-icon jstree-file"}
 }
 

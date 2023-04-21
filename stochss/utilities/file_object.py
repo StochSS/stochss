@@ -31,6 +31,8 @@ class FileObject():
     HOME_DIRECTORY = os.path.expanduser("~")
 
     def __init__(self, path=None, **kwargs):
+        if path in ("", "/"):
+            path = None
         if path is None:
             self.path = self.HOME_DIRECTORY
         else:

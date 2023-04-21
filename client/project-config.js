@@ -22,18 +22,18 @@ let path = require('path');
 let app = require('./app');
 let modals = require('./modals');
 
-let contextZipTypes = ["workflow", "folder", "other", "root", "workflowGroup"];
+let contextZipTypes = ["workflow", "folder", "other", "root", "workflow-group"];
 
 let doubleClick = (view, e) => {
   let node = $('#files-jstree').jstree().get_node(e.target);
   if(!node.original._path.includes(".proj/trash/")){
-    if((node.type === "folder" || node.type === "workflowGroup") && $('#files-jstree').jstree().is_open(node) && $('#files-jstree').jstree().is_loaded(node)){
+    if((node.type === "folder" || node.type === "workflow-group") && $('#files-jstree').jstree().is_open(node) && $('#files-jstree').jstree().is_loaded(node)){
       view.refreshJSTree(node);
-    }else if(node.type === "nonspatial" || node.type === "spatial"){
+    }else if(node.type === "well-mixed" || node.type === "spatial"){
       view.openModel(node.original._path);
     }else if(node.type === "notebook"){
       view.openNotebook(node.original._path);
-    }else if(node.type === "sbmlModel"){
+    }else if(node.type === "sbml-model"){
       view.openSBML(node.original._path);
     }else if(node.type === "workflow"){
       view.openWorkflow(node.original._path);
@@ -273,7 +273,7 @@ let move = (view, par, node) => {
   app.getXHR(endpoint, {
     success: (err, response, body) => {
       node.original._path = path.join(newDir, file);
-      if((node.type === "nonspatial" || node.type === "spatial") && (oldPath.includes("trash") || newDir.includes("trash"))) {
+      if((node.type === "well-mixed" || node.type === "spatial") && (oldPath.includes("trash") || newDir.includes("trash"))) {
         updateParent(view, "Archive");
       }else if(node.type !== "notebook" || node.original._path.includes(".wkgp") || newDir.includes(".wkgp")) {
         updateParent(view, node.type);
@@ -346,24 +346,24 @@ let types = {
   'root' : {"icon": "jstree-icon jstree-folder"},
   'folder' : {"icon": "jstree-icon jstree-folder"},
   'spatial' : {"icon": "jstree-icon jstree-file"},
-  'nonspatial' : {"icon": "jstree-icon jstree-file"},
-  'workflowGroup' : {"icon": "jstree-icon jstree-folder"},
+  'well-mixed' : {"icon": "jstree-icon jstree-file"},
+  'workflow-group' : {"icon": "jstree-icon jstree-folder"},
   'workflow' : {"icon": "jstree-icon jstree-file"},
   'notebook' : {"icon": "jstree-icon jstree-file"},
   'domain' : {"icon": "jstree-icon jstree-file"},
-  'sbmlModel' : {"icon": "jstree-icon jstree-file"},
+  'sbml-model' : {"icon": "jstree-icon jstree-file"},
   'other' : {"icon": "jstree-icon jstree-file"}
 }
 
 let updateParent = (view, type) => {
-  let models = ["nonspatial", "spatial", "sbml", "model"];
+  let models = ["well-mixed", "spatial", "sbml", "model"];
   let workflows = ["workflow", "notebook"];
   if(models.includes(type)) {
     view.parent.update("Model", "file-browser");
   }else if(workflows.includes(type)) {
     view.parent.update("Workflow", "file-browser");
-  }else if(type === "workflowGroup") {
-    view.parent.update("WorkflowGroup", "file-browser");
+  }else if(type === "workflow-group") {
+    view.parent.update("Workflow-group", "file-browser");
   }else if(type === "Archive") {
     view.parent.update(type, "file-browser");
   }
@@ -381,21 +381,21 @@ let validateMove = (view, node, more, pos) => {
   if(isWorkflow && node.original._status && node.original._status === "running") { return false };
 
   // Check if model, workflow, or workflow group is moving to or from trash
-  let isWkgp = Boolean(validSrc && node.type === "workflowGroup");
+  let isWkgp = Boolean(validSrc && node.type === "workflow-group");
   let trashAction = Boolean((validSrc && node.original._path.includes("trash")) || (validDst && more.ref.original.text === "trash"));
   if(isWkgp && !(view.parent.model.newFormat && trashAction)) { return false };
-  let isModel = Boolean(validSrc && (node.type === "nonspatial" || node.type === "spatial"));
+  let isModel = Boolean(validSrc && (node.type === "well-mixed" || node.type === "spatial"));
   if((isModel || isWorkflow) && !trashAction) { return false };
 
   // Check if model, workflow, or workflow group is moving from trash to the correct location
   if(validSrc && node.original._path.includes("trash")) {
     if(isWkgp && (!view.parent.model.newFormat || (validDst && more.ref.type !== "root"))) { return false };
-    if(isWorkflow && validDst && more.ref.type !== "workflowGroup") { return false };
+    if(isWorkflow && validDst && more.ref.type !== "workflow-group") { return false };
     if(isModel && validDst) {
       if(!view.parent.model.newFormat && more.ref.type !== "root") { return false };
       let length = node.original.text.split(".").length;
       let modelName = node.original.text.split(".").slice(0, length - 1).join(".");
-      if(view.parent.model.newFormat && (more.ref.type !== "workflowGroup" || !more.ref.original.text.startsWith(modelName))) { return false };
+      if(view.parent.model.newFormat && (more.ref.type !== "workflow-group" || !more.ref.original.text.startsWith(modelName))) { return false };
     }
   }
 
@@ -404,7 +404,7 @@ let validateMove = (view, node, more, pos) => {
   let isNotebook = Boolean(validSrc && node.type === "notebook");
   let isOther = Boolean(validSrc && !isModel && !isWorkflow && !isWkgp && !isNotebook);
   if(isOther && validDst && !validDsts.includes(more.ref.type)) { return false };
-  validDsts.push("workflowGroup");
+  validDsts.push("workflow-group");
   if(isNotebook && validDst && !validDsts.includes(more.ref.type)) { return false };
   
   // Check if file already exists with that name in folder

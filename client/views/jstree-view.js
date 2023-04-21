@@ -57,7 +57,7 @@ module.exports = View.extend({
         if(node.parent === null){
           var queryStr = `?path=${this.root}`;
           if(this.root !== "none") {
-            queryStr += "&isRoot=True";
+            queryStr += "&is_root=True";
           }
           return path.join(app.getLoadPath(), "jstree") + queryStr;
         }
@@ -65,9 +65,9 @@ module.exports = View.extend({
         return path.join(app.getLoadPath(), "jstree") + queryStr;
       },
       "dataType" : "json",
-      "data" : (node) => {
-        return { 'id' : node.id};
-      }
+      // "data" : (node) => {
+      //   return { 'id' : node.id};
+      // }
     }
     this.treeSettings = {
       'plugins': ['types', 'wholerow', 'changed', 'contextmenu', 'dnd'],
@@ -289,7 +289,7 @@ module.exports = View.extend({
     app.getXHR(endpoint, {
       success: (err, response, body) => {
         var par = $('#files-jstree').jstree().get_node(node.parent);
-        if(this.root !== "none" && (["nonspatial", "spatial"].includes(node.type) || target === "wkfl_model")){
+        if(this.root !== "none" && (["well-mixed", "spatial"].includes(node.type) || target === "wkfl_model")){
           par = $('#files-jstree').jstree().get_node(par.parent);
           var file = body.File.replace(node.type === "spatial" ? ".smdl" : ".mdl", ".wkgp");
         }else{
@@ -615,8 +615,8 @@ module.exports = View.extend({
             this.createModel(node, dirname, true, inProject);
           }
         }),
-        nonspatial: this.buildContextBase({
-          label: "Non-Spatial",
+        'well-mixed': this.buildContextBase({
+          label: "Well-Mixed",
           action: (data) => {
             this.createModel(node, dirname, false, inProject);
           }
@@ -958,7 +958,7 @@ module.exports = View.extend({
         let endpoint = path.join(app.getApiPath(), "file/rename") + queryStr;
         app.getXHR(endpoint, {
           always: (err, response, body) => {
-            if(this.root !== "none" && ["nonspatial", "spatial"].includes(node.type)){
+            if(this.root !== "none" && ["well-mixed", "spatial"].includes(node.type)){
               this.refreshJSTree(null);
             }else{
               this.refreshJSTree(par);
@@ -1024,12 +1024,12 @@ module.exports = View.extend({
         project: this.config.getProjectContext,
         workflowGroup: this.config.getWorkflowGroupContext,
         folder: this.config.getFolderContext,
-        nonspatial: this.config.getModelContext,
+        'well-mixed': this.config.getModelContext,
         spatial: this.config.getSpatialModelContext,
         domain: this.config.getDomainContext,
         workflow: this.config.getWorkflowContext,
         notebook: this.config.getNotebookContext,
-        sbmlModel: this.config.getSBMLContext,
+        sbmlmodel: this.config.getSBMLContext,
       }
       if(Object.keys(contextMenus).includes(node.type)){
         return contextMenus[node.type](this, node);

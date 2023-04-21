@@ -231,6 +231,7 @@ class UserSystem:
         :rtype: logging.Logger
         '''
         log = logging.getLogger()
+        log.handlers.clear()
         log.setLevel(logging.INFO)
 
         stochss_log = log.getChild("StochSS")
