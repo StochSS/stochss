@@ -93,3 +93,29 @@ class FileExistsAPIError(APIError):
     '''
     def __init__(self, message, trace):
         super().__init__(406, "File Already Exists", message, trace)
+
+class FileNotFoundAPIError(APIError):
+    '''
+    API handler error for FileNotFoundError.
+
+    :param message: Details on what caused the error.
+    :type message: str
+
+    :param trace: Stack trace for the original error.
+    :type trace: str
+    '''
+    def __init__(self, message, trace):
+        super().__init__(404, "File or Directory Not Found", message, trace)
+
+class PermissionsAPIError(APIError):
+    '''
+    API handler error for PermissionsError.
+
+    :param message: Details on what caused the error.
+    :type message: str
+
+    :param trace: Stack trace for the original error.
+    :type trace: str
+    '''
+    def __init__(self, message, trace):
+        super().__init__(403, "Permission Denied", message, trace)

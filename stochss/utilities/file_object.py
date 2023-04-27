@@ -16,27 +16,39 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
+import shutil
+import traceback
 
 from stochss.utilities.user_system import UserSystem
+from stochss.utilities.server_errors import FileNotFoundAPIError, PermissionsAPIError
 
 class FileObject():
-    '''
+    r'''
     Base class for file objects.
 
     :param path: Path to the file object. Defaults to the users home directory.
     :type path: str
 
+    :param make_unique: Indicates that the directory name should change if the name is not available.
+                        Ignored if path is not set.
+    :type make_unique: bool
+
     :param \**kwargs: Key word arguments passed to UserSystem.
     '''
     HOME_DIRECTORY = os.path.expanduser("~")
 
-    def __init__(self, path=None, **kwargs):
+    def __init__(self, path=None, make_unique=False, **kwargs):
         if path in ("", "/"):
             path = None
         if path is None:
-            self.path = self.HOME_DIRECTORY
+            path = self.HOME_DIRECTORY
         else:
-            self.path = os.path.join(self.HOME_DIRECTORY, path)
+            path = os.path.join(self.HOME_DIRECTORY, path)
+            if make_unique and os.path.exists(path):
+                dirname = self.get_dirname(path=path)
+                name = self.get_name(path=path, with_ext=True, unique_method="rename")
+                path = os.path.join(dirname, name)
+        self.path = path
 
         self.system = UserSystem(**kwargs)
 
@@ -113,20 +125,23 @@ class FileObject():
         }
         unique_methods = {
             "duplicate": lambda name, ext, index: f"{name}-copy({index}).{ext}" if index > 0 else f"{name}-copy.{ext}",
-            "rename": lambda name, ext, index: f"{name}({index}).{ext}" if index > 0 else f"{name}.{ext}"
+            "rename": lambda name, ext, index: f"{name}({index}).{ext}"
         }
         if path is None:
             path = self.path
 
         file_name = path.split("/").pop()
         if pymethod:
-            name = remove_methods['ext'](file_name)
+            file_name = remove_methods['ext'](file_name)
             raise Exception("pymethod has not been implemented.")
         if unique_method is not None:
             ext = self.get_extension(path=path)
-            name = remove_methods['ext'](file_name)
+            file_name = remove_methods['ext'](file_name)
             dirname = self.get_dirname(path=path)
-            raise Exception("unique has not been implemented.")
+            index = 1
+            while os.path.exists(f"{dirname}/{file_name}{ext}"):
+                file_name = unique_methods[unique_method](file_name, ext, index)
+                index += 1
         if with_ext:
             return file_name
         return remove_methods['ext'](file_name)
@@ -144,3 +159,29 @@ class FileObject():
         if path is None:
             path = self.path
         return path[len(self.HOME_DIRECTORY) + 1:]
+
+    def rename(self, name):
+        '''
+        Rename a file object. The name may change depending on its availability.
+
+        :param name: Proposed new name for the file object.
+        :type name: str
+
+        :returns: True if the proposed name was changed, else False
+        :rtype: bool
+        '''
+        dirname = self.get_dirname()
+        new_path = os.path.join(dirname, name)
+        unique_name = self.get_name(path=new_path, with_ext=True, unique_method="rename")
+        dst = os.path.join(dirname, unique_name)
+        changed = new_path != dst
+        try:
+            shutil.move(self.path, dst)
+            self.path = dst
+            return changed
+        except FileNotFoundError as err:
+            msg = f"Could not find file or directory: {str(err)}"
+            raise FileNotFoundAPIError(msg, traceback.format_exc()) from err
+        except PermissionError as err:
+            msg = f"You do not have permission to rename this file or directory: {str(err)}"
+            raise PermissionsAPIError(msg, traceback.format_exc()) from err

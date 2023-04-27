@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
 import json
+import shutil
 import pickle
 import string
 import datetime
@@ -25,10 +26,10 @@ import traceback
 from escapism import escape
 
 from stochss.utilities.file_object import FileObject
-from stochss.utilities.server_errors import FileExistsAPIError
+from stochss.utilities.server_errors import FileExistsAPIError, FileNotFoundAPIError, PermissionsAPIError
 
 class Folder(FileObject):
-    '''
+    r'''
     Folder object used for interacting with folders on the file system.
 
     :param path: Path to the directoy.
@@ -37,10 +38,13 @@ class Folder(FileObject):
     :param new: Indicates whether the directory is new.
     :type new: bool
 
+    :param make_unique: Indicates that the directory name should change if the name is not available.
+    :type make_unique: bool
+
     :param \**kwargs: Key word arguments passed to UserSystem.
     '''
-    def __init__(self, path=None, new=False, **kwargs):
-        super().__init__(path, **kwargs)
+    def __init__(self, path=None, new=False, make_unique=False, **kwargs):
+        super().__init__(path, make_unique=new and make_unique, **kwargs)
 
         if new:
             self.system.log.debug("Path of directories: %s", self.path)
@@ -67,13 +71,15 @@ class Folder(FileObject):
         }
         if node['type'] != 'workflow':
             return node
-        files = self.__get_file_objects(
-            tests=[lambda root, file_obj: file_obj.startswith('.')],
-            path=path, full_paths=False, recursive=False
+        files = self._get_file_objects(
+            tests=[
+                lambda root, file_obj: file_obj.startswith('.'),
+                lambda root, file_obj: file_obj in ("settings.json", "README.md")
+            ], full_paths=False, recursive=False
         )
-        node['_newFormat'] = len(files) == 1
+        node['_newFormat'] = len(files) == 0
         if node['_newFormat']:
-            jobs = self.__get_file_objects(
+            jobs = self._get_file_objects(
                 tests=[
                     lambda root, file_obj: file_obj.startswith('.'),
                     lambda root, file_obj: not file_obj.startswith('job')
@@ -93,49 +99,10 @@ class Folder(FileObject):
         node['_status'] = __wkfl_status(files=files)
         return node
 
-    def __get_file_objects(self, path=None, tests=None, full_paths=True,
-                           include_files=True, include_folders=False, recursive=True):
-        if path is None:
-            path = self.path
-        if tests is None:
-            tests = []
-        file_objects = []
-        if not recursive:
-            for file_object in os.listdir(path):
-                if not include_files:
-                    tests.append(lambda root, file_obj: os.path.isfile(os.path.join(root, file_obj)))
-                if not include_folders:
-                    tests.append(lambda root, file_obj: os.path.isdir(os.path.join(root, file_obj)))
-                exclude = True in [test(path, file_object) for test in tests]
-                if full_paths:
-                    file_object = os.path.join(path, file_object)
-                if not exclude:
-                    file_objects.append(file_object)
-            return file_objects
-        try:
-            for root, folders, files in os.walk(path):
-                if include_files:
-                    for file in files:
-                        exclude = True in [test(root, file) for test in tests]
-                        if full_paths:
-                            file = os.path.join(root, file)
-                        if not exclude:
-                            file_objects.append(file)
-                if include_folders:
-                    for folder in folders:
-                        exclude = True in [test(root, folder) for test in tests]
-                        if full_paths:
-                            folder = os.path.join(root, folder)
-                        if not exclude:
-                            file_objects.append(folder)
-            return file_objects
-        except FileNotFoundError:
-            return []
-
     def __get_jstree_node(self, is_root=False):
         if self.path == self.HOME_DIRECTORY:
             is_root = True
-        files = self.__get_file_objects(
+        files = self._get_file_objects(
             tests=[lambda root, file_obj: file_obj.startswith('.')],
             full_paths=False, include_folders=True, recursive=False
         )
@@ -153,7 +120,7 @@ class Folder(FileObject):
 
     def __get_presentations(self):
         presentations = []
-        file_objects = self.__get_file_objects(tests=[lambda root, file_obj: file_obj.startswith('.')])
+        file_objects = self._get_file_objects(tests=[lambda root, file_obj: file_obj.startswith('.')])
         if len(file_objects) == 0:
             return presentations
         names = self.__get_presentation_names()
@@ -210,7 +177,7 @@ class Folder(FileObject):
         tests = [
             lambda root, file_obj: not file_obj.endswith(".proj"), lambda root, file_obj: "trash" in root.split("/")
         ]
-        file_objects = self.__get_file_objects(tests=tests, include_files=False, include_folders=True)
+        file_objects = self._get_file_objects(tests=tests, include_files=False, include_folders=True)
         for file in file_objects:
             project = {
                 'directory': self.get_sanitized_path(path=file), 'dirname': self.get_dirname(path=file),
@@ -219,9 +186,59 @@ class Folder(FileObject):
             projects.append(project)
         return projects
 
+    def _get_file_objects(self, path=None, tests=None, full_paths=True,
+                           include_files=True, include_folders=False, recursive=True):
+        if path is None:
+            path = self.path
+        if tests is None:
+            tests = []
+        file_objects = []
+        if not recursive:
+            for file_object in os.listdir(path):
+                if not include_files:
+                    tests.append(lambda root, file_obj: os.path.isfile(os.path.join(root, file_obj)))
+                if not include_folders:
+                    tests.append(lambda root, file_obj: os.path.isdir(os.path.join(root, file_obj)))
+                exclude = True in [test(path, file_object) for test in tests]
+                if full_paths:
+                    file_object = os.path.join(path, file_object)
+                if not exclude:
+                    file_objects.append(file_object)
+            return file_objects
+        try:
+            for root, folders, files in os.walk(path):
+                if include_files:
+                    for file in files:
+                        exclude = True in [test(root, file) for test in tests]
+                        if full_paths:
+                            file = os.path.join(root, file)
+                        if not exclude:
+                            file_objects.append(file)
+                if include_folders:
+                    for folder in folders:
+                        exclude = True in [test(root, folder) for test in tests]
+                        if full_paths:
+                            folder = os.path.join(root, folder)
+                        if not exclude:
+                            file_objects.append(folder)
+            return file_objects
+        except FileNotFoundError:
+            return []
+
     @classmethod
     def load_jstree(cls, path=None, is_root=False):
-        ''' Load the nodes for the jstree views. '''
+        '''
+        Load the nodes for the jstree views.
+
+        :param path: Path to the jstree node to load.
+        :type path: str
+
+        :param is_root: Indeicates that the node is the root node.
+        :type is_root: bool
+
+        :returns: The contents of the requested node.
+        :rtype: dict
+        '''
         self = cls(path=path)
         self.system.log.debug("Path to the directory: %s", path)
         response = self.__get_jstree_node(is_root=is_root)
@@ -248,9 +265,35 @@ class Folder(FileObject):
         self.system.log.info("Projects loaded")
         return {'projects': projects}
 
+    def move(self, location):
+        '''
+        Move a directory to another laction on the file system.
+
+        :param location: New location for the directory.
+        :type location: str
+        '''
+        self.system.log.debug("Path to the directory: %s", self.path)
+        self.system.log.debug("Path to the distination: %s", location)
+        try:
+            _ = shutil.move(self.path, location)
+        except FileNotFoundError as err:
+            msg = f"Could not find the directory: {str(err)}"
+            raise FileNotFoundAPIError(msg, traceback.format_exc()) from err
+        except PermissionError as err:
+            msg = f"You do not have permission to move this directory: {str(err)}"
+            raise PermissionsAPIError(msg, traceback.format_exc()) from err
+
     @classmethod
     def page_load(cls, with_presentations=True):
-        ''' Load the projects and presentations for the browser page. '''
+        '''
+        Load the projects and presentations for the browser page.
+
+        :param with_presentations: Indicates that the contents should include the presentations.
+        :type with_presentations: bool
+
+        :return: The required contents of the browser page.
+        :rtype: dict
+        '''
         response = cls.load_projects()
         if with_presentations:
             response.update(cls.load_presentations())

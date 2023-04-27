@@ -16,9 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-user_settings_template = {
-    "awsAccessKeyID": "",
-    "awsRegion": "",
-    "headNode": "",
-    "userLogs": True
-}
+from .example_html import example_section, example_entry
+from .models import well_mixed_template, spatial_template
+from .user_settings import user_settings_template
+from .workflow_settings import wkfl_settings_template

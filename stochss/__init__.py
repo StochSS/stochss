@@ -16,9 +16,5 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
-user_settings_template = {
-    "awsAccessKeyID": "",
-    "awsRegion": "",
-    "headNode": "",
-    "userLogs": True
-}
+from stochss.templates import *
+from stochss.utilities import *

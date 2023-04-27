@@ -90,7 +90,7 @@ def get_page_handlers(route_start):
         # Project API Handlers                                                       #
         ##############################################################################
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),
-        (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
+        # (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
         # (r"/stochss/api/project/load-browser\/?", LoadProjectBrowserAPIHandler),
         (r"/stochss/api/project/load-project\/?", LoadProjectAPIHandler),
         (r"/stochss/api/project/new-project\/?", NewProjectAPIHandler),

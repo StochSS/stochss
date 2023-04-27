@@ -20,6 +20,7 @@ from tornado import web
 from notebook.base.handlers import APIHandler
 
 from stochss.utilities.folder import Folder
+from stochss.utilities.project import Project
 from stochss.utilities.user_system import UserSystem
 from stochss.utilities.server_errors import APIError, report_error
 
@@ -37,7 +38,7 @@ class PageLoadHandler(APIHandler):
         # 'multiple-plots': 'multiple-plots-page.html',
         'presentations': Folder.load_presentations,
         'projects': Folder.load_projects,
-        # 'project-manager': 'stochss-project-manager.html',
+        'project-manager': Project.page_load,
         'settings': UserSystem.page_load,
         # 'workflow-manager': 'stochss-workflow-manager.html',
         # 'workflow-selection': 'stochss-workflow-selection.html'
@@ -78,9 +79,7 @@ class PageLoadHandler(APIHandler):
             kwargs = self.__process_query_args()
             if page_key == 'example-library':
                 kwargs['url_base'] = self.request.path
-            classmethods = ('logs', 'settings', 'example-library', 'browser', 'projects', 'presentations', 'jstree')
-            if page_key in classmethods:
-                response = self.PAGE_MAP[page_key](**kwargs)
+            response = self.PAGE_MAP[page_key](**kwargs)
             self.write(response)
         except Exception as err: # pylint: disable=broad-except
             system = UserSystem()

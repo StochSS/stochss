@@ -28,7 +28,7 @@ let Model = require('ampersand-model');
 
 module.exports = Model.extend({
   url: function () {
-    return path.join(app.getApiPath(), "project/load-project")+"?path="+this.directory;
+    return path.join(app.getLoadPath(), "project-manager")+"?path="+this.directory;
   },
   children: {
     metadata: Metadata

@@ -25,7 +25,7 @@ import requests
 
 from tornado.log import LogFormatter
 
-from stochss.templates.user_settings import settings_template
+from stochss.templates.user_settings import user_settings_template
 from stochss.templates.example_html import example_section, example_entry
 
 class UserSystem:
@@ -199,7 +199,7 @@ class UserSystem:
             src_path = os.path.join(self.HOME_DIRECTORY, ".user-settings.json")
             if not os.path.exists(src_path):
                 with open(self.SETTINGS_FILE, "w", encoding="utf-8") as settings_fd:
-                    json.dump(settings_template, settings_fd)
+                    json.dump(user_settings_template, settings_fd)
             else:
                 os.rename(src_path, self.SETTINGS_FILE)
         # Ensure that the logs file always exists in the new location.
@@ -259,7 +259,7 @@ class UserSystem:
 
             job_fh = self.__get_file_handler(file_path=log_path, log_level="warning")
             log.addHandler(job_fh)
-        return log
+        return stochss_log
 
     @classmethod
     def load_examples(cls, url_base):
