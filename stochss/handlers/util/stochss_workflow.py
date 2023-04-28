@@ -98,7 +98,7 @@ class StochSSWorkflow(StochSSBase):
         return headers, time, obs_data
 
     def __get_obs_trace(self, path, traces, f_ndx=None):
-        if path.endswith(".obsd"):
+        if path.endswith(".odf"):
             for ndx, file in enumerate(os.listdir(path)):
                 traces = self.__get_obs_trace(os.path.join(path, file), traces, f_ndx=ndx)
             return traces

@@ -73,6 +73,7 @@ module.exports = View.extend({
         </svg>
       `
     }
+    this.occordianStates = {import: "hide", select: "hide"}
     this.summaryStatCollections = {
       identity: null, minimal: null, custom: null
     }
@@ -181,7 +182,7 @@ module.exports = View.extend({
     app.registerRenderSubview(this, this.editSummaryStats, hook);
   },
   renderObsDataSelects: function () {
-    let queryStr = "?ext=.obsd,.csv"
+    let queryStr = "?ext=.odf,.csv"
     let endpoint = `${path.join(app.getApiPath(), 'workflow/obs-data-files')}${queryStr}`;
     app.getXHR(endpoint, {success: (err, response, body) => {
       this.obsDataFiles = body.obsDataFiles;
@@ -305,22 +306,20 @@ module.exports = View.extend({
     this.renderViewSummaryStats();
   },
   toggleImportFiles: function (e) {
-    let classes = $(this.queryByHook('collapseImportObsData')).attr("class").split(/\s+/);
-    $(this.queryByHook('upload-chevron')).html(this.chevrons.hide);
-    if(classes.includes('collapsed')) {
-      $(this.queryByHook('import-chevron')).html(this.chevrons.show);
-    }else{
-      $(this.queryByHook('import-chevron')).html(this.chevrons.hide);
-    }
+    setTimeout(() => {
+      this.occordianStates.select = "hide";
+      this.occordianStates.import = this.occordianStates.import === "hide" ? "show" : "hide";
+      $(this.queryByHook('upload-chevron')).html(this.chevrons.hide);
+      $(this.queryByHook('import-chevron')).html(this.occordianStates.import === "show" ? this.chevrons.show : this.chevrons.hide);
+    });
   },
   toggleUploadFiles: function (e) {
-    let classes = $(this.queryByHook('collapseUploadObsData')).attr("class").split(/\s+/);
-    $(this.queryByHook('import-chevron')).html(this.chevrons.hide);
-    if(classes.includes('collapsed')) {
-      $(this.queryByHook('upload-chevron')).html(this.chevrons.show);
-    }else{
-      $(this.queryByHook('upload-chevron')).html(this.chevrons.hide);
-    }
+    setTimeout(() => {
+      this.occordianStates.import = "hide";
+      this.occordianStates.select = this.occordianStates.select === "hide" ? "show" : "hide";
+      $(this.queryByHook('import-chevron')).html(this.chevrons.hide);
+      $(this.queryByHook('upload-chevron')).html(this.occordianStates.select === "show" ? this.chevrons.show : this.chevrons.hide);
+    });
   },
   update: function (e) {},
   updateValid: function (e) {},

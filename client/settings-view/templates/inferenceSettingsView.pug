@@ -82,33 +82,40 @@ div#inference-settings.card
 
                     path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
 
-            div.collapse(id="collapseImportObsData" aria-labelledby="importObsDataHeader" data-parent="#obs-data-section")
+            div.card-body
 
-              div.card-body
+              p.mb-0
+                | Valid files are <b>Observed Data Files</b> (a directory with the postfix .odf) compressed to a zip archive (.zip) or <b>Observed Data File</b> (.csv)
 
-                div.my-3
+              div
 
-                  span.inline(for="obsDataFile")=`Please specify a file to import: `
+                div.collapse(id="collapseImportObsData" aria-labelledby="importObsDataHeader" data-parent="#obs-data-section")
 
-                  input.ml-2(id="obsDataFile" data-hook="obs-data-file" type="file" name="obs-data-file" size="30" accept='.zip, .csv' required)
+                  hr
 
-                div.inline
+                  div.my-3
 
-                  button.btn.btn-outline-primary.box-shadow(data-hook="import-obs-data-file" disabled)=`Import File`
+                    span.inline(for="obsDataFile")=`Please specify a file to import: `
 
-                div.mdl-edit-btn.saving-status.inline(data-hook="iodf-in-progress")
+                    input.ml-2(id="obsDataFile" data-hook="obs-data-file" type="file" name="obs-data-file" size="30" accept='.zip, .csv' required)
 
-                  div.spinner-grow.mr-2
+                  div.inline
 
-                  span Importing observed data ...
+                    button.btn.btn-outline-primary.box-shadow(data-hook="import-obs-data-file" disabled)=`Import File`
 
-                div.mdl-edit-btn.saved-status.inline(data-hook="iodf-complete")
+                  div.mdl-edit-btn.saving-status.inline(data-hook="iodf-in-progress")
 
-                  span Successfully imported observed data!
+                    div.spinner-grow.mr-2
 
-                div.mdl-edit-btn.save-error-status(data-hook="iodf-error")
+                    span Importing observed data ...
 
-                  span(data-hook="iodf-action-error")
+                  div.mdl-edit-btn.saved-status.inline(data-hook="iodf-complete")
+
+                    span Successfully imported observed data!
+
+                  div.mdl-edit-btn.save-error-status(data-hook="iodf-error")
+
+                    span(data-hook="iodf-action-error")
 
           div.card
 
@@ -124,11 +131,16 @@ div#inference-settings.card
 
                     path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
 
-            div.collapse(id="collapseUploadObsData" aria-labelledby="uploadObsDataHeader" data-parent="#obs-data-section")
+            div.card-body
 
-              div.card-body
+              p.mb-0
+                | Valid files are <b>Observed Data Files</b> (a directory with the postfix .odf) or <b>Observed Data File</b> (.csv)
 
-                div
+              div
+
+                div.collapse(id="collapseUploadObsData" aria-labelledby="uploadObsDataHeader" data-parent="#obs-data-section")
+
+                  hr
 
                   div.hidden.text-info(data-hook="obs-data-location-message")=`There are multiple observed data files with that name, please select a location`
 

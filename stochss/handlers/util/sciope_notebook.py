@@ -163,12 +163,12 @@ class StochSSSciopeNotebook(StochSSNotebook):
         pad = "    "
         start = 11 if results is None else 12
         load_cell = nbf.new_code_cell("\n".join([
-            "def load_obs_data(path=None, data=None):",
-            f"{pad}if not (path.endswith('.csv') or path.endswith('.obsd')):",
-            f"{pad*2}raise ValueError('Observed data must be a CSV file (.csv) or a directory (.obsd) of CSV files.')",
+            "def load_observed_data(path=None, data=None):",
+            f"{pad}if not (path.endswith('.csv') or path.endswith('.odf')):",
+            f"{pad*2}raise ValueError('Observed data must be a CSV file (.csv) or a directory (.odf) of CSV files.')",
             f"{pad}if path.endswith('.csv'):", f"{pad*2}new_data = get_csv_data(path)", f"{pad*2}data.append(new_data)",
             f"{pad*2}return data", f"{pad}for file in os.listdir(path):",
-            f"{pad*2}data = load_obs_data(path=os.path.join(path, file), data=data)",
+            f"{pad*2}data = load_observed_data(path=os.path.join(path, file), data=data)",
             f"{pad}return numpy.array(data)[:, 1:, :]"
         ]))
         csv_cell = nbf.new_code_cell("\n".join([
@@ -182,7 +182,7 @@ class StochSSSciopeNotebook(StochSSNotebook):
         obsd_lines = [
             "kwargs = configure_simulation()", "results = model.run(**kwargs)", "",
             "unshaped_obs_data = results.to_array()", "shaped_obs_data = unshaped_obs_data.swapaxes(1, 2)",
-            "obs_data = shaped_obs_data[:,1:, :]", "", "obs_data = load_obs_data(",
+            "obs_data = shaped_obs_data[:,1:, :]", "", "obs_data = load_observed_data(",
             f"{pad}path='../{self.get_file(self.settings['inferenceSettings']['obsData'])}', data=[]",
             ")", "print(obs_data.shape)"
         ]

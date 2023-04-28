@@ -1247,8 +1247,8 @@ class ModelInference(StochSSJob):
     def __load_obs_data(self, path=None, data=None):
         if path is None:
             path = self.get_new_path(self.settings['inferenceSettings']['obsData'])
-        if not (path.endswith(".csv") or path.endswith(".obsd")):
-            raise StochSSJobError("Observed data must be a CSV file (.csv) or a directory (.obsd) of CSV files.")
+        if not (path.endswith(".csv") or path.endswith(".odf")):
+            raise StochSSJobError("Observed data must be a CSV file (.csv) or a directory (.odf) of CSV files.")
         if path.endswith(".csv"):
             new_data = self.__get_csv_data(path)
             data.append(new_data)

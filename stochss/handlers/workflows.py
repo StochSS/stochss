@@ -554,7 +554,7 @@ class ImportObsDataAPIHandler(APIHandler):
         try:
             folder = StochSSFolder(path=dirname)
             if data_file['filename'].endswith(".zip"):
-                new_name = data_file['filename'].replace(".zip", ".obsd")
+                new_name = data_file['filename'].replace(".zip", ".odf")
             else:
                 new_name = None
             data_resp = folder.upload(
