@@ -71,12 +71,10 @@ class Folder(FileObject):
         }
         if node['type'] != 'workflow':
             return node
-        files = self._get_file_objects(
-            tests=[
-                lambda root, file_obj: file_obj.startswith('.'),
-                lambda root, file_obj: file_obj in ("settings.json", "README.md")
-            ], full_paths=False, recursive=False
-        )
+        files = self._get_file_objects(full_paths=False, recursive=False, tests=[
+            lambda root, file_obj: file_obj.startswith('.'),
+            lambda root, file_obj: file_obj in ("settings.json", "README.md")
+        ])
         node['_newFormat'] = len(files) == 0
         if node['_newFormat']:
             jobs = self._get_file_objects(
@@ -88,15 +86,15 @@ class Folder(FileObject):
             )
             node['_hasJobs'] = len(jobs) > 0
             return node
-        def __wkfl_status(files):
-            if "COMPLETE" in files:
-                return "complete"
+        def __workflow_status(files):
             if "ERROR" in files:
                 return "error"
+            if "COMPLETE" in files:
+                return "complete"
             if "RUNNING" in files:
                 return "running"
             return "ready"
-        node['_status'] = __wkfl_status(files=files)
+        node['_status'] = __workflow_status(files=files)
         return node
 
     def __get_jstree_node(self, is_root=False):
@@ -284,7 +282,7 @@ class Folder(FileObject):
             raise PermissionsAPIError(msg, traceback.format_exc()) from err
 
     @classmethod
-    def page_load(cls, with_presentations=True):
+    def load_browser(cls, with_presentations=True):
         '''
         Load the projects and presentations for the browser page.
 

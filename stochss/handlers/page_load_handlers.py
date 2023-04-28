@@ -28,7 +28,7 @@ from stochss.utilities.server_errors import APIError, report_error
 class PageLoadHandler(APIHandler):
     ''' Handler for loading the initial content of StochSS Live! pages '''
     PAGE_MAP = {
-        'browser': Folder.page_load,
+        'browser': Folder.load_browser,
         # 'domain-editor': 'stochss-domain-editor.html',
         'example-library': UserSystem.load_examples,
         'jstree': Folder.load_jstree,
@@ -38,7 +38,7 @@ class PageLoadHandler(APIHandler):
         # 'multiple-plots': 'multiple-plots-page.html',
         'presentations': Folder.load_presentations,
         'projects': Folder.load_projects,
-        'project-manager': Project.page_load,
+        'project-manager': Project.load_project,
         'settings': UserSystem.page_load,
         # 'workflow-manager': 'stochss-workflow-manager.html',
         # 'workflow-selection': 'stochss-workflow-selection.html'

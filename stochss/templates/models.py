@@ -19,44 +19,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 spatial_template = {
 	"is_spatial": True,
 	"defaultID": 1,
-	"defaultMode": "",
+	"defaultMode": "discrete",
 	"annotation": "",
 	"modelSettings": {
 		"endSim": 20,
 		"timeStep": 0.05,
 		"timestepSize": 1e-5
 	},
-	"domain": {
-        "actions": [],
-		"boundary_condition": {
-        	"reflect_x": True,
-        	"reflect_y": True,
-        	"reflect_z": True},
-        "c_0": 10,
-        "gravity": [0, 0, 0],
-        "p_0": 100.0,
-        "rho_0": 1.0,
-        "shapes": [],
-        "size": None,
-        "static": True,
-        "template_version": 2,
-        "transformations": [],
-        "types": [
-            {
-                "c":10,
-                "fixed":False,
-                "mass":1.0,
-                "name":"Un-Assigned",
-                "nu":0.0,
-                "rho":1.0,
-                "typeID":0,
-                "volume":1.0
-            }
-        ],
-        "x_lim": [0, 0],
-        "y_lim": [0, 0],
-        "z_lim": [0, 0]
-    },
+	"domain": {},
 	"species": [],
     "initialConditions": [],
 	"parameters": [],
@@ -74,8 +44,7 @@ well_mixed_template = {
 	"volume": 1,
 	"modelSettings": {
 		"endSim": 20,
-		"timeStep": 0.05,
-		"timestepSize": 1e-5
+		"timeStep": 0.05
 	},
 	"species": [],
     "parameters": [],

@@ -15,19 +15,35 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
-from .domain import Domain
-from .file import File
-from .file_object import FileObject
-from .folder import Folder
-from .notebook import Notebook
-from .project import Project
-from .server_errors import (
-	report_error, APIError,
-	FileExistsAPIError, FileNotFoundAPIError, PermissionsAPIError,
-	JSONDecodeAPIError, DomainAPIError
-)
-from .spatial import Spatial
-from .user_system import UserSystem
-from .well_mixed import WellMixed
-from .workflow import Workflow
-from .workflow_group import WorkflowGroup
+
+domain_template = {
+    "actions": [],
+	"boundary_condition": {
+    	"reflect_x": True,
+    	"reflect_y": True,
+    	"reflect_z": True},
+    "c_0": 10,
+    "gravity": [0, 0, 0],
+    "p_0": 100.0,
+    "rho_0": 1.0,
+    "shapes": [],
+    "size": None,
+    "static": True,
+    "template_version": 2,
+    "transformations": [],
+    "types": [
+        {
+            "c":10,
+            "fixed":False,
+            "mass":1.0,
+            "name":"Un-Assigned",
+            "nu":0.0,
+            "rho":1.0,
+            "typeID":0,
+            "volume":1.0
+        }
+    ],
+    "x_lim": [0, 0],
+    "y_lim": [0, 0],
+    "z_lim": [0, 0]
+}

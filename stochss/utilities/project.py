@@ -19,6 +19,7 @@ import os
 import json
 
 from stochss.utilities.folder import Folder
+from stochss.utilities.workflow_group import WorkflowGroup
 from stochss.utilities.workflow import Workflow
 
 class Project(Folder):
@@ -47,11 +48,11 @@ class Project(Folder):
             open(self.metadata_file, "w", encoding="utf-8").close() # pylint: disable=consider-using-with
 
         self.loaded = False
-        # self.archive = None
+        self.archive = []
         self.creators = None
         self.metadata = None
         self.annotation = None
-        # self.workflow_groups = None
+        self.workflow_groups = []
 
     def __check_project_version(self):
         models = self._get_file_objects(
@@ -149,17 +150,22 @@ class Project(Folder):
             tests=[lambda root, file_obj: not file_obj.endswith(".wkgp")],
             full_paths=False, include_files=False, include_folders=True, recursive=False
         )
-        for workflow_group in workflow_groups:
-            if workflow_group is self.metadata:
-                self.__update_metadata(self.metadata[workflow_group], self.creators)
-                wkgp_metadata = self.metadata[workflow_group]
+        for workflow_group_path in workflow_groups:
+            if workflow_group_path in self.metadata:
+                self.__update_metadata(self.metadata[workflow_group_path], self.creators)
+                wkgp_metadata = self.metadata[workflow_group_path]
             else:
                 wkgp_metadata = None
-
+            workflow_group = WorkflowGroup(workflow_group_path, metadata=wkgp_metadata)
+            workflow_group.load()
+            if workflow_group.model is None:
+                self.archive.append(workflow_group)
+            else:
+                self.workflow_groups.append(workflow_group)
         self.loaded = True
 
     @classmethod
-    def page_load(cls, path=None):
+    def load_project(cls, path=None):
         '''
         Load the details of the project for the project manager page.
 
@@ -184,7 +190,7 @@ class Project(Folder):
 
         project = {
             'annotation': self.annotation,
-            # 'archive': self.archive,
+            'archive': [workflow_group.to_dict() for workflow_group in self.archive],
             'creators': self.creators,
             'directory': self.get_sanitized_path(),
             'dirname': self.get_dirname(sanitized=True),
@@ -195,6 +201,6 @@ class Project(Folder):
                 path=self.trash_directory, tests=[lambda root, file_obj: file_obj.startswith('.')],
                 full_paths=False, include_folders=True, recursive=False
             )) == 0,
-            # 'workflowGroups': self.workflow_groups
+            'workflowGroups': [workflow_group.to_dict() for workflow_group in self.workflow_groups]
         }
         return project

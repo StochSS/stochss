@@ -119,3 +119,32 @@ class PermissionsAPIError(APIError):
     '''
     def __init__(self, message, trace):
         super().__init__(403, "Permission Denied", message, trace)
+
+####################################################################################################
+# Object Interaction Errors
+####################################################################################################
+class JSONDecodeAPIError(APIError):
+    '''
+    API handler error for json.decoder.JSONDecodeError.
+
+    :param message: Details on what caused the error.
+    :type message: str
+
+    :param trace: Stack trace for the original error.
+    :type trace: str
+    '''
+    def __init__(self, message, trace):
+        super().__init__(406, "File Data Not JSON Format", message, trace)
+
+class DomainAPIError(APIError):
+    '''
+    API handler error for DomainError.
+
+    :param message: Details on what caused the error.
+    :type message: str
+
+    :param trace: Stack trace for the original error.
+    :type trace: str
+    '''
+    def __init__(self, message, trace=None):
+        super().__init__(406, "Domain Error", message, trace)
