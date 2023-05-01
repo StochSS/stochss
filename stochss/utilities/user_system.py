@@ -237,7 +237,7 @@ class UserSystem:
         stochss_log = log.getChild("StochSS")
         stochss_sh = logging.StreamHandler()
         stochss_sh.setFormatter(LogFormatter(
-            fmt="%(color)s[%(levelname)1.1s %(asctime)s StochSS %(filenam)s:%(lineno)d]%(end_color)s %(message)s",
+            fmt="%(color)s[%(levelname)1.1s %(asctime)s StochSS %(filename)s:%(lineno)d]%(end_color)s %(message)s",
             datefmt="%H:%M:%S", color=True
         ))
         stochss_sh.setLevel(logging.WARNING)

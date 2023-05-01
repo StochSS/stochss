@@ -56,7 +56,7 @@ class Project(Folder):
 
     def __check_project_version(self):
         models = self._get_file_objects(
-            tests=[lambda root, file_obj, obj=self: obj.get_extension(file_obj) not in ("mdl", "smdl")],
+            tests=[lambda root, file_obj, obj=self: obj.get_extension(path=file_obj) not in ("mdl", "smdl")],
             full_paths=False, recursive=False
         )
         if len(models) > 0:
@@ -83,7 +83,7 @@ class Project(Folder):
                 else:
                     wkfl_mappings[model] = [data]
         models = self._get_file_objects(
-            tests=[lambda root, file_obj, obj=self: obj.get_extension(file_obj) not in ("mdl", "smdl")],
+            tests=[lambda root, file_obj, obj=self: obj.get_extension(path=file_obj) not in ("mdl", "smdl")],
             full_paths=False, recursive=False
         )
         wkgp_mappings = {}
@@ -150,12 +150,13 @@ class Project(Folder):
             tests=[lambda root, file_obj: not file_obj.endswith(".wkgp")],
             full_paths=False, include_files=False, include_folders=True, recursive=False
         )
-        for workflow_group_path in workflow_groups:
-            if workflow_group_path in self.metadata:
-                self.__update_metadata(self.metadata[workflow_group_path], self.creators)
-                wkgp_metadata = self.metadata[workflow_group_path]
+        for workflow_group_file in workflow_groups:
+            if workflow_group_file in self.metadata:
+                self.__update_metadata(self.metadata[workflow_group_file], self.creators)
+                wkgp_metadata = self.metadata[workflow_group_file]
             else:
                 wkgp_metadata = None
+            workflow_group_path = os.path.join(self.get_sanitized_path(), workflow_group_file)
             workflow_group = WorkflowGroup(workflow_group_path, metadata=wkgp_metadata)
             workflow_group.load()
             if workflow_group.model is None:

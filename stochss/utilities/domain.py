@@ -40,7 +40,7 @@ class Domain(File):
     '''
     TEMPLATE_VERSION = 2
 
-    def __init__(self, path, new=True, domain=None, **kwargs):
+    def __init__(self, path, new=False, domain=None, **kwargs):
         if new:
             if not path.endswith(".domn"):
                 path = f"{path}.domn"

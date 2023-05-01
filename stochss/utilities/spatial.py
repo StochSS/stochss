@@ -40,7 +40,7 @@ class Spatial(File):
     '''
     TEMPLATE_VERSION = 1
 
-    def __init__(self, path, new=True, model=None, **kwargs):
+    def __init__(self, path, new=False, model=None, **kwargs):
         if new:
             if not path.endswith(".smdl"):
                 path = f"{path}.smdl"

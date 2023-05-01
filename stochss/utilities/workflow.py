@@ -53,7 +53,7 @@ class Workflow(Folder):
     }
     TYPES = { 'gillespy2': '_ES', 'spatial': '_SES', 'paramereSweep': '_PS', 'inference': '_MI' }
 
-    def __init__(self, path, new=True, settings=None, model=None, wkfl_type=None, **kwargs):
+    def __init__(self, path, new=False, settings=None, model=None, wkfl_type=None, **kwargs):
         if new and not path.endswith(".wkfl"):
             path = f"{path}.wkfl"
         super().__init__(path=path, new=new, make_unique=True, **kwargs)
@@ -193,7 +193,7 @@ class Workflow(Folder):
         :param for_project: Indicates the dictionaty is intended for the project manager page.
         :type for_project: bool
         '''
-        if self.check_current_workflow_version():
+        if not self.check_current_workflow_version():
             self.update_workflow_to_current()
 
         self.__load_settings()

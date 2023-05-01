@@ -45,7 +45,7 @@ class WorkflowGroup(Folder):
 
     :param \**kwargs: Key word arguments passed to UserSystem.
     '''
-    def __init__(self, path, metadata=None, new=True, spatial=False, model=None, **kwargs):
+    def __init__(self, path, metadata=None, new=False, spatial=False, model=None, **kwargs):
         if new and not path.endswith(".wkpg"):
             path = f"{path}.wkgp"
         super().__init__(path=path, new=new, make_unique=True, **kwargs)
@@ -71,8 +71,9 @@ class WorkflowGroup(Folder):
     def __load_model(self):
         models = self._get_file_objects(recursive=False, tests=[
             lambda root, file_obj: file_obj.startswith("."),
-            lambda root, file_obj, obj=self: obj.get_extension() not in ("mdl", "smdl")
+            lambda root, file_obj, obj=self: obj.get_extension(path=file_obj) not in ("mdl", "smdl")
         ])
+        print(models)
         if len(models) > 0:
             if self.get_extension(path=models[0]) == "smdl":
                 self.model = Spatial(models[0])
@@ -82,7 +83,7 @@ class WorkflowGroup(Folder):
     def __load_workflows(self):
         workflows = self._get_file_objects(include_folders=True, recursive=False, tests=[
             lambda root, file_obj: file_obj.startswith("."),
-            lambda root, file_obj, obj=self: obj.get_extension() not in ("ipynb", "wkfl")
+            lambda root, file_obj, obj=self: obj.get_extension(path=file_obj) not in ("ipynb", "wkfl")
         ])
         for workflow in workflows:
             if self.get_extension(path=workflow) == "ipynb":

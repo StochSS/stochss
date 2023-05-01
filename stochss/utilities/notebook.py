@@ -39,7 +39,7 @@ class Notebook(File):
     MODEL_EXPLORATION = 4
     MODEL_INFERENCE = 5
 
-    def __init__(self, path, new=True, model=None, settings=None, **kwargs):
+    def __init__(self, path, new=False, model=None, settings=None, **kwargs):
         if new:
             if not path.endswith(".ipynb"):
                 path = f"{path}.ipynb"

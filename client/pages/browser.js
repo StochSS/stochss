@@ -56,7 +56,7 @@ let FileBrowser = PageView.extend({
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
     this.homeLink = "stochss/home";
-    $(this.queryByHook("loading-header")).html(`Loading User Settings`);
+    $(this.queryByHook("loading-header")).html(`Loading Browser`);
     $(this.queryByHook("loading-target")).css("display", "none");
     $(this.queryByHook("loading-spinner")).css("display", "block");
     $(this.queryByHook("loading-message")).css("display", "none");
