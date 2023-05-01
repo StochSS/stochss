@@ -52,6 +52,12 @@ let FileBrowser = PageView.extend({
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
+    window.addEventListener('pageshow', (e) => {
+      let navType = window.performance.navigation.type;
+      if(navType === 2){
+        window.location.reload();
+      }
+    });
   },
   render: function (attrs, options) {
     PageView.prototype.render.apply(this, arguments);
@@ -69,12 +75,6 @@ let FileBrowser = PageView.extend({
   renderContent: function (body) {
     this.template = template
     PageView.prototype.render.apply(this, arguments)
-    window.addEventListener('pageshow', (e) => {
-      let navType = window.performance.navigation.type;
-      if(navType === 2){
-        window.location.reload();
-      }
-    });
     this.renderProjectsView(body.projects);
     if(body.presentations) {
       $("#presentations").css("display", "flex");

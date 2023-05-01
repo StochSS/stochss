@@ -64,7 +64,7 @@ class WorkflowGroup(Folder):
     def __load_metadata(self):
         try:
             with open(self.metadata_file, "r", encoding="utf-8") as metadata_fd:
-                self.metadata = json.load(metadata_fd)
+                self.metadata = json.load(metadata_fd)['metadata']
         except FileNotFoundError:
             self.metadata = {'description': "", 'creators': []}
 
@@ -73,7 +73,6 @@ class WorkflowGroup(Folder):
             lambda root, file_obj: file_obj.startswith("."),
             lambda root, file_obj, obj=self: obj.get_extension(path=file_obj) not in ("mdl", "smdl")
         ])
-        print(models)
         if len(models) > 0:
             if self.get_extension(path=models[0]) == "smdl":
                 self.model = Spatial(models[0])

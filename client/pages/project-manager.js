@@ -36,11 +36,13 @@ let WorkflowListing = require('../views/workflow-listing');
 let WorkflowGroupListing = require('../views/workflow-group-listing');
 //templates
 let template = require('../templates/pages/projectManager.pug');
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
+let loadingTemplate = require('../templates/pages/loadingPage.pug');
 
 import initPage from './page.js'
 
 let ProjectManager = PageView.extend({
-  template: template,
+  template: loadingTemplate,
   events: {
     'change [data-hook=annotation-text-container]' : 'updateAnnotation',
     'click [data-hook=edit-annotation-btn]' : 'handleEditAnnotationClick',
@@ -59,28 +61,62 @@ let ProjectManager = PageView.extend({
     'click [data-hook=empty-project-trash]' : 'handleEmptyTrashClick'
   },
   initialize: function (attrs, options) {
-    PageView.prototype.initialize.apply(this, arguments)
-    let self = this;
+    PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
-    this.model = new Project({
-      directory: urlParams.get('path')
-    });
-    app.getXHR(this.model.url(), {
-      success: function (err, response, body) {
-        self.model.set(body)
-        self.models = new Collection(body.models, {model: Model});
-        if(!self.model.newFormat) {
-          self.model.workflowGroups.models[0].model = null;
-        }
-        self.renderSubviews(body.trash_empty);
-      }
-    });
+    this.model = new Project({ directory: urlParams.get('path') });
     window.addEventListener("pageshow", function (event) {
-      var navType = window.performance.navigation.type
+      var navType = window.performance.navigation.type;
       if(navType === 2){
-        window.location.reload()
+        window.location.reload();
       }
     });
+  },
+  render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments);
+    this.homeLink = "stochss/home";
+    $(this.queryByHook("loading-header")).html(`Loading Project`);
+    $(this.queryByHook("loading-target")).html(this.model.directory);
+    $(this.queryByHook("loading-spinner")).css("display", "block");
+    $(this.queryByHook("loading-message")).css("display", "none");
+    app.getXHR(this.model.url(), {
+      success: (err, response, body) => { this.renderContent(body); },
+      error: (err, response, body) => { this.renderError(response, body); }
+    });
+  },
+  renderContent: function (body) {
+    this.template = template
+    PageView.prototype.render.apply(this, arguments)
+    this.model.set(body)
+    this.models = new Collection(body.models, {model: Model});
+    if(!this.model.newFormat) {
+      this.model.workflowGroups.models[0].model = null;
+    }
+    $("#page-title").text(`Project: ${this.model.name}`);
+    if(this.model.annotation){
+      $(this.queryByHook('edit-annotation-btn')).text('Edit Notes');
+      $(this.queryByHook('annotation-text-container')).text(this.model.annotation);
+      $(this.queryByHook("collapse-annotation-container")).collapse('show');
+    }
+    $("#" + this.model.elementID + "-archive-section").css("display", "block");
+    this.renderWorkflowGroupCollection();
+    this.renderArchiveCollection();
+    this.renderMetaDataView();
+    this.renderProjectFileBrowser();
+    $(this.queryByHook('empty-project-trash')).prop('disabled', body.trash_empty);
+    $(document).on('hide.bs.modal', '.modal', (e) => { e.target.remove() });
+    $(document).ready(() => {
+      $('[data-toggle="tooltip"]').tooltip();
+      $('[data-toggle="tooltip"]').click(() => {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+      });
+    });
+  },
+  renderError: function (response, body) {
+    this.template = errorTemplate;
+    this.logoPath = "/static/stochss-logo.png";
+    this.title = `${response.statusCode} ${body.reason}`;
+    this.errMsg = body.message;
+    PageView.prototype.render.apply(this, arguments);
   },
   addExistingModel: function () {
     if(document.querySelector('#importModelModal')){
@@ -355,47 +391,6 @@ let ProjectManager = PageView.extend({
       configKey: "project"
     });
     app.registerRenderSubview(this, this.projectFileBrowser, "file-browser");
-  },
-  renderSubviews: function (emptyTrash) {
-    PageView.prototype.render.apply(this, arguments);
-    if(!this.model.newFormat) {
-      let self = this;
-      let modal = $(modals.updateFormatHtml("Project")).modal();
-      let yesBtn = document.querySelector("#updateProjectFormatModal .yes-modal-btn");
-      yesBtn.addEventListener("click", function (e) {
-        modal.modal("hide");
-        let queryStr = "?path=" + self.model.directory + "&action=update-project";
-        let endpoint = path.join(app.getBasePath(), "stochss/loading-page") + queryStr;
-        window.location.href = endpoint;
-      });
-    }
-    $("#page-title").text("Project: " + this.model.name);
-    if(this.model.annotation){
-      $(this.queryByHook('edit-annotation-btn')).text('Edit Notes');
-      $(this.queryByHook('annotation-text-container')).text(this.model.annotation);
-      $(this.queryByHook("collapse-annotation-container")).collapse('show');
-    }
-    if(this.model.newFormat) {
-      $("#" + this.model.elementID + "-archive-section").css("display", "block");
-      this.renderWorkflowGroupCollection();
-      this.renderArchiveCollection();
-    }else{
-      $("#" + this.model.elementID + "-workflows-section").css("display", "block");
-      this.renderModelsCollection();
-      this.renderWorkflowsCollection();
-    }
-    this.renderMetaDataView();
-    this.renderProjectFileBrowser();
-    $(this.queryByHook('empty-project-trash')).prop('disabled', emptyTrash);
-    $(document).on('hide.bs.modal', '.modal', function (e) {
-      e.target.remove()
-    });
-    $(document).ready(function () {
-      $('[data-toggle="tooltip"]').tooltip();
-      $('[data-toggle="tooltip"]').click(function () {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-      });
-    });
   },
   renderWorkflowsCollection: function () {
     if(this.workflowCollectionView) {
