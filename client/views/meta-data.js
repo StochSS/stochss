@@ -36,7 +36,7 @@ let template = require('../templates/includes/metaData.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'change [data-hook=file-select-view]' : 'updateMetaData',
+    'change [data-hook=file-select-view]' : 'handleUpdateMetaData',
     'change [data-hook=description-input-view]' : 'updateFileDescription',
     'change [data-hook=creator-select-view]' : 'updateCreator',
     'change [data-hook=email-input-view]' : 'toggleAddCreatorBtn',
@@ -46,13 +46,14 @@ module.exports = View.extend({
   },
   initialize: function(attrs, options) {
     View.prototype.initialize.apply(this, arguments);
-    this.files = this.model.workflowGroups.map(function (wkgp) {
+    this.files = this.model.workflowGroups.map((wkgp) => {
       return wkgp.name;
     });
     this.files.unshift(this.model.name);
+    this.selectedFile = this.model.name
     this.metadata = this.model.metadata;
     this.selectedCreator = "New Creator";
-    this.model.creators.forEach(function (creator) {
+    this.model.creators.forEach((creator) => {
       if(!creator.elementID) {
         creator.elementID = "C" + (creator.collection.indexOf(creator) + 1);
       }
@@ -96,13 +97,16 @@ module.exports = View.extend({
       this.addCreator("existing", creator);
     }
   },
+  handleUpdateMetaData: function (e) {
+    this.selectedFile = e.target.selectedOptions.item(0).text;
+    this.updateMetaData();
+  },
   renderCreatorListingView: function () {
     if(this.creatorListingView) {
       this.creatorListingView.remove();
     }
-    let self = this;
-    let listOfCreators = this.metadata.creators.map(function (key) {
-      return self.model.creators.get(key, "elementID");
+    let listOfCreators = this.metadata.creators.map((key) => {
+      return this.model.creators.get(key, "elementID");
     });
     let creators = new Creators(listOfCreators);
     this.creatorListingView = this.renderCollection(creators, CreatorListingView, this.queryByHook("list-of-creators"));
@@ -163,16 +167,15 @@ module.exports = View.extend({
       textAttribute: 'name',
       eagerValidate: true,
       options: this.files,
-      value: this.model.name
+      value: this.selectedFile
     });
     app.registerRenderSubview(this, this.filesSelectView, "file-select-view");
   },
   saved: function () {
     $(this.queryByHook('md-in-progress')).css("display", "none");
     $(this.queryByHook('md-complete')).css("display", "inline-block");
-    let self = this;
-    setTimeout(function () {
-      $(self.queryByHook("md-complete")).css("display", "none");
+    setTimeout(() => {
+      $(this.queryByHook("md-complete")).css("display", "none");
     }, 5000);
   },
   saving: function () {
@@ -183,14 +186,13 @@ module.exports = View.extend({
     this.saving();
     let data = {}
     data[this.model.directory] = {"metadata":this.model.metadata, "creators":this.model.creators};
-    this.model.workflowGroups.forEach(function (wkgp) {
+    this.model.workflowGroups.forEach((wkgp) => {
       data[wkgp.name + ".wkgp"] = {"metadata": wkgp.metadata};
     });
-    let self = this;
     let endpoint = path.join(app.getApiPath(), "project/meta-data")+"?path="+this.model.directory;
     app.postXHR(endpoint, data, {
-      success: function (err, response, body) {
-        self.saved();
+      success: (err, response, body) => {
+        this.saved();
       }
     });
   },
@@ -212,13 +214,23 @@ module.exports = View.extend({
       $(this.queryByHook("add-creator-btn")).text("Add");
     }
   },
-  updateMetaData: function (e) {
-    let selectedFile = e.target.selectedOptions.item(0).text;
-    this.metadata = selectedFile !== this.model.name ? this.model.workflowGroups.filter(function (wkgp) {
-      return wkgp.name === selectedFile;
+  updateMetaData: function () {
+    this.metadata = this.selectedFile !== this.model.name ? this.model.workflowGroups.filter((wkgp) => {
+      return wkgp.name === this.selectedFile;
     })[0].metadata : this.model.metadata;
     $(this.queryByHook("description-input-view")).val(this.metadata.description);
     this.renderCreatorListingView();
   },
-  updateValid: function () {}
+  updateValid: function () {},
+  updateView: function () {
+    this.files = this.model.workflowGroups.map((wkgp) => {
+      return wkgp.name;
+    });
+    this.files.unshift(this.model.name);
+    if(!this.files.includes(this.selectedFile)) {
+      this.selectedFile = this.model.name;
+      this.updateMetaData();
+    }
+    this.renderFilesSelectView();
+  }
 });

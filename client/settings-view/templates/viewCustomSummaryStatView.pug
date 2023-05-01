@@ -1,0 +1,12 @@
+div.mx-1
+
+  if(this.model.collection.indexOf(this.model) !== 0)
+    hr
+
+  div.row
+
+    div.col-sm-2
+
+      div.pl-2=this.model.name
+
+    div.col-sm-10=this.model.argsDisplay

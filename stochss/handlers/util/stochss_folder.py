@@ -408,7 +408,7 @@ class StochSSFolder(StochSSBase):
         return {"Message":message, "Path":zip_path}
 
 
-    def get_file_list(self, ext, folder=False, test=None):
+    def get_file_list(self, ext, inc_folders=False, inc_files=True, test=None):
         '''
         Get the list of files matching the ext in this directory and all sub-directories
 
@@ -416,8 +416,10 @@ class StochSSFolder(StochSSBase):
         ----------
         ext : str or list
             Extension of file object to search for
-        folder : bool
-            Indicates whether or not the file object is a folder
+        inc_folder : bool
+            Indicates whether or not to include 'folder' file objects
+        inc_file : bool
+            Indicates whether or not to include 'file' file objects
         test : func
             Function that determines if a file object should be excluded
         '''
@@ -425,7 +427,12 @@ class StochSSFolder(StochSSBase):
         domain_files = {}
         for root, folders, files in os.walk(self.get_path(full=True)):
             root = root.replace(self.user_dir+"/", "")
-            file_list = folders if folder else files
+            if inc_folders:
+                file_list = folders
+                if inc_files:
+                    file_list.extend(files)
+            else:
+                file_list = files
             for file in file_list:
                 exclude = False if test is None else test(ext, root, file)
                 if not exclude and '.' in file and f".{file.split('.').pop()}" in ext:
@@ -519,7 +526,7 @@ class StochSSFolder(StochSSBase):
         ----------
         '''
         test = lambda ext, root, file: bool("trash" in root.split("/"))
-        data = self.get_file_list(ext=".proj", folder=True, test=test)
+        data = self.get_file_list(ext=".proj", inc_folders=True, inc_files=False, test=test)
         projects = []
         for file in data['files']:
             for path in data['paths'][file[0]]:

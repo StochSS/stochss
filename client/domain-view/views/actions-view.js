@@ -29,7 +29,7 @@ let template = require('../templates/actionsView.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-actions]' : 'changeCollapseButtonText',
     'click [data-hook=fill-action]' : 'addAction',
     'click [data-hook=set-action]' : 'addAction',
     'click [data-hook=remove-action]' : 'addAction',

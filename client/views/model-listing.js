@@ -33,6 +33,7 @@ module.exports = View.extend({
   	events['change [data-hook=' + this.model.elementID + '-annotation]'] = 'updateAnnotation';
     events['click #' + this.model.elementID + "-ensemble-simulation"] = 'handleEnsembleSimulationClick';
     events['click #' + this.model.elementID + "-parameter-sweep"] = 'handleParameterSweepClick';
+    events['click #' + this.model.elementID + "-model-inference"] = 'handleModelInferenceClick';
   	events['click [data-hook=' + this.model.elementID + '-notes-btn]'] = 'handleEditNotesClick';
   	events['click [data-hook=' + this.model.elementID + '-remove]'] = 'handleTrashModelClick';
   	events['click [data-hook=' + this.model.elementID + '-annotation-btn'] = 'changeCollapseButtonText';
@@ -73,8 +74,11 @@ module.exports = View.extend({
     let type = this.model.is_spatial ? "Spatial Ensemble Simulation" : "Ensemble Simulation";
     this.newWorkflow(type);
   },
+  handleModelInferenceClick: function (e) {
+    this.newWorkflow("Model Inference");
+  },
   handleParameterSweepClick: function (e) {
-    this.newWorkflow("Parameter Sweep")
+    this.newWorkflow("Parameter Sweep");
   },
   handleTrashModelClick: function (e) {
     if(document.querySelector('#moveToTrashConfirmModal')) {

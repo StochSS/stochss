@@ -36,7 +36,8 @@ from spatialpy import Model, Species, Parameter, Reaction, Domain, DomainError, 
 from .stochss_base import StochSSBase
 from .stochss_errors import StochSSFileNotFoundError, FileNotJSONFormatError, DomainFormatError, \
                             StochSSModelFormatError, StochSSPermissionsError, DomainUpdateError, \
-                            DomainActionError, DomainShapeError, DomainTransformationError
+                            DomainActionError, DomainShapeError, DomainTransformationError, \
+                            StochSSAPIError
 
 class StochSSSpatialModel(StochSSBase):
     '''
@@ -321,7 +322,7 @@ class StochSSSpatialModel(StochSSBase):
             end = self.model['modelSettings']['endSim']
             output_freq = self.model['modelSettings']['timeStep']
             step_size = self.model['modelSettings']['timestepSize']
-            tspan = TimeSpan.arange(output_freq, t=end + step_size, timestep_size=step_size)
+            tspan = TimeSpan.arange(output_freq, t=end, timestep_size=step_size)
             model.timespan(tspan)
         except KeyError as err:
             message = "Spatial model settings are not properly formatted or "
@@ -565,19 +566,26 @@ class StochSSSpatialModel(StochSSBase):
     def __create_presentation(self, file, dst):
         presentation = {'model': self.model, 'files': {}}
         # Check if the domain has lattices
-        if len(self.model['domain']['lattices']) == 0:
-            return self.__write_presentation_file(presentation, dst)
+        if len(self.model['domain']['actions']) == 0:
+            raise StochSSAPIError(
+                405, "Model Incomplete", "A domain must have action to publish as a presentation.", None
+            )
         # Process file based lattices
-        file_based_types = ('XML Mesh Lattice', 'Mesh IO Lattice', 'StochSS Lattice')
-        for lattice in self.model['domain']['lattices']:
-            if lattice['type'] in file_based_types:
-                entry = self.__get_presentation_file_entry(lattice['filename'], file)
-                lattice['filename'] = entry['pres_path']
-                presentation['files'][lattice['name']] = entry
-                if lattice['subdomainFile'] != "":
-                    sdf_entry = self.__get_presentation_file_entry(lattice['subdomainFile'], file)
-                    lattice['subdomainFile'] = sdf_entry['pres_path']
-                    presentation['files'][f"{lattice['name']}_sdf"] = sdf_entry
+        file_based_types = ('XML Mesh', 'Mesh IO', 'StochSS Domain')
+        for action in self.model['domain']['actions']:
+            if action['type'] in file_based_types:
+                o_action_id = hashlib.md5(json.dumps(action, sort_keys=True, indent=4).encode('utf-8')).hexdigest()
+                entry = self.__get_presentation_file_entry(action['filename'], file)
+                action['filename'] = entry['pres_path']
+                presentation['files'][o_action_id] = entry
+                if action['subdomainFile'] != "":
+                    sdf_entry = self.__get_presentation_file_entry(action['subdomainFile'], file)
+                    action['subdomainFile'] = sdf_entry['pres_path']
+                    presentation['files'][f"{o_action_id}_sdf"] = sdf_entry
+                p_action_id = hashlib.md5(json.dumps(action, sort_keys=True, indent=4).encode('utf-8')).hexdigest()
+                presentation['files'][p_action_id] = entry
+                if f"{o_action_id}_sdf" in presentation['files']:
+                    presentation['files'][f"{p_action_id}_sdf"] = presentation['files'][f"{o_action_id}_sdf"]
         return self.__write_presentation_file(presentation, dst)
 
     def __get_presentation_file_entry(self, path, presentation_file):

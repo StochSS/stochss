@@ -1,25 +1,78 @@
 {
-    "simulationSettings": {
-        "isAutomatic": true,
-        "relativeTol": 1e-3,
-        "absoluteTol": 1e-6,
-        "realizations": 100,
-        "algorithm": "SSA",
-        "seed": -1,
-        "tauTol": 0.03
+    "inferenceSettings": {
+        "batchSize": 10,
+        "chunkSize": 10,
+        "numRounds": 5,
+        "numSamples": 100,
+        "obsData": "",
+        "parameters": [],
+        "priorMethod": "Uniform Prior",
+        "summaryStats": [
+            {
+                "name": "sum_values",
+                "args": null,
+                "formula": ""
+            },
+            {
+                "name": "median",
+                "args": null,
+                "formula": ""
+            },
+            {
+                "name": "mean",
+                "args": null,
+                "formula": ""
+            },
+            {
+                "name": "length",
+                "args": null,
+                "formula": ""
+            },
+            {
+                "name": "standard_deviation",
+                "args": null,
+                "formula": ""
+            },
+            {
+                "name": "variance",
+                "args": null,
+                "formula": ""
+            },
+            {
+                "name": "maximum",
+                "args": null,
+                "formula": ""
+            },
+            {
+                "name": "minimum",
+                "args": null,
+                "formula": ""
+            }
+        ],
+        "summaryStatsType": "minimal"
     },
-    "parameterSweepSettings":{
+    "parameterSweepSettings": {
         "parameters": [],
         "speciesOfInterest": {}
     },
-    "resultsSettings":{
-        "mapper":"final",
-        "reducer":"avg",
-        "outputs": []
+    "resultsSettings": {
+        "mapper": "final",
+        "outputs": [],
+        "reducer": "avg"
     },
+    "simulationSettings": {
+        "absoluteTol": 1e-06,
+        "algorithm": "SSA",
+        "isAutomatic": true,
+        "realizations": 100,
+        "relativeTol": 0.001,
+        "seed": -1,
+        "tauTol": 0.03
+    },
+    "template_version": 1,
     "timespanSettings": {
         "endSim": 20,
         "timeStep": 0.05,
-        "timestepSize": 1e-5
+        "timestepSize": 1e-05
     }
 }

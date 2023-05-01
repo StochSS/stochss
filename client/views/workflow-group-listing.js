@@ -36,12 +36,20 @@ module.exports = View.extend({
     events['change [data-hook=' + this.model.elementID + '-annotation'] = 'updateAnnotation';
     events['click #' + this.model.elementID + "-ensemble-simulation"] = 'handleEnsembleSimulationClick';
     events['click #' + this.model.elementID + "-parameter-sweep"] = 'handleParameterSweepClick';
+    events['click #' + this.model.elementID + "-model-inference"] = 'handleModelInferenceClick';
     events['click [data-hook=' + this.model.elementID + '-remove'] = 'handleTrashModelClick';
     events['click [data-hook=' + this.model.elementID + '-tab-btn'] = 'changeCollapseButtonText';
     return events;
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    let links = [];
+    this.model.model.refLinks.forEach((link) => {
+      links.push(
+        `<a class="text-break" href='stochss/workflow/edit?path=${link.path}&type=none'>${link.name}</a>`
+      );
+    });
+    this.htmlLinks = links.join('')
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
@@ -50,6 +58,9 @@ module.exports = View.extend({
     let endpoint = path.join(app.getBasePath(), 'stochss/workflow/selection') + queryString;
     $(this.queryByHook(this.model.elementID + "-jupyter-notebook")).prop("href", endpoint);
     this.renderWorkflowCollection();
+    if(this.htmlLinks) {
+      $(this.queryByHook(`${this.model.elementID}-reference-links`)).html(this.htmlLinks);
+    }
   },
   changeCollapseButtonText: function (e) {
     app.changeCollapseButtonText(this, e);
@@ -58,8 +69,11 @@ module.exports = View.extend({
     let type = this.model.model.is_spatial ? "Spatial Ensemble Simulation" : "Ensemble Simulation";
     this.newWorkflow(type);
   },
+  handleModelInferenceClick: function (e) {
+    this.newWorkflow("Model Inference");
+  },
   handleParameterSweepClick: function (e) {
-    this.newWorkflow("Parameter Sweep")
+    this.newWorkflow("Parameter Sweep");
   },
   handleTrashModelClick: function () {
     if(document.querySelector('#moveToTrashConfirmModal')) {

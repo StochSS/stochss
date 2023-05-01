@@ -29,7 +29,7 @@ let template = require('../templates/transformationsView.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-transformations]' : 'changeCollapseButtonText',
     'click [data-hook=translate-transformation]' : 'addTransformation',
     'click [data-hook=rotate-transformation]' : 'addTransformation',
     'click [data-hook=reflect-transformation]' : 'addTransformation',

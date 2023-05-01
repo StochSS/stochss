@@ -20,10 +20,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 let app = require('../app');
 //views
 let View = require('ampersand-view');
+let SpatialSettingsView = require('./views/spatial-settings-view');
 let TimespanSettingsView = require('./views/timespan-settings-view');
 let ParameterSettingsView = require('./views/parameter-settings-view');
+let InferenceSettingsView = require('./views/inference-settings-view');
 let WellMixedSettingsView = require('./views/well-mixed-settings-view');
-let SpatialSettingsView = require('./views/spatial-settings-view');
 //templates
 let template = require('./settingsView.pug');
 
@@ -43,8 +44,22 @@ module.exports = View.extend({
     }
     if(this.type === "Parameter Sweep") {
       this.renderParameterSettingsView();
+    }else if(this.type === "Model Inference") {
+      this.renderInferenceSettingsView();
     }
     this.renderSimulationSettingsView();
+  },
+  renderInferenceSettingsView: function () {
+    if(this.inferenceSettingsView) {
+      this.inferenceSettingsView.remove();
+    }
+    this.inferenceSettingsView = new InferenceSettingsView({
+      model: this.model.inferenceSettings,
+      stochssModel: this.stochssModel,
+      readOnly: this.readOnly
+    });
+    let hook = "inference-settings-container";
+    app.registerRenderSubview(this, this.inferenceSettingsView, hook);
   },
   renderParameterSettingsView: function () {
     if(this.parameterSettingsView) {

@@ -15,19 +15,23 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 //models
-var State = require('ampersand-state');
+let State = require('ampersand-state');
+let ResultsSettings = require('./results-settings');
 let TimespanSettings = require('./timespan-settings');
-var SimulationSettings = require('./simulation-settings');
-var ParameterSweepSettings = require('./parameter-sweep-settings');
-var ResultsSettings = require('./results-settings');
+let InferenceSettings = require('./inference-settings');
+let SimulationSettings = require('./simulation-settings');
+let ParameterSweepSettings = require('./parameter-sweep-settings');
 
 module.exports = State.extend({
+  props: {
+    template_version: 'number'
+  },
   children: {
   	timespanSettings: TimespanSettings,
     simulationSettings: SimulationSettings,
     parameterSweepSettings: ParameterSweepSettings,
+    inferenceSettings: InferenceSettings,
     resultsSettings: ResultsSettings
   },
   initialize: function(attrs, options) {

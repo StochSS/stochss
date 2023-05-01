@@ -153,13 +153,33 @@ module.exports = {
 
     variable: "The parameter(s) to sweep through.",
     
-    value: "The current value for the parameter you with to sweep through.",
+    value: "The current value for the parameter you wish to sweep through.",
     
     min: "The initial value of the sweep range.  Defaults to half of the current value.",
     
     max: "The final value of the sweep range.  Defaults to 1.5 times the current value.",
     
     steps: "The number of steps used to determine the sweep values across the sweep range."
+  },
+  inferenceSettings: {
+    variable: "The parameter(s) to infer.",
+    
+    value: "The current value for the parameter you wish to infer.",
+    
+    min: "The lower bound of the parameter/dimension.  Defaults to half of the current value.",
+    
+    max: "The upper bound of the parameter/dimension.  Defaults to 1.5 times the current value."
+  },
+  summaryStats: {
+    customArgs: "Arguments to the TSFresh feature calculator.<br><li>Leave the feild empty if no arguments are required.</li>" +
+                '<li>To run once provide a single dictionary.  i.e. {"lag":1}</li>' +
+                '<li>To run multiple times provide a list of dictionaries.  i.e. {"lag":1},{"lag":2}</li>',
+
+    customName: "Name of the TSFresh feature calculator.",
+
+    identityFormula: "An expression that is evaluable within a python environment and a namespace comprised of the model's species.",
+
+    identityName: "Name of the observable data.",
   },
   jobResults: {
     species: "The variables to view sweep data for",

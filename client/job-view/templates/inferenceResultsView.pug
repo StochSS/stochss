@@ -1,0 +1,262 @@
+div#workflow-results.card
+
+  div.card-header.pb-0
+
+    h3.inline Results
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#collapse-results" data-hook="collapse-results-btn") -
+
+  div.collapse.show(id="collapse-results" data-hook="workflow-results")
+
+    div.card-body
+
+      div.collapse(id="edit-plot-args" data-hook="edit-plot-args")
+
+        table.table
+          thead
+            tr
+              th(scope="col") Title
+              th(scope="col") X-axis Label
+              th(scope="col") Y-axis Label
+
+          tbody
+            tr
+              td: div(id="title" data-hook="title")
+              td: div(id="xaxis" data-hook="xaxis")
+              td: div(id="yaxis" data-hook="yaxis")
+
+      div.card
+
+        div.card-header.pb-0
+
+          h5.inline.mr-2 Plot Inference
+
+          div.inline
+
+            ul.nav.nav-tabs
+
+              li.nav-item
+
+                a.nav-link.tab.active(data-toggle="tab" href="#inference-histogram" data-hook="inference-histogram-tab") Histogram
+
+              li.nav-item
+
+                a.nav-link.tab(data-toggle="tab" href="#pdf" data-hook="inference-pdf-tab") Propability Distribution
+
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-inference"
+            id="collapse-inference-btn"
+            data-hook="collapse-inference-btn"
+            data-trigger="collapse-plot-container"
+            data-type="inference"
+          ) -
+
+        div.collapse.show(id="collapse-inference")
+
+          div.card-body
+
+            div.row
+
+              div.col-sm-4
+
+                div.inference-cpv-line Current Parameter Values
+
+              div.col-sm-8
+
+                div.inference-ipv-line Inferred Parameter Values (mean of the accepted samples)
+
+            div.tab-content
+
+              div.tab-pane.active(id="inference-histogram" data-hook="inference-histogram")
+
+                div(data-hook="inference-histogram-plot")
+
+                div.spinner-border.workflow-plot(data-hook="inference-histogram-plot-spinner")
+
+              div.tab-pane(id="pdf" data-hook="pdf")
+            
+                div(data-hook="inference-pdf-plot")
+
+                div.spinner-border.workflow-plot(data-hook="inference-pdf-plot-spinner")
+
+            button.btn.btn-primary.box-shadow(data-hook="inference-model-export" data-target="model-export" disabled) Export Model
+
+            button.btn.btn-primary.box-shadow(data-hook="inference-model-explore" data-target="model-explore" disabled) Export & Explore Model
+
+            button.btn.btn-primary.box-shadow(data-hook="inference-edit-plot" data-target="edit-plot" disabled) Edit Plot
+
+            button.btn.btn-primary.box-shadow.dropdown-toggle(
+              id="inference-download"
+              data-hook="inference-download"
+              data-toggle="dropdown",
+              aria-haspopup="true",
+              aria-expanded="false",
+              type="button"
+              disabled
+            ) Download <span class="caret"></span>
+
+            ul.dropdown-menu(aria-labelledby="#inference-download")
+              li.dropdown-item(
+                data-hook="inference-download-png-custom"
+                data-target="download-png-custom"
+                data-type="inference"
+              ) Plot as .png
+              li.dropdown-item(
+                data-hook="inference-download-json"
+                data-target="download-json"
+                data-type="inference"
+              ) Plot as .json
+
+      div.card
+
+        div.card-header.pb-0
+
+          h5.inline.mr-2 Plot Round
+
+          div.inline
+
+            ul.nav.nav-tabs
+
+              li.nav-item
+
+                a.nav-link.tab.active(data-toggle="tab" href="#round-histogram" data-hook="round-histogram-tab") Histogram
+
+              li.nav-item
+
+                a.nav-link.tab(data-toggle="tab" href="#intersection" data-hook="round-intersection-tab") Intersection
+
+          button.btn.btn-outline-collapse(
+            data-toggle="collapse"
+            data-target="#collapse-round"
+            id="collapse-round-btn"
+            data-hook="collapse-round-btn"
+            data-trigger="collapse-plot-container"
+            data-type="round"
+          ) +
+
+        div.card-body
+
+          p.mb-0
+            | View the results of any selected round.<br>
+            | <b>Histogram</b> - View the histogram, pdf, and original and inferred values for all parameters as well as intersection between parameters.<br>
+
+          ul.mb-0
+            li Click on any intersection subplot to view it in the intersection tab
+
+          p.mb-0
+            | <b>Intersection</b> - View an intersection of two parameters including their histogram, pdf, and original and inferred values.
+
+          ul.mb-0
+            li Click on the histogram tab to select a different intersection.
+
+          div.collapse(id="collapse-round")
+
+            div
+
+              div(data-hook="round-slider-container")
+
+                hr
+
+                div.mx-1.row.head.align-items-baseline
+
+                  div.col-sm-12
+
+                    h6
+
+                      div.inline.mr-2 <b>Round</b>:
+
+                      div.inline(data-hook="round-index-value")=this.roundIndex
+
+                div.mx-1.my-3.row
+
+                  div.col-sm-12
+
+                    input.custom-range(
+                      type="range"
+                      min="1"
+                      max=`${this.model.settings.inferenceSettings.numRounds}`
+                      value=this.roundIndex
+                      data-hook="round-index-slider"
+                    )
+
+              hr
+
+              div.row
+
+                div.col-sm-4
+
+                  div.inference-cpv-line Current Parameter Values
+
+                div.col-sm-8
+
+                  div.inference-ipv-line Inferred Parameter Values (mean of the accepted samples)
+
+            div.tab-content
+
+              div.tab-pane.active(id="round-histogram" data-hook="round-histogram")
+
+                div(data-hook="round-histogram-plot" style="min-height: 1000;")
+
+                div.spinner-border.workflow-plot(data-hook="round-histogram-plot-spinner")
+
+              div.tab-pane(id="intersection" data-hook="intersection")
+
+                div(data-hook="round-intersection-plot" style="min-height: 1000;")
+
+                div.spinner-border.workflow-plot(data-hook="round-intersection-plot-spinner")
+
+            div
+
+              button.btn.btn-primary.box-shadow(data-hook="round-model-export" data-target="model-export" disabled) Export Model
+
+              button.btn.btn-primary.box-shadow(data-hook="round-model-explore" data-target="model-explore" disabled) Export & Explore Model
+
+              button.btn.btn-primary.box-shadow(data-hook="round-edit-plot" data-target="edit-plot" disabled) Edit Plot
+
+              button.btn.btn-primary.box-shadow.dropdown-toggle(
+                id="round-download"
+                data-hook="round-download"
+                data-toggle="dropdown",
+                aria-haspopup="true",
+                aria-expanded="false",
+                type="button"
+                disabled
+              ) Download <span class="caret"></span>
+
+              ul.dropdown-menu(aria-labelledby="#round-download")
+                li.dropdown-item(
+                  data-hook="round-download-png-custom"
+                  data-target="download-png-custom"
+                  data-type="round"
+                ) Plot as .png
+                li.dropdown-item(
+                  data-hook="round-download-json"
+                  data-target="download-json"
+                  data-type="round"
+                ) Plot as .json
+
+      div
+
+        button.btn.btn-primary.box-shadow(id="convert-to-notebook" data-hook="convert-to-notebook") Convert to Notebook
+
+        button.btn.btn-primary.box-shadow(id="download-results-csv" data-hook="download-results-csv") Download Full CSV Results as .zip
+
+        button.btn.btn-primary.box-shadow(id="job-presentation" data-hook="job-presentation" disabled) Publish
+
+        div.saving-status(data-hook="job-action-start")
+
+          div.spinner-grow
+
+          span Publishing ...
+
+        div.saved-status(data-hook="job-action-end")
+
+          span Published
+
+        div.save-error-status(data-hook="job-action-err")
+
+          span Error
+
+      div.text-info(data-hook="update-format-message" style="display: none;")
+        | To publish you job the workflows format must be updated.

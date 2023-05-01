@@ -29,7 +29,7 @@ let template = require('../templates/shapesView.pug');
 module.exports = View.extend({
   template: template,
   events: {
-    'click [data-hook=collapse]' : 'changeCollapseButtonText',
+    'click [data-hook=collapse-shapes]' : 'changeCollapseButtonText',
     'click [data-hook=cartesian-lattice]' : 'addShape',
     'click [data-hook=spherical-lattice]' : 'addShape',
     'click [data-hook=cylindrical-lattice]' : 'addShape'

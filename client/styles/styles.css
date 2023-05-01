@@ -428,6 +428,10 @@ input[type="file"]::-ms-browse {
   margin: 0.5rem auto;
 }
 
+.modal-dialog.preview-plot {
+  max-width: 1000px;
+}
+
 .modal-backdrop {
   width: 100%;
   height: 100%;
@@ -440,6 +444,10 @@ input[type="file"]::-ms-browse {
 
 .modal-content.default-species {
   width: 60%;
+}
+
+.modal-content.preview-plot {
+  max-width: 1000px;
 }
 
 .spinner-border {
@@ -848,4 +856,32 @@ input:checked + .slider:before {
 
 .slider.round:before {
   border-radius: 50%;
+}
+
+.inference-cpv-line {
+  margin-left: 19%;
+}
+
+.inference-cpv-line:before {
+  content: "";
+  display: block;
+  width: 15%;
+  border-top: 4px solid black;
+  position: absolute;
+  left: 15px;
+  top: 40%;
+}
+
+.inference-ipv-line {
+  margin-left: 10%;
+}
+
+.inference-ipv-line:before {
+  content: "";
+  display: block;
+  width: 8%;
+  border-top: 4px dashed black;
+  position: absolute;
+  left: 15px;
+  top: 40%;
 }

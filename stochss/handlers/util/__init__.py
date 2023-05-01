@@ -30,4 +30,5 @@ from .stochss_job import StochSSJob
 from .stochss_project import StochSSProject
 from .ensemble_simulation import EnsembleSimulation
 from .parameter_sweep import ParameterSweep
+from .model_inference import ModelInference
 from .stochss_errors import StochSSAPIError, report_error, report_critical_error

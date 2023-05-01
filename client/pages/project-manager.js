@@ -89,42 +89,42 @@ let ProjectManager = PageView.extend({
     let self = this
     let mdlListEP = path.join(app.getApiPath(), 'project/add-existing-model') + "?path=" + self.model.directory;
     app.getXHR(mdlListEP, {
-      always: function (err, response, body) {
+      always: (err, response, body) => {
         let modal = $(modals.importModelHtml(body.files)).modal();
         let okBtn = document.querySelector('#importModelModal .ok-model-btn');
         let select = document.querySelector('#importModelModal #modelFileSelect');
         let location = document.querySelector('#importModelModal #modelPathSelect');
-        select.addEventListener("change", function (e) {
+        select.addEventListener("change", (e) => {
           okBtn.disabled = e.target.value && body.paths[e.target.value].length >= 2;
           if(body.paths[e.target.value].length >= 2) {
-            var locations = body.paths[e.target.value].map(function (path) {
+            var locations = body.paths[e.target.value].map((path) => {
               return `<option>${path}</option>`;
             });
             locations.unshift(`<option value="">Select a location</option>`);
             locations = locations.join(" ");
-            $("#modelPathInput").find('option').remove().end().append(locations);
+            $(location).find('option').remove().end().append(locations);
             $("#location-container").css("display", "block");
           }else{
             $("#location-container").css("display", "none");
-            $("#modelPathInput").find('option').remove().end();
+            $(location).find('option').remove().end();
           }
         });
-        location.addEventListener("change", function (e) {
+        location.addEventListener("change", (e) => {
           okBtn.disabled = !Boolean(e.target.value);
         });
-        okBtn.addEventListener("click", function (e) {
+        okBtn.addEventListener("click", (e) => {
           modal.modal('hide');
           let mdlPath = body.paths[select.value].length < 2 ? body.paths[select.value][0] : location.value;
           let queryString = "?path=" + self.model.directory + "&mdlPath=" + mdlPath;
           let endpoint = path.join(app.getApiPath(), 'project/add-existing-model') + queryString
           app.postXHR(endpoint, null, {
-            success: function (err, response, body) {
+            success: (err, response, body) => {
               if(document.querySelector("#successModal")) {
                 document.querySelector("#successModal").remove();
               }
               let successModal = $(modals.successHtml(body.message)).modal();
             },
-            error: function (err, response, body) {
+            error: (err, response, body) => {
               if(document.querySelector("#errorModal")) {
                 document.querySelector("#errorModal").remove();
               }
@@ -423,22 +423,24 @@ let ProjectManager = PageView.extend({
     }
     let fetchTypes = ["Model", "Workflow", "WorkflowGroup", "Archive"];
     if(fetchTypes.includes(target)) {
-      let self = this;
       app.getXHR(this.model.url(), {
-        success: function (err, response, body) {
-          self.model.set(body)
-          if(self.model.newFormat) {
-            self.renderWorkflowGroupCollection();
+        success: (err, response, body) => {
+          this.model.set(body);
+          if(this.model.newFormat) {
+            this.renderWorkflowGroupCollection();
+            if(["Model", "WorkflowGroup", "Archive"].includes(target)) {
+              this.metaDataView.updateView();
+            }
           }else{
             if(target === "Workflow"){
-              self.renderWorkflowsCollection();
+              this.renderWorkflowsCollection();
             }
             if(target === "Model"){
-              self.models = new Collection(body.models, {model: Model});
-              self.renderModelsCollection();
+              this.models = new Collection(body.models, {model: Model});
+              this.renderModelsCollection();
             }
           }
-          $(self.queryByHook('empty-project-trash')).prop('disabled', body.trash_empty)
+          $(this.queryByHook('empty-project-trash')).prop('disabled', body.trash_empty);
         }
       });
     }
