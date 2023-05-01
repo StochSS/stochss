@@ -423,22 +423,24 @@ let ProjectManager = PageView.extend({
     }
     let fetchTypes = ["Model", "Workflow", "WorkflowGroup", "Archive"];
     if(fetchTypes.includes(target)) {
-      let self = this;
       app.getXHR(this.model.url(), {
-        success: function (err, response, body) {
-          self.model.set(body)
-          if(self.model.newFormat) {
-            self.renderWorkflowGroupCollection();
+        success: (err, response, body) => {
+          this.model.set(body);
+          if(this.model.newFormat) {
+            this.renderWorkflowGroupCollection();
+            if(["Model", "WorkflowGroup", "Archive"].includes(target)) {
+              this.metaDataView.updateView();
+            }
           }else{
             if(target === "Workflow"){
-              self.renderWorkflowsCollection();
+              this.renderWorkflowsCollection();
             }
             if(target === "Model"){
-              self.models = new Collection(body.models, {model: Model});
-              self.renderModelsCollection();
+              this.models = new Collection(body.models, {model: Model});
+              this.renderModelsCollection();
             }
           }
-          $(self.queryByHook('empty-project-trash')).prop('disabled', body.trash_empty)
+          $(this.queryByHook('empty-project-trash')).prop('disabled', body.trash_empty);
         }
       });
     }
