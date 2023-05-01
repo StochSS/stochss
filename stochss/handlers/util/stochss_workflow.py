@@ -17,12 +17,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
 import os
+import csv
 import json
 import shutil
 import datetime
 import traceback
 
 import numpy
+import plotly
+import plotly.graph_objs as go
 
 from .stochss_base import StochSSBase
 from .stochss_folder import StochSSFolder
@@ -62,7 +65,7 @@ class StochSSWorkflow(StochSSBase):
             settings = self.get_settings_template()
             if wkfl_type == "Parameter Sweep":
                 settings['simulationSettings']['realizations'] = 20
-            if wkfl_type == "Spatial Ensemble Simulation":
+            if wkfl_type in ("Spatial Ensemble Simulation", "Model Inference"):
                 settings['simulationSettings']['realizations'] = 1
             if os.path.exists(mdl_path):
                 with open(mdl_path, "r", encoding="utf-8") as mdl_file:
@@ -75,6 +78,57 @@ class StochSSWorkflow(StochSSBase):
         else:
             self.workflow['settings'] = None
 
+    @classmethod
+    def __get_csv_data(cls, path):
+        with open(path, "r", newline="", encoding="utf-8") as csv_fd:
+            csv_reader = csv.reader(csv_fd, delimiter=",")
+            rows = []
+            headers = None
+            for i, row in enumerate(csv_reader):
+                if i == 0:
+                    if len(row) > 0:
+                        headers = row[1:]
+                else:
+                    rows.append(row)
+            data = numpy.array(rows).swapaxes(0, 1)
+            time = data[0].astype("float")
+            obs_data = data[1:].astype("float")
+            if headers is None:
+                headers = [f"obs{i+1}" for i in range(len(obs_data))]
+        return headers, time, obs_data
+
+    def __get_obs_trace(self, path, traces, f_ndx=None):
+        if path.endswith(".odf"):
+            for ndx, file in enumerate(os.listdir(path)):
+                traces = self.__get_obs_trace(os.path.join(path, file), traces, f_ndx=ndx)
+            return traces
+        if path.endswith(".csv"):
+            common_rgb_values = [
+                '#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd', '#8c564b', '#e377c2',
+                '#7f7f7f', '#bcbd22', '#17becf', '#ff0000', '#00ff00', '#0000ff', '#ffff00',
+                '#00ffff', '#ff00ff', '#800000', '#808000', '#008000', '#800080', '#008080',
+                '#000080', '#ff9999', '#ffcc99', '#ccff99', '#cc99ff', '#ffccff', '#62666a',
+                '#8896bb', '#77a096', '#9d5a6c', '#9d5a6c', '#eabc75', '#ff9600', '#885300',
+                '#9172ad', '#a1b9c4', '#18749b', '#dadecf', '#c5b8a8', '#000117', '#13a8fe',
+                '#cf0060', '#04354b', '#0297a0', '#037665', '#eed284', '#442244',
+                '#ffddee', '#702afb'
+            ]
+            headers, time, data = self.__get_csv_data(path)
+            for i, obs in enumerate(data):
+                line_dict = {"color": common_rgb_values[(i-1)%len(common_rgb_values)]}
+                if f_ndx is not None and f_ndx > 0:
+                    traces.append(go.Scatter(
+                        x=time, y=obs, mode="lines", name=headers[i], line=line_dict,
+                        legendgroup=headers[i], showlegend=False
+                    ))
+                else:
+                    traces.append(go.Scatter(
+                        x=time, y=obs, mode="lines", name=headers[i], line=line_dict,
+                        legendgroup=headers[i]
+                    ))
+            return traces
+        self.log("warning", f"Observed data file found that is not a CSV file.\n\t File: {path}")
+        return traces
 
     def __get_old_wkfl_data(self):
         job = StochSSJob(path=self.path)
@@ -135,6 +189,10 @@ class StochSSWorkflow(StochSSBase):
                 self.workflow['model'] = settings['model']
                 self.workflow['settings'] = settings['settings']
                 self.workflow['type'] = settings['type']
+                if settings['type'] == "Model Inference":
+                    from tsfresh.feature_extraction.settings import EfficientFCParameters # pylint: disable=import-outside-toplevel
+                    feature_calculators = list(EfficientFCParameters().keys())
+                    self.workflow['settings']['inferenceSettings']['customCalculators'] = feature_calculators
         except FileNotFoundError as err:
             message = f"Could not find the settings file: {str(err)}"
             raise StochSSFileNotFoundError(message, traceback.format_exc) from err
@@ -146,31 +204,40 @@ class StochSSWorkflow(StochSSBase):
             p_range = list(numpy.linspace(param['min'], param['max'], param['steps']))
             param['range'] = p_range
 
+    def __update_settings_to_current(self):
+        settings = self.workflow['settings']
+        if settings['template_version'] == self.SETTINGS_TEMPLATE_VERSION:
+            return
 
-    def __update_settings(self):
-        settings = self.workflow['settings']['parameterSweepSettings']
         parameters = []
-        if "parameters" not in settings.keys():
-            if "paramID" in settings['parameterOne']:
-                param1 = {"paramID": settings['parameterOne']['paramID'],
-                          "min": settings['p1Min'],
-                          "max": settings['p1Max'],
-                          "name": settings['parameterOne']['name'],
-                          "steps": settings['p1Steps'],
-                          "hasChangedRanged": False}
-                parameters.append(param1)
-            if "paramID" in settings['parameterTwo']:
-                param2 = {"paramID": settings['parameterTwo']['paramID'],
-                          "min": settings['p2Min'],
-                          "max": settings['p2Max'],
-                          "name": settings['parameterTwo']['name'],
-                          "steps": settings['p2Steps'],
-                          "hasChangedRanged": False}
-                parameters.append(param2)
-            soi = settings['speciesOfInterest']
-            self.workflow['settings']['parameterSweepSettings'] = {"speciesOfInterest": soi,
-                                                                   "parameters": parameters}
+        if "parameters" not in settings['parameterSweepSettings']:
+            if "paramID" in settings['parameterSweepSettings']['parameterOne']:
+                parameters.append({
+                    "paramID": settings['parameterOne']['paramID'],
+                    "min": settings['parameterSweepSettings']['p1Min'],
+                    "max": settings['parameterSweepSettings']['p1Max'],
+                    "name": settings['parameterSweepSettings']['parameterOne']['name'],
+                    "steps": settings['parameterSweepSettings']['p1Steps'],
+                    "hasChangedRanged": False
+                })
+            if "paramID" in settings['parameterSweepSettings']['parameterTwo']:
+                parameters.append({
+                    "paramID": settings['parameterSweepSettings']['parameterTwo']['paramID'],
+                    "min": settings['parameterSweepSettings']['p2Min'],
+                    "max": settings['parameterSweepSettings']['p2Max'],
+                    "name": settings['parameterSweepSettings']['parameterTwo']['name'],
+                    "steps": settings['parameterSweepSettings']['p2Steps'],
+                    "hasChangedRanged": False
+                })
+            soi = settings['parameterSweepSettings']['speciesOfInterest']
+            settings['parameterSweepSettings'] = {
+                "speciesOfInterest": soi, "parameters": parameters
+            }
 
+        settings['inferenceSettings'] = {
+            "obsData": "", "parameters": [], "priorMethod": "Uniform Prior", "summaryStats": ""
+        }
+        settings['template_version'] = self.SETTINGS_TEMPLATE_VERSION
 
     @classmethod
     def __write_new_files(cls, settings, annotation):
@@ -336,7 +403,9 @@ class StochSSWorkflow(StochSSBase):
             self.workflow['settings'] = jobdata['settings']
             self.workflow['type'] = jobdata['titleType']
             oldfmtrdy = jobdata['status'] == "ready"
-        self.__update_settings()
+        if "template_version" not in self.workflow['settings']:
+            self.workflow['settings']['template_version'] = 0
+        self.__update_settings_to_current()
         if (self.workflow['model'] is None or not os.path.exists(self.workflow['model'])) \
                                                     and (oldfmtrdy or self.workflow['newFormat']):
             if ".proj" in self.path:
@@ -362,6 +431,24 @@ class StochSSWorkflow(StochSSBase):
                 self.workflow['models'] = models
         return self.workflow
 
+    def preview_obs_data(self, path):
+        '''
+        Preview the observed data for inference workflow.
+
+        Attributes
+        ----------
+        path : str
+            Path to the observed data.
+        '''
+        traces = self.__get_obs_trace(path, [])
+        if not traces:
+            raise Exception("No observed data found.")
+
+        layout = go.Layout(
+            showlegend=True, title="Observed Data", xaxis_title="Time", yaxis_title="Value"
+        )
+        fig = {"data": traces, "layout": layout, "config": {"responsive": True}}
+        return json.loads(json.dumps(fig, cls=plotly.utils.PlotlyJSONEncoder))
 
     def save(self, new_settings, mdl_path):
         '''

@@ -495,6 +495,12 @@ module.exports = View.extend({
             this.newWorkflow(node, "Parameter Sweep");
           }
         }),
+        modelInference: this.buildContextBase({
+          label: "Model Inference",
+          action: (data) => {
+            this.newWorkflow(node, "Model Inference");
+          }
+        }),
         jupyterNotebook: this.getNotebookNewWorkflowContext(node)
       }
     });

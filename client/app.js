@@ -79,25 +79,6 @@ let changeCollapseButtonText = (view, e) => {
     text === '+' ? collapseBtn.text('-') : collapseBtn.text('+');
   }
 }
-let copyToClipboard = (text, success, error) => {
-  fullURL = window.location.protocol + '//' + window.location.hostname + text;
-  if (window.clipboardData && window.clipboardData.setData) {
-    // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
-    return window.clipboardData.setData("Text", fullURL);
-  }
-  else {
-    navigator.clipboard.writeText(fullURL).then(success, error);
-  }
-}
-let documentSetup = () => {
-  tooltipSetup();
-  $(document).on('shown.bs.modal', (e) => {
-    $('[autofocus]', e.target).focus();
-  });
-  $(document).on('hide.bs.modal', '.modal', (e) => {
-    e.target.remove();
-  });
-}
 let getApiPath = () => path.join(getBasePath(), apiPrefix);
 let getBasePath = () => {
   try {
@@ -133,6 +114,112 @@ let getXHR = (endpoint, {
     error(exception, response, body);
   }
 }
+
+let validateName = (input, {rename=false, saveAs=true}={}) => {
+  var error = "";
+  if(input.endsWith('/')) {
+    error = 'forward';
+  }
+  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
+  if(rename || !saveAs) {
+    invalidChars += "/";
+  }
+  for(var i = 0; i < input.length; i++) {
+    if(invalidChars.includes(input.charAt(i))) {
+      error = error === "" || error === "special" ? "special" : "both";
+    }
+  }
+  return error;
+}
+
+let newWorkflow = (parent, mdlPath, isSpatial, type) => {
+  if(document.querySelector('#newWorkflowModal')) {
+    document.querySelector('#newWorkflowModal').remove()
+  }
+  let typeCodes = {
+    "Ensemble Simulation": "_ES",
+    "Spatial Ensemble Simulation": "_SES",
+    "Parameter Sweep": "_PS",
+    "Model Inference": "_MI"
+  }
+  let ext = isSpatial ? /.smdl/g : /.mdl/g
+  let typeCode = typeCodes[type];
+  let name = mdlPath.split('/').pop().replace(ext, typeCode)
+  let modal = $(modals.createWorkflowHtml(name, type)).modal();
+  let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
+  let input = document.querySelector('#newWorkflowModal #workflowNameInput');
+  okBtn.disabled = false;
+  input.addEventListener("keyup", (event) => {
+    if(event.keyCode === 13){
+      event.preventDefault();
+      okBtn.click();
+    }
+  });
+  input.addEventListener("input", (e) => {
+    let endErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputEndCharError')
+    let charErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputSpecCharError')
+    let error = validateName(input.value)
+    okBtn.disabled = error !== "" || input.value.trim() === ""
+    charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none"
+    endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none"
+  });
+  okBtn.addEventListener('click', (e) => {
+    modal.modal("hide");
+    let wkflFile = `${input.value.trim()}.wkfl`;
+    if(mdlPath.includes(".proj") && !mdlPath.includes(".wkgp")){
+      var wkflPath = path.join(path.dirname(mdlPath), "WorkflowGroup1.wkgp", wkflFile);
+    }else{
+      var wkflPath = path.join(path.dirname(mdlPath), wkflFile);
+    }
+    let queryString = `?path=${wkflPath}&model=${mdlPath}&type=${type}`;
+    let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
+    getXHR(endpoint, {
+      success: (err, response, body) => {
+        window.location.href = `${path.join(getBasePath(), "stochss/workflow/edit")}?path=${body.path}`;
+      }
+    });
+  });
+}
+
+tooltipSetup = () => {
+  $(function () {
+    $('[data-toggle="tooltip"]').tooltip();
+    $('[data-toggle="tooltip"]').on('click ', function () {
+        $('[data-toggle="tooltip"]').tooltip("hide");
+     });
+  });
+}
+
+documentSetup = () => {
+  tooltipSetup();
+  $(document).on('shown.bs.modal', function (e) {
+    $('[autofocus]', e.target).focus();
+  });
+  $(document).on('hide.bs.modal', '.modal', function (e) {
+    e.target.remove();
+  });
+}
+
+copyToClipboard = (text, success, error) => {
+  fullURL = window.location.protocol + '//' + window.location.hostname + text;
+  if (window.clipboardData && window.clipboardData.setData) {
+    // Internet Explorer-specific code path to prevent textarea being shown while dialog is visible.
+    return window.clipboardData.setData("Text", fullURL);
+  }
+  else {
+    navigator.clipboard.writeText(fullURL).then(success, error)
+  }
+}
+
+let switchToEditTab = (view, section) => {
+  let elementID = Boolean(view.model && view.model.elementID) ? view.model.elementID + "-" : "";
+  if($(view.queryByHook(elementID + 'view-' + section)).hasClass('active')) {
+    $(view.queryByHook(elementID + section + '-edit-tab')).tab('show');
+    $(view.queryByHook(elementID + 'edit-' + section)).addClass('active');
+    $(view.queryByHook(elementID + 'view-' + section)).removeClass('active');
+  }
+}
+
 let maintenance = (view) => {
   getXHR("stochss/api/message", {
     always: (err, response, body) => {
@@ -186,53 +273,6 @@ let maintenance = (view) => {
     }
   });
 }
-let newWorkflow = (parent, mdlPath, isSpatial, type) => {
-  if(document.querySelector('#newWorkflowModal')) {
-    document.querySelector('#newWorkflowModal').remove();
-  }
-  let typeCodes = {
-    "Ensemble Simulation": "_ES",
-    "Spatial Ensemble Simulation": "_SES",
-    "Parameter Sweep": "_PS"
-  }
-  let ext = isSpatial ? /.smdl/g : /.mdl/g;
-  let typeCode = typeCodes[type];
-  let name = mdlPath.split('/').pop().replace(ext, typeCode);
-  let modal = $(modals.createWorkflowHtml(name, type)).modal();
-  let okBtn = document.querySelector('#newWorkflowModal .ok-model-btn');
-  let input = document.querySelector('#newWorkflowModal #workflowNameInput');
-  okBtn.disabled = false;
-  input.addEventListener("keyup", (event) => {
-    if(event.keyCode === 13){
-      event.preventDefault();
-      okBtn.click();
-    }
-  });
-  input.addEventListener("input", (e) => {
-    let endErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputEndCharError');
-    let charErrMsg = document.querySelector('#newWorkflowModal #workflowNameInputSpecCharError');
-    let error = validateName(input.value);
-    okBtn.disabled = error !== "" || input.value.trim() === "";
-    charErrMsg.style.display = error === "both" || error === "special" ? "block" : "none";
-    endErrMsg.style.display = error === "both" || error === "forward" ? "block" : "none";
-  });
-  okBtn.addEventListener('click', (e) => {
-    modal.modal("hide");
-    let wkflFile = `${input.value.trim()}.wkfl`;
-    if(mdlPath.includes(".proj") && !mdlPath.includes(".wkgp")){
-      var wkflPath = path.join(path.dirname(mdlPath), "WorkflowGroup1.wkgp", wkflFile);
-    }else{
-      var wkflPath = path.join(path.dirname(mdlPath), wkflFile);
-    }
-    let queryString = `?path=${wkflPath}&model=${mdlPath}&type=${type}`;
-    let endpoint = path.join(getApiPath(), "workflow/new") + queryString;
-    getXHR(endpoint, {
-      success: (err, response, body) => {
-        window.location.href = `${path.join(getBasePath(), "stochss/workflow/edit")}?path=${body.path}`;
-      }
-    });
-  });
-}
 let postXHR = (endpoint, data, {
   always = function (err, response, body) {}, success = function (err, response, body) {},
   error = function (err, response, body) {}}={}, isJSON) => {
@@ -257,38 +297,6 @@ let postXHR = (endpoint, data, {
 let registerRenderSubview = (parent, view, hook) => {
   parent.registerSubview(view);
   parent.renderSubview(view, parent.queryByHook(hook));
-}
-let switchToEditTab = (view, section) => {
-  let elementID = Boolean(view.model && view.model.elementID) ? view.model.elementID + "-" : "";
-  if($(view.queryByHook(elementID + 'view-' + section)).hasClass('active')) {
-    $(view.queryByHook(elementID + section + '-edit-tab')).tab('show');
-    $(view.queryByHook(elementID + 'edit-' + section)).addClass('active');
-    $(view.queryByHook(elementID + 'view-' + section)).removeClass('active');
-  }
-}
-let tooltipSetup = () => {
-  $(() => {
-    $('[data-toggle="tooltip"]').tooltip();
-    $('[data-toggle="tooltip"]').on('click ', () => {
-        $('[data-toggle="tooltip"]').tooltip("hide");
-     });
-  });
-}
-let validateName = (input, {rename=false, saveAs=true}={}) => {
-  var error = "";
-  if(input.endsWith('/')) {
-    error = 'forward';
-  }
-  var invalidChars = "`~!@#$%^&*=+[{]}\"|:;'<,>?\\";
-  if(rename || !saveAs) {
-    invalidChars += "/";
-  }
-  for(var i = 0; i < input.length; i++) {
-    if(invalidChars.includes(input.charAt(i))) {
-      error = error === "" || error === "special" ? "special" : "both";
-    }
-  }
-  return error;
 }
 
 module.exports = {

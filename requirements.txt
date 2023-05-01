@@ -6,4 +6,4 @@ escapism==1.0.1
 gillespy2==1.8.1
 spatialpy==1.2.1
 stochss-compute[AWS]==1.0.1
-git+https://github.com/StochSS/sciope.git@master
+git+https://github.com/StochSS/sciope.git@33dae8ef43fcb6b50d749a469bbdde0d0110e359

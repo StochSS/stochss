@@ -32,6 +32,7 @@ sys.path.append("/stochss/stochss/handlers/") # pylint: disable=wrong-import-pos
 from util.ensemble_simulation import EnsembleSimulation
 from util.spatial_simulation import SpatialSimulation
 from util.parameter_sweep import ParameterSweep
+from util.model_inference import ModelInference
 from handlers.log import init_log
 
 init_log()
@@ -107,9 +108,10 @@ def setup_logger(log_path):
 if __name__ == "__main__":
     args = get_parsed_args()
     jobs = {
-        "gillespy":EnsembleSimulation,
+        "gillespy": EnsembleSimulation,
         "spatial": SpatialSimulation,
-        "parameterSweep":ParameterSweep
+        "parameterSweep": ParameterSweep,
+        "inference": ModelInference
     }
     try:
         os.chdir(args.path)

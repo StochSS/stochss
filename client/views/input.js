@@ -15,8 +15,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-var AmpersandInputView = require('ampersand-input-view');
+let $ = require('jquery');
+let AmpersandInputView = require('ampersand-input-view');
 
 module.exports = AmpersandInputView.extend({
   props: {
@@ -24,10 +24,12 @@ module.exports = AmpersandInputView.extend({
     label: 'string',
     modelKey: 'string',
     valueType: 'string',
-    disabled: 'boolean'
+    disabled: 'boolean',
+    changeTests: 'object'
   },
   events: {
-    'input input' : 'changeInputHandler',
+    'change input' : 'runChangeTests',
+    'input input' : 'changeInputHandler'
   },
   initialize: function (attrs, options) {
     AmpersandInputView.prototype.initialize.apply(this, arguments);
@@ -68,4 +70,22 @@ module.exports = AmpersandInputView.extend({
       this.parent.updateValid()
     }
   },
+  runChangeTests: function (e) {
+    if(this.changeTests === undefined) { return }
+    let text = e.target.value;
+    let messages = [];
+    this.changeTests.forEach((test) => {
+      let message = test(text);
+      if(message) {
+        messages.push(message);
+      }
+    });
+    if(messages.length > 0){
+      let html = messages.join("<br>");
+      $(this.queryByHook("message-text")).html(html);
+      $(this.queryByHook("message-container")).css("display", "block");
+    }else{
+      $(this.queryByHook("message-container")).css("display", "none");
+    }
+  }
 });

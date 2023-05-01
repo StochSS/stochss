@@ -1,0 +1,207 @@
+div#inference-settings.card
+
+  div.card-header.pb-0
+
+    h3.inline.mr-3 Inference Settings
+
+    div.inline.mr-3
+
+      ul.nav.nav-tabs.card-header-tabs(id="inference-settings-tabs")
+
+        li.nav-item
+
+          a.nav-link.tab.active(data-hook=this.model.elementID + "-inference-settings-edit-tab" data-toggle="tab" href="#" + this.model.elementID + "-edit-inference-settings") Edit
+
+        li.nav-item
+
+          a.nav-link.tab(data-hook=this.model.elementID + "-inference-settings-view-tab" data-toggle="tab" href="#" + this.model.elementID + "-view-inference-settings") View
+
+    button.btn.btn-outline-collapse(data-toggle="collapse" data-target="#" + this.model.elementID + "collapse-inference-settings" data-hook="collapse") -
+
+  div.collapse(class="show" id=this.model.elementID + "collapse-inference-settings")
+
+    div.card-body.tab-content
+
+      div.tab-pane.active(id=this.model.elementID + "-edit-inference-settings" data-hook=this.model.elementID + "-edit-inference-settings")
+
+        div
+
+          hr
+
+          div.mx-1.row.head.align-items-baseline
+
+            div.col-sm-3
+
+              h6.inline <b>Number of Rounds</b>
+
+            div.col-sm-3
+
+              h6.inline <b>Number of Samples</b>
+
+          div.mx-1.my-3.row
+
+            div.col-sm-3(data-hook="num-rounds")
+
+            div.col-sm-3(data-hook="num-samples")
+
+        div
+
+          h4 Summary Statistics
+
+          hr
+
+          div.mr-3.inline
+
+            span.mr-2.inline(for="#summaryStatsTypeSelect")
+
+              h6 <b>Summary Statistics Type</b>:
+
+            div.inline(id="summaryStatsTypeSelect" data-hook="summary-stats-type-select")
+
+          div.inline.hidden(data-hook="tsfresh-docs-link")
+
+            p See <a href="https://tsfresh.readthedocs.io/en/latest/api/tsfresh.feature_extraction.html#module-tsfresh.feature_extraction.feature_calculators" target="_blank">TSFresh documentation</a> for a full list of supported feature calculators.
+
+          div(data-hook="edit-summary-stats-container")
+
+        div.my-3(data-hook="edit-parameter-space-container")
+
+        div.accordion(id="obs-data-section" data-hook="obs-data-section")
+
+          div.card
+
+            div.card-header(id="importObsDataHeader")
+
+              h4.mb-0.inline="Import Observed Data File"
+
+              button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseImportObsData" data-hook="collapseImportObsData" aria-expanded="false" aria-controls="collapseImportObsData" style="float: right") 
+
+                div(data-hook="import-chevron")
+
+                  svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512")
+
+                    path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
+
+            div.card-body
+
+              p.mb-0
+                | Valid files are <b>Observed Data Files</b> (a directory with the postfix .odf) compressed to a zip archive (.zip) or <b>Observed Data File</b> (.csv)
+
+              div
+
+                div.collapse(id="collapseImportObsData" aria-labelledby="importObsDataHeader" data-parent="#obs-data-section")
+
+                  hr
+
+                  div.my-3
+
+                    span.inline(for="obsDataFile")=`Please specify a file to import: `
+
+                    input.ml-2(id="obsDataFile" data-hook="obs-data-file" type="file" name="obs-data-file" size="30" accept='.zip, .csv' required)
+
+                  div.inline
+
+                    button.btn.btn-outline-primary.box-shadow(data-hook="import-obs-data-file" disabled)=`Import File`
+
+                  div.mdl-edit-btn.saving-status.inline(data-hook="iodf-in-progress")
+
+                    div.spinner-grow.mr-2
+
+                    span Importing observed data ...
+
+                  div.mdl-edit-btn.saved-status.inline(data-hook="iodf-complete")
+
+                    span Successfully imported observed data!
+
+                  div.mdl-edit-btn.save-error-status(data-hook="iodf-error")
+
+                    span(data-hook="iodf-action-error")
+
+          div.card
+
+            div.card-header(id="uploadObsDataHeader")
+
+              h4.mb-0.inline="Select Observed Data File"
+
+              button.btn.btn-outline-collapse.collapsed.inline(type="button" data-toggle="collapse" data-target="#collapseUploadObsData" data-hook="collapseUploadObsData" aria-expanded="false" aria-controls="collapseUploadObsData" style="float: right")
+
+                div(data-hook="upload-chevron")
+
+                  svg(xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 512 512")
+
+                    path(d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z")
+
+            div.card-body
+
+              p.mb-0
+                | Valid files are <b>Observed Data Files</b> (a directory with the postfix .odf) or <b>Observed Data File</b> (.csv)
+
+              div
+
+                div.collapse(id="collapseUploadObsData" aria-labelledby="uploadObsDataHeader" data-parent="#obs-data-section")
+
+                  hr
+
+                  div.hidden.text-info(data-hook="obs-data-location-message")=`There are multiple observed data files with that name, please select a location`
+
+                  div
+
+                    div.inline.mr-3
+
+                      span.inline(for="obs-data-file-select")=`Please specify a file: `
+
+                      div.inline(id="obs-data-file-select" data-hook="obs-data-file-select")
+
+                    div.hidden.inline(data-hook="obs-data-location-container")
+
+                      span.inline.mr-2(for="obs-data-location-select") Location:
+
+                      div.inline(id="obs-data-location-select" data-hook="obs-data-location-select")
+
+                    div.inline
+
+                      button.btn.btn-outline-secondary.box-shadow(data-hook="preview-obs-data") Preview
+
+      div.tab-pane(id=this.model.elementID + "-view-inference-settings" data-hook=this.model.elementID + "-view-inference-settings")
+
+        div
+
+          hr
+
+          div.mx-1.row.head.align-items-baseline
+
+            div.col-sm-3
+
+              h6.inline <b>Number of Rounds</b>
+
+            div.col-sm-3
+
+              h6.inline <b>Number of Samples</b>
+
+          div.mx-1.my-3.row
+
+            div.col-sm-3
+
+              div(data-hook="view-num-rounds")=this.model.numRounds
+
+            div.col-sm-3
+
+              div(data-hook="view-num-samples")=this.model.numSamples
+
+        h4 Summary Statistics
+
+        hr
+
+        div
+
+          h6.mr-2.inline <b>Summary Statistic Type</b>:
+
+          div.inline(data-hook="view-summary-type")=this.summaryType
+
+        div.mb-3(data-hook="view-summary-stats-container")
+
+        div(data-hook="view-parameter-space-container")
+
+        h4 Observed Data
+
+        div(data-hook="view-obs-data-file")=this.model.obsData
