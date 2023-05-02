@@ -52,10 +52,22 @@ let ModelPresentationPage = PageView.extend({
     let endpoint = `api/file/json-data?file=${this.model.directory}&owner=${owner}`;
     app.getXHR(endpoint, {
       success: (err, response, body) => {
+        let particles = body.model.domain.particles
         this.model.set(body.model);
-        if(Object.keys(body.model.domain).includes("particles")) {
+        if(this.model.is_spatial && Object.keys(body.model.domain).includes("particles")) {
           let particles = new Particles(body.model.domain.particles);
           this.model.domain.particles = particles;
+          this.model.domain.actions.forEach((action) => {
+            action.filename = action.filename.split('/').pop();
+            action.subdomainFile = action.subdomainFile.split('/').pop();
+          });
+          this.model.domain.x_lim = body.domainLimits[0];
+          this.model.domain.y_lim = body.domainLimits[1];
+          this.model.domain.z_lim = body.domainLimits[2];
+          let particleCounts = {};
+          this.model.domain.types.forEach((type) => { particleCounts[type.typeID] = 0; });
+          particles.forEach((particle) => { particleCounts[particle.type] += 1; });
+          this.model.domain.types.forEach((type) => { type.numParticles = particleCounts[type.typeID]; });
         }
         let domainPlot = Boolean(body.domainPlot) ? body.domainPlot : null;
         this.renderSubviews(false, domainPlot);

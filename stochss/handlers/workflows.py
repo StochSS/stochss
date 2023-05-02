@@ -27,9 +27,9 @@ from notebook.base.handlers import APIHandler
 # Note APIHandler.finish() sets Content-Type handler to 'application/json'
 # Use finish() for json, write() for text
 
-from .util import StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, StochSSWorkflow, \
-                  StochSSParamSweepNotebook, StochSSSciopeNotebook, StochSSAPIError, report_error, \
-                  report_critical_error
+from .util import StochSSFolder, StochSSJob, StochSSModel, StochSSSpatialModel, StochSSNotebook, \
+                  StochSSWorkflow, StochSSParamSweepNotebook, StochSSSciopeNotebook, \
+                  StochSSAPIError, report_error, report_critical_error, ModelInference
 
 log = logging.getLogger('stochss')
 
@@ -249,23 +249,33 @@ class PlotWorkflowResultsAPIHandler(APIHandler):
         body = json.loads(self.get_query_argument(name='data'))
         log.debug(f"Plot args passed to the plot: {body}")
         try:
-            job = StochSSJob(path=path)
-            if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
-                fig = job.get_plot_from_results(data_keys=body['data_keys'],
-                                                plt_key=body['plt_key'], add_config=True)
-                job.print_logs(log)
-            elif body['sim_type'] == "SpatialPy":
-                fig = job.get_plot_from_spatial_results(
-                    data_keys=body['data_keys'], add_config=True
-                )
+            if body['sim_type'] == "Inference":
+                job = ModelInference(path=path)
+                kwargs = {'add_config': True}
+                kwargs.update(body['data_keys'])
+                if "plt_data" in body.keys() and body['plt_data'] is not None:
+                    kwargs.update(body['plt_data'])
+                fig, fig2 = job.get_result_plot(**kwargs)
+                log.debug(f"Histogram figure: {fig}, PDF figure: {fig2}")
+                self.write({'histogram': fig, 'pdf': fig2})
             else:
-                fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
-                                                       kwargs=body['plt_key'], add_config=True)
-                job.print_logs(log)
-            if "plt_data" in body.keys():
-                fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
-            log.debug(f"Plot figure: {fig}")
-            self.write(fig)
+                job = StochSSJob(path=path)
+                if body['sim_type'] in  ("GillesPy2", "GillesPy2_PS"):
+                    fig = job.get_plot_from_results(data_keys=body['data_keys'],
+                                                    plt_key=body['plt_key'], add_config=True)
+                    job.print_logs(log)
+                elif body['sim_type'] == "SpatialPy":
+                    fig = job.get_plot_from_spatial_results(
+                        data_keys=body['data_keys'], add_config=True
+                    )
+                else:
+                    fig = job.get_psweep_plot_from_results(fixed=body['data_keys'],
+                                                           kwargs=body['plt_key'], add_config=True)
+                    job.print_logs(log)
+                if "plt_data" in body.keys():
+                    fig = job.update_fig_layout(fig=fig, plt_data=body['plt_data'])
+                log.debug(f"Plot figure: {fig}")
+                self.write(fig)
         except StochSSAPIError as err:
             report_error(self, log, err)
         except Exception as err:
@@ -317,10 +327,11 @@ class WorkflowNotebookHandler(APIHandler):
                 notebook = StochSSParamSweepNotebook(**kwargs)
                 notebooks = {"1d_parameter_sweep":notebook.create_1d_notebook,
                              "2d_parameter_sweep":notebook.create_2d_notebook}
-            elif wkfl_type in ("sciope_model_exploration", "model_inference"):
+            elif wkfl_type in ("sciope_model_exploration", "model_inference", "inference"):
                 notebook = StochSSSciopeNotebook(**kwargs)
                 notebooks = {"sciope_model_exploration":notebook.create_me_notebook,
-                             "model_inference":notebook.create_mi_notebook}
+                             "model_inference":notebook.create_mi_notebook,
+                             "inference":notebook.create_mi_notebook}
             else:
                 notebook = StochSSNotebook(**kwargs)
                 notebooks = {"gillespy":notebook.create_es_notebook,
@@ -496,16 +507,162 @@ class DownloadCSVZipAPIHandler(APIHandler):
         if data is not None:
             data = json.loads(data)
         try:
-            job = StochSSJob(path=path)
+            if csv_type == "inference":
+                job = ModelInference(path=path)
+            else:
+                job = StochSSJob(path=path)
             name = job.get_name()
             self.set_header('Content-Disposition', f'attachment; filename="{name}.zip"')
             if csv_type == "time series":
                 csv_data = job.get_csvzip_from_results(**data, name=name)
             elif csv_type == "psweep":
                 csv_data = job.get_psweep_csvzip_from_results(fixed=data, name=name)
+            elif csv_type == "inference":
+                csv_data = job.get_csv_data(name=name)
             else:
                 csv_data = job.get_full_csvzip_from_results(name=name)
             self.write(csv_data)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
+        self.finish()
+
+
+class ImportObsDataAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for importing observed data from remote file.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def post(self):
+        '''
+        Imports observed data from a file.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        dirname = os.path.dirname(self.request.body_arguments['path'][0].decode())
+        if dirname == '.':
+            dirname = ""
+        elif ".wkgp" in dirname:
+            dirname = os.path.dirname(dirname)
+        data_file = self.request.files['datafile'][0]
+        log.info(f"Importing observed data: {data_file['filename']}")
+        try:
+            folder = StochSSFolder(path=dirname)
+            if data_file['filename'].endswith(".zip"):
+                new_name = data_file['filename'].replace(".zip", ".odf")
+            else:
+                new_name = None
+            data_resp = folder.upload(
+                'file', data_file['filename'], data_file['body'], new_name=new_name
+            )
+            resp = {'obsDataPath': data_resp['path'], 'obsDataFile': data_resp['file']}
+            log.info("Successfully uploaded observed data")
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
+        self.finish()
+
+
+class LoadObsDataFiles(APIHandler):
+    '''
+    ################################################################################################
+    Handler for getting observed data files.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Get observed data files on disc for file selections.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        target_ext = self.get_query_argument(name="ext").split(',')
+        try:
+            folder = StochSSFolder(path="")
+            test = lambda ext, root, file: bool(
+                "trash" in root.split("/") or file.startswith('.') or \
+                'wkfl' in root or root.startswith('.') or root.endswith("obsd")
+            )
+            data_files = folder.get_file_list(ext=target_ext, test=test, inc_folders=True)
+            resp = {'obsDataFiles': data_files}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
+        self.finish()
+
+class PreviewOBSDataAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for previewing observed data.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Preview the observed data files.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        try:
+            wkfl = StochSSWorkflow(path="")
+            resp = {"figure": wkfl.preview_obs_data(path)}
+            wkfl.print_logs(log)
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+        except StochSSAPIError as err:
+            report_error(self, log, err)
+        except Exception as err:
+            report_critical_error(self, log, err)
+        self.finish()
+
+class ExportInferredModelAPIHandler(APIHandler):
+    '''
+    ################################################################################################
+    Handler for exporting an inferred model.
+    ################################################################################################
+    '''
+    @web.authenticated
+    async def get(self):
+        '''
+        Preview the observed data files.
+
+        Attributes
+        ----------
+        '''
+        self.set_header('Content-Type', 'application/json')
+        path = self.get_query_argument(name="path")
+        round = int(self.get_query_argument(name="round", default=-1))
+        try:
+            job = ModelInference(path=path)
+            inf_model = job.export_inferred_model(round_ndx=round)
+
+            end = -3 if '.wkgp' in path else -2
+            dirname = '/'.join(path.split('/')[:end])
+            if ".proj" in dirname:
+                dst = os.path.join(dirname, f"{inf_model['name']}.wkgp", f"{inf_model['name']}.mdl")
+            else:
+                dst = os.path.join(dirname, f"{inf_model['name']}.mdl")
+            model = StochSSModel(path=dst, new=True, model=inf_model)
+
+            resp = {"path": model.get_path()}
+            log.debug(f"Response: {resp}")
+            self.write(resp)
+            job.update_export_links(round, dst)
         except StochSSAPIError as err:
             report_error(self, log, err)
         except Exception as err:

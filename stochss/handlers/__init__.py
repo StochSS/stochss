@@ -53,7 +53,7 @@ def get_page_handlers(route_start):
         (r'/stochss/settings\/?', UserSettingsHandler),
         (r'/stochss/api/user-logs\/?', UserLogsAPIHandler),
         (r'/stochss/api/clear-user-logs\/?', ClearUserLogsAPIHandler),
-        (r'/stochss/api/user-settings\/?', LoadUserSettings),
+        (r'/stochss/api/load-user-settings\/?', LoadUserSettings),
         (r'/stochss/api/aws/job-config-check\/?', ConfirmAWSConfigHandler),
         (r'/stochss/api/aws/launch-cluster\/?', LaunchAWSClusterHandler),
         (r'/stochss/api/aws/cluster-status\/?', AWSClusterStatusHandler),
@@ -128,8 +128,12 @@ def get_page_handlers(route_start):
         (r"/stochss/api/workflow/save-plot\/?", SavePlotAPIHandler),
         (r"/stochss/api/workflow/save-annotation\/?", SaveAnnotationAPIHandler),
         (r"/stochss/api/workflow/update-format\/?", UpadteWorkflowAPIHandler),
+        (r"/stochss/api/workflow/import-obs-data\/?", ImportObsDataAPIHandler),
+        (r"/stochss/api/workflow/obs-data-files\/?", LoadObsDataFiles),
+        (r"/stochss/api/workflow/preview-obs-data\/?", PreviewOBSDataAPIHandler),
         (r"/stochss/api/job/presentation\/?", JobPresentationAPIHandler),
-        (r"/stochss/api/job/csv\/?", DownloadCSVZipAPIHandler)
+        (r"/stochss/api/job/csv\/?", DownloadCSVZipAPIHandler),
+        (r"/stochss/api/job/export-inferred-model\/?", ExportInferredModelAPIHandler)
     ]
     full_handlers = list(map(lambda h: (url_path_join(route_start, h[0]), h[1]), handlers))
     return full_handlers

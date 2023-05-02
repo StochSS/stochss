@@ -26,6 +26,7 @@ import traceback
 
 from escapism import escape
 from gillespy2.sbml.SBMLexport import export
+from gillespy2.core.jsonify import ComplexJsonCoder
 from gillespy2 import (
     Model, Species, Parameter, Reaction, Event, EventTrigger, EventAssignment,
     RateRule, AssignmentRule, FunctionDefinition, TimeSpan
@@ -67,7 +68,7 @@ class StochSSModel(StochSSBase):
             if changed:
                 self.path = new_path.replace(self.user_dir + '/', "")
             with open(new_path, "w", encoding="utf-8") as mdl_file:
-                json.dump(model, mdl_file, indent=4, sort_keys=True)
+                json.dump(model, mdl_file, indent=4, sort_keys=True, cls=ComplexJsonCoder)
         else:
             self.model = None
 
@@ -138,7 +139,7 @@ class StochSSModel(StochSSBase):
         try:
             end = self.model['modelSettings']['endSim']
             step_size = self.model['modelSettings']['timeStep']
-            return TimeSpan.arange(step_size, t=end + step_size)
+            return TimeSpan.arange(step_size, t=end)
         except KeyError as err:
             message = "Model settings are not properly formatted or "
             message += f"are referenced incorrectly: {str(err)}"
@@ -276,6 +277,19 @@ class StochSSModel(StochSSBase):
         for event in self.model['eventsCollection']:
             self.__update_event_assignments(event=event, param_ids=param_ids)
 
+    def __update_model_to_current(self):
+        if self.model['template_version'] == self.TEMPLATE_VERSION:
+            return
+
+        param_ids = self.__update_parameters()
+        self.__update_reactions()
+        self.__update_events(param_ids=param_ids)
+        self.__update_rules(param_ids=param_ids)
+
+        if "refLinks" not in self.model.keys():
+            self.model['refLinks'] = []
+
+        self.model['template_version'] = self.TEMPLATE_VERSION
 
     def __update_parameters(self):
         if "parameters" not in self.model.keys():
@@ -485,10 +499,10 @@ class StochSSModel(StochSSBase):
                 self.model['volume'] = self.model['modelSettings']['volume']
             else:
                 self.model['volume'] = 1
-        param_ids = self.__update_parameters()
-        self.__update_reactions()
-        self.__update_events(param_ids=param_ids)
-        self.__update_rules(param_ids=param_ids)
+        if "template_version" not in self.model:
+            self.model['template_version'] = 0
+        self.__update_model_to_current()
+
         self.model['name'] = self.get_name()
         self.model['directory'] = self.path
         return self.model

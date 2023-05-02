@@ -495,6 +495,12 @@ module.exports = View.extend({
             this.newWorkflow(node, "Parameter Sweep");
           }
         }),
+        modelInference: this.buildContextBase({
+          label: "Model Inference",
+          action: (data) => {
+            this.newWorkflow(node, "Model Inference");
+          }
+        }),
         jupyterNotebook: this.getNotebookNewWorkflowContext(node)
       }
     });
@@ -781,11 +787,11 @@ module.exports = View.extend({
             });
             locations.unshift(`<option value="">Select a location</option>`);
             locations = locations.join(" ");
-            $("#modelPathSelect").find('option').remove().end().append(locations);
+            $(location).find('option').remove().end().append(locations);
             $("#location-container").css("display", "block");
           }else{
             $("#location-container").css("display", "none");
-            $("#modelPathSelect").find('option').remove().end();
+            $(location).find('option').remove().end();
           }
         });
         location.addEventListener("change", (e) => {

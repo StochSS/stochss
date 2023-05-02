@@ -44,6 +44,7 @@
     "initialConditions": [],
 	"parameters": [],
 	"reactions": [],
+    "refLinks": [],
 	"rules": [],
 	"eventsCollection": [],
 	"functionDefinitions": [],

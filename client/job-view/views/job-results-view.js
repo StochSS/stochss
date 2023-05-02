@@ -18,22 +18,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 let $ = require('jquery');
 let path = require('path');
+let _ = require('underscore');
 //support files
 let app = require('../../app');
 let modals = require('../../modals');
 let Tooltips = require('../../tooltips');
 let Plotly = require('plotly.js-dist');
+//models
+let Model = require('../../models/model');
 //views
 let InputView = require('../../views/input');
 let View = require('ampersand-view');
 let SelectView = require('ampersand-select-view');
 let SweepParametersView = require('./sweep-parameter-range-view');
 //templates
-let wellMixedTemplate = require('../templates/gillespyResultsView.pug');
-let ensembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
-let sweepTemplate = require('../templates/parameterSweepResultsView.pug');
-let scanTemplate = require('../templates/parameterScanResultsView.pug');
 let spatialTemplate = require('../templates/spatialResultsView.pug');
+let wellMixedTemplate = require('../templates/gillespyResultsView.pug');
+let scanTemplate = require('../templates/parameterScanResultsView.pug');
+let inferenceTemplate = require('../templates/inferenceResultsView.pug');
+let sweepTemplate = require('../templates/parameterSweepResultsView.pug');
+let ensembleTemplate = require('../templates/gillespyResultsEnsembleView.pug');
 
 module.exports = View.extend({
   events: {
@@ -43,12 +47,19 @@ module.exports = View.extend({
     'change [data-hook=target-of-interest-list]' : 'getPlotForTarget',
     'change [data-hook=target-mode-list]' : 'getPlotForTargetMode',
     'change [data-hook=trajectory-index-slider]' : 'getPlotForTrajectory',
+    'change [data-hook=round-index-slider]' : 'getPlotForRound',
     'change [data-hook=specie-of-interest-list]' : 'getPlotForSpecies',
     'change [data-hook=feature-extraction-list]' : 'getPlotForFeatureExtractor',
     'change [data-hook=ensemble-aggragator-list]' : 'getPlotForEnsembleAggragator',
     'change [data-hook=plot-type-select]' : 'getTSPlotForType',
     'click [data-hook=collapse-results-btn]' : 'changeCollapseButtonText',
+    'click [data-hook=inference-histogram-tab]' : 'handleInferenceResize',
+    'click [data-hook=inference-pdf-tab]' : 'handlePDFResize',
+    'click [data-hook=round-histogram-tab]' : 'handleRoundResize',
+    'click [data-hook=round-intersection-tab]' : 'handleIntersectionResize',
     'click [data-trigger=collapse-plot-container]' : 'handleCollapsePlotContainerClick',
+    'click [data-target=model-export]' : 'handleExportInferredModel',
+    'click [data-target=model-explore]' : 'handleExploreInferredModel',
     'click [data-target=edit-plot]' : 'openPlotArgsSection',
     'click [data-hook=multiple-plots]' : 'plotMultiplePlots',
     'click [data-target=download-png-custom]' : 'handleDownloadPNGClick',
@@ -57,7 +68,8 @@ module.exports = View.extend({
     'click [data-hook=convert-to-notebook]' : 'handleConvertToNotebookClick',
     'click [data-hook=download-results-csv]' : 'handleFullCSVClick',
     'click [data-hook=job-presentation]' : 'handlePresentationClick',
-    'input [data-hook=trajectory-index-slider]' : 'viewTrajectoryIndex'
+    'input [data-hook=trajectory-index-slider]' : 'viewTrajectoryIndex',
+    'input [data-hook=round-index-slider]' : 'viewRoundIndex'
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
@@ -67,7 +79,12 @@ module.exports = View.extend({
     this.tooltips = Tooltips.jobResults;
     this.plots = {};
     this.plotArgs = {};
+    this.activePlots = {};
     this.trajectoryIndex = 1;
+    this.pdfResized = false;
+    this.inferenceResized = false;
+    this.roundHistoResized = false;
+    this.intersectionResized = false;
   },
   render: function (attrs, options) {
     let isEnsemble = this.model.settings.simulationSettings.realizations > 1 && 
@@ -76,7 +93,8 @@ module.exports = View.extend({
     let templates = {
       "Ensemble Simulation": isEnsemble ? ensembleTemplate : wellMixedTemplate,
       "Parameter Sweep": isParameterScan ? scanTemplate : sweepTemplate,
-      "Spatial Ensemble Simulation": spatialTemplate
+      "Spatial Ensemble Simulation": spatialTemplate,
+      "Model Inference": inferenceTemplate
     }
     this.template = templates[this.titleType];
     View.prototype.render.apply(this, arguments);
@@ -110,7 +128,7 @@ module.exports = View.extend({
       }
       this.getPlot("psweep");
       this.renderSweepParameterView();
-    }else{
+    }else if(this.titleType === "Spatial Ensemble Simulation") {
       var type = "spatial";
       this.spatialTarget = "type";
       this.targetIndex = null;
@@ -121,6 +139,23 @@ module.exports = View.extend({
         $(this.queryByHook("spatial-trajectory-container")).css("display", "inline-block");
       }
       $(this.queryByHook("spatial-plot-csv")).css('display', 'none');
+    }else{
+      var type = "inference";
+      this.roundIndex = this.model.settings.inferenceSettings.numRounds === 0 ? 1 : this.model.settings.inferenceSettings.numRounds;
+      let parameters = this.model.settings.inferenceSettings.parameters;
+      this.intersectionNames = [parameters.at(0).name, parameters.at(1).name];
+      if(this.model.exportLinks[this.roundIndex] !== null) {
+        $(this.queryByHook("inference-model-export")).text("Open Model");
+        $(this.queryByHook("inference-model-explore")).text("Explore Model");
+      }
+      if(this.roundIndex > 1) {
+        $(this.queryByHook("round-index-value")).text(this.roundIndex);
+        $(this.queryByHook("round-index-slider")).prop("value", this.roundIndex);
+      }else{
+        $(this.queryByHook("round-slider-container")).css('display', 'none');
+      }
+      // TODO: Enable inference presentations when implemented
+      $(this.queryByHook("job-presentation")).prop("disabled", true);
     }
     this.getPlot(type);
   },
@@ -143,18 +178,49 @@ module.exports = View.extend({
       error.css("display", "none");
     }, 5000);
   },
-  cleanupPlotContainer: function (type) {
-    let el = this.queryByHook(`${type}-plot`);
-    Plotly.purge(el);
-    $(this.queryByHook(type + "-plot")).empty();
-    if(type === "ts-psweep" || type === "psweep"){
-      $(this.queryByHook(`${type}-download`)).prop("disabled", true);
-      $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", true);
-      $(this.queryByHook("multiple-plots")).prop("disabled", true);
-    }else if(type === "spatial") {
-      $(this.queryByHook("spatial-plot-loading-msg")).css("display", "block");
+  cleanupPlotContainer: function (type, {pdfOnly=false}={}) {
+    if(["inference", "round"].includes(type)) {
+      let histoEL = this.queryByHook(`${type}-histogram-plot`);
+      if(!pdfOnly) {
+        Plotly.purge(histoEL);
+        $(this.queryByHook(`${type}-histogram-plot`)).empty();
+        $(this.queryByHook(`${type}-histogram-plot-spinner`)).css("display", "block");
+      }
+      if(type === "inference") {
+        let pdfEL = this.queryByHook('inference-pdf-plot');
+        Plotly.purge(pdfEL);
+        $(this.queryByHook('inference-pdf-plot')).empty();
+        $(this.queryByHook('inference-pdf-plot-spinner')).css("display", "block");
+      }else {
+        let interEL = this.queryByHook('round-intersection-plot');
+        Plotly.purge(interEL);
+        $(this.queryByHook('round-intersection-plot')).empty();
+        $(this.queryByHook('round-intersection-plot-spinner')).css("display", "block");
+        if(!pdfOnly) {
+          $(this.queryByHook("round-model-export")).prop("disabled", true);
+          $(this.queryByHook("round-model-explore")).prop("disabled", true);
+          $(this.queryByHook("round-download")).prop("disabled", true);
+          $(this.queryByHook("round-edit-plot")).prop("disabled", true);
+          try {
+            histoEL.removeListener('plotly_click', _.bind(this.selectIntersection, this));
+          }catch (err) {
+            //pass
+          }
+        }
+      }
+    }else {
+      let el = this.queryByHook(`${type}-plot`);
+      Plotly.purge(el);
+      $(this.queryByHook(type + "-plot")).empty();
+      if(["ts-psweep", "psweep"].includes(type)) {
+        $(this.queryByHook(`${type}-download`)).prop("disabled", true);
+        $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", true);
+        $(this.queryByHook("multiple-plots")).prop("disabled", true);
+      }else if(type === "spatial") {
+        $(this.queryByHook("spatial-plot-loading-msg")).css("display", "block");
+      }
+      $(this.queryByHook(`${type}-plot-spinner`)).css("display", "block");
     }
-    $(this.queryByHook(`${type}-plot-spinner`)).css("display", "block");
   },
   downloadCSV: function (csvType, data) {
     var queryStr = `?path=${this.model.directory}&type=${csvType}`;
@@ -164,24 +230,83 @@ module.exports = View.extend({
     let endpoint = `${path.join(app.getApiPath(), "job/csv")}${queryStr}`;
     window.open(endpoint);
   },
-  getPlot: function (type) {
-    this.cleanupPlotContainer(type);
+  exportInferredModel: function (type, {cb=null}={}) {
+    let round = type === "round" ? this.roundIndex : this.model.settings.inferenceSettings.numRounds
+    if(this.model.exportLinks[round] === null) {
+      var queryStr = `?path=${this.model.directory}`;
+      if(type === "round") {
+        queryStr += `&round=${this.roundIndex}`;
+      }
+      let endpoint = `${path.join(app.getApiPath(), "job/export-inferred-model")}${queryStr}`;
+      app.getXHR(endpoint, {
+        success: (err, response, body) => {
+          if(cb === null) {
+            let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${body.path}`;
+            window.location.href = editEP;
+          }else {
+            cb(err, response, body);
+          }
+        }
+      });
+    }else if(cb === null){
+      let mdPath = this.model.exportLinks[round];
+      let editEP = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${mdPath}`;
+      window.location.href = editEP;
+    }else {
+      cb();
+    }
+  },
+  fixPlotSize: function (type, plotID) {
+    let figID = plotID === "histogram" ? plotID : "pdf"
+    let plotEL = this.queryByHook(`${type}-${plotID}-plot`);
+    // Clear plot
+    Plotly.purge(plotEL);
+    $(plotEL).empty();
+    // Re-render the plot
+    if(Object.keys(this.plots).includes(this.activePlots[type])) {
+      let figure = this.plots[this.activePlots[type]]
+      Plotly.newPlot(plotEL, figure[figID]);
+      if(type === "round" && plotID === "histogram") {
+        plotEL.on('plotly_click', _.bind(this.selectIntersection, this));
+      }
+      return true;
+    }
+    return false;
+  },
+  getPlot: function (type, {pdfOnly=false}={}) {
+    this.cleanupPlotContainer(type, {pdfOnly: pdfOnly});
     let data = this.getPlotData(type);
     if(data === null) { return };
     let storageKey = JSON.stringify(data);
     data['plt_data'] = this.getPlotLayoutData();
     if(Boolean(this.plots[storageKey])) {
-      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial'];
+      let renderTypes = ['psweep', 'ts-psweep', 'ts-psweep-mp', 'mltplplt', 'spatial', 'round'];
       if(renderTypes.includes(type)) {
-        this.plotFigure(this.plots[storageKey], type);
+        this.activePlots[type] = storageKey;
+        this.plotFigure(this.plots[storageKey], type, {pdfOnly: pdfOnly});
       }
     }else{
       let queryStr = `?path=${this.model.directory}&data=${JSON.stringify(data)}`;
       let endpoint = `${path.join(app.getApiPath(), "workflow/plot-results")}${queryStr}`;
       app.getXHR(endpoint, {
         success: (err, response, body) => {
+          if(type === "round") {
+            let xLabel = {
+              font: {size: 16}, showarrow: false, text: "", x: 0.5, xanchor: "center", xref: "paper",
+              y: 0, yanchor: "top", yref: "paper", yshift: -30
+            }
+            let yLabel = {
+              font: {size: 16}, showarrow: false, text: "", textangle: -90, x: 0, xanchor: "right",
+              xref: "paper", xshift: -40, y: 0.5, yanchor: "middle", yref: "paper"
+            }
+            body.histogram.layout.annotations.push(xLabel);
+            body.histogram.layout.annotations.push(yLabel);
+            body.pdf.layout.annotations.push(xLabel);
+            body.pdf.layout.annotations.push(yLabel);
+          }
+          this.activePlots[type] = storageKey;
           this.plots[storageKey] = body;
-          this.plotFigure(body, type);
+          this.plotFigure(body, type, {pdfOnly: pdfOnly});
         },
         error: (err, response, body) => {
           if(type === "spatial") {
@@ -228,6 +353,13 @@ module.exports = View.extend({
         target: this.spatialTarget, index: this.targetIndex, mode: this.targetMode, trajectory: this.trajectoryIndex - 1
       };
       data['plt_key'] = type;
+    }else if(["inference", "round"].includes(type)) {
+      data['sim_type'] = "Inference";
+      data['data_keys'] = {
+        "epoch": type === "inference" ? null : this.roundIndex - 1,
+        "names": type === "inference" ? null : this.intersectionNames
+      }
+      data['plt_key'] = "inference";
     }else {
       data['sim_type'] = "GillesPy2";
       data['data_keys'] = {};
@@ -244,6 +376,12 @@ module.exports = View.extend({
   getPlotForEnsembleAggragator: function (e) {
     this.model.settings.resultsSettings.reducer = e.target.value;
     this.getPlot('psweep')
+  },
+  getPlotForRound: function (e) {
+    this.roundIndex = Number(e.target.value);
+    this.roundHistoResized = false;
+    this.intersectionResized = false;
+    this.getPlot('round');
   },
   getPlotForFeatureExtractor: function (e) {
     this.model.settings.resultsSettings.mapper = e.target.value;
@@ -314,8 +452,12 @@ module.exports = View.extend({
   },
   getType: function (storageKey) {
     let plotData = JSON.parse(storageKey)
-    if(plotData.sim_type === "GillesPy2") { return plotData.plt_key }
-    if(plotData.sim_type === "GillesPy2_PS") { return "ts-psweep"}
+    if(plotData.sim_type === "GillesPy2") { return plotData.plt_key; }
+    if(plotData.sim_type === "GillesPy2_PS") { return "ts-psweep"; }
+    if(plotData.sim_type === "Inference") {
+      if(plotData.data_keys.round === null) { return "inference"; }
+      return "round"
+    }
     return "psweep"
   },
   handleCollapsePlotContainerClick: function (e) {
@@ -346,11 +488,28 @@ module.exports = View.extend({
   },
   handleDownloadJSONClick: function (e) {
     let type = e.target.dataset.type;
-    let storageKey = JSON.stringify(this.getPlotData(type))
-    let jsonData = this.plots[storageKey];
+    let storageKey = JSON.stringify(this.getPlotData(type));
+    if(["inference", "round"].includes(type)) {
+      if(type === "inference") {
+        let classList = this.queryByHook("inference-histogram-tab").classList.value.split(" ");
+        var key = classList.includes("active") ? "histogram" : "pdf";
+        var nameBase = `${type}-${key}`;
+      }else{
+        let classList = this.queryByHook("round-histogram-tab").classList.value.split(" ");
+        var key = classList.includes("active") ? "histogram" : "pdf";
+        let pltKey = key === "pdf" ? `${this.intersectionNames.join("-X-")}-intersection` : key;
+        var nameBase = `${type}${this.roundIndex}-${pltKey}`;
+      }
+      var jsonData = this.plots[storageKey][key];
+    }else if(type === "spatial") {
+      var nameBase = `${type}${this.trajectoryIndex}`
+    }else{
+      var jsonData = this.plots[storageKey];
+      var nameBase = type
+    }
     let dataStr = JSON.stringify(jsonData);
     let dataURI = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
-    let exportFileDefaultName = type + '-plot.json';
+    let exportFileDefaultName = `${nameBase}-plot.json`;
 
     let linkElement = document.createElement('a');
     linkElement.setAttribute('href', dataURI);
@@ -359,11 +518,63 @@ module.exports = View.extend({
   },
   handleDownloadPNGClick: function (e) {
     let type = e.target.dataset.type;
-    let pngButton = $('div[data-hook=' + type + '-plot] a[data-title*="Download plot as a png"]')[0];
+    if(["inference", "round"].includes(type)) {
+      if(type === "inference") {
+        let classList = this.queryByHook("inference-histogram-tab").classList.value.split(" ");
+        var key = classList.includes("active") ? "histogram" : "pdf";
+      }else{
+        let classList = this.queryByHook("round-histogram-tab").classList.value.split(" ");
+        var key = classList.includes("active") ? "histogram" : "intersection";
+      }
+      var divEL = `div[data-hook=${type}-${key}-plot]`;
+    }else{
+      var divEL = `div[data-hook=${type}-plot]`;
+    }
+    let pngButton = $(`${divEL} a[data-title*="Download plot as a png"]`)[0];
     pngButton.click();
   },
+  handleExploreInferredModel: function (e) {
+    let type = e.target.dataset.hook.split('-')[0];
+    this.exportInferredModel(type, {cb: _.bind(this.newWorkflow, this)});
+  },
+  handleExportInferredModel: function (e) {
+    let type = e.target.dataset.hook.split('-')[0];
+    this.exportInferredModel(type);
+  },
   handleFullCSVClick: function (e) {
-    this.downloadCSV("full", null);
+    if(this.titleType === "Model Inference") {
+      this.downloadCSV("inference", null);
+    }else {
+      this.downloadCSV("full", null);
+    }
+  },
+  handleInferenceResize: function (e) {
+    if(!this.inferenceResized) {
+      setTimeout(() => {
+        this.inferenceResized = this.fixPlotSize("inference", "histogram");
+      }, 0)
+    }
+  },
+  handleIntersectionResize: function (e) {
+    if(!this.intersectionResized) {
+      setTimeout(() => {
+        this.intersectionResized = this.fixPlotSize("round", "intersection");
+      }, 0)
+    }
+  },
+  handlePDFResize: function (e) {
+    if(!this.pdfResized) {
+      setTimeout(() => {
+        this.pdfResized = this.fixPlotSize("inference", "pdf");
+      }, 0)
+    }
+  },
+  handleRoundResize: function (e) {
+    if(!this.roundHistoResized) {
+      setTimeout(() => {
+        this.roundHistoResized = this.fixPlotSize("round", "histogram");
+      }, 0)
+    }
   },
   handlePlotCSVClick: function (e) {
     let type = e.target.dataset.type;
@@ -414,6 +625,30 @@ module.exports = View.extend({
       }
     });
   },
+  newWorkflow: function (err, response, body) {
+    let type = "Parameter Sweep"
+    if([undefined, null].includes(body)) {
+      body = { path: this.model.exportLinks[this.roundIndex] };
+    }
+    let model = new Model({ directory: body.path });
+    app.getXHR(model.url(), {
+      success: (err, response, body) => {
+        model.set(body);
+        model.updateValid();
+        if(model.valid){
+          app.newWorkflow(this, model.directory, model.is_spatial, type);
+        }else{
+          if(document.querySelector("#errorModal")) {
+            document.querySelector("#errorModal").remove();
+          }
+          let title = "Model Errors Detected";
+          let endpoint = `${path.join(app.getBasePath(), "stochss/models/edit")}?path=${model.directory}&validate`;
+          let message = `Errors were detected in you model <a href="${endpoint}">click here to fix your model<a/>`;
+          $(modals.errorHtml(title, message)).modal();
+        }
+      }
+    });
+  },
   openPlotArgsSection: function (e) {
     $(this.queryByHook("edit-plot-args")).collapse("show");
     $(document).ready(function () {
@@ -422,18 +657,54 @@ module.exports = View.extend({
       }, false);
     });
   },
-  plotFigure: function (figure, type) {
-    let hook = `${type}-plot`;
-    let el = this.queryByHook(hook);
-    Plotly.newPlot(el, figure);
-    if(type === "spatial") {
-      $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
+  plotFigure: function (figure, type, {pdfOnly=false}={}) {
+    if(["inference", "round"].includes(type)) {
+      let histoHook = `${type}-histogram-plot`;
+      let histoEL = this.queryByHook(histoHook);
+      if(!pdfOnly) {
+        // Display histogram plot
+        Plotly.newPlot(histoEL, figure.histogram);
+        $(this.queryByHook(`${type}-histogram-plot-spinner`)).css("display", "none");
+        $(this.queryByHook(`${type}-model-export`)).prop("disabled", false);
+        $(this.queryByHook(`${type}-model-explore`)).prop("disabled", false);
+      }
+      // Display pdf plot
+      if(type === "inference") {
+        let pdfHook = 'inference-pdf-plot';
+        let pdfEL = this.queryByHook(pdfHook);
+        Plotly.newPlot(pdfEL, figure.pdf);
+        $(this.queryByHook('inference-pdf-plot-spinner')).css("display", "none");
+      }else {
+        let interHook = 'round-intersection-plot';
+        let interEL = this.queryByHook(interHook);
+        Plotly.newPlot(interEL, figure.pdf);
+        $(this.queryByHook('round-intersection-plot-spinner')).css("display", "none");
+        if(!pdfOnly) {
+          histoEL.on('plotly_click', _.bind(this.selectIntersection, this));
+          if(this.model.exportLinks[this.roundIndex] !== null) {
+            $(this.queryByHook("round-model-export")).text("Open Model");
+            $(this.queryByHook("round-model-explore")).text("Explore Model");
+          }else {
+            $(this.queryByHook("round-model-export")).text("Export Model");
+            $(this.queryByHook("round-model-explore")).text("Export & Explore Model");
+          }
+        }
+      }
+    }else {
+      let hook = `${type}-plot`;
+      let el = this.queryByHook(hook);
+      Plotly.newPlot(el, figure);
+      if(type === "spatial") {
+        $(this.queryByHook("spatial-plot-loading-msg")).css("display", "none");
+      }
+      $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
+      if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
+        $(this.queryByHook("multiple-plots")).prop("disabled", false);
+      }      
     }
-    $(this.queryByHook(`${type}-plot-spinner`)).css("display", "none");
-    $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", false);
-    $(this.queryByHook(`${type}-download`)).prop("disabled", false);
-    if(type === "trajectories" || (this.tsPlotData && this.tsPlotData.type === "trajectories")) {
-      $(this.queryByHook("multiple-plots")).prop("disabled", false);
+    if(!pdfOnly) {
+      $(this.queryByHook(`${type}-edit-plot`)).prop("disabled", false);
+      $(this.queryByHook(`${type}-download`)).prop("disabled", false);
     }
   },
   plotMultiplePlots: function (e) {
@@ -558,13 +829,34 @@ module.exports = View.extend({
     });
     app.registerRenderSubview(this, this.targetModeView, "target-mode-list");
   },
+  selectIntersection: function (data) {
+    let subplot = data.event.target.dataset.subplot;
+    let subplotID = subplot === "xy" ? 0 : Number(subplot.split('x').pop().split('y')[0]) - 1;
+    let parameters = this.model.settings.inferenceSettings.parameters
+    let col = subplotID % parameters.length;
+    let row = (subplotID - col) / parameters.length;
+    if(row < col) {
+      this.intersectionNames = [parameters.at(row).name, parameters.at(col).name];
+      this.queryByHook('round-intersection-tab').click();
+      setTimeout(() => {
+        this.getPlot("round", {pdfOnly: true});
+        this.intersectionResized = false;
+      }, 0);
+    }
+  },
   setTitle: function (e) {
     this.plotArgs['title'] = e.target.value
     for (var storageKey in this.plots) {
       let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
-      fig.layout.title.text = e.target.value
-      this.plotFigure(fig, type)
+      if(Object.keys(fig.layout).includes('title')) {
+        fig.layout.title.text = e.target.value
+      }else{
+        fig.layout.title = {'text': e.target.value, 'x': 0.5, 'xanchor': 'center'}
+      }
+    }
+    for (var [type, storageKey] of Object.entries(this.activePlots)) {
+      this.plotFigure(this.plots[storageKey], type);
     }
   },
   setXAxis: function (e) {
@@ -572,8 +864,14 @@ module.exports = View.extend({
     for (var storageKey in this.plots) {
       let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
-      fig.layout.xaxis.title.text = e.target.value
-      this.plotFigure(fig, type)
+      if(['inference', 'round'].includes(type)) {
+        fig.layout.annotations.at(-2).text = e.target.value
+      }else {
+        fig.layout.xaxis.title.text = e.target.value
+      }
+    }
+    for (var [type, storageKey] of Object.entries(this.activePlots)) {
+      this.plotFigure(this.plots[storageKey], type);
     }
   },
   setYAxis: function (e) {
@@ -581,8 +879,14 @@ module.exports = View.extend({
     for (var storageKey in this.plots) {
       let type = this.getType(storageKey);
       let fig = this.plots[storageKey]
-      fig.layout.yaxis.title.text = e.target.value
-      this.plotFigure(fig, type)
+      if(['inference', 'round'].includes(type)) {
+        fig.layout.annotations.at(-1).text = e.target.value
+      }else {
+        fig.layout.xaxis.title.text = e.target.value
+      }
+    }
+    for (var [type, storageKey] of Object.entries(this.activePlots)) {
+      this.plotFigure(this.plots[storageKey], type);
     }
   },
   startAction: function () {
@@ -592,6 +896,9 @@ module.exports = View.extend({
   },
   update: function () {},
   updateValid: function () {},
+  viewRoundIndex: function (e) {
+    $(this.queryByHook("round-index-value")).html(e.target.value);
+  },
   viewTrajectoryIndex: function (e) {
     $(this.queryByHook("trajectory-index-value")).html(e.target.value);
   },
