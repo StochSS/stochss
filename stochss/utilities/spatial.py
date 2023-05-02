@@ -16,6 +16,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import json
+import copy
 import traceback
 
 from stochss.utilities.file import File
@@ -62,9 +63,10 @@ class Spatial(File):
 
             if "template_version" not in model_dict:
                 model_dict['template_version'] = 0
-            spatial_template.update(model_dict)
+            model_template = copy.deepcopy(spatial_template)
+            model_template.update(model_dict)
 
-            self.model_dict = spatial_template
+            self.model_dict = model_template
             self.model_dict['domain'] = Domain(
                 self.get_sanitized_path(), domain=model_dict['domain']
             ).to_dict(nested=True)
@@ -105,9 +107,9 @@ class Spatial(File):
 
     def load(self, dict_only=True):
         '''
-        Load the contents of the model file and convert the model to Spatial.
+        Load the contents of the spatial model file and convert the model to Spatial.
 
-        :param dict_only: Indicates that only the model dictionary is needed
+        :param dict_only: Indicates that only the spatial model dictionary is needed.
         :type dict_only: bool
         '''
         self.__load_model_dict()
@@ -115,7 +117,21 @@ class Spatial(File):
             self.__load_model_object()
         self.loaded = True
 
-    def to_dict(self, domain_only=True):
+    @classmethod
+    def load_spatial_model(cls, path=None):
+        '''
+        Load the details of the spatial model for the model editor page.
+
+        :param path: Path to the spatial model.
+        :type path: str
+
+        :returns: Contents of the spatial model for the model editor page.
+        :rtype: dict
+        '''
+        model = cls(path)
+        return model.to_dict()
+
+    def to_dict(self, domain_only=False):
         '''
         Update and return the model dictionary thats compatable with the stochss pages.
 

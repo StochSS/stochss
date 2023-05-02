@@ -75,7 +75,7 @@ let ProjectManager = PageView.extend({
     PageView.prototype.render.apply(this, arguments);
     this.homeLink = "stochss/home";
     $(this.queryByHook("loading-header")).html(`Loading Project`);
-    $(this.queryByHook("loading-target")).html(this.model.directory);
+    $(this.queryByHook("loading-target")).html(this.model.directory.split('/').pop());
     $(this.queryByHook("loading-spinner")).css("display", "block");
     $(this.queryByHook("loading-message")).css("display", "none");
     app.getXHR(this.model.url(), {

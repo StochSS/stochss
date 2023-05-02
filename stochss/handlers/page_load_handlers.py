@@ -21,6 +21,8 @@ from notebook.base.handlers import APIHandler
 
 from stochss.utilities.folder import Folder
 from stochss.utilities.project import Project
+from stochss.utilities.spatial import Spatial
+from stochss.utilities.well_mixed import WellMixed
 from stochss.utilities.user_system import UserSystem
 from stochss.utilities.server_errors import APIError, report_error
 
@@ -34,7 +36,8 @@ class PageLoadHandler(APIHandler):
         'jstree': Folder.load_jstree,
         'logs': UserSystem.load_logs,
         # 'loading-page': 'stochss-loading-page.html',
-        # 'model-editor': 'stochss-model-editor.html',
+        'well-mixed-model-editor': WellMixed.load_well_mixed_model,
+        'spatial-model-editor': Spatial.load_spatial_model,
         # 'multiple-plots': 'multiple-plots-page.html',
         'presentations': Folder.load_presentations,
         'projects': Folder.load_projects,

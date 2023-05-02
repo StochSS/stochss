@@ -30,6 +30,8 @@ let TimespanSettingsView = require('../settings-view/views/timespan-settings-vie
 let Model = require('../models/model');
 //templates
 let template = require('../templates/pages/modelEditor.pug');
+let errorTemplate = require('../templates/pages/errorTemplate.pug');
+let loadingTemplate = require('../templates/pages/loadingPage.pug');
 
 import initPage from './page.js';
 
@@ -56,12 +58,12 @@ let ModelEditor = PageView.extend({
     let urlParams = new URLSearchParams(window.location.search);
     let directory = urlParams.get('path');
     let modelFile = directory.split('/').pop();
+    this.validate = urlParams.has('validate');
     this.model = new Model({
       name: this.getFileName(decodeURI(modelFile)),
       directory: directory,
       is_spatial: modelFile.split('.').pop().startsWith('s'),
-      isPreview: true,
-      for: "edit"
+      isPreview: true
     });
     if(directory.includes('.proj')) {
       this.projectPath = path.dirname(directory);
@@ -70,20 +72,68 @@ let ModelEditor = PageView.extend({
       }
       this.projectName = this.getFileName(this.projectPath);
     }
-    app.getXHR(this.model.url(), {
-      success: (err, response, body) => {
-        this.model.set(body);
-        this.model.updateValid();
-        this.model.autoSave();
-        this.renderSubviews(urlParams.has('validate'));
-      }
-    });
     window.addEventListener("pageshow", (event) => {
       let navType = window.performance.navigation.type;
       if(navType === 2){
         window.location.reload();
       }
     });
+  },
+  render: function (attrs, options) {
+    PageView.prototype.render.apply(this, arguments);
+    this.homeLink = "stochss/home";
+    $(this.queryByHook("loading-header")).html(`Loading ${this.model.is_spatial ? "Spatial" : "Well-Mixed"} Model`);
+    $(this.queryByHook("loading-target")).html(this.model.directory.split('/').pop());
+    $(this.queryByHook("loading-spinner")).css("display", "block");
+    $(this.queryByHook("loading-message")).css("display", "none");
+    app.getXHR(this.model.url(), {
+      success: (err, response, body) => { this.renderContent(body); },
+      error: (err, response, body) => { this.renderError(response, body); }
+    });
+  },
+  renderContent: function (body) {
+    this.template = template;
+    PageView.prototype.render.apply(this, arguments);
+    this.model.set(body);
+    this.model.updateValid();
+    this.model.autoSave();
+    if(this.model.directory.includes('.proj')) {
+      $(this.queryByHook("project-breadcrumb-links")).css("display", "block");
+      $(this.queryByHook("model-name-header")).css("display", "none");
+      $(this.queryByHook("return-to-project-btn")).css("display", "inline-block");
+    }
+    if(app.getBasePath() === "/") {
+      $(this.queryByHook("presentation")).css("display", "none");
+    }
+    if(this.model.is_spatial) {
+      $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
+      this.openDomainPlot();
+      $(this.queryByHook("stochss-ps")).addClass("disabled");
+    }
+    let infLink = this.model.refLinks.filter((refLink) => { return refLink.job; })[0] || null;
+    if(infLink) {
+      $(this.queryByHook('return-to-inf-btn')).css("display", "inline-block");
+      $(this.queryByHook('return-to-inf-btn')).prop("href", `stochss/workflow-manager?path=${infLink.path}&type=none`);
+    }
+    this.renderModelView();
+    this.modelSettings = new TimespanSettingsView({
+      parent: this,
+      model: this.model.modelSettings,
+      isSpatial: this.model.is_spatial
+    });
+    app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
+    if(this.validate && !this.model.valid) {
+      let errorMsg = $(this.queryByHook("error-detected-msg"));
+      this.displayError(errorMsg);
+    }
+    app.documentSetup();
+  },
+  renderError: function (response, body) {
+    this.template = errorTemplate;
+    this.logoPath = "/static/stochss-logo.png";
+    this.title = `${response.statusCode} ${body.reason}`;
+    this.errMsg = body.message;
+    PageView.prototype.render.apply(this, arguments);
   },
   clickDownloadPNGButton: function (e) {
     $('div[data-hook=preview-plot-container] a[data-title*="Download plot as a png"]')[0].click();
@@ -345,38 +395,6 @@ let ModelEditor = PageView.extend({
       domainElements: domainElements
     });
     app.registerRenderSubview(this, this.modelView, "model-view-container");
-  },
-  renderSubviews: function (validate) {
-    if(this.model.directory.includes('.proj')) {
-      $(this.queryByHook("project-breadcrumb-links")).css("display", "block");
-      $(this.queryByHook("model-name-header")).css("display", "none");
-      $(this.queryByHook("return-to-project-btn")).css("display", "inline-block");
-    }
-    if(this.model.is_spatial) {
-      $(this.queryByHook("toggle-preview-domain")).css("display", "inline-block");
-      this.openDomainPlot();
-      $(this.queryByHook("stochss-ps")).addClass("disabled");
-    }
-    if(app.getBasePath() === "/") {
-      $(this.queryByHook("presentation")).css("display", "none");
-    }
-    let infLink = this.model.refLinks.filter((refLink) => { return refLink.job; })[0] || null;
-    if(infLink) {
-      $(this.queryByHook('return-to-inf-btn')).css("display", "inline-block");
-      $(this.queryByHook('return-to-inf-btn')).prop("href", `stochss/workflow-manager?path=${infLink.path}&type=none`);
-    }
-    this.renderModelView();
-    this.modelSettings = new TimespanSettingsView({
-      parent: this,
-      model: this.model.modelSettings,
-      isSpatial: this.model.is_spatial
-    });
-    app.registerRenderSubview(this, this.modelSettings, 'model-settings-container');
-    if(validate && !this.model.valid) {
-      let errorMsg = $(this.queryByHook("error-detected-msg"));
-      this.displayError(errorMsg);
-    }
-    app.documentSetup();
   },
   runModel: function ({target=null}={}) {
     this.running();

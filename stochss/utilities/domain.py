@@ -17,11 +17,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import os
 import json
+import copy
 import traceback
 
 from stochss.utilities.file import File
 from stochss.utilities.server_errors import FileNotFoundAPIError, JSONDecodeAPIError, DomainAPIError
-from stochss.templates.domain import domain_template
+from stochss.templates.domain import spatial_domain_template
 
 class Domain(File):
     r'''
@@ -45,7 +46,7 @@ class Domain(File):
             if not path.endswith(".domn"):
                 path = f"{path}.domn"
             if domain is None:
-                domain = json.dumps(domain_template, sort_keys=True, indent=4)
+                domain = json.dumps(spatial_domain_template, sort_keys=True, indent=4)
             elif isinstance(domain, dict):
                 domain = json.dumps(domain, sort_keys=True, indent=4)
 
@@ -67,6 +68,7 @@ class Domain(File):
 
             if "template_version" not in domain_dict:
                 domain_dict['template_version'] = 0
+            domain_template = copy.deepcopy(spatial_domain_template)
             domain_template.update(domain_dict)
 
             self.domain_dict = domain_template
@@ -140,7 +142,7 @@ class Domain(File):
                 d_type['rho'] = d_type['mass'] / d_type['volume']
             if "c" not in d_type:
                 d_type['c'] = 10
-        if self.domain_dict['particles']:
+        if 'particles' in self.domain_dict and len(self.domain_dict['particles']) > 0:
             for particle in self.domain_dict['particles']:
                 if particle['type'] in type_changes:
                     particle['type'] = type_changes[particle['type']]

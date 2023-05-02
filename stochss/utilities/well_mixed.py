@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 import ast
 import json
+import copy
 import traceback
 
 from stochss.utilities.file import File
@@ -51,9 +52,9 @@ class WellMixed(File):
 
         super().__init__(path=path, new=new, make_unique=True, body=model, **kwargs)
 
-        self.loaded = False
         self.model_dict = None
         self.model_object = None
+        self.loaded = False
 
     def __load_model_dict(self):
         try:
@@ -64,9 +65,10 @@ class WellMixed(File):
                 model_dict['volume'] = model_dict['modelSettings']['volume']
             if "template_version" not in model_dict:
                 model_dict['template_version'] = 0
-            well_mixed_template.update(model_dict)
+            model_template = copy.deepcopy(well_mixed_template)
+            model_template.update(model_dict)
 
-            self.model_dict = well_mixed_template
+            self.model_dict = model_template
             self.__update_model_to_current()
         except FileNotFoundError as err:
             msg = f"Could not find the well mixed model file: {str(err)}"
@@ -143,15 +145,29 @@ class WellMixed(File):
 
     def load(self, dict_only=True):
         '''
-        Load the contents of the model file and convert the model to GillesPy2.
+        Load the contents of the well-mixed model file and convert the model to GillesPy2.
 
-        :param dict_only: Indicates that only the model dictionary is needed
+        :param dict_only: Indicates that only the well_mixed model dictionary is needed
         :type dict_only: bool
         '''
+        self.loaded = True
         self.__load_model_dict()
         if not dict_only:
             self.__load_model_object()
-        self.loaded = True
+
+    @classmethod
+    def load_well_mixed_model(cls, path=None):
+        '''
+        Load the details of the well-mixed model for the model editor page.
+
+        :param path: Path to the well-mixed model.
+        :type path: str
+
+        :returns: Contents of the well-mixed model for the model editor page.
+        :rtype: dict
+        '''
+        model = cls(path)
+        return model.to_dict()
 
     def to_dict(self):
         '''

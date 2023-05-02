@@ -120,10 +120,11 @@ class Workflow(Folder):
 
         if "template_version" not in settings['settings']:
             settings['settings']['template_version'] = 0
-        wkfl_settings_template.update(settings['settings'])
+        settings_template = copy.deepcopy(wkfl_settings_template)
+        settings_template.update(settings['settings'])
 
         self.model = settings['model']
-        self.settings = wkfl_settings_template
+        self.settings = settings_template
         self.type = settings['type']
         self.__update_settings_to_current()
 

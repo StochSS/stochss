@@ -36,7 +36,9 @@ var BoundaryConditions = require('./boundary-conditions');
 
 module.exports = Model.extend({
   url: function () {
-    return path.join(app.getApiPath(), "file/json-data")+"?for="+this.for+"&path="+this.directory;
+    let modelType = this.is_spatial ? "spatial" : "well-mixed";
+    let queryStr = `?path=${this.directory}`;
+    return path.join(app.getLoadPath(), `${modelType}-model-editor`) + queryStr;
   },
   props: {
     annotation: 'string',
