@@ -22,5 +22,6 @@ let Collection = require('ampersand-collection');
 let Job = require('./job');
 
 module.exports = Collection.extend({
-  model: Job
+  model: Job,
+  comparator: 'sortTime'
 });

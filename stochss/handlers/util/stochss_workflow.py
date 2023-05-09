@@ -165,20 +165,21 @@ class StochSSWorkflow(StochSSBase):
 
     def __load_jobs(self):
         self.workflow['jobs'] = []
-        time = 0
+        mrm_time = 0
         last_job = None
         for file_obj in os.listdir(self.get_path(full=True)):
             if file_obj.startswith("job_"):
                 path = os.path.join(self.path, file_obj)
-                job = StochSSJob(path=path).load()
-                self.workflow['jobs'].append(job)
-                if os.path.getmtime(path) > time and job['status'] != "running":
-                    time = os.path.getmtime(path)
-                    last_job = job
+                job = StochSSJob(path=path)
+                self.workflow['jobs'].append(job.load())
+                cm_time = job.get_update_time()
+                if cm_time > mrm_time:
+                    mrm_time = cm_time
+                    last_job = len(self.workflow['jobs']) - 1
         if last_job is None:
             self.workflow['activeJob'] = None
         else:
-            self.workflow['activeJob'] = last_job
+            self.workflow['activeJob'] = self.workflow['jobs'][last_job]
 
 
     def __load_settings(self):

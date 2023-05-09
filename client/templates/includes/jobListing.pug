@@ -3,24 +3,26 @@ div(data-hook=this.model.elementID)
   if(this.model.collection.indexOf(this.model) !== 0)
     hr
 
-  div.row
+  div.py-1.pl-1(data-hook="is-active-job")
 
-    div.col-md-3
+    div.row
 
-      button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-open" style="width: 100%")=this.model.name
+      div.col-md-3
 
-    div.col-md-4
+        button.btn.btn-outline-secondary.box-shadow.job-listing-btn(data-hook=this.model.elementID + "-open" style="width: 100%")=this.model.name
 
-      div.py-2=this.model.fmtStartTime
+      div.col-md-4
 
-    div.col-md-3
+        div.py-2=this.model.fmtStartTime
 
-      div.py-2
+      div.col-md-3
 
-        div.inline(data-hook=this.model.elementID + "-status")=this.model.status
+        div.py-2
 
-        div.inline.spinner-border.status(data-hook=this.model.elementID + "-running-spinner")
+          div.inline(data-hook=this.model.elementID + "-status")=this.model.status
 
-    div.col-md-2
+          div.inline.spinner-border.status(data-hook=this.model.elementID + "-running-spinner")
 
-      button.btn.btn-outline-secondary.box-shadow(data-hook=this.model.elementID + "-remove") X
+      div.col-md-2
+
+        button.btn.btn-outline-secondary.box-shadow.job-listing-btn(data-hook=this.model.elementID + "-remove") X

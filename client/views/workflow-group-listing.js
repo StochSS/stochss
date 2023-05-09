@@ -44,12 +44,14 @@ module.exports = View.extend({
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
     let links = [];
-    this.model.model.refLinks.forEach((link) => {
-      links.push(
-        `<a class="text-break" href='stochss/workflow/edit?path=${link.path}&type=none'>${link.name}</a>`
-      );
-    });
-    this.htmlLinks = links.join('')
+    if(this.model.model.refLinks) {
+      this.model.model.refLinks.forEach((link) => {
+        links.push(
+          `<a class="text-break" href='stochss/workflow/edit?path=${link.path}&type=none'>${link.name}</a>`
+        );
+      });
+    }
+    this.htmlLinks = links.join('');
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
