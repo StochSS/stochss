@@ -290,14 +290,13 @@ let WorkflowManager = PageView.extend({
     }else if(this.model.activeJob.status !== "ready") {
       this.renderStatusView();
     }
-    let detailsStatus = ["error", "complete"];
     if(jobID !== null) {
       let activeJob = this.model.jobs.filter((job) => { return job.name === jobID; })[0] || null;
       if(activeJob !== null) {
         this.model.activeJob = activeJob;
       }
     }
-    if(this.model.activeJob && detailsStatus.includes(this.model.activeJob.status)) {
+    if(this.model.activeJob) {
       this.renderActiveJob();
     }
   },

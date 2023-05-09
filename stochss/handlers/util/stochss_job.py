@@ -692,6 +692,18 @@ class StochSSJob(StochSSBase):
             return time_stamp
         return None
 
+    def get_update_time(self):
+        os.chdir(self.get_path(full=True))
+        if os.path.exists("COMPLETE"):
+            mod_time = os.path.getctime("COMPLETE")
+        elif os.path.exists("ERROR"):
+            mod_time = os.path.getctime("ERROR")
+        elif os.path.exists("RUNNING"):
+            mod_time = os.path.getctime("RUNNING")
+        else:
+            mod_time = None
+        os.chdir(self.user_dir)
+        return mod_time
 
     def load(self, new=False):
         '''
