@@ -106,7 +106,13 @@ section.page
 
   div.mt-4(data-hook="active-job-header-container" style="display: none")
 
-    h2(data-hook="active-job-header") Job:
+    div.inline
+
+      h2(data-hook="active-job-header") Job:
+
+    div.mr-3.inline(style="float: right;")
+
+      button.btn.btn-outline-secondary.box-shadow(data-hook="manual-view-control") View
 
   div(data-hook="active-job-container")
 

@@ -36,11 +36,15 @@ module.exports = View.extend({
   },
   initialize: function (attrs, options) {
     View.prototype.initialize.apply(this, arguments);
+    this.isActiveJob = false;
+    console.log(this.model.startTime, this.model.sortTime)
   },
   render: function (attrs, options) {
     View.prototype.render.apply(this, arguments);
+    if(this.isActiveJob) {
+      $(this.queryByHook("is-active-job")).addClass("active-job-listing");
+    }
     if(this.model.status === "running") {
-      $(this.queryByHook(this.model.elementID + "-open")).prop("disabled", true);
       this.getJobStatus();
     }else{
       $(this.queryByHook(this.model.elementID + '-running-spinner')).css('display', "none")
@@ -80,5 +84,13 @@ module.exports = View.extend({
   },
   openActiveJob: function (e) {
     this.parent.setActiveJob(this.model);
+  },
+  updateActiveJob: function (activeJob) {
+    this.isActiveJob = Boolean(activeJob) && activeJob === this.model.directory;
+    if(this.isActiveJob) {
+      $(this.queryByHook("is-active-job")).addClass("active-job-listing");
+    }else {
+      $(this.queryByHook("is-active-job")).removeClass("active-job-listing");
+    }
   }
 });

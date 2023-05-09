@@ -63,7 +63,8 @@ module.exports = View.extend({
     }else {
       if(!this.model.isAutomatic){
         $(this.queryByHook('select-ode')).prop('checked', Boolean(this.model.algorithm === "ODE"));
-        $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA")); 
+        $(this.queryByHook('select-ssa')).prop('checked', Boolean(this.model.algorithm === "SSA"));
+        $(this.queryByHook('select-cle')).prop('checked', Boolean(this.model.algorithm === "CLE"));
         $(this.queryByHook('select-tau-leaping')).prop('checked', Boolean(this.model.algorithm === "Tau-Leaping"));
         $(this.queryByHook('select-hybrid-tau')).prop('checked', Boolean(this.model.algorithm === "Hybrid-Tau-Leaping"));
       }else{

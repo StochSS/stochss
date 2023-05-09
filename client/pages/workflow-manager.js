@@ -49,12 +49,14 @@ let WorkflowManager = PageView.extend({
     'click [data-target=start-job]'  : 'clickStartJobHandler',
     'click [data-hook=edit-model]' : 'clickEditModelHandler',
     'click [data-hook=collapse-jobs]' : 'changeCollapseButtonText',
-    'click [data-hook=return-to-project-btn]' : 'handleReturnToProject'
+    'click [data-hook=return-to-project-btn]' : 'handleReturnToProject',
+    'click [data-hook=manual-view-control]' : 'setActiveJobViewControl'
   },
   initialize: function (attrs, options) {
     PageView.prototype.initialize.apply(this, arguments);
     let urlParams = new URLSearchParams(window.location.search);
     let jobID = urlParams.has('job') ? urlParams.get('job') : null;
+    this.viewingActiveJob = false;
     this.model = new Workflow({
       directory: urlParams.get('path')
     });
@@ -227,8 +229,9 @@ let WorkflowManager = PageView.extend({
     this.jobListingView = this.renderCollection(
       this.model.jobs,
       JobListingView,
-      this.queryByHook("job-listing")
+      this.queryByHook("job-listing"),
     );
+    this.setActiveJobIndicator();
   },
   renderModelLocationSelectView: function (model) {
     if(this.modelLocationSelectView) {
@@ -309,7 +312,19 @@ let WorkflowManager = PageView.extend({
   setActiveJob: function (job) {
     this.removeActiveJob();
     this.model.activeJob = job;
+    this.viewingActiveJob = false;
+    this.setActiveJobViewControl();
     this.renderActiveJob();
+  },
+  setActiveJobIndicator: function () {
+    this.jobListingView.views.forEach((view) => {
+      view.updateActiveJob(this.model.activeJob.directory);
+    });
+  },
+  setActiveJobViewControl: function (e) {
+    this.viewingActiveJob = !this.viewingActiveJob;
+    $(this.queryByHook("manual-view-control")).text(this.viewingActiveJob ? "Finished" : "View");
+    this.setActiveJobIndicator();
   },
   setupSettingsView: function () {
     if(!this.model.newFormat) {
@@ -375,31 +390,46 @@ let WorkflowManager = PageView.extend({
         let runEndpoint = `${path.join(app.getApiPath(), "workflow/run-job")}${runQuery}`;
         app.getXHR(runEndpoint, {
           success: (err, response, body) => {
-            this.updateWorkflow(true);
+            this.updateWorkflow({newJob: true});
           }
         });
       }
     });
   },
-  updateWorkflow: function (newJob) {
-    let self = this;
+  updateWorkflow: function ({newJob=false}={}) {
     if(this.model.newFormat) {
-      let hadActiveJob = Boolean(this.model.activeJob.status)
       app.getXHR(this.model.url(), {
-        success: function (err, response, body) {
-          self.model.set({jobs: body.jobs, activeJob: body.activeJob});
-          if(!Boolean(self.model.activeJob.status)){
-            self.removeActiveJob();
-          }else if(!hadActiveJob && Boolean(self.model.activeJob.status)) {
-            self.renderActiveJob();
+        success: (err, response, body) => {
+          this.model.set({jobs: body.jobs});
+          if(newJob || this.viewingActiveJob) {
+            setTimeout(() => { this.setActiveJobIndicator(); });
+          }else if (!Boolean(body.activeJob.status)) {
+            this.removeActiveJob();
+          }else {
+            this.model.set({activeJob: body.activeJob});
+            this.setActiveJobViewControl();
+            this.renderActiveJob();
+          }
+          if(newJob) {
+            setTimeout(() => { this.setActiveJobIndicator(); });
+          }else {
+            if(!Boolean(this.model.activeJob.status)) {
+              this.removeActiveJob();
+            }else if(!this.viewingActiveJob){
+              this.model.set({activeJob: body.activeJob});
+              this.renderActiveJob();
+              this.setActiveJobViewControl();
+            }else {
+              setTimeout(() => { this.setActiveJobIndicator(); });
+            }
           }
         }
       });
     }else if(!this.model.newFormat){
       app.getXHR(this.model.url(), {
-        success: function (err, response, body) {
-          self.model.set(body)
-          self.renderSubviews();
+        success: (err, response, body) => {
+          this.model.set(body)
+          this.renderSubviews();
         }
       });
     }
