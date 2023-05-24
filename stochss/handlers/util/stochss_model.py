@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 import os
 import ast
 import json
+import copy
 import string
 import hashlib
 import tempfile
@@ -42,6 +43,7 @@ class StochSSModel(StochSSBase):
     StochSS model object
     ################################################################################################
     '''
+    TEMPLATE_VERSION = 2
 
     def __init__(self, path, new=False, model=None):
         '''
@@ -277,8 +279,8 @@ class StochSSModel(StochSSBase):
         for event in self.model['eventsCollection']:
             self.__update_event_assignments(event=event, param_ids=param_ids)
 
-    def __update_model_to_current(self):
-        if self.model['template_version'] == self.TEMPLATE_VERSION:
+    def __update_model_to_v1(self):
+        if self.model['template_version'] == 1:
             return
 
         param_ids = self.__update_parameters()
@@ -288,6 +290,57 @@ class StochSSModel(StochSSBase):
 
         if "refLinks" not in self.model.keys():
             self.model['refLinks'] = []
+
+    def __update_model_to_current(self):
+        if self.model['template_version'] == self.TEMPLATE_VERSION:
+            return
+
+        self.__update_model_to_v1()
+
+        for species in self.model['species']:
+            species['observable'] = True
+
+        spec_template = {
+            'mode': self.model['defaultMode'], 'switchTol': 0.03, 'switchMin': 100,
+            'isSwitchTol': True, 'diffusionConst': 0.0, 'types': [], 'observable': False
+        }
+        param_ids = list(map(lambda param: param['compID'], self.model['parameters']))
+        changes = {}
+        for event in self.model['eventsCollection']:
+            for assignment in event['eventAssignments']:
+                if assignment['variable']['compID'] in param_ids:
+                    if assignment['variable']['compID'] in changes:
+                        assignment['variable'] = changes[assignment['variable']['compID']]
+                    else:
+                        species = copy.deepcopy(spec_template)
+                        updates = {
+                            'annotation': assignment['variable']['annotation'], 'name': assignment['variable']['name'],
+                            'compID': assignment['variable']['compID'], 'value': assignment['variable']['expression']
+                        }
+                        species.update(updates)
+                        assignment['variable'] = species
+                        changes[assignment['variable']['compID']] = species
+        for rule in self.model['rules']:
+            if rule['variable']['compID'] in param_ids:
+                if rule['variable']['compID'] in changes:
+                    rule['variable'] = changes[rule['variable']['compID']]
+                else:
+                    species = copy.deepcopy(spec_template)
+                    updates = {
+                        'annotation': rule['variable']['annotation'], 'compID': rule['variable']['compID'],
+                        'name': rule['variable']['name'], 'value': rule['variable']['expression']
+                    }
+                    species.update(updates)
+                    rule['variable'] = species
+                    changes[rule['variable']['compID']] = species
+
+        self.model['species'].extend(list(changes.values()))
+        self.model['parameters'] = list(filter(
+            lambda param, ids=list(changes.keys()): param['compID'] not in ids, self.model['parameters']
+        ))
+        for reaction in self.model['reactions']:
+            if reaction['massaction'] and reaction['rate']['compID'] in changes:
+                reaction['rate'] = changes[reaction['rate']['compID']]
 
         self.model['template_version'] = self.TEMPLATE_VERSION
 
