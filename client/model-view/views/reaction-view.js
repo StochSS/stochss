@@ -155,6 +155,19 @@ module.exports = View.extend({
       self.parent.renderEditReactionView();
     });
   },
+  getOptions: function () {
+    var species = this.model.collection.parent.species;
+    var parameters = this.model.collection.parent.parameters;
+    var specs = species.map(function (specie) {
+      return [specie.compID, specie.name];
+    });
+    var params = parameters.map(function (parameter) {
+      return [parameter.compID, parameter.name];
+    });
+    let options = [{groupName: Boolean(specs) ? "Variables" : "Variables (empty)", options: specs},
+                   {groupName: Boolean(params) ? "Parameters" : "Parameters (empty)", options: params}];
+    return options;
+  },
   getReactionTypes: function () {
     let disableTypes = this.model.collection.parent.parameters.length == 0;
     let options = _.map(ReactionTypes, function (val, key) {
@@ -289,14 +302,18 @@ module.exports = View.extend({
         viewOptions['options'] = [];
         viewOptions['unselectedText'] = "N/A";
       }else{
-        // make sure the reaction has a rate and that rate exists in the parameters collection
+        // make sure the reaction has a rate and that rate exists in the species or parameters collection
         let paramIDs = this.model.collection.parent.parameters.map(function (param) {
           return param.compID;
         });
-        if(!this.model.rate.compID || !paramIDs.includes(this.model.rate.compID)) {
+        let specIDs = this.model.collection.parent.species.map(function (spec) {
+          return spec.compID;
+        });
+        let rateExists = paramIDs.includes(this.model.rate.compID) || specIDs.includes(this.model.rate.compID);
+        if(!this.model.rate.compID || !rateExists) {
           this.model.rate = this.model.collection.getDefaultRate();
         }
-        viewOptions['options'] = this.model.collection.parent.parameters;
+        viewOptions['groupOptions'] = this.getOptions();
         viewOptions['value'] = this.model.rate.compID;
       }
 
@@ -368,9 +385,13 @@ module.exports = View.extend({
   },
   selectRateParam: function (e) {
     let val = e.target.selectedOptions.item(0).value;
-    let param = this.model.collection.parent.parameters.get(val, 'compID');
-    if(param) {
-      this.model.rate = param;
+    console.log(val)
+    var rate = this.model.collection.parent.parameters.get(val, 'compID');
+    if(rate === undefined) {
+      rate = this.model.collection.parent.species.get(val, 'compID');
+    }
+    if(rate) {
+      this.model.rate = rate;
       this.updateViewer();
       this.model.trigger('change-reaction');
       this.model.collection.trigger("change");

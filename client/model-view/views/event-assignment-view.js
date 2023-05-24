@@ -43,15 +43,9 @@ module.exports = View.extend({
   },
   getOptions: function () {
     var species = this.model.collection.parent.collection.parent.species;
-    var parameters = this.model.collection.parent.collection.parent.parameters;
-    var specs = species.map(function (specie) {
+    var options = species.map(function (specie) {
       return [specie.compID, specie.name];
     });
-    var params = parameters.map(function (parameter) {
-      return [parameter.compID, parameter.name];
-    });
-    let options = [{groupName: Boolean(specs) ? "Variables" : "Variables (empty)", options: specs},
-                   {groupName: Boolean(params) ? "Parameters" : "Parameters (empty)", options: params}];
     return options;
   },
   removeAssignment: function () {
@@ -60,22 +54,8 @@ module.exports = View.extend({
     this.collection.parent.collection.trigger('change');
   },
   selectAssignmentVariable: function (e) {
-    var species = this.model.collection.parent.collection.parent.species;
-    var parameters = this.model.collection.parent.collection.parent.parameters;
-    var val = Number(e.target.value);
-    var eventVar = species.filter(function (specie) {
-      if(specie.compID === val) {
-        return specie;
-      }
-    });
-    if(!eventVar.length) {
-      eventVar = parameters.filter(function (parameter) {
-        if(parameter.compID === val) {
-          return parameter;
-        }
-      });
-    }
-    this.model.variable = eventVar[0];
+    let species = this.model.collection.parent.collection.parent.species;
+    this.model.variable = species.get(Number(e.target.value), 'compID');
     this.updateViewer();
     this.model.collection.parent.collection.trigger('change');
   },
@@ -107,7 +87,7 @@ module.exports = View.extend({
           name: 'variable',
           required: true,
           idAttributes: 'cid',
-          groupOptions: options,
+          options: options,
           value: this.model.variable.compID
         });
       }
