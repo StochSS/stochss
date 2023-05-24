@@ -49,24 +49,6 @@ module.exports = View.extend({
           }
         }
       });
-      this.collection.parent.eventsCollection.map((event) => {
-        event.eventAssignments.map((assignment) => {
-          if(assignment.variable.compID === compID) {
-            assignment.variable = parameter;
-          }
-        })
-        if(event.selected) {
-          event.trigger('change-event');
-        }
-      });
-      this.collection.parent.rules.map((rule) => {
-        if(rule.variable.compID === compID) {
-          rule.variable = parameter;
-        }
-      });
-      if(this.parent.rulesView) {
-        this.parent.rulesView.renderEditRules();
-      }
     });
   },
   render: function () {
