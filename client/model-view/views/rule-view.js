@@ -77,14 +77,9 @@ module.exports = View.extend({
   getOptions: function () {
     let species = this.model.collection.parent.species;
     let parameters = this.model.collection.parent.parameters;
-    let specs = species.map(function (specie) {
+    let options = species.map(function (specie) {
       return [specie.compID, specie.name];
     });
-    let params = parameters.map(function (parameter) {
-      return [parameter.compID, parameter.name];
-    });
-    let options = [{groupName: Boolean(specs) ? "Variables" : "Variables (empty)", options: specs},
-                   {groupName: Boolean(params) ? "Parameters" : "Parameters (empty)", options: params}];
     return options;
   },
   removeRule: function () {
@@ -95,21 +90,7 @@ module.exports = View.extend({
   },
   selectRuleVariable: function (e) {
     let species = this.model.collection.parent.species;
-    let parameters = this.model.collection.parent.parameters;
-    let compID = Number(e.target.value);
-    let ruleVar = species.filter(function (specie) {
-      if(specie.compID === compID) {
-        return specie;
-      }
-    });
-    if(!ruleVar.length) {
-      ruleVar = parameters.filter(function (parameter) {
-        if(parameter.compID === compID) {
-          return parameter;
-        }
-      });
-    }
-    this.model.variable = ruleVar[0];
+    this.model.variable = species.get(Number(e.target.value), 'compID')
   },
   update: function (e) {},
   updateValid: function () {},
@@ -152,7 +133,7 @@ module.exports = View.extend({
           name: 'variable',
           required: true,
           idAttributes: 'cid',
-          groupOptions: options,
+          options: options,
           value: this.model.variable.compID
         });
       }

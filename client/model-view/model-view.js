@@ -106,11 +106,9 @@ module.exports = View.extend({
       });
       this.model.eventsCollection.on("add change remove", () => {
         this.updateSpeciesInUse();
-        this.updateParametersInUse();
       });
       this.model.rules.on("add change remove", () => {
         this.updateSpeciesInUse();
-        this.updateParametersInUse();
       });
     }
   },
@@ -429,14 +427,6 @@ module.exports = View.extend({
         updateInUse(reaction.rate);
       }
     });
-    events.forEach((event) => {
-      event.eventAssignments.forEach((assignment) => {
-        updateInUse(assignment.variable);
-      });
-    });
-    rules.forEach((rule) => {
-      updateInUse(rule.variable);
-    });
   },
   updateSpeciesInUse: function () {
     let species = this.model.species;
@@ -450,6 +440,10 @@ module.exports = View.extend({
           specie.inUse = true;
         });
     }
+    let updateInUseForRate = (rate) => {
+      specie = species.get(rate.compID, 'compID')
+      if(specie) { specie.inUse = true; }
+    }
     let updateInUseForOther = (specie) => {
       _.where(species.models, { compID: specie.compID })
        .forEach((specie) => {
@@ -459,6 +453,9 @@ module.exports = View.extend({
     reactions.forEach((reaction) => {
       reaction.products.forEach(updateInUseForReaction);
       reaction.reactants.forEach(updateInUseForReaction);
+      if(reaction.reactionType !== 'custom-propensity') {
+        updateInUseForRate(reaction.rate);
+      }
     });
     events.forEach((event) => {
       event.eventAssignments.forEach((assignment) => {

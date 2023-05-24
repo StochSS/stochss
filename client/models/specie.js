@@ -22,16 +22,17 @@ var State = require('ampersand-state');
 
 module.exports = State.extend({
   props: {
+    annotation: 'string',
     compID: 'number',
-    name: 'string',
-    value: 'any',
+    diffusionConst: 'number',
+    isSwitchTol: 'boolean',
     mode: 'string',
+    name: 'string',
+    observable: 'boolean',
     switchTol: 'any',
     switchMin: 'any',
-    isSwitchTol: 'boolean',
-    annotation: 'string',
-    diffusionConst: 'number',
-    types: 'object'
+    types: 'object',
+    value: 'any'
   },
   session: {
     inUse: {

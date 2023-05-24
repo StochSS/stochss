@@ -46,10 +46,10 @@ module.exports = View.extend({
   },
   render: function (attrs, options) {
   	View.prototype.render.apply(this, arguments);
-  	if(this.model.status !== "error") {
+  	if(this.model.status === "complete") {
       this.renderResultsView();
     }
-    if(!this.readOnly) {
+    if(!this.readOnly && this.model.status !== "running") {
       this.renderLogsView();
     }
     this.renderSettingsView();

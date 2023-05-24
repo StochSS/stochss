@@ -18,8 +18,14 @@ div.mx-1
       div=this.model.mode
 
     if this.model.mode === "dynamic"
-      div.col-sm-4
+      div.col-sm-2
         div=this.switchingValWithLabel
+
+    div.col-sm-2
+
+      div.pl-3
+
+        input(type="checkbox" data-hook="observable" checked=this.model.observable)
 
     div.col-sm-2
 

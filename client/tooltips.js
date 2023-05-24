@@ -18,17 +18,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 module.exports = {
   speciesEditor: {
-    name: "Unique identifier for Variable. Cannot share a name with other model components.",
-
     initialValue: "Initial population of a variables.",
 
     annotation: "An optional note about the variables.",
 
-    remove: "A variables may only be removed if it is not a part of any reaction, event assignment, or rule.",
-    
     mode: "Concentration - Variables will only be represented using continuous (floating point) values.<br>Population - Variables will only be represented "+
         "using discrete (integer count) values.<br>Hybrid Concentration/Population - Allows a variables to be represented using continuous and/or discrete values.",
 
+    name: "Unique identifier for Variable. Cannot share a name with other model components.",
+
+    observable: "Indicates that the species should be plotted with viewing results.",
+
+    remove: "A variables may only be removed if it is not a part of any reaction, event assignment, or rule.",
+    
     switchValue: "Switching Tolerance - Tolerance level for considering a dynamic variables deterministically, value is compared to an estimated sd/mean population "+
         "of a variables after a given time step. This value will be used if a 'Minimum Value' not provided.<br>Minimum Value For Switching - Minimum population value "+
         "at which variables will be represented as Concentration."

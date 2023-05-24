@@ -103,7 +103,11 @@ class EnsembleSimulation(StochSSJob):
             if verbose:
                 log.info(f"{self.g_model.name} preview simulation has completed")
                 log.info(f"Generate result plot for {self.g_model.name} preview")
-            plot = results.plotplotly(return_plotly_figure=True)
+            included_species_list = []
+            for species in self.s_model['species']:
+                if species['observable']:
+                    included_species_list.append(species['name'])
+            plot = results.plotplotly(return_plotly_figure=True, included_species_list=included_species_list)
             plot["layout"]["autosize"] = True
             plot["config"] = {"responsive": True, "displayModeBar": True}
             return plot

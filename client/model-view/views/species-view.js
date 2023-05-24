@@ -46,6 +46,12 @@ module.exports = View.extend({
     this.collection.on('update-species', (compID, specie, isNameUpdate, isDefaultMode) => {
       this.collection.parent.reactions.forEach((reaction) => {
         var changedReaction = false;
+        if(reaction.rate && reaction.rate.compID === compID){
+          reaction.rate = specie;
+          if(reaction.reactionType !== 'custom-propensity') {
+            changedReaction = true;
+          }
+        }
         reaction.reactants.forEach((reactant) => {
           if(reactant.specie.compID === compID) {
             reactant.specie = specie;

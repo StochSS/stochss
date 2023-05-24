@@ -505,16 +505,24 @@ class StochSSJob(StochSSBase):
             self.log("info", "Loading the results...")
             result = self.__get_filtered_ensemble_results(data_keys)
             self.log("info", "Generating the plot...")
+            included_species_list = []
+            for species in self.load_models()[1]['species']:
+                if species['observable']:
+                    included_species_list.append(species['name'])
             if plt_key == "mltplplt":
-                fig = result.plotplotly(return_plotly_figure=True, multiple_graphs=True)
+                fig = result.plotplotly(
+                    return_plotly_figure=True, multiple_graphs=True, included_species_list=included_species_list
+                )
             elif plt_key == "stddevran":
-                fig = result.plotplotly_mean_stdev(return_plotly_figure=True)
+                fig = result.plotplotly_mean_stdev(
+                    return_plotly_figure=True, included_species_list=included_species_list
+                )
             else:
                 if plt_key == "stddev":
                     result = result.stddev_ensemble()
                 elif plt_key == "avg":
                     result = result.average_ensemble()
-                fig = result.plotplotly(return_plotly_figure=True)
+                fig = result.plotplotly(return_plotly_figure=True, included_species_list=included_species_list)
             if add_config and plt_key != "mltplplt":
                 fig["config"] = {"responsive":True}
             self.log("info", "Loading the plot...")
@@ -692,6 +700,18 @@ class StochSSJob(StochSSBase):
             return time_stamp
         return None
 
+    def get_update_time(self):
+        os.chdir(self.get_path(full=True))
+        if os.path.exists("COMPLETE"):
+            mod_time = os.path.getctime("COMPLETE")
+        elif os.path.exists("ERROR"):
+            mod_time = os.path.getctime("ERROR")
+        elif os.path.exists("RUNNING"):
+            mod_time = os.path.getctime("RUNNING")
+        else:
+            mod_time = None
+        os.chdir(self.user_dir)
+        return mod_time
 
     def load(self, new=False):
         '''

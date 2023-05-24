@@ -74,6 +74,13 @@ module.exports = State.extend({
         // timeZone = timeZone.replace('(', '').replace(')', '') // remove the '()' from the timezone
         return  stamp + hours + ":" + minutes + " " + ampm + " " + timeZone;
       }
+    },
+    sortTime: {
+      deps: ["startTime"],
+      fn: function () {
+        let date = new Date(this.startTime);
+        return Math.round(date.getTime() / 1000);
+      }
     }
   }
 });
