@@ -301,7 +301,7 @@ class StochSSModel(StochSSBase):
             species['observable'] = True
 
         spec_template = {
-            'mode': self.model['defaultMode'], 'switchTol': 0.03, 'switchMin': 100,
+            'mode': 'continuous', 'switchTol': 0.03, 'switchMin': 100,
             'isSwitchTol': True, 'diffusionConst': 0.0, 'types': [], 'observable': False
         }
         param_ids = list(map(lambda param: param['compID'], self.model['parameters']))
@@ -333,6 +333,8 @@ class StochSSModel(StochSSBase):
                     species.update(updates)
                     rule['variable'] = species
                     changes[rule['variable']['compID']] = species
+                if rule['type'] == "Rate Rule":
+                    self.model['defaultMode'] = "dynamic"
 
         self.model['species'].extend(list(changes.values()))
         self.model['parameters'] = list(filter(

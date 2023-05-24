@@ -29,16 +29,17 @@ module.exports = Collection.extend({
     var id = this.parent.getDefaultID();
     var name = this.getDefaultName();
     var specie = this.add({
+      annotation: "",
       compID: id,
-      name: name,
-      value: 0,
+      diffusionConst: 0.0,
+      isSwitchTol: true,
       mode: this.parent.defaultMode,
+      name: name,
+      observable: true,
       switchTol: 0.03,
       switchMin: 100,
-      isSwitchTol: true,
-      annotation: "",
-      diffusionConst: 0.0,
-      types: types
+      types: types,
+      value: 0
     });
     this.parent.updateValid()
   },

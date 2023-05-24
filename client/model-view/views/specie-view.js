@@ -40,12 +40,19 @@ module.exports = View.extend({
       type: 'booleanAttribute',
       name: 'disabled',
     },
+    'model.observable': {
+      type: function (el, value, previousValue) {
+        el.checked = value;
+      },
+      hook: 'observable'
+    }
   },
   events: {
     'change [data-hook=input-name-container]' : 'setSpeciesName',
     'change [data-hook=specie-mode]' : 'setSpeciesMode',
     'change [data-hook=switching-tol]' : 'setSwitchingType',
     'change [data-hook=switching-min]' : 'setSwitchingType',
+    'change [data-hook=observable]' : 'setObservable',
     'click [data-hook=edit-annotation-btn]' : 'editAnnotation',
     'click [data-hook=remove]' : 'removeSpecie',
     'click [data-hook=collapse-advanced]' : 'changeCollapseButtonText'
@@ -151,6 +158,9 @@ module.exports = View.extend({
         return model.typeID != 0;
       }}
     );
+  },
+  setObservable: function (e) {
+    this.model.observable = !this.model.observable;
   },
   setSpeciesMode: function (e) {
     this.model.mode = e.target.value;

@@ -108,6 +108,7 @@ def run_gillespy2_preview(args):
     model = StochSSModel(path=args.path)
     job = EnsembleSimulation(path="", preview=True)
     job.g_model = model.convert_to_gillespy2()
+    job.s_model = model.model
     plot = job.run(preview=True)
     timeout = 'GillesPy2 simulation exceeded timeout.' in log_stm.getvalue()
     log_stm.close()
