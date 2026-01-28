@@ -2,14 +2,14 @@
 
 StochSS provides advanced tools for simulating and analyzing biochemical systems as Software as a Service. StochSS supports a wide range of model types ranging from continuous ODEs to discrete (spatial) stochastic simulations as well as advanced model analysis workflows.  
   
-**Try out [StochSS Live!](https://live.stochss.org)**  
+**Try out [StochSS Live!](https://live.stochss.se)**  
   
 ## Why use StochSS
 StochSS provides both an easy-to-use UI for constructing biochemical models as well as intuitive UIs for the most common model analysis tools such as visualization of results, parameter sweeps and parameter inference. StochSS is built on top of Jupyter Hub, and this lets you seemlessly switch between UI representations and Notebooks exposing the full backend API. In this way a user can benefit from the best of graphical representations with a clear upgrade path to modeling as code. For this reason, StochSS is also uniquely suited for the computational biologist starting out with mathematical modeling of biochemical systems. 
 
-StochSS is a software project involving several leading research groups in computational systems biology. We welcome collaborators to help expand the capabilities of StochSS. Read more about the project at [www.stochss.org](http://www.stochss.org).   
+StochSS is a software project involving several leading research groups in computational systems biology. We welcome collaborators to help expand the capabilities of StochSS. 
 
-StochSS is intended to be used as Software as a Service via [StochSS Live!](https://live.stochss.org). The following instructions can help you set up your own local development environment or deploy your own instance as SaaS.
+StochSS is intended to be used as Software as a Service via [StochSS Live!](https://live.stochss.se). The following instructions can help you set up your own local development environment or deploy your own instance as SaaS.
 
 ## Deploying your own Single-User StochSS Instance
 ### Requirements
